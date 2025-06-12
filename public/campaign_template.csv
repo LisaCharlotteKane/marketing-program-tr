@@ -1,5 +1,5 @@
 Campaign Type,Strategic Pillars,Revenue Play,Fiscal Year,Quarter/Month,Region,Country,Impacted Regions,Owner,Description,Forecasted Cost,Expected Leads
-Exec Engagement Programs,"Pipeline Acceleration & Executive Engagement, New Logo Acquisition",Accelerate developer productivity with Copilot in VS Code and GitHub,FY24,Q3 - January,North Asia,Japan,,John Doe,Executive briefing on AI,45000,50
-Webinars,"Brand Awareness & Top of Funnel Demand Generation",Secure all developer workloads with the power of AI,FY24,Q3 - February,South Asia,Singapore,,Jane Smith,Security webinar series,20000,120
-Localized Events,"Account Growth and Product Adoption, Pipeline Acceleration & Executive Engagement",All,FY24,Q3 - March,SAARC,India,,Michael Johnson,Technical roadshow,35000,80
-Targeted Paid Ads & Content Syndication,"Brand Awareness & Top of Funnel Demand Generation, New Logo Acquisition",Secure all developer workloads with the power of AI,FY24,Q4 - April,Digital,"X Apac","North Asia, South Asia, SAARC",Emily Brown,Regional digital campaign,75000,250
+In-Account Events (1:1),"Account Growth and Product Adoption, Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY24,Q1 - July,SAARC,India,,John Doe,Example campaign,10000,100
+Webinars,Brand Awareness & Top of Funnel Demand Generation,Secure all developer workloads with the power of AI,FY24,Q2 - October,North Asia,Japan,,Jane Smith,Example webinar,5000,200
+Flagship Events (Galaxy, Universe Recaps) (1:Many),New Logo Acquisition,All,FY24,Q3 - January,South Asia,Singapore,,Michael Johnson,Example flagship event,25000,300
+Targeted Paid Ads & Content Syndication,"Brand Awareness & Top of Funnel Demand Generation, New Logo Acquisition",Accelerate developer productivity with Copilot in VS Code and GitHub,FY24,Q4 - April,Digital,"X Apac","SAARC, North Asia, South Asia",Emily Brown,Digital campaign,15000,500

@@ -226,7 +226,7 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <a href="/campaign_template.csv" download>
+          <a href="/campaign_template.csv" download="campaign_template.csv">
             <Button variant="ghost" size="sm" className="flex items-center gap-2">
               <Download className="h-4 w-4" />
               Download Template
