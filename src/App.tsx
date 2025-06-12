@@ -31,6 +31,8 @@ function App() {
   // Form state
   const [campaignOwner, setCampaignOwner] = useState("")
   const [programType, setProgramType] = useState("_none")
+  const [campaignType, setCampaignType] = useState("_none")
+  const [country, setCountry] = useState("_none")
   const [strategicPillars, setStrategicPillars] = useState<string[]>([])
   const [revenuePlay, setRevenuePlay] = useState("_none")
   const [forecastedCost, setForecastedCost] = useState<number | "">("")
@@ -68,6 +70,54 @@ function App() {
   const revenuePlays = ["New Business", "Cross-sell", "Upsell", "Renewal", "Reactivation"]
   const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"]
   const regions = ["SAARC", "North Asia", "South Asia"]
+  
+  // Campaign types
+  const campaignTypes = [
+    "In-Account Events (1:1)",
+    "Exec Engagement Programs",
+    "CxO Events (1:Few)",
+    "Localized Events",
+    "Localized Programs",
+    "Lunch & Learns and Workshops (1:Few)",
+    "Microsoft",
+    "Partners",
+    "Webinars",
+    "3P Sponsored Events",
+    "Flagship Events (Galaxy, Universe Recaps) (1:Many)",
+    "Targeted Paid Ads & Content Syndication",
+    "User Groups",
+    "Contractor/Infrastructure"
+  ]
+  
+  // Countries (sorted alphabetically)
+  const countries = [
+    "Afghanistan",
+    "Australia",
+    "Bangladesh",
+    "Bhutan",
+    "Brunei",
+    "Cambodia",
+    "China",
+    "Hong Kong",
+    "India",
+    "Indonesia",
+    "Japan",
+    "Laos",
+    "Malaysia",
+    "Maldives",
+    "Myanmar",
+    "Nepal",
+    "New Zealand",
+    "Pakistan",
+    "Philippines",
+    "Singapore",
+    "South Korea",
+    "Sri Lanka",
+    "Taiwan",
+    "Thailand",
+    "Vietnam",
+    "X Apac"
+  ]
 
   // Generate a simple ID for programs
   const generateId = () => {
@@ -181,6 +231,8 @@ function App() {
   const resetForm = () => {
     setCampaignOwner("");
     setProgramType("_none");
+    setCampaignType("_none");
+    setCountry("_none");
     setStrategicPillars([]);
     setRevenuePlay("_none");
     setForecastedCost("");
@@ -306,6 +358,38 @@ function App() {
                       <SelectItem value="_none">Select type</SelectItem>
                       {programTypes.map(type => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Campaign Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-type">Campaign Type</Label>
+                  <Select value={campaignType} onValueChange={setCampaignType}>
+                    <SelectTrigger id="campaign-type" className="w-full">
+                      <SelectValue placeholder="Select campaign type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Select campaign type</SelectItem>
+                      {campaignTypes.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Country */}
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Select value={country} onValueChange={setCountry}>
+                    <SelectTrigger id="country" className="w-full">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Select country</SelectItem>
+                      {countries.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
