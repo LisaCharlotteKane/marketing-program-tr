@@ -20,9 +20,9 @@ import {
 
 export function ReportingDashboard() {
   // Filter states
-  const [selectedRegion, setSelectedRegion] = useState("")
-  const [selectedCountry, setSelectedCountry] = useState("")
-  const [selectedQuarter, setSelectedQuarter] = useState("")
+  const [selectedRegion, setSelectedRegion] = useState("_all")
+  const [selectedCountry, setSelectedCountry] = useState("_all")
+  const [selectedQuarter, setSelectedQuarter] = useState("_all")
   const [availableCountries, setAvailableCountries] = useState([])
   
   // Data states
@@ -41,10 +41,10 @@ export function ReportingDashboard() {
 
   // Update available countries when region changes
   useEffect(() => {
-    if (selectedRegion) {
+    if (selectedRegion && selectedRegion !== "_all") {
       setAvailableCountries(getCountriesByRegion(selectedRegion))
       // Reset country selection when region changes
-      setSelectedCountry("")
+      setSelectedCountry("_all")
     } else {
       setAvailableCountries([])
     }
@@ -74,9 +74,9 @@ export function ReportingDashboard() {
 
   // Reset all filters
   const resetFilters = () => {
-    setSelectedRegion("")
-    setSelectedCountry("")
-    setSelectedQuarter("")
+    setSelectedRegion("_all")
+    setSelectedCountry("_all")
+    setSelectedQuarter("_all")
   }
 
   // Handle export to CSV
@@ -104,7 +104,7 @@ export function ReportingDashboard() {
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="_all">All Regions</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
@@ -118,13 +118,13 @@ export function ReportingDashboard() {
               <Select 
                 value={selectedCountry} 
                 onValueChange={setSelectedCountry}
-                disabled={!selectedRegion}
+                disabled={selectedRegion === "_all"}
               >
                 <SelectTrigger id="filter-country">
-                  <SelectValue placeholder={selectedRegion ? "All Countries" : "Select a region first"} />
+                  <SelectValue placeholder={selectedRegion !== "_all" ? "All Countries" : "Select a region first"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Countries</SelectItem>
+                  <SelectItem value="_all">All Countries</SelectItem>
                   {availableCountries.map(country => (
                     <SelectItem key={country} value={country}>{country}</SelectItem>
                   ))}
@@ -140,7 +140,7 @@ export function ReportingDashboard() {
                   <SelectValue placeholder="All Quarters" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Quarters</SelectItem>
+                  <SelectItem value="_all">All Quarters</SelectItem>
                   {quarters.map(quarter => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
@@ -169,20 +169,20 @@ export function ReportingDashboard() {
           </div>
 
           {/* Applied Filters */}
-          {(selectedRegion || selectedCountry || selectedQuarter) && (
+          {(selectedRegion !== "_all" || selectedCountry !== "_all" || selectedQuarter !== "_all") && (
             <div className="flex flex-wrap gap-2 mt-4">
               <div className="text-sm text-muted-foreground mr-1">Applied filters:</div>
-              {selectedRegion && (
+              {selectedRegion !== "_all" && (
                 <Badge variant="outline" className="text-xs">
                   Region: {selectedRegion}
                 </Badge>
               )}
-              {selectedCountry && (
+              {selectedCountry !== "_all" && (
                 <Badge variant="outline" className="text-xs">
                   Country: {selectedCountry}
                 </Badge>
               )}
-              {selectedQuarter && (
+              {selectedQuarter !== "_all" && (
                 <Badge variant="outline" className="text-xs">
                   Quarter: {selectedQuarter}
                 </Badge>
@@ -353,7 +353,7 @@ export function ReportingDashboard() {
             <ChartBar className="h-5 w-5" /> Campaign List
           </CardTitle>
           <CardDescription>
-            Showing {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} {(selectedRegion || selectedCountry || selectedQuarter) ? 'matching your filters' : ''}
+            Showing {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} {(selectedRegion !== "_all" || selectedCountry !== "_all" || selectedQuarter !== "_all") ? 'matching your filters' : ''}
           </CardDescription>
         </CardHeader>
 

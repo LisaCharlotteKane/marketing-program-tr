@@ -30,14 +30,14 @@ interface RegionalBudgets {
 function App() {
   // Form state
   const [campaignOwner, setCampaignOwner] = useState("")
-  const [programType, setProgramType] = useState("")
+  const [programType, setProgramType] = useState("_none")
   const [strategicPillars, setStrategicPillars] = useState<string[]>([])
-  const [revenuePlay, setRevenuePlay] = useState("")
+  const [revenuePlay, setRevenuePlay] = useState("_none")
   const [forecastedCost, setForecastedCost] = useState<number | "">("")
   const [expectedLeads, setExpectedLeads] = useState<number | "">("")
   
   // Region selection
-  const [selectedRegion, setSelectedRegion] = useState("")
+  const [selectedRegion, setSelectedRegion] = useState("_all")
 
   // Calculated metrics
   const [mql, setMql] = useState(0)
@@ -46,7 +46,7 @@ function App() {
   const [pipeline, setPipeline] = useState(0)
   
   // Execution tracking state
-  const [status, setStatus] = useState("")
+  const [status, setStatus] = useState("_none")
   const [poRaised, setPoRaised] = useState(false)
   const [campaignCode, setCampaignCode] = useState("")
   const [issueLink, setIssueLink] = useState("")
@@ -180,12 +180,12 @@ function App() {
   // Reset form for new program
   const resetForm = () => {
     setCampaignOwner("");
-    setProgramType("");
+    setProgramType("_none");
     setStrategicPillars([]);
-    setRevenuePlay("");
+    setRevenuePlay("_none");
     setForecastedCost("");
     setExpectedLeads("");
-    setStatus("");
+    setStatus("_none");
     setPoRaised(false);
     setCampaignCode("");
     setIssueLink("");
@@ -276,6 +276,7 @@ function App() {
                       <SelectValue placeholder="Select region" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="_all">All Regions</SelectItem>
                       {regions.map(region => (
                         <SelectItem key={region} value={region}>{region}</SelectItem>
                       ))}
@@ -302,6 +303,7 @@ function App() {
                       <SelectValue placeholder="Select program type" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="_none">Select type</SelectItem>
                       {programTypes.map(type => (
                         <SelectItem key={type} value={type}>{type}</SelectItem>
                       ))}
@@ -343,6 +345,7 @@ function App() {
                       <SelectValue placeholder="Select revenue play" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="_none">Select play</SelectItem>
                       {revenuePlays.map(play => (
                         <SelectItem key={play} value={play}>{play}</SelectItem>
                       ))}
@@ -438,6 +441,7 @@ function App() {
                       <SelectValue placeholder="Select campaign status" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="_none">Select status</SelectItem>
                       {statusOptions.map(option => (
                         <SelectItem key={option} value={option}>{option}</SelectItem>
                       ))}
