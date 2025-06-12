@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ROIDashboard } from "@/components/roi-dashboard";
+import { CSVUploader } from "@/components/csv-uploader";
 import { 
   PlusCircle, 
   Trash, 
@@ -292,6 +293,13 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
           </Button>
         </div>
       </div>
+
+      {/* CSV Uploader */}
+      <CSVUploader 
+        onCampaignsImported={(importedCampaigns) => {
+          setCampaigns((prevCampaigns) => [...prevCampaigns, ...importedCampaigns]);
+        }} 
+      />
 
       <div className="space-y-6">
         <div className="rounded-md border">

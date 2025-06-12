@@ -61,6 +61,11 @@
    - Why: Enable proper tracking and attribution of campaigns that span multiple regions
    - Success: Digital campaigns can be properly budgeted and their impact across regions can be tracked
 
+9. **CSV Data Import**
+   - What: Ability to upload campaign data via CSV file with validation and error reporting
+   - Why: Enable bulk import of campaign data from external sources or planning documents
+   - Success: Users can successfully import multiple campaigns at once with proper validation
+
 ## Design Direction
 
 ### Visual Tone & Identity
@@ -131,10 +136,10 @@
   - Responsive design for all screen sizes
 
 ### UI Elements & Component Selection
-- **Component Usage**: Table components for campaign planning; Form components (Select, Input, Switch) for cell editing; Tabs for separating planning, execution, and reporting sections
+- **Component Usage**: Table components for campaign planning; Form components (Select, Input, Switch) for cell editing; Tabs for separating planning, execution, and reporting sections; CSV uploader for bulk data import
 - **Component Customization**: Compact design for table cells, clear section headings
 - **Component States**: Clear hover and focus states for interactive elements
-- **Icon Selection**: Table, add/remove, chart, and status icons where appropriate
+- **Icon Selection**: Table, add/remove, chart, upload/download, and status icons where appropriate
 - **Component Hierarchy**: Campaign table primary, budget management secondary, reporting dashboard tertiary
 - **Spacing System**: Tighter spacing within table cells, consistent padding for sections
 - **Mobile Adaptation**: Horizontal scrolling for tables, responsive charts and filters
@@ -157,8 +162,8 @@
 
 ## Implementation Considerations
 - **Scalability Needs**: Potential to handle hundreds of campaign entries, additional columns, and more complex filtering
-- **Testing Focus**: Validate table interactions, calculation accuracy, data export functionality
-- **Critical Questions**: Does the table format make data entry more efficient? Are all important fields accessible? Does the export functionality capture all relevant data?
+- **Testing Focus**: Validate table interactions, calculation accuracy, data export/import functionality
+- **Critical Questions**: Does the table format make data entry more efficient? Are all important fields accessible? Does the export/import functionality capture all relevant data? How robust is the CSV validation?
 
 ## Reflection
 - This table-based approach provides a more spreadsheet-like experience that marketing teams will find familiar and efficient.
