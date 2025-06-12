@@ -23,7 +23,7 @@
 ## Essential Features
 1. **Input Form**
    - What: Form with text input, dropdown, multi-select, and numeric inputs
-   - Why: Capture necessary campaign parameters including campaign owner
+   - Why: Capture necessary campaign parameters including campaign owner, campaign type, country, strategic pillars, and revenue play
    - Success: All inputs function properly with appropriate validation
 
 2. **Live Calculations**

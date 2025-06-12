@@ -30,7 +30,6 @@ interface RegionalBudgets {
 function App() {
   // Form state
   const [campaignOwner, setCampaignOwner] = useState("")
-  const [programType, setProgramType] = useState("_none")
   const [campaignType, setCampaignType] = useState("_none")
   const [country, setCountry] = useState("_none")
   const [strategicPillars, setStrategicPillars] = useState<string[]>([])
@@ -65,7 +64,6 @@ function App() {
   const [programId, setProgramId] = useState<string>("")
 
   // Preset data
-  const programTypes = ["Event", "Webinar", "Content", "Email", "Social", "Paid Media", "Partner"]
   const pillars = [
     "Account Growth and Product Adoption",
     "Pipeline Acceleration & Executive Engagement",
@@ -235,7 +233,6 @@ function App() {
   // Reset form for new program
   const resetForm = () => {
     setCampaignOwner("");
-    setProgramType("_none");
     setCampaignType("_none");
     setCountry("_none");
     setStrategicPillars([]);
@@ -350,22 +347,6 @@ function App() {
                     value={campaignOwner}
                     onChange={(e) => setCampaignOwner(e.target.value)}
                   />
-                </div>
-
-                {/* Program Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="program-type">Program Type</Label>
-                  <Select value={programType} onValueChange={setProgramType}>
-                    <SelectTrigger id="program-type" className="w-full">
-                      <SelectValue placeholder="Select program type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Select type</SelectItem>
-                      {programTypes.map(type => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 {/* Campaign Type */}
