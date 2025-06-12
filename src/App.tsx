@@ -150,6 +150,22 @@ function App() {
       maximumFractionDigits: 0
     }).format(value)
   }
+  
+  // Handle numeric input changes
+  const handleNumericChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: React.Dispatch<React.SetStateAction<number | "">>
+  ) => {
+    const value = e.target.value;
+    if (value === "") {
+      setter("");
+    } else {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue >= 0) {
+        setter(numValue);
+      }
+    }
+  };
 
   // Calculate budget metrics for a region
   const calculateRegionalMetrics = (region: string) => {

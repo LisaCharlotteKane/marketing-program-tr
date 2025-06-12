@@ -51,6 +51,11 @@
    - Why: Enable analysis of aggregated campaign data for better decision making
    - Success: Users can filter data by region, country, and quarter to gain actionable insights
 
+7. **ROI Dashboard**
+   - What: Visual dashboard showing ROI metrics, funnel progression, and performance indicators based on campaign table data
+   - Why: Provide at-a-glance insight into campaign effectiveness and return on investment
+   - Success: Accurate ROI calculation and visualization that updates dynamically with campaign changes
+
 ## Design Direction
 
 ### Visual Tone & Identity
@@ -104,11 +109,13 @@
 - **Contextual Appropriateness**: Minimal animations to maintain professional feel
 
 ### Data Visualization
-- **Chart Types**: Bar charts for cost comparison and budget visualization, line charts for trend analysis
-- **Chart Purpose**: Visual representation of forecasted vs. actual costs, budget allocation, and performance metrics across regions
+- **Chart Types**: Bar charts for cost comparison and budget visualization, line charts for trend analysis, ROI gauge
+- **Chart Purpose**: Visual representation of forecasted vs. actual costs, budget allocation, ROI metrics, and performance metrics across regions
 - **Chart Styling**: Consistent color scheme with the application
 - **Chart Interactivity**: Hover tooltips to show exact values, filter controls to refine data view
 - **Dashboard Visualization**: Filterable charts showing aggregate data by region, country, and time period
+- **ROI Visualization**: Gauge chart showing ROI percentage with color-coded indicators for performance levels
+- **Lead Funnel Visualization**: Bar chart showing progression from leads to MQLs to SQLs to opportunities
 - **Budget Visualization**: Progress bars to show percentage of budget utilized with clear warning indicators
 - **Reporting Features**: 
   - Filters for region, country, and quarter

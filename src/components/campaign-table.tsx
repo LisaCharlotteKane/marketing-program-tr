@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ROIDashboard } from "@/components/roi-dashboard";
 import { 
   PlusCircle, 
   Trash, 
   Download,
   Check,
-  CheckCircle
+  CheckCircle,
+  ChartLineUp
 } from "@phosphor-icons/react";
 
 // Type definitions
@@ -269,298 +271,311 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
         </div>
       </div>
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Campaign Type</TableHead>
-              <TableHead>Strategic Pillars</TableHead>
-              <TableHead>Revenue Play</TableHead>
-              <TableHead>FY</TableHead>
-              <TableHead>Quarter/Month</TableHead>
-              <TableHead>Region</TableHead>
-              <TableHead>Country</TableHead>
-              <TableHead>Owner</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Forecasted Cost</TableHead>
-              <TableHead>Expected Leads</TableHead>
-              <TableHead>MQLs (10%)</TableHead>
-              <TableHead>SQLs (6%)</TableHead>
-              <TableHead>Opportunities</TableHead>
-              <TableHead>Pipeline Forecast</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {campaigns.length === 0 ? (
+      <div className="space-y-6">
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={16} className="text-center py-6 text-muted-foreground">
-                  No campaigns added. Click "Add Campaign" to create one.
-                </TableCell>
+                <TableHead>Campaign Type</TableHead>
+                <TableHead>Strategic Pillars</TableHead>
+                <TableHead>Revenue Play</TableHead>
+                <TableHead>FY</TableHead>
+                <TableHead>Quarter/Month</TableHead>
+                <TableHead>Region</TableHead>
+                <TableHead>Country</TableHead>
+                <TableHead>Owner</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Forecasted Cost</TableHead>
+                <TableHead>Expected Leads</TableHead>
+                <TableHead>MQLs (10%)</TableHead>
+                <TableHead>SQLs (6%)</TableHead>
+                <TableHead>Opportunities</TableHead>
+                <TableHead>Pipeline Forecast</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
-            ) : (
-              campaigns.map((campaign) => (
-                <TableRow key={campaign.id}>
-                  {/* Campaign Type */}
-                  <TableCell>
-                    <Select
-                      value={campaign.campaignType}
-                      onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {campaignTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-
-                  {/* Strategic Pillars - Multi-select */}
-                  <TableCell>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          className="w-[180px] justify-start text-left font-normal"
-                          size="sm"
-                        >
-                          {campaign.strategicPillars.length > 0 
-                            ? `${campaign.strategicPillars.length} selected`
-                            : "Select pillars"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[220px] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Search pillars..." />
-                          <CommandEmpty>No results found.</CommandEmpty>
-                          <CommandGroup>
-                            {pillars.map((pillar) => (
-                              <CommandItem
-                                key={pillar}
-                                onSelect={() => togglePillar(campaign.id, pillar)}
-                                className="flex items-center gap-2"
-                              >
-                                <Checkbox 
-                                  checked={campaign.strategicPillars.includes(pillar)}
-                                  className="mr-2"
-                                />
-                                <span>{pillar}</span>
-                                {campaign.strategicPillars.includes(pillar) && (
-                                  <Check className="h-4 w-4 ml-auto" />
-                                )}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    {campaign.strategicPillars.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {campaign.strategicPillars.map((pillar) => (
-                          <Badge key={pillar} variant="outline" className="text-xs px-1 py-0">
-                            {pillar.substring(0, 15)}...
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </TableCell>
-
-                  {/* Revenue Play */}
-                  <TableCell>
-                    <Select
-                      value={campaign.revenuePlay}
-                      onValueChange={(value) => updateCampaign(campaign.id, 'revenuePlay', value)}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select play" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {revenuePlays.map((play) => (
-                          <SelectItem key={play} value={play} className="whitespace-normal py-2">
-                            {play}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-
-                  {/* Fiscal Year */}
-                  <TableCell>
-                    <Select
-                      value={campaign.fiscalYear}
-                      onValueChange={(value) => updateCampaign(campaign.id, 'fiscalYear', value)}
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue placeholder="FY" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {fiscalYears.map((year) => (
-                          <SelectItem key={year} value={year}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-
-                  {/* Quarter/Month */}
-                  <TableCell>
-                    <Select
-                      value={campaign.quarterMonth}
-                      onValueChange={(value) => updateCampaign(campaign.id, 'quarterMonth', value)}
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {quarters.map((quarter) => (
-                          <SelectItem key={quarter} value={quarter}>
-                            {quarter}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-
-                  {/* Region */}
-                  <TableCell>
-                    <Select
-                      value={campaign.region}
-                      onValueChange={(value) => updateCampaign(campaign.id, 'region', value)}
-                    >
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Region" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {regions.map((region) => (
-                          <SelectItem key={region} value={region}>
-                            {region}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-
-                  {/* Country */}
-                  <TableCell>
-                    <Select
-                      value={campaign.country}
-                      onValueChange={(value) => updateCampaign(campaign.id, 'country', value)}
-                    >
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Country" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {countries.map((country) => (
-                          <SelectItem key={country} value={country}>
-                            {country}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-
-                  {/* Owner */}
-                  <TableCell>
-                    <Select
-                      value={campaign.owner}
-                      onValueChange={(value) => updateCampaign(campaign.id, 'owner', value)}
-                    >
-                      <SelectTrigger className="w-[120px]">
-                        <SelectValue placeholder="Owner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {owners.map((owner) => (
-                          <SelectItem key={owner} value={owner}>
-                            {owner}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-
-                  {/* Description */}
-                  <TableCell>
-                    <Input
-                      value={campaign.description}
-                      onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
-                      placeholder="Brief description"
-                      className="w-[180px]"
-                    />
-                  </TableCell>
-
-                  {/* Forecasted Cost */}
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={campaign.forecastedCost === "" ? "" : campaign.forecastedCost}
-                      onChange={(e) => handleNumericChange(campaign.id, 'forecastedCost', e.target.value)}
-                      placeholder="USD"
-                      className="w-[100px]"
-                    />
-                  </TableCell>
-
-                  {/* Expected Leads */}
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={campaign.expectedLeads === "" ? "" : campaign.expectedLeads}
-                      onChange={(e) => handleNumericChange(campaign.id, 'expectedLeads', e.target.value)}
-                      placeholder="#"
-                      className="w-[80px]"
-                    />
-                  </TableCell>
-
-                  {/* Calculated fields (read-only) */}
-                  <TableCell className="text-muted-foreground">
-                    {campaign.mql || 0}
-                  </TableCell>
-                  
-                  <TableCell className="text-muted-foreground">
-                    {campaign.sql || 0}
-                  </TableCell>
-                  
-                  <TableCell className="text-muted-foreground">
-                    {campaign.opportunities || 0}
-                  </TableCell>
-                  
-                  <TableCell className="font-medium">
-                    {campaign.pipelineForecast ? formatCurrency(campaign.pipelineForecast) : "$0"}
-                  </TableCell>
-
-                  {/* Actions */}
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeCampaign(campaign.id)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
+            </TableHeader>
+            <TableBody>
+              {campaigns.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={16} className="text-center py-6 text-muted-foreground">
+                    No campaigns added. Click "Add Campaign" to create one.
                   </TableCell>
                 </TableRow>
-              ))
+              ) : (
+                campaigns.map((campaign) => (
+                  <TableRow key={campaign.id}>
+                    {/* Campaign Type */}
+                    <TableCell>
+                      <Select
+                        value={campaign.campaignType}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {campaignTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+
+                    {/* Strategic Pillars - Multi-select */}
+                    <TableCell>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className="w-[180px] justify-start text-left font-normal"
+                            size="sm"
+                          >
+                            {campaign.strategicPillars.length > 0 
+                              ? `${campaign.strategicPillars.length} selected`
+                              : "Select pillars"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[220px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search pillars..." />
+                            <CommandEmpty>No results found.</CommandEmpty>
+                            <CommandGroup>
+                              {pillars.map((pillar) => (
+                                <CommandItem
+                                  key={pillar}
+                                  onSelect={() => togglePillar(campaign.id, pillar)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Checkbox 
+                                    checked={campaign.strategicPillars.includes(pillar)}
+                                    className="mr-2"
+                                  />
+                                  <span>{pillar}</span>
+                                  {campaign.strategicPillars.includes(pillar) && (
+                                    <Check className="h-4 w-4 ml-auto" />
+                                  )}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      {campaign.strategicPillars.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {campaign.strategicPillars.map((pillar) => (
+                            <Badge key={pillar} variant="outline" className="text-xs px-1 py-0">
+                              {pillar.substring(0, 15)}...
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </TableCell>
+
+                    {/* Revenue Play */}
+                    <TableCell>
+                      <Select
+                        value={campaign.revenuePlay}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'revenuePlay', value)}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Select play" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {revenuePlays.map((play) => (
+                            <SelectItem key={play} value={play} className="whitespace-normal py-2">
+                              {play}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+
+                    {/* Fiscal Year */}
+                    <TableCell>
+                      <Select
+                        value={campaign.fiscalYear}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'fiscalYear', value)}
+                      >
+                        <SelectTrigger className="w-[100px]">
+                          <SelectValue placeholder="FY" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fiscalYears.map((year) => (
+                            <SelectItem key={year} value={year}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+
+                    {/* Quarter/Month */}
+                    <TableCell>
+                      <Select
+                        value={campaign.quarterMonth}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'quarterMonth', value)}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {quarters.map((quarter) => (
+                            <SelectItem key={quarter} value={quarter}>
+                              {quarter}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+
+                    {/* Region */}
+                    <TableCell>
+                      <Select
+                        value={campaign.region}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'region', value)}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Region" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {regions.map((region) => (
+                            <SelectItem key={region} value={region}>
+                              {region}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+
+                    {/* Country */}
+                    <TableCell>
+                      <Select
+                        value={campaign.country}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'country', value)}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countries.map((country) => (
+                            <SelectItem key={country} value={country}>
+                              {country}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+
+                    {/* Owner */}
+                    <TableCell>
+                      <Select
+                        value={campaign.owner}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'owner', value)}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue placeholder="Owner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {owners.map((owner) => (
+                            <SelectItem key={owner} value={owner}>
+                              {owner}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+
+                    {/* Description */}
+                    <TableCell>
+                      <Input
+                        value={campaign.description}
+                        onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
+                        placeholder="Brief description"
+                        className="w-[180px]"
+                      />
+                    </TableCell>
+
+                    {/* Forecasted Cost */}
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={campaign.forecastedCost === "" ? "" : campaign.forecastedCost}
+                        onChange={(e) => handleNumericChange(campaign.id, 'forecastedCost', e.target.value)}
+                        placeholder="USD"
+                        className="w-[100px]"
+                      />
+                    </TableCell>
+
+                    {/* Expected Leads */}
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={campaign.expectedLeads === "" ? "" : campaign.expectedLeads}
+                        onChange={(e) => handleNumericChange(campaign.id, 'expectedLeads', e.target.value)}
+                        placeholder="#"
+                        className="w-[80px]"
+                      />
+                    </TableCell>
+
+                    {/* Calculated fields (read-only) */}
+                    <TableCell className="text-muted-foreground">
+                      {campaign.mql || 0}
+                    </TableCell>
+                    
+                    <TableCell className="text-muted-foreground">
+                      {campaign.sql || 0}
+                    </TableCell>
+                    
+                    <TableCell className="text-muted-foreground">
+                      {campaign.opportunities || 0}
+                    </TableCell>
+                    
+                    <TableCell className="font-medium">
+                      {campaign.pipelineForecast ? formatCurrency(campaign.pipelineForecast) : "$0"}
+                    </TableCell>
+
+                    {/* Actions */}
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeCampaign(campaign.id)}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+            {campaigns.length > 0 && (
+              <TableFooter>
+                <TableRow>
+                  <TableCell colSpan={9} className="text-right font-medium">
+                    Total Forecasted Cost:
+                  </TableCell>
+                  <TableCell className="font-bold">
+                    {formatCurrency(totalForecastedCost)}
+                  </TableCell>
+                  <TableCell colSpan={6}></TableCell>
+                </TableRow>
+              </TableFooter>
             )}
-          </TableBody>
-          {campaigns.length > 0 && (
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={9} className="text-right font-medium">
-                  Total Forecasted Cost:
-                </TableCell>
-                <TableCell className="font-bold">
-                  {formatCurrency(totalForecastedCost)}
-                </TableCell>
-                <TableCell colSpan={6}></TableCell>
-              </TableRow>
-            </TableFooter>
-          )}
-        </Table>
+          </Table>
+        </div>
+
+        {/* ROI Dashboard */}
+        {campaigns.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-4 text-lg font-semibold">
+              <ChartLineUp className="h-5 w-5" />
+              ROI & Performance Dashboard
+            </div>
+            <ROIDashboard campaigns={campaigns} />
+          </div>
+        )}
       </div>
     </div>
   );
