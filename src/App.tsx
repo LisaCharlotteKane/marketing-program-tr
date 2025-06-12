@@ -66,7 +66,12 @@ function App() {
 
   // Preset data
   const programTypes = ["Event", "Webinar", "Content", "Email", "Social", "Paid Media", "Partner"]
-  const pillars = ["Customer Acquisition", "Customer Retention", "Brand Awareness", "Market Expansion", "Product Launch"]
+  const pillars = [
+    "Account Growth and Product Adoption",
+    "Pipeline Acceleration & Executive Engagement",
+    "Brand Awareness & Top of Funnel Demand Generation",
+    "New Logo Acquisition"
+  ]
   const revenuePlays = ["New Business", "Cross-sell", "Upsell", "Renewal", "Reactivation"]
   const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"]
   const regions = ["SAARC", "North Asia", "South Asia"]
@@ -398,15 +403,16 @@ function App() {
                 {/* Strategic Pillar */}
                 <div className="space-y-2">
                   <Label>Strategic Pillar (select multiple)</Label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                  <div className="grid grid-cols-1 gap-3 pt-1">
                     {pillars.map(pillar => (
-                      <div key={pillar} className="flex items-center space-x-2">
+                      <div key={pillar} className="flex items-start space-x-2">
                         <Checkbox 
                           id={`pillar-${pillar}`} 
                           checked={strategicPillars.includes(pillar)}
                           onCheckedChange={() => togglePillar(pillar)}
+                          className="mt-0.5"
                         />
-                        <Label htmlFor={`pillar-${pillar}`} className="font-normal cursor-pointer">{pillar}</Label>
+                        <Label htmlFor={`pillar-${pillar}`} className="font-normal cursor-pointer text-sm">{pillar}</Label>
                       </div>
                     ))}
                   </div>
