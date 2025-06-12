@@ -9,8 +9,9 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart } from "@phosphor-icons/react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { ReportingDashboard } from "@/components/reporting-dashboard"
 
 // Type definitions for regional budget tracking
 interface RegionalBudget {
@@ -242,7 +243,7 @@ function App() {
         </header>
 
         <Tabs defaultValue="planning" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-4 mb-4">
             <TabsTrigger value="planning" className="flex items-center gap-2">
               <Calculator className="h-4 w-4" /> Planning
             </TabsTrigger>
@@ -251,6 +252,9 @@ function App() {
             </TabsTrigger>
             <TabsTrigger value="budget" className="flex items-center gap-2">
               <Buildings className="h-4 w-4" /> Budget Management
+            </TabsTrigger>
+            <TabsTrigger value="reporting" className="flex items-center gap-2">
+              <PresentationChart className="h-4 w-4" /> Reporting
             </TabsTrigger>
           </TabsList>
 
@@ -719,6 +723,10 @@ function App() {
                 })}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="reporting" className="space-y-6">
+            <ReportingDashboard />
           </TabsContent>
         </Tabs>
       </div>

@@ -1,23 +1,24 @@
 # Marketing Campaign Calculator PRD
 
 ## Core Purpose & Success
-- **Mission Statement**: A real-time calculator for marketing teams to forecast campaign performance metrics and financial outcomes, with execution tracking.
-- **Success Indicators**: Accurate calculations, intuitive form inputs, clear visualization of results, and effective tracking of campaign execution.
+- **Mission Statement**: A real-time calculator for marketing teams to forecast campaign performance metrics and financial outcomes, with execution tracking and data-driven reporting.
+- **Success Indicators**: Accurate calculations, intuitive form inputs, clear visualization of results, effective tracking of campaign execution, and comprehensive reporting dashboards.
 - **Experience Qualities**: Efficient, Professional, Responsive
 
 ## Project Classification & Approach
-- **Complexity Level**: Light Application (form with real-time calculations and status tracking)
-- **Primary User Activity**: Creating and Tracking (inputting data to generate forecasts and updating execution status)
+- **Complexity Level**: Light Application (form with real-time calculations, status tracking, and reporting)
+- **Primary User Activity**: Creating, Tracking, and Analyzing (inputting data, updating status, and reviewing performance)
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Marketing teams need to quickly estimate campaign performance metrics and track execution status throughout the campaign lifecycle.
-- **User Context**: Users will engage with this tool during campaign planning, budget meetings, and execution reviews.
-- **Critical Path**: Select region → Assign budget → Select campaign parameters → Input forecasted values → View calculated metrics → Update execution status → Monitor budget utilization
+- **Core Problem Analysis**: Marketing teams need to quickly estimate campaign performance metrics, track execution status, and analyze aggregate data across regions and time periods.
+- **User Context**: Users will engage with this tool during campaign planning, budget meetings, execution reviews, and quarterly performance reporting.
+- **Critical Path**: Select region → Assign budget → Select campaign parameters → Input forecasted values → View calculated metrics → Update execution status → Monitor budget utilization → Generate reports
 - **Key Moments**: 
   1. Selecting all required campaign parameters
   2. Viewing the real-time calculation of derived metrics
   3. Seeing the financial impact (pipeline value)
   4. Updating campaign execution status and details
+  5. Analyzing filtered data across multiple campaigns
 
 ## Essential Features
 1. **Input Form**
@@ -44,6 +45,11 @@
    - What: Regional budget tracking and comparison against forecasted and actual costs
    - Why: Enable financial oversight and budget adherence across regions
    - Success: Clear visual indicators when budgets are exceeded with appropriate alerts
+
+6. **Reporting Dashboard**
+   - What: Filterable dashboard with visualizations and summary metrics across campaigns
+   - Why: Enable analysis of aggregated campaign data for better decision making
+   - Success: Users can filter data by region, country, and quarter to gain actionable insights
 
 ## Design Direction
 
@@ -79,11 +85,11 @@
 - **Legibility Check**: Inter provides excellent legibility at all sizes
 
 ### Visual Hierarchy & Layout
-- **Attention Direction**: Form on top, results highlighted below, budget status prominently displayed
+- **Attention Direction**: Form on top, results highlighted below, budget status prominently displayed, reporting dashboard with clear visualizations
 - **White Space Philosophy**: Generous spacing for form groups, compact results display
 - **Grid System**: Simple card-based layout with consistent padding
 - **Responsive Approach**: Stack form elements vertically on mobile
-- **Content Density**: Focused density around calculated results and budget visualizations
+- **Content Density**: Focused density around calculated results, budget visualizations, and dashboard reports
 
 ### Animations
 - **Purposeful Meaning**: Subtle transitions when calculation values change
@@ -91,20 +97,28 @@
 - **Contextual Appropriateness**: Minimal animations to maintain professional feel
 
 ### Data Visualization
-- **Chart Types**: Bar charts for cost comparison and budget visualization
-- **Chart Purpose**: Visual representation of forecasted vs. actual costs and budget allocation
+- **Chart Types**: Bar charts for cost comparison and budget visualization, line charts for trend analysis
+- **Chart Purpose**: Visual representation of forecasted vs. actual costs, budget allocation, and performance metrics across regions
 - **Chart Styling**: Consistent color scheme with the application
-- **Chart Interactivity**: Hover tooltips to show exact values
+- **Chart Interactivity**: Hover tooltips to show exact values, filter controls to refine data view
+- **Dashboard Visualization**: Filterable charts showing aggregate data by region, country, and time period
 - **Budget Visualization**: Progress bars to show percentage of budget utilized with clear warning indicators
+- **Reporting Features**: 
+  - Filters for region, country, and quarter
+  - Bar charts comparing forecasted vs. actual costs by region
+  - Bar charts comparing forecasted vs. actual leads, MQLs, and SQLs
+  - Summary metrics panel with key performance indicators
+  - Exportable data in CSV format
+  - Responsive design for all screen sizes
 
 ### UI Elements & Component Selection
-- **Component Usage**: Form components (Select, Input, Switch, Card) for inputs; Card for results; Tabs for separating planning and execution sections
+- **Component Usage**: Form components (Select, Input, Switch, Card) for inputs; Card for results; Tabs for separating planning, execution, and reporting sections
 - **Component Customization**: Rounded corners, subtle shadows
 - **Component States**: Clear hover and focus states for interactive elements
 - **Icon Selection**: Calculator, chart, and status icons where appropriate
-- **Component Hierarchy**: Form card primary, results card secondary, execution tracking card tertiary
+- **Component Hierarchy**: Form card primary, results card secondary, execution tracking card tertiary, reporting dashboard card quaternary
 - **Spacing System**: Consistent 4px-based spacing (p-4, m-2, etc.)
-- **Mobile Adaptation**: Full-width inputs on mobile
+- **Mobile Adaptation**: Full-width inputs on mobile, responsive charts and filters
 
 ### Visual Consistency Framework
 - **Design System Approach**: Component-based design
@@ -116,16 +130,16 @@
 - **Contrast Goal**: WCAG AA compliance for all text elements
 
 ## Edge Cases & Problem Scenarios
-- **Potential Obstacles**: Users entering negative or unrealistic values; tracking status changes over time
-- **Edge Case Handling**: Input validation to ensure positive numbers; clear status indicators
-- **Technical Constraints**: Form needs to handle both text and numeric inputs; URL validation for issue links
+- **Potential Obstacles**: Users entering negative or unrealistic values; tracking status changes over time; filtering with no matching data
+- **Edge Case Handling**: Input validation to ensure positive numbers; clear status indicators; empty state messaging for filtered results
+- **Technical Constraints**: Form needs to handle both text and numeric inputs; URL validation for issue links; export functionality for filtered data
 
 ## Implementation Considerations
-- **Scalability Needs**: Potential to add more calculation fields and execution metrics later
-- **Testing Focus**: Validate calculation accuracy and status transitions
-- **Critical Questions**: Are the calculation formulas accurate to business needs? Do the execution tracking fields cover all necessary information?
+- **Scalability Needs**: Potential to add more calculation fields, execution metrics, and reporting dimensions later
+- **Testing Focus**: Validate calculation accuracy, status transitions, and report filtering logic
+- **Critical Questions**: Are the calculation formulas accurate to business needs? Do the execution tracking fields cover all necessary information? Does the reporting dashboard provide actionable insights?
 
 ## Reflection
-- This approach provides a comprehensive tool that spans the entire campaign lifecycle from planning to execution.
+- This approach provides a comprehensive tool that spans the entire campaign lifecycle from planning to execution to analysis.
 - We assume users understand the terminology, calculation relationships, and execution tracking workflow.
 - Adding the ability to save campaigns, export calculations, and visualize historical performance would make this solution truly exceptional.
