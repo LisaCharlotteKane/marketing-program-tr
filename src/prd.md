@@ -20,8 +20,8 @@
 
 ## Essential Features
 1. **Input Form**
-   - What: Form with dropdown, multi-select, and numeric inputs
-   - Why: Capture necessary campaign parameters
+   - What: Form with text input, dropdown, multi-select, and numeric inputs
+   - Why: Capture necessary campaign parameters including campaign owner
    - Success: All inputs function properly with appropriate validation
 
 2. **Live Calculations**

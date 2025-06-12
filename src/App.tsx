@@ -9,6 +9,7 @@ import { Calculator, ChartLineUp } from "@phosphor-icons/react"
 
 function App() {
   // Form state
+  const [campaignOwner, setCampaignOwner] = useState("")
   const [programType, setProgramType] = useState("")
   const [strategicPillars, setStrategicPillars] = useState<string[]>([])
   const [revenuePlay, setRevenuePlay] = useState("")
@@ -102,6 +103,17 @@ function App() {
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {/* Campaign Owner */}
+            <div className="space-y-2">
+              <Label htmlFor="campaign-owner">Campaign Owner</Label>
+              <Input 
+                id="campaign-owner" 
+                placeholder="Enter owner name" 
+                value={campaignOwner}
+                onChange={(e) => setCampaignOwner(e.target.value)}
+              />
+            </div>
+
             {/* Program Type */}
             <div className="space-y-2">
               <Label htmlFor="program-type">Program Type</Label>
