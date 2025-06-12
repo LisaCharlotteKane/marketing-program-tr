@@ -1,287 +1,287 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Campaign } from "@/components/campaign-table";
-import { InfoCircle, Link } from "@phosphor-icons/react";
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Progress } from "@/components/ui/progress"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table } from "@phosphor-icons/react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import { ReportingDashboard } from "@/components/reporting-dashboard"
+import { CampaignTable, Campaign } from "@/components/campaign-table"
+import { ExecutionTracking } from "@/components/execution-tracking"
 
-interface ExecutionTrackingProps {
-  campaigns: Campaign[];
-  setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>>;
+// Type definitions for regional budget tracking
+interface RegionalBudget {
+  assignedBudget: number | "";
+  programs: {
+    id: string;
+    forecastedCost: number;
+    actualCost: number;
+  }[];
 }
 
-export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTrackingProps) {
-  // Filter states
-  const [selectedRegion, setSelectedRegion] = useState("_all");
-  const [selectedOwner, setSelectedOwner] = useState("_all");
+interface RegionalBudgets {
+  [key: string]: RegionalBudget;
+}
+
+function App() {
+  // Form state
+  const [campaignOwner, setCampaignOwner] = useState("")
+  const [campaignType, setCampaignType] = useState("_none")
+  const [country, setCountry] = useState("_none")
+  const [strategicPillars, setStrategicPillars] = useState<string[]>([])
+  const [revenuePlay, setRevenuePlay] = useState("_none")
+  const [forecastedCost, setForecastedCost] = useState<number | "">("")
+  const [expectedLeads, setExpectedLeads] = useState<number | "">("")
   
-  // Constants
-  const regions = ["SAARC", "North Asia", "South Asia", "Digital"];
-  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
+  // Region selection
+  const [selectedRegion, setSelectedRegion] = useState("_all")
+
+  // Calculated metrics
+  const [mql, setMql] = useState(0)
+  const [sql, setSql] = useState(0)
+  const [opportunities, setOpportunities] = useState(0)
+  const [pipeline, setPipeline] = useState(0)
   
-  // Get unique owners from campaigns
-  const owners = Array.from(new Set(campaigns.map(campaign => campaign.owner))).filter(Boolean);
+  // Execution tracking state
+  const [status, setStatus] = useState("_none")
+  const [poRaised, setPoRaised] = useState(false)
+  const [campaignCode, setCampaignCode] = useState("")
+  const [issueLink, setIssueLink] = useState("")
+  const [actualCost, setActualCost] = useState<number | "">("")
   
+  // Regional budget management
+  const [regionalBudgets, setRegionalBudgets] = useState<RegionalBudgets>({
+    "SAARC": { assignedBudget: "", programs: [] },
+    "North Asia": { assignedBudget: "", programs: [] },
+    "South Asia": { assignedBudget: "", programs: [] },
+    "Digital": { assignedBudget: "", programs: [] }
+  })
+  
+  // Program ID for tracking
+  const [programId, setProgramId] = useState<string>("")
+
+  // Campaign Table Data
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+
+  // Preset data
+  const pillars = [
+    "Account Growth and Product Adoption",
+    "Pipeline Acceleration & Executive Engagement",
+    "Brand Awareness & Top of Funnel Demand Generation",
+    "New Logo Acquisition"
+  ]
+  const revenuePlays = [
+    "Accelerate developer productivity with Copilot in VS Code and GitHub",
+    "Secure all developer workloads with the power of AI",
+    "All"
+  ]
+  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"]
+  const regions = ["SAARC", "North Asia", "South Asia", "Digital"]
+  
+  // Campaign types
+  const campaignTypes = [
+    "In-Account Events (1:1)",
+    "Exec Engagement Programs",
+    "CxO Events (1:Few)",
+    "Localized Events",
+    "Localized Programs",
+    "Lunch & Learns and Workshops (1:Few)",
+    "Microsoft",
+    "Partners",
+    "Webinars",
+    "3P Sponsored Events",
+    "Flagship Events (Galaxy, Universe Recaps) (1:Many)",
+    "Targeted Paid Ads & Content Syndication",
+    "User Groups",
+    "Contractor/Infrastructure"
+  ]
+  
+  // Countries (sorted alphabetically)
+  const countries = [
+    "Afghanistan",
+    "Australia",
+    "Bangladesh",
+    "Bhutan",
+    "Brunei",
+    "Cambodia",
+    "China",
+    "Hong Kong",
+    "India",
+    "Indonesia",
+    "Japan",
+    "Laos",
+    "Malaysia",
+    "Maldives",
+    "Myanmar",
+    "Nepal",
+    "New Zealand",
+    "Pakistan",
+    "Philippines",
+    "Singapore",
+    "South Korea",
+    "Sri Lanka",
+    "Taiwan",
+    "Thailand",
+    "Vietnam",
+    "X Apac"
+  ]
+
+  // Generate a simple ID for programs
+  const generateId = () => {
+    return Math.random().toString(36).substring(2, 9);
+  }
+
+  // Initialize program ID if not set
+  useEffect(() => {
+    if (!programId) {
+      setProgramId(generateId());
+    }
+  }, [programId]);
+
   // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
-    }).format(value);
-  };
+    }).format(value)
+  }
   
   // Handle numeric input changes
   const handleNumericChange = (
-    id: string,
-    field: 'actualCost' | 'actualLeads' | 'actualMQLs',
-    value: string
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: React.Dispatch<React.SetStateAction<number | "">>
   ) => {
+    const value = e.target.value;
     if (value === "") {
-      updateCampaign(id, field, "");
+      setter("");
     } else {
       const numValue = parseFloat(value);
       if (!isNaN(numValue) && numValue >= 0) {
-        updateCampaign(id, field, numValue);
+        setter(numValue);
       }
     }
   };
-  
-  // Update campaign field
-  const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
-    setCampaigns(campaigns.map(campaign => {
-      if (campaign.id === id) {
-        return { ...campaign, [field]: value };
-      }
-      return campaign;
-    }));
-  };
-  
-  // Check if campaign is locked (cancelled or shipped)
-  const isCampaignLocked = (campaign: Campaign) => {
-    return campaign.status === "Cancelled" || campaign.status === "Shipped";
-  };
-  
-  // Filter campaigns by region and owner
-  const filteredCampaigns = campaigns.filter(campaign => {
-    if (selectedRegion !== "_all" && campaign.region !== selectedRegion) {
-      return false;
-    }
-    if (selectedOwner !== "_all" && campaign.owner !== selectedOwner) {
-      return false;
-    }
-    return true;
-  });
-  
-  // Calculate totals
-  const totalForecastedCost = filteredCampaigns.reduce((total, campaign) => {
-    return total + (typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0);
-  }, 0);
-  
-  const totalActualCost = filteredCampaigns.reduce((total, campaign) => {
-    return total + (typeof campaign.actualCost === 'number' ? campaign.actualCost : 0);
-  }, 0);
-  
-  return (
-    <Card className="border shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle>Execution Tracking</CardTitle>
-        <CardDescription>Track campaign execution status and performance</CardDescription>
-      </CardHeader>
+
+  // Calculate budget metrics for a region
+  const calculateRegionalMetrics = (region: string) => {
+    const budgetData = regionalBudgets[region];
+    if (!budgetData) return { totalForecasted: 0, totalActual: 0 };
+
+    const totalForecasted = budgetData.programs.reduce((sum, program) => sum + program.forecastedCost, 0);
+    const totalActual = budgetData.programs.reduce((sum, program) => sum + program.actualCost, 0);
+
+    return { totalForecasted, totalActual };
+  }
+
+  // Update regional budget program data
+  const updateRegionalProgramData = () => {
+    if (!selectedRegion || typeof forecastedCost !== 'number') return;
+
+    setRegionalBudgets(prev => {
+      const currentPrograms = [...prev[selectedRegion].programs];
       
-      <CardContent className="space-y-4">
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row md:items-end gap-4 mb-4">
-          {/* Region Filter */}
-          <div className="space-y-2">
-            <Label htmlFor="filter-region">Filter by Region</Label>
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger id="filter-region" className="w-[180px]">
-                <SelectValue placeholder="All Regions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Regions</SelectItem>
-                {regions.map(region => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Owner Filter */}
-          <div className="space-y-2">
-            <Label htmlFor="filter-owner">Filter by Owner</Label>
-            <Select value={selectedOwner} onValueChange={setSelectedOwner}>
-              <SelectTrigger id="filter-owner" className="w-[180px]">
-                <SelectValue placeholder="All Owners" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Owners</SelectItem>
-                {owners.map(owner => (
-                  <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Reset Filters Button */}
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              setSelectedRegion("_all");
-              setSelectedOwner("_all");
-            }}
-          >
-            Reset Filters
-          </Button>
-          
-          {/* Applied Filters */}
-          {(selectedRegion !== "_all" || selectedOwner !== "_all") && (
-            <div className="flex items-center gap-2 ml-auto">
-              <span className="text-sm text-muted-foreground">Filters:</span>
-              {selectedRegion !== "_all" && (
-                <Badge variant="outline" className="text-xs">
-                  Region: {selectedRegion}
-                </Badge>
-              )}
-              {selectedOwner !== "_all" && (
-                <Badge variant="outline" className="text-xs">
-                  Owner: {selectedOwner}
-                </Badge>
-              )}
-            </div>
-          )}
-        </div>
+      // Find if the current program already exists
+      const programIndex = currentPrograms.findIndex(p => p.id === programId);
+      
+      if (programIndex >= 0) {
+        // Update existing program
+        currentPrograms[programIndex] = {
+          ...currentPrograms[programIndex],
+          forecastedCost: forecastedCost || 0,
+          actualCost: typeof actualCost === 'number' ? actualCost : 0
+        };
+      } else {
+        // Add new program
+        currentPrograms.push({
+          id: programId,
+          forecastedCost: forecastedCost || 0,
+          actualCost: typeof actualCost === 'number' ? actualCost : 0
+        });
+      }
+      
+      return {
+        ...prev,
+        [selectedRegion]: {
+          ...prev[selectedRegion],
+          programs: currentPrograms
+        }
+      };
+    });
+  }
+
+  // Calculate derived metrics whenever inputs change
+  useEffect(() => {
+    // Only calculate if we have numeric values
+    if (typeof expectedLeads === 'number') {
+      const mqlValue = Math.round(expectedLeads * 0.1) // 10% of leads
+      setMql(mqlValue)
+      
+      const sqlValue = Math.round(expectedLeads * 0.06) // 6% of leads
+      setSql(sqlValue)
+      
+      const oppsValue = Math.round(sqlValue * 0.8) // 80% of SQLs
+      setOpportunities(oppsValue)
+      
+      const pipelineValue = oppsValue * 50000 // $50K per opportunity
+      setPipeline(pipelineValue)
+    } else {
+      // Reset calculations if no valid input
+      setMql(0)
+      setSql(0)
+      setOpportunities(0)
+      setPipeline(0)
+    }
+  }, [expectedLeads])
+
+  // Update regional program data when forecasted or actual costs change
+  useEffect(() => {
+    if (selectedRegion) {
+      updateRegionalProgramData();
+    }
+  }, [forecastedCost, actualCost, selectedRegion])
+
+  // Handle regional budget change
+  const handleRegionalBudgetChange = (region: string, value: string) => {
+    if (value === "") {
+      setRegionalBudgets(prev => ({
+        ...prev,
+        [region]: {
+          ...prev[region],
+          assignedBudget: ""
+        }
+      }));
+    } else {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue >= 0) {
+        setRegionalBudgets(prev => ({
+          ...prev,
+          [region]: {
+            ...prev[region],
+            assignedBudget: numValue
+          }
+        }));
+      }
+    }
+  }
+  
+  // Update regional budgets based on campaign table data
+  useEffect(() => {
+    const campaignsByRegion: { [key: string]: any[] } = {};
+    
+    // Group campaigns by region
+    campaigns.forEach(campaign => {
+      if (campaign.region && typeof campaign.forecastedCost === 'number') {
+        if (!campaignsByRegion[campaign.region]) {
+          campaignsByRegion[campaign.region] = [];
+        }
         
-        {/* Campaign Execution Table */}
-        <div className="rounded-md border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Campaign</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>PO Raised?</TableHead>
-                <TableHead>Campaign Code</TableHead>
-                <TableHead>Issue Link</TableHead>
-                <TableHead>Actual Cost</TableHead>
-                <TableHead>Actual Leads</TableHead>
-                <TableHead>Actual MQLs</TableHead>
-                <TableHead>Forecasted Cost</TableHead>
-                <TableHead>Variance</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCampaigns.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center py-6 text-muted-foreground">
-                    No campaigns found matching your filter criteria. Add campaigns in the Planning tab.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredCampaigns.map((campaign) => {
-                  // Calculate variance if both forecasted and actual costs are available
-                  const hasBothCosts = typeof campaign.forecastedCost === 'number' && 
-                                      typeof campaign.actualCost === 'number';
-                  const variance = hasBothCosts 
-                    ? (campaign.actualCost as number) - (campaign.forecastedCost as number)
-                    : null;
-                  const variancePercent = hasBothCosts && campaign.forecastedCost !== 0
-                    ? ((campaign.actualCost as number) / (campaign.forecastedCost as number) - 1) * 100
-                    : null;
-                  
-                  return (
-                    <TableRow 
-                      key={campaign.id}
-                      className={isCampaignLocked(campaign) ? "opacity-70" : ""}
-                    >
-                      {/* Campaign Name/Description */}
-                      <TableCell>
-                        <div className="font-medium">{campaign.campaignType || "Untitled Campaign"}</div>
-                        <div className="text-sm text-muted-foreground truncate max-w-[150px]">
-                          {campaign.description || "No description"}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {campaign.region} • {campaign.country}
-                        </div>
-                      </TableCell>
-
-                      {/* Status */}
-                      <TableCell>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-1">
-                                <Select
-                                  value={campaign.status || "Planning"}
-                                  onValueChange={(value) => updateCampaign(campaign.id, 'status', value)}
-                                >
-                                  <SelectTrigger className="w-[120px]">
-                                    <SelectValue placeholder="Select status" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {statusOptions.map((status) => (
-                                      <SelectItem key={status} value={status}>
-                                        {status}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <InfoCircle className="h-4 w-4 text-muted-foreground" />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Current execution status of the campaign</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-
-                      {/* PO Raised */}
-                      <TableCell>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="flex items-center gap-1">
-                                <Switch
-                                  checked={campaign.poRaised || false}
-                                  onCheckedChange={(checked) => updateCampaign(campaign.id, 'poRaised', checked)}
-                                  disabled={isCampaignLocked(campaign)}
-                                />
-                                <InfoCircle className="h-4 w-4 text-muted-foreground" />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Has a purchase order been issued?</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-
-                      {/* Campaign Code */}
-                      <TableCell>
-                        <Input
-                          value={campaign.campaignCode || ""}
-                          onChange={(e) => updateCampaign(campaign.id, 'campaignCode', e.target.value)}
-                          placeholder="SF-123456"
-                          className="w-[120px]"
-                          disabled={isCampaignLocked(campaign)}
-                        />
-                      </TableCell>
-
-                      {/* Issue Link */}
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Input
-                            value={campaign.issueLink || ""}
-                            onChange={(e) => updateCampaign(campaign.id, 'issueLink', e.target.value)}
-                            placeholder="https://..."
-                            className="w-[140px]"
                             disabled={isCampaignLocked(campaign)}
                           />
                           {campaign.issueLink && (
@@ -291,7 +291,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                               rel="noopener noreferrer"
                               className="text-primary hover:text-primary/80"
                             >
-                              <Link className="h-4 w-4" />
+                              <LinkIcon className="h-4 w-4" />
                             </a>
                           )}
                         </div>
