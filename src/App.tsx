@@ -7,7 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar } from "@phosphor-icons/react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 function App() {
   // Form state
@@ -335,6 +336,61 @@ function App() {
                   />
                 </div>
               </CardContent>
+
+              {/* Cost Comparison Chart */}
+              {(forecastedCost !== "" || actualCost !== "") && (
+                <div className="px-6 pb-4">
+                  <div className="flex items-center gap-2 text-sm font-medium mb-3">
+                    <ChartBar className="h-4 w-4" />
+                    Cost Comparison
+                  </div>
+                  <div className="h-64 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={[
+                          {
+                            name: 'Costs',
+                            Forecasted: typeof forecastedCost === 'number' ? forecastedCost : 0,
+                            Actual: typeof actualCost === 'number' ? actualCost : 0,
+                          },
+                        ]}
+                        margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                        <XAxis dataKey="name" />
+                        <YAxis 
+                          tickFormatter={(value) => `$${value.toLocaleString()}`}
+                          domain={[0, 'auto']}
+                        />
+                        <Tooltip 
+                          formatter={(value) => [`$${value.toLocaleString()}`, undefined]}
+                          labelFormatter={() => ''}
+                        />
+                        <Legend />
+                        <Bar 
+                          dataKey="Forecasted" 
+                          fill="var(--primary)" 
+                          radius={[4, 4, 0, 0]} 
+                          barSize={80}
+                        />
+                        <Bar 
+                          dataKey="Actual" 
+                          fill="var(--accent)" 
+                          radius={[4, 4, 0, 0]} 
+                          barSize={80}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {forecastedCost && typeof forecastedCost === 'number' && 
+                   actualCost && typeof actualCost === 'number' && (
+                    <div className="text-sm text-center mt-2 text-muted-foreground">
+                      Variance: {formatCurrency(actualCost - forecastedCost)} 
+                      ({Math.round((actualCost / forecastedCost - 1) * 100)}%)
+                    </div>
+                  )}
+                </div>
+              )}
 
               <CardFooter>
                 {status && (

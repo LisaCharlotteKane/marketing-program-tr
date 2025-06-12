@@ -36,9 +36,9 @@
    - Success: Users can easily distinguish between inputs and calculated values
 
 4. **Execution Tracking**
-   - What: Fields to track campaign status, PO status, campaign codes, issue links, and actual costs
+   - What: Fields to track campaign status, PO status, campaign codes, issue links, and actual costs with visualization
    - Why: Enable teams to monitor campaign progress and compare actual vs. forecasted performance
-   - Success: Users can effectively update campaign status throughout its lifecycle
+   - Success: Users can effectively update campaign status and visualize cost comparisons throughout its lifecycle
 
 ## Design Direction
 
@@ -84,6 +84,12 @@
 - **Purposeful Meaning**: Subtle transitions when calculation values change
 - **Hierarchy of Movement**: No animations on inputs, gentle animations on outputs
 - **Contextual Appropriateness**: Minimal animations to maintain professional feel
+
+### Data Visualization
+- **Chart Types**: Bar chart for cost comparison
+- **Chart Purpose**: Visual representation of forecasted vs. actual costs
+- **Chart Styling**: Consistent color scheme with the application
+- **Chart Interactivity**: Hover tooltips to show exact values
 
 ### UI Elements & Component Selection
 - **Component Usage**: Form components (Select, Input, Switch, Card) for inputs; Card for results; Tabs for separating planning and execution sections
