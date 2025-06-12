@@ -70,7 +70,11 @@ function App() {
     "Brand Awareness & Top of Funnel Demand Generation",
     "New Logo Acquisition"
   ]
-  const revenuePlays = ["New Business", "Cross-sell", "Upsell", "Renewal", "Reactivation"]
+  const revenuePlays = [
+    "Accelerate developer productivity with Copilot in VS Code and GitHub",
+    "Secure all developer workloads with the power of AI",
+    "All"
+  ]
   const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"]
   const regions = ["SAARC", "North Asia", "South Asia"]
   
@@ -415,10 +419,10 @@ function App() {
                     <SelectTrigger id="revenue-play" className="w-full">
                       <SelectValue placeholder="Select revenue play" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Select play</SelectItem>
+                    <SelectContent className="max-w-[350px]">
+                      <SelectItem value="_none">Select revenue play</SelectItem>
                       {revenuePlays.map(play => (
-                        <SelectItem key={play} value={play}>{play}</SelectItem>
+                        <SelectItem key={play} value={play} className="whitespace-normal py-2">{play}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
