@@ -13,6 +13,7 @@ import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, W
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { CampaignTable, Campaign } from "@/components/campaign-table"
+import { ExecutionTracking } from "@/components/execution-tracking"
 
 // Type definitions for regional budget tracking
 interface RegionalBudget {
@@ -47,13 +48,6 @@ function App() {
   const [opportunities, setOpportunities] = useState(0)
   const [pipeline, setPipeline] = useState(0)
   
-  // Execution tracking state
-  const [status, setStatus] = useState("_none")
-  const [poRaised, setPoRaised] = useState(false)
-  const [campaignCode, setCampaignCode] = useState("")
-  const [issueLink, setIssueLink] = useState("")
-  const [actualCost, setActualCost] = useState<number | "">("")
-  
   // Regional budget management
   const [regionalBudgets, setRegionalBudgets] = useState<RegionalBudgets>({
     "SAARC": { assignedBudget: "", programs: [] },
@@ -80,7 +74,6 @@ function App() {
     "Secure all developer workloads with the power of AI",
     "All"
   ]
-  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"]
   const regions = ["SAARC", "North Asia", "South Asia", "Digital"]
   
   // Campaign types
@@ -151,22 +144,6 @@ function App() {
       maximumFractionDigits: 0
     }).format(value)
   }
-  
-  // Handle numeric input changes
-  const handleNumericChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setter: React.Dispatch<React.SetStateAction<number | "">>
-  ) => {
-    const value = e.target.value;
-    if (value === "") {
-      setter("");
-    } else {
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        setter(numValue);
-      }
-    }
-  };
 
   // Calculate budget metrics for a region
   const calculateRegionalMetrics = (region: string) => {
@@ -284,7 +261,7 @@ function App() {
         campaignsByRegion[campaign.region].push({
           id: campaign.id,
           forecastedCost: campaign.forecastedCost,
-          actualCost: 0 // Default actual cost
+          actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 0
         });
       }
     });
@@ -347,167 +324,7 @@ function App() {
           </TabsContent>
 
           <TabsContent value="execution" className="space-y-6">
-            <Card className="border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkle className="h-5 w-5" /> Execution Status
-                </CardTitle>
-                <CardDescription>Track the current state of your marketing campaign</CardDescription>
-              </CardHeader>
-
-              <CardContent className="space-y-6">
-                {/* Status */}
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger id="status" className="w-full">
-                      <SelectValue placeholder="Select campaign status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Select status</SelectItem>
-                      {statusOptions.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* PO Raised */}
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="po-raised">PO Raised?</Label>
-                    <div className="text-sm text-muted-foreground">Has a purchase order been issued</div>
-                  </div>
-                  <Switch
-                    id="po-raised"
-                    checked={poRaised}
-                    onCheckedChange={setPoRaised}
-                  />
-                </div>
-
-                {/* Salesforce Campaign Code */}
-                <div className="space-y-2">
-                  <Label htmlFor="campaign-code">Salesforce Campaign Code</Label>
-                  <Input 
-                    id="campaign-code" 
-                    placeholder="Enter campaign code" 
-                    value={campaignCode}
-                    onChange={(e) => setCampaignCode(e.target.value)}
-                  />
-                </div>
-
-                {/* Issue Link */}
-                <div className="space-y-2">
-                  <Label htmlFor="issue-link">Issue Link</Label>
-                  <Input 
-                    id="issue-link" 
-                    type="url"
-                    placeholder="https://..." 
-                    value={issueLink}
-                    onChange={(e) => setIssueLink(e.target.value)}
-                  />
-                </div>
-
-                {/* Actual Cost */}
-                <div className="space-y-2">
-                  <Label htmlFor="actual-cost">Actual Cost ($)</Label>
-                  <Input 
-                    id="actual-cost" 
-                    type="number" 
-                    placeholder="Enter actual amount spent" 
-                    value={actualCost.toString()}
-                    onChange={(e) => handleNumericChange(e, setActualCost)}
-                    min="0"
-                  />
-                </div>
-              </CardContent>
-
-              {/* Cost Comparison Chart */}
-              {(forecastedCost !== "" || actualCost !== "") && (
-                <div className="px-6 pb-4">
-                  <div className="flex items-center gap-2 text-sm font-medium mb-3">
-                    <ChartBar className="h-4 w-4" />
-                    Cost Comparison
-                  </div>
-                  <div className="h-64 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={[
-                          {
-                            name: 'Costs',
-                            Forecasted: typeof forecastedCost === 'number' ? forecastedCost : 0,
-                            Actual: typeof actualCost === 'number' ? actualCost : 0,
-                          },
-                        ]}
-                        margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="name" />
-                        <YAxis 
-                          tickFormatter={(value) => `$${value.toLocaleString()}`}
-                          domain={[0, 'auto']}
-                        />
-                        <Tooltip 
-                          formatter={(value) => [`$${value.toLocaleString()}`, undefined]}
-                          labelFormatter={() => ''}
-                        />
-                        <Legend />
-                        <Bar 
-                          dataKey="Forecasted" 
-                          fill="var(--primary)" 
-                          radius={[4, 4, 0, 0]} 
-                          barSize={80}
-                        />
-                        <Bar 
-                          dataKey="Actual" 
-                          fill="var(--accent)" 
-                          radius={[4, 4, 0, 0]} 
-                          barSize={80}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  {forecastedCost && typeof forecastedCost === 'number' && 
-                   actualCost && typeof actualCost === 'number' && (
-                    <div className="text-sm text-center mt-2 text-muted-foreground">
-                      Variance: {formatCurrency(actualCost - forecastedCost)} 
-                      ({Math.round((actualCost / forecastedCost - 1) * 100)}%)
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <CardFooter>
-                {status && (
-                  <div className="w-full">
-                    <div className="text-sm font-medium mb-2">Status Summary</div>
-                    <div className="flex items-center justify-between gap-4">
-                      <Badge 
-                        className={`${
-                          status === "Planning" ? "bg-blue-100 text-blue-800" : 
-                          status === "On Track" ? "bg-yellow-100 text-yellow-800" :
-                          status === "Shipped" ? "bg-green-100 text-green-800" :
-                          "bg-red-100 text-red-800"
-                        } px-3 py-1 rounded-full text-xs`}
-                      >
-                        {status}
-                      </Badge>
-                      <div className="text-sm text-muted-foreground">
-                        {forecastedCost && typeof forecastedCost === 'number' && 
-                         actualCost && typeof actualCost === 'number' ? (
-                          <span>
-                            Budget variance: {formatCurrency(actualCost - forecastedCost)} 
-                            ({Math.round((actualCost / forecastedCost - 1) * 100)}%)
-                          </span>
-                        ) : (
-                          <span>Enter actual cost to see budget variance</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardFooter>
-            </Card>
+            <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
 
           <TabsContent value="budget" className="space-y-6">
