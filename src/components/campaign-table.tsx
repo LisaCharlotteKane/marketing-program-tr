@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ROIDashboard } from "@/components/roi-dashboard";
 import { CSVUploader } from "@/components/csv-uploader";
 import { 
@@ -15,7 +18,10 @@ import {
   Download,
   Check,
   CheckCircle,
-  ChartLineUp
+  ChartLineUp,
+  PencilSimple,
+  InfoCircle,
+  Link as LinkIcon
 } from "@phosphor-icons/react";
 
 // Type definitions
@@ -38,6 +44,14 @@ export interface Campaign {
   sql?: number;
   opportunities?: number;
   pipelineForecast?: number;
+  // Execution tracking fields
+  status?: string;
+  poRaised?: boolean;
+  campaignCode?: string;
+  issueLink?: string;
+  actualCost?: number | "";
+  actualLeads?: number | "";
+  actualMQLs?: number | "";
 }
 
 interface CampaignTableProps {
@@ -46,6 +60,9 @@ interface CampaignTableProps {
 }
 
 export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) => {
+  // Filter state
+  const [selectedOwner, setSelectedOwner] = useState<string>("_all");
+  
   // Constants for dropdown options
   const campaignTypes = [
     "In-Account Events (1:1)",
@@ -97,6 +114,8 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
   ];
 
   const owners = ["John Doe", "Jane Smith", "Michael Johnson", "Emily Brown", "David Wilson"];
+  
+  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -123,6 +142,14 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
       forecastedCost: "",
       expectedLeads: "",
       impactedRegions: [],
+      // Initialize execution tracking fields
+      status: "Planning",
+      poRaised: false,
+      campaignCode: "",
+      issueLink: "",
+      actualCost: "",
+      actualLeads: "",
+      actualMQLs: ""
     };
     setCampaigns([...campaigns, newCampaign]);
   };
@@ -198,7 +225,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
   // Handle numeric input changes
   const handleNumericChange = (
     id: string,
-    field: 'forecastedCost' | 'expectedLeads',
+    field: 'forecastedCost' | 'expectedLeads' | 'actualCost' | 'actualLeads' | 'actualMQLs',
     value: string
   ) => {
     if (value === "") {
@@ -218,7 +245,8 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
       "Campaign Type", "Strategic Pillars", "Revenue Play", 
       "Fiscal Year", "Quarter/Month", "Region", "Country", "Impacted Regions", "Owner", 
       "Description", "Forecasted Cost", "Expected Leads",
-      "MQLs (10%)", "SQLs (6%)", "Opportunities (80% of SQL)", "Pipeline Forecast"
+      "MQLs (10%)", "SQLs (6%)", "Opportunities (80% of SQL)", "Pipeline Forecast",
+      "Status", "PO Raised", "Campaign Code", "Issue Link", "Actual Cost", "Actual Leads", "Actual MQLs"
     ];
     
     // Convert campaign data to CSV rows
@@ -238,7 +266,14 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
       campaign.mql || 0,
       campaign.sql || 0,
       campaign.opportunities || 0,
-      campaign.pipelineForecast || 0
+      campaign.pipelineForecast || 0,
+      campaign.status || 'Planning',
+      campaign.poRaised ? 'Yes' : 'No',
+      campaign.campaignCode || '',
+      campaign.issueLink || '',
+      typeof campaign.actualCost === 'number' ? campaign.actualCost : '',
+      typeof campaign.actualLeads === 'number' ? campaign.actualLeads : '',
+      typeof campaign.actualMQLs === 'number' ? campaign.actualMQLs : ''
     ]);
     
     // Create CSV content
@@ -269,6 +304,21 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     return total + (typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0);
   }, 0);
 
+  // Calculate total actual cost
+  const totalActualCost = campaigns.reduce((total, campaign) => {
+    return total + (typeof campaign.actualCost === 'number' ? campaign.actualCost : 0);
+  }, 0);
+
+  // Check if campaign is locked (cancelled or shipped)
+  const isCampaignLocked = (campaign: Campaign) => {
+    return campaign.status === "Cancelled" || campaign.status === "Shipped";
+  };
+
+  // Filter campaigns by owner
+  const filteredCampaigns = selectedOwner === "_all"
+    ? campaigns
+    : campaigns.filter(campaign => campaign.owner === selectedOwner);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -294,6 +344,41 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
         </div>
       </div>
 
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          {/* Owner Filter */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="owner-filter" className="text-sm font-medium">Filter by Owner:</label>
+            <Select
+              value={selectedOwner}
+              onValueChange={setSelectedOwner}
+            >
+              <SelectTrigger id="owner-filter" className="w-[180px]">
+                <SelectValue placeholder="Select owner" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Owners</SelectItem>
+                {owners.map((owner) => (
+                  <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Status info */}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <InfoCircle className="h-3.5 w-3.5" />
+            <span>Shipped or Cancelled campaigns are locked for editing</span>
+          </div>
+        </div>
+
+        {/* Display campaign count */}
+        <div className="text-sm text-muted-foreground">
+          {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} 
+          {selectedOwner !== "_all" ? ` for ${selectedOwner}` : ''}
+        </div>
+      </div>
+
       {/* CSV Uploader */}
       <CSVUploader 
         onCampaignsImported={(importedCampaigns) => {
@@ -302,351 +387,603 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
       />
 
       <div className="space-y-6">
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Campaign Type</TableHead>
-                <TableHead>Strategic Pillars</TableHead>
-                <TableHead>Revenue Play</TableHead>
-                <TableHead>FY</TableHead>
-                <TableHead>Quarter/Month</TableHead>
-                <TableHead>Region</TableHead>
-                <TableHead>Country</TableHead>
-                <TableHead>Owner</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Forecasted Cost</TableHead>
-                <TableHead>Expected Leads</TableHead>
-                <TableHead>MQLs (10%)</TableHead>
-                <TableHead>SQLs (6%)</TableHead>
-                <TableHead>Opportunities</TableHead>
-                <TableHead>Pipeline Forecast</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {campaigns.length === 0 ? (
+        <Tabs defaultValue="planning" className="w-full">
+          <TabsList className="w-full grid grid-cols-2 mb-4">
+            <TabsTrigger value="planning">Campaign Planning</TabsTrigger>
+            <TabsTrigger value="execution">Execution Tracking</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="planning" className="rounded-md border">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={16} className="text-center py-6 text-muted-foreground">
-                    No campaigns added. Click "Add Campaign" to create one.
-                  </TableCell>
+                  <TableHead>Campaign Type</TableHead>
+                  <TableHead>Strategic Pillars</TableHead>
+                  <TableHead>Revenue Play</TableHead>
+                  <TableHead>FY</TableHead>
+                  <TableHead>Quarter/Month</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Country</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Forecasted Cost</TableHead>
+                  <TableHead>Expected Leads</TableHead>
+                  <TableHead>MQLs (10%)</TableHead>
+                  <TableHead>SQLs (6%)</TableHead>
+                  <TableHead>Opportunities</TableHead>
+                  <TableHead>Pipeline Forecast</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ) : (
-                campaigns.map((campaign) => (
-                  <TableRow key={campaign.id}>
-                    {/* Campaign Type */}
-                    <TableCell>
-                      <Select
-                        value={campaign.campaignType}
-                        onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {campaignTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-
-                    {/* Strategic Pillars - Multi-select */}
-                    <TableCell>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            className="w-[180px] justify-start text-left font-normal"
-                            size="sm"
-                          >
-                            {campaign.strategicPillars.length > 0 
-                              ? `${campaign.strategicPillars.length} selected`
-                              : "Select pillars"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[220px] p-0" align="start">
-                          <Command>
-                            <CommandInput placeholder="Search pillars..." />
-                            <CommandEmpty>No results found.</CommandEmpty>
-                            <CommandGroup>
-                              {pillars.map((pillar) => (
-                                <CommandItem
-                                  key={pillar}
-                                  onSelect={() => togglePillar(campaign.id, pillar)}
-                                  className="flex items-center gap-2"
-                                >
-                                  <Checkbox 
-                                    checked={campaign.strategicPillars.includes(pillar)}
-                                    className="mr-2"
-                                  />
-                                  <span>{pillar}</span>
-                                  {campaign.strategicPillars.includes(pillar) && (
-                                    <Check className="h-4 w-4 ml-auto" />
-                                  )}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      {campaign.strategicPillars.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {campaign.strategicPillars.map((pillar) => (
-                            <Badge key={pillar} variant="outline" className="text-xs px-1 py-0">
-                              {pillar.substring(0, 15)}...
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </TableCell>
-
-                    {/* Revenue Play */}
-                    <TableCell>
-                      <Select
-                        value={campaign.revenuePlay}
-                        onValueChange={(value) => updateCampaign(campaign.id, 'revenuePlay', value)}
-                      >
-                        <SelectTrigger className="w-[180px]">
-                          <SelectValue placeholder="Select play" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {revenuePlays.map((play) => (
-                            <SelectItem key={play} value={play} className="whitespace-normal py-2">
-                              {play}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-
-                    {/* Fiscal Year */}
-                    <TableCell>
-                      <Select
-                        value={campaign.fiscalYear}
-                        onValueChange={(value) => updateCampaign(campaign.id, 'fiscalYear', value)}
-                      >
-                        <SelectTrigger className="w-[100px]">
-                          <SelectValue placeholder="FY" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fiscalYears.map((year) => (
-                            <SelectItem key={year} value={year}>
-                              {year}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-
-                    {/* Quarter/Month */}
-                    <TableCell>
-                      <Select
-                        value={campaign.quarterMonth}
-                        onValueChange={(value) => updateCampaign(campaign.id, 'quarterMonth', value)}
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {quarters.map((quarter) => (
-                            <SelectItem key={quarter} value={quarter}>
-                              {quarter}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-
-                    {/* Region */}
-                    <TableCell>
-                      <Select
-                        value={campaign.region}
-                        onValueChange={(value) => updateCampaign(campaign.id, 'region', value)}
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="Region" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {regions.map((region) => (
-                            <SelectItem key={region} value={region}>
-                              {region}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-
-                    {/* Country */}
-                    <TableCell>
-                      <Select
-                        value={campaign.country}
-                        onValueChange={(value) => updateCampaign(campaign.id, 'country', value)}
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="Country" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countries.map((country) => (
-                            <SelectItem key={country} value={country}>
-                              {country}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      {/* Impacted Regions (only show for Digital region) */}
-                      {campaign.region === "Digital" && (
-                        <div className="mt-2">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                className="w-[180px] justify-start text-left font-normal"
-                                size="sm"
-                              >
-                                {campaign.impactedRegions && campaign.impactedRegions.length > 0 
-                                  ? `${campaign.impactedRegions.length} region(s) impacted`
-                                  : "Select impacted regions"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[220px] p-0" align="start">
-                              <Command>
-                                <CommandInput placeholder="Search regions..." />
-                                <CommandEmpty>No results found.</CommandEmpty>
-                                <CommandGroup>
-                                  {regions.filter(r => r !== "Digital").map((region) => (
-                                    <CommandItem
-                                      key={region}
-                                      onSelect={() => toggleImpactedRegion(campaign.id, region)}
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Checkbox 
-                                        checked={campaign.impactedRegions?.includes(region)}
-                                        className="mr-2"
-                                      />
-                                      <span>{region}</span>
-                                      {campaign.impactedRegions?.includes(region) && (
-                                        <Check className="h-4 w-4 ml-auto" />
-                                      )}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </Command>
-                            </PopoverContent>
-                          </Popover>
-                          {campaign.impactedRegions && campaign.impactedRegions.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {campaign.impactedRegions.map((region) => (
-                                <Badge key={region} variant="outline" className="text-xs px-1 py-0">
-                                  {region}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-
-                    {/* Owner */}
-                    <TableCell>
-                      <Select
-                        value={campaign.owner}
-                        onValueChange={(value) => updateCampaign(campaign.id, 'owner', value)}
-                      >
-                        <SelectTrigger className="w-[120px]">
-                          <SelectValue placeholder="Owner" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {owners.map((owner) => (
-                            <SelectItem key={owner} value={owner}>
-                              {owner}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-
-                    {/* Description */}
-                    <TableCell>
-                      <Input
-                        value={campaign.description}
-                        onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
-                        placeholder="Brief description"
-                        className="w-[180px]"
-                      />
-                    </TableCell>
-
-                    {/* Forecasted Cost */}
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={campaign.forecastedCost === "" ? "" : campaign.forecastedCost}
-                        onChange={(e) => handleNumericChange(campaign.id, 'forecastedCost', e.target.value)}
-                        placeholder="USD"
-                        className="w-[100px]"
-                      />
-                    </TableCell>
-
-                    {/* Expected Leads */}
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={campaign.expectedLeads === "" ? "" : campaign.expectedLeads}
-                        onChange={(e) => handleNumericChange(campaign.id, 'expectedLeads', e.target.value)}
-                        placeholder="#"
-                        className="w-[80px]"
-                      />
-                    </TableCell>
-
-                    {/* Calculated fields (read-only) */}
-                    <TableCell className="text-muted-foreground">
-                      {campaign.mql || 0}
-                    </TableCell>
-                    
-                    <TableCell className="text-muted-foreground">
-                      {campaign.sql || 0}
-                    </TableCell>
-                    
-                    <TableCell className="text-muted-foreground">
-                      {campaign.opportunities || 0}
-                    </TableCell>
-                    
-                    <TableCell className="font-medium">
-                      {campaign.pipelineForecast ? formatCurrency(campaign.pipelineForecast) : "$0"}
-                    </TableCell>
-
-                    {/* Actions */}
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeCampaign(campaign.id)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
+              </TableHeader>
+              <TableBody>
+                {filteredCampaigns.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={16} className="text-center py-6 text-muted-foreground">
+                      No campaigns added. Click "Add Campaign" to create one.
                     </TableCell>
                   </TableRow>
-                ))
+                ) : (
+                  filteredCampaigns.map((campaign) => (
+                    <TableRow 
+                      key={campaign.id}
+                      className={isCampaignLocked(campaign) ? "opacity-70" : ""}
+                    >
+                      {/* Campaign Type */}
+                      <TableCell>
+                        <Select
+                          value={campaign.campaignType}
+                          onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}
+                          disabled={isCampaignLocked(campaign)}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {campaignTypes.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Strategic Pillars - Multi-select */}
+                      <TableCell>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              className="w-[180px] justify-start text-left font-normal"
+                              size="sm"
+                              disabled={isCampaignLocked(campaign)}
+                            >
+                              {campaign.strategicPillars.length > 0 
+                                ? `${campaign.strategicPillars.length} selected`
+                                : "Select pillars"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[220px] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Search pillars..." />
+                              <CommandEmpty>No results found.</CommandEmpty>
+                              <CommandGroup>
+                                {pillars.map((pillar) => (
+                                  <CommandItem
+                                    key={pillar}
+                                    onSelect={() => togglePillar(campaign.id, pillar)}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Checkbox 
+                                      checked={campaign.strategicPillars.includes(pillar)}
+                                      className="mr-2"
+                                    />
+                                    <span>{pillar}</span>
+                                    {campaign.strategicPillars.includes(pillar) && (
+                                      <Check className="h-4 w-4 ml-auto" />
+                                    )}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {campaign.strategicPillars.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {campaign.strategicPillars.map((pillar) => (
+                              <Badge key={pillar} variant="outline" className="text-xs px-1 py-0">
+                                {pillar.substring(0, 15)}...
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </TableCell>
+
+                      {/* Revenue Play */}
+                      <TableCell>
+                        <Select
+                          value={campaign.revenuePlay}
+                          onValueChange={(value) => updateCampaign(campaign.id, 'revenuePlay', value)}
+                          disabled={isCampaignLocked(campaign)}
+                        >
+                          <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select play" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {revenuePlays.map((play) => (
+                              <SelectItem key={play} value={play} className="whitespace-normal py-2">
+                                {play}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Fiscal Year */}
+                      <TableCell>
+                        <Select
+                          value={campaign.fiscalYear}
+                          onValueChange={(value) => updateCampaign(campaign.id, 'fiscalYear', value)}
+                          disabled={isCampaignLocked(campaign)}
+                        >
+                          <SelectTrigger className="w-[100px]">
+                            <SelectValue placeholder="FY" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fiscalYears.map((year) => (
+                              <SelectItem key={year} value={year}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Quarter/Month */}
+                      <TableCell>
+                        <Select
+                          value={campaign.quarterMonth}
+                          onValueChange={(value) => updateCampaign(campaign.id, 'quarterMonth', value)}
+                          disabled={isCampaignLocked(campaign)}
+                        >
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {quarters.map((quarter) => (
+                              <SelectItem key={quarter} value={quarter}>
+                                {quarter}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Region */}
+                      <TableCell>
+                        <Select
+                          value={campaign.region}
+                          onValueChange={(value) => updateCampaign(campaign.id, 'region', value)}
+                          disabled={isCampaignLocked(campaign)}
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Region" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {regions.map((region) => (
+                              <SelectItem key={region} value={region}>
+                                {region}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Country */}
+                      <TableCell>
+                        <Select
+                          value={campaign.country}
+                          onValueChange={(value) => updateCampaign(campaign.id, 'country', value)}
+                          disabled={isCampaignLocked(campaign)}
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries.map((country) => (
+                              <SelectItem key={country} value={country}>
+                                {country}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        {/* Impacted Regions (only show for Digital region) */}
+                        {campaign.region === "Digital" && (
+                          <div className="mt-2">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  className="w-[180px] justify-start text-left font-normal"
+                                  size="sm"
+                                  disabled={isCampaignLocked(campaign)}
+                                >
+                                  {campaign.impactedRegions && campaign.impactedRegions.length > 0 
+                                    ? `${campaign.impactedRegions.length} region(s) impacted`
+                                    : "Select impacted regions"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-[220px] p-0" align="start">
+                                <Command>
+                                  <CommandInput placeholder="Search regions..." />
+                                  <CommandEmpty>No results found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {regions.filter(r => r !== "Digital").map((region) => (
+                                      <CommandItem
+                                        key={region}
+                                        onSelect={() => toggleImpactedRegion(campaign.id, region)}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <Checkbox 
+                                          checked={campaign.impactedRegions?.includes(region)}
+                                          className="mr-2"
+                                        />
+                                        <span>{region}</span>
+                                        {campaign.impactedRegions?.includes(region) && (
+                                          <Check className="h-4 w-4 ml-auto" />
+                                        )}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </Command>
+                              </PopoverContent>
+                            </Popover>
+                            {campaign.impactedRegions && campaign.impactedRegions.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {campaign.impactedRegions.map((region) => (
+                                  <Badge key={region} variant="outline" className="text-xs px-1 py-0">
+                                    {region}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+
+                      {/* Owner */}
+                      <TableCell>
+                        <Select
+                          value={campaign.owner}
+                          onValueChange={(value) => updateCampaign(campaign.id, 'owner', value)}
+                          disabled={isCampaignLocked(campaign)}
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Owner" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {owners.map((owner) => (
+                              <SelectItem key={owner} value={owner}>
+                                {owner}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Description */}
+                      <TableCell>
+                        <Input
+                          value={campaign.description}
+                          onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
+                          placeholder="Brief description"
+                          className="w-[180px]"
+                          disabled={isCampaignLocked(campaign)}
+                        />
+                      </TableCell>
+
+                      {/* Forecasted Cost */}
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={campaign.forecastedCost === "" ? "" : campaign.forecastedCost}
+                          onChange={(e) => handleNumericChange(campaign.id, 'forecastedCost', e.target.value)}
+                          placeholder="USD"
+                          className="w-[100px]"
+                          disabled={isCampaignLocked(campaign)}
+                        />
+                      </TableCell>
+
+                      {/* Expected Leads */}
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={campaign.expectedLeads === "" ? "" : campaign.expectedLeads}
+                          onChange={(e) => handleNumericChange(campaign.id, 'expectedLeads', e.target.value)}
+                          placeholder="#"
+                          className="w-[80px]"
+                          disabled={isCampaignLocked(campaign)}
+                        />
+                      </TableCell>
+
+                      {/* Calculated fields (read-only) */}
+                      <TableCell className="text-muted-foreground">
+                        {campaign.mql || 0}
+                      </TableCell>
+                      
+                      <TableCell className="text-muted-foreground">
+                        {campaign.sql || 0}
+                      </TableCell>
+                      
+                      <TableCell className="text-muted-foreground">
+                        {campaign.opportunities || 0}
+                      </TableCell>
+                      
+                      <TableCell className="font-medium">
+                        {campaign.pipelineForecast ? formatCurrency(campaign.pipelineForecast) : "$0"}
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeCampaign(campaign.id)}
+                          disabled={isCampaignLocked(campaign)}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+              {filteredCampaigns.length > 0 && (
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-right font-medium">
+                      Total Forecasted Cost:
+                    </TableCell>
+                    <TableCell className="font-bold">
+                      {formatCurrency(totalForecastedCost)}
+                    </TableCell>
+                    <TableCell colSpan={6}></TableCell>
+                  </TableRow>
+                </TableFooter>
               )}
-            </TableBody>
-            {campaigns.length > 0 && (
-              <TableFooter>
+            </Table>
+          </TabsContent>
+
+          <TabsContent value="execution" className="rounded-md border">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={9} className="text-right font-medium">
-                    Total Forecasted Cost:
-                  </TableCell>
-                  <TableCell className="font-bold">
-                    {formatCurrency(totalForecastedCost)}
-                  </TableCell>
-                  <TableCell colSpan={6}></TableCell>
+                  <TableHead>Campaign</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>PO Raised?</TableHead>
+                  <TableHead>Campaign Code</TableHead>
+                  <TableHead>Issue Link</TableHead>
+                  <TableHead>Actual Cost</TableHead>
+                  <TableHead>Forecasted Cost</TableHead>
+                  <TableHead>Variance</TableHead>
+                  <TableHead>Actual Leads</TableHead>
+                  <TableHead>Actual MQLs</TableHead>
+                  <TableHead>Expected Leads</TableHead>
                 </TableRow>
-              </TableFooter>
-            )}
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filteredCampaigns.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={11} className="text-center py-6 text-muted-foreground">
+                      No campaigns added. Click "Add Campaign" to create one.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredCampaigns.map((campaign) => {
+                    // Calculate variance if both forecasted and actual costs are available
+                    const hasBothCosts = typeof campaign.forecastedCost === 'number' && 
+                                         typeof campaign.actualCost === 'number';
+                    const variance = hasBothCosts 
+                      ? (campaign.actualCost as number) - (campaign.forecastedCost as number)
+                      : null;
+                    const variancePercent = hasBothCosts && campaign.forecastedCost !== 0
+                      ? ((campaign.actualCost as number) / (campaign.forecastedCost as number) - 1) * 100
+                      : null;
+                    
+                    return (
+                      <TableRow 
+                        key={campaign.id}
+                        className={isCampaignLocked(campaign) ? "opacity-70" : ""}
+                      >
+                        {/* Campaign Name/Description */}
+                        <TableCell>
+                          <div className="font-medium">{campaign.campaignType || "Untitled Campaign"}</div>
+                          <div className="text-sm text-muted-foreground truncate max-w-[150px]">
+                            {campaign.description || "No description"}
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {campaign.region} • {campaign.owner}
+                          </div>
+                        </TableCell>
+
+                        {/* Status */}
+                        <TableCell>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1">
+                                  <Select
+                                    value={campaign.status || "Planning"}
+                                    onValueChange={(value) => updateCampaign(campaign.id, 'status', value)}
+                                  >
+                                    <SelectTrigger className="w-[120px]">
+                                      <SelectValue placeholder="Select status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {statusOptions.map((status) => (
+                                        <SelectItem key={status} value={status}>
+                                          {status}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Current execution status of the campaign</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+
+                        {/* PO Raised */}
+                        <TableCell>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-1">
+                                  <Switch
+                                    checked={campaign.poRaised || false}
+                                    onCheckedChange={(checked) => updateCampaign(campaign.id, 'poRaised', checked)}
+                                    disabled={isCampaignLocked(campaign)}
+                                  />
+                                  <InfoCircle className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Has a purchase order been issued?</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+
+                        {/* Campaign Code */}
+                        <TableCell>
+                          <Input
+                            value={campaign.campaignCode || ""}
+                            onChange={(e) => updateCampaign(campaign.id, 'campaignCode', e.target.value)}
+                            placeholder="SF-123456"
+                            className="w-[120px]"
+                            disabled={isCampaignLocked(campaign)}
+                          />
+                        </TableCell>
+
+                        {/* Issue Link */}
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={campaign.issueLink || ""}
+                              onChange={(e) => updateCampaign(campaign.id, 'issueLink', e.target.value)}
+                              placeholder="https://..."
+                              className="w-[140px]"
+                              disabled={isCampaignLocked(campaign)}
+                            />
+                            {campaign.issueLink && (
+                              <a 
+                                href={campaign.issueLink} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-primary hover:text-primary/80"
+                              >
+                                <LinkIcon className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        {/* Actual Cost */}
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={campaign.actualCost === "" ? "" : campaign.actualCost}
+                            onChange={(e) => handleNumericChange(campaign.id, 'actualCost', e.target.value)}
+                            placeholder="USD"
+                            className="w-[100px]"
+                            disabled={isCampaignLocked(campaign)}
+                          />
+                        </TableCell>
+
+                        {/* Forecasted Cost (read-only in this tab) */}
+                        <TableCell className="text-muted-foreground">
+                          {typeof campaign.forecastedCost === 'number' 
+                            ? formatCurrency(campaign.forecastedCost) 
+                            : "$0"}
+                        </TableCell>
+
+                        {/* Variance */}
+                        <TableCell>
+                          {hasBothCosts && (
+                            <div className={`${variance && variance > 0 ? "text-red-600" : "text-green-600"}`}>
+                              {formatCurrency(variance || 0)} 
+                              {variancePercent !== null && (
+                                <span className="text-xs ml-1">
+                                  ({variancePercent > 0 ? "+" : ""}{Math.round(variancePercent)}%)
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </TableCell>
+
+                        {/* Actual Leads */}
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={campaign.actualLeads === "" ? "" : campaign.actualLeads}
+                            onChange={(e) => handleNumericChange(campaign.id, 'actualLeads', e.target.value)}
+                            placeholder="#"
+                            className="w-[80px]"
+                            disabled={isCampaignLocked(campaign)}
+                          />
+                        </TableCell>
+
+                        {/* Actual MQLs */}
+                        <TableCell>
+                          <Input
+                            type="number"
+                            value={campaign.actualMQLs === "" ? "" : campaign.actualMQLs}
+                            onChange={(e) => handleNumericChange(campaign.id, 'actualMQLs', e.target.value)}
+                            placeholder="#"
+                            className="w-[80px]"
+                            disabled={isCampaignLocked(campaign)}
+                          />
+                        </TableCell>
+
+                        {/* Expected Leads (read-only in this tab) */}
+                        <TableCell className="text-muted-foreground">
+                          {typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+              {filteredCampaigns.length > 0 && (
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-right font-medium">
+                      Total Costs:
+                    </TableCell>
+                    <TableCell className="font-bold">
+                      {formatCurrency(totalActualCost)}
+                    </TableCell>
+                    <TableCell className="font-bold">
+                      {formatCurrency(totalForecastedCost)}
+                    </TableCell>
+                    <TableCell className={`font-bold ${totalActualCost > totalForecastedCost ? "text-red-600" : "text-green-600"}`}>
+                      {formatCurrency(totalActualCost - totalForecastedCost)}
+                      <span className="text-xs ml-1">
+                        ({totalForecastedCost ? Math.round((totalActualCost / totalForecastedCost - 1) * 100) : 0}%)
+                      </span>
+                    </TableCell>
+                    <TableCell colSpan={3}></TableCell>
+                  </TableRow>
+                </TableFooter>
+              )}
+            </Table>
+          </TabsContent>
+        </Tabs>
 
         {/* ROI Dashboard */}
         {campaigns.length > 0 && (

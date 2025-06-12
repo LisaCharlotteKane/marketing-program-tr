@@ -40,6 +40,11 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
     totalSQLs: 0,
     totalOpportunities: 0,
     totalPipelineForecast: 0,
+    totalActualLeads: 0,
+    totalActualMQLs: 0,
+    actualSQLs: 0,
+    actualOpportunities: 0,
+    actualPipeline: 0,
     roi: 0
   });
 
@@ -71,22 +76,47 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
       0
     );
 
-    const totalActualSpend = 0; // Placeholder for actual spend (not yet implemented)
+    const totalActualSpend = filteredCampaigns.reduce(
+      (sum, campaign) => sum + (typeof campaign.actualCost === 'number' ? campaign.actualCost : 0),
+      0
+    );
 
     const totalExpectedLeads = filteredCampaigns.reduce(
       (sum, campaign) => sum + (typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0),
       0
     );
 
+    const totalActualLeads = filteredCampaigns.reduce(
+      (sum, campaign) => sum + (typeof campaign.actualLeads === 'number' ? campaign.actualLeads : 0),
+      0
+    );
+
+    const totalActualMQLs = filteredCampaigns.reduce(
+      (sum, campaign) => sum + (typeof campaign.actualMQLs === 'number' ? campaign.actualMQLs : 0),
+      0
+    );
+
+    // Calculate forecasted metrics
     const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of leads
     const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of leads
     const totalOpportunities = Math.round(totalSQLs * 0.8); // 80% of SQLs
     const totalPipelineForecast = totalOpportunities * 50000; // $50K per opportunity
 
-    // Calculate ROI
-    const roi = totalForecastedSpend > 0 
+    // Calculate actual SQLs and Opportunities (if we have actual MQLs)
+    const actualSQLs = totalActualMQLs > 0 ? Math.round(totalActualMQLs * 0.6) : 0; // 60% of actual MQLs
+    const actualOpportunities = actualSQLs > 0 ? Math.round(actualSQLs * 0.8) : 0; // 80% of actual SQLs
+    const actualPipeline = actualOpportunities * 50000; // $50K per opportunity
+
+    // Calculate ROI - use actual data if available, otherwise use forecasts
+    const calculatedROI = totalForecastedSpend > 0 
       ? Math.round((totalPipelineForecast / totalForecastedSpend) * 100) 
       : 0;
+    
+    const actualROI = totalActualSpend > 0 && actualPipeline > 0
+      ? Math.round((actualPipeline / totalActualSpend) * 100)
+      : 0;
+
+    const roi = actualROI > 0 ? actualROI : calculatedROI;
 
     setMetrics({
       totalForecastedSpend,
@@ -96,6 +126,11 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
       totalSQLs,
       totalOpportunities,
       totalPipelineForecast,
+      totalActualLeads,
+      totalActualMQLs,
+      actualSQLs,
+      actualOpportunities,
+      actualPipeline,
       roi
     });
   }, [filteredCampaigns]);
@@ -117,10 +152,26 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
 
   // Data for the funnel chart
   const funnelData = [
-    { name: "Leads", value: metrics.totalExpectedLeads },
-    { name: "MQLs", value: metrics.totalMQLs },
-    { name: "SQLs", value: metrics.totalSQLs },
-    { name: "Opps", value: metrics.totalOpportunities },
+    { 
+      name: "Leads", 
+      Expected: metrics.totalExpectedLeads,
+      Actual: metrics.totalActualLeads 
+    },
+    { 
+      name: "MQLs", 
+      Expected: metrics.totalMQLs,
+      Actual: metrics.totalActualMQLs 
+    },
+    { 
+      name: "SQLs", 
+      Expected: metrics.totalSQLs,
+      Actual: metrics.actualSQLs 
+    },
+    { 
+      name: "Opps", 
+      Expected: metrics.totalOpportunities,
+      Actual: metrics.actualOpportunities 
+    },
   ];
 
   // Data for spend comparison chart
@@ -129,6 +180,11 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
       name: "Spend",
       Forecasted: metrics.totalForecastedSpend,
       Actual: metrics.totalActualSpend,
+    },
+    {
+      name: "Pipeline",
+      Forecasted: metrics.totalPipelineForecast,
+      Actual: metrics.actualPipeline,
     }
   ];
 
@@ -187,36 +243,75 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
         {/* Key Metrics Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-card rounded-lg p-4 border">
-            <div className="text-sm font-medium text-muted-foreground mb-1">Total Forecasted Spend</div>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.totalForecastedSpend)}</div>
+            <div className="text-sm font-medium text-muted-foreground mb-1">Total Spend</div>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.totalActualSpend > 0 ? metrics.totalActualSpend : metrics.totalForecastedSpend)}</div>
+            {metrics.totalActualSpend > 0 && (
+              <div className="text-sm text-muted-foreground mt-1">
+                {metrics.totalActualSpend > metrics.totalForecastedSpend ? 'Over budget' : 'Under budget'}
+              </div>
+            )}
           </div>
           <div className="bg-card rounded-lg p-4 border">
-            <div className="text-sm font-medium text-muted-foreground mb-1">Total Pipeline Forecast</div>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.totalPipelineForecast)}</div>
+            <div className="text-sm font-medium text-muted-foreground mb-1">Total Pipeline</div>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.actualPipeline > 0 ? metrics.actualPipeline : metrics.totalPipelineForecast)}</div>
+            {metrics.actualPipeline > 0 && (
+              <div className="text-sm text-muted-foreground mt-1">
+                Based on actual performance
+              </div>
+            )}
           </div>
           <div className="bg-card rounded-lg p-4 border">
             <div className="text-sm font-medium text-muted-foreground mb-1">Return on Investment</div>
             <div className="text-2xl font-bold text-primary">{metrics.roi}%</div>
+            <div className="text-sm text-muted-foreground mt-1">
+              {metrics.roi < 100 ? 'Low' : metrics.roi < 300 ? 'Moderate' : 'High'} ROI
+            </div>
           </div>
         </div>
 
         {/* Additional Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-muted rounded-lg p-3">
-            <div className="text-xs font-medium text-muted-foreground mb-1">Expected Leads</div>
-            <div className="text-lg font-semibold">{metrics.totalExpectedLeads.toLocaleString()}</div>
+            <div className="text-xs font-medium text-muted-foreground mb-1">Leads</div>
+            <div className="text-lg font-semibold">
+              {metrics.totalActualLeads > 0 
+                ? metrics.totalActualLeads.toLocaleString() 
+                : metrics.totalExpectedLeads.toLocaleString()}
+            </div>
+            {metrics.totalActualLeads > 0 && (
+              <div className="text-xs text-muted-foreground">
+                {Math.round((metrics.totalActualLeads / metrics.totalExpectedLeads) * 100)}% of target
+              </div>
+            )}
           </div>
           <div className="bg-muted rounded-lg p-3">
-            <div className="text-xs font-medium text-muted-foreground mb-1">MQLs (10%)</div>
-            <div className="text-lg font-semibold">{metrics.totalMQLs.toLocaleString()}</div>
+            <div className="text-xs font-medium text-muted-foreground mb-1">MQLs</div>
+            <div className="text-lg font-semibold">
+              {metrics.totalActualMQLs > 0 
+                ? metrics.totalActualMQLs.toLocaleString() 
+                : metrics.totalMQLs.toLocaleString()}
+            </div>
+            {metrics.totalActualMQLs > 0 && (
+              <div className="text-xs text-muted-foreground">
+                {Math.round((metrics.totalActualMQLs / metrics.totalMQLs) * 100)}% of target
+              </div>
+            )}
           </div>
           <div className="bg-muted rounded-lg p-3">
-            <div className="text-xs font-medium text-muted-foreground mb-1">SQLs (6%)</div>
-            <div className="text-lg font-semibold">{metrics.totalSQLs.toLocaleString()}</div>
+            <div className="text-xs font-medium text-muted-foreground mb-1">SQLs</div>
+            <div className="text-lg font-semibold">
+              {metrics.actualSQLs > 0 
+                ? metrics.actualSQLs.toLocaleString() 
+                : metrics.totalSQLs.toLocaleString()}
+            </div>
           </div>
           <div className="bg-muted rounded-lg p-3">
             <div className="text-xs font-medium text-muted-foreground mb-1">Opportunities</div>
-            <div className="text-lg font-semibold">{metrics.totalOpportunities.toLocaleString()}</div>
+            <div className="text-lg font-semibold">
+              {metrics.actualOpportunities > 0 
+                ? metrics.actualOpportunities.toLocaleString() 
+                : metrics.totalOpportunities.toLocaleString()}
+            </div>
           </div>
         </div>
 
@@ -247,13 +342,17 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" />
                   <Tooltip 
-                    formatter={(value) => [value.toLocaleString(), "Count"]} 
+                    formatter={(value) => [value.toLocaleString(), undefined]} 
                   />
                   <Legend />
                   <Bar 
-                    dataKey="value" 
+                    dataKey="Expected" 
                     fill="var(--primary)" 
-                    name="Count" 
+                    radius={[0, 4, 4, 0]}
+                  />
+                  <Bar 
+                    dataKey="Actual" 
+                    fill="var(--accent)" 
                     radius={[0, 4, 4, 0]}
                   />
                 </BarChart>
