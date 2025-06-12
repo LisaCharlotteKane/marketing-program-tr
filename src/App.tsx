@@ -48,6 +48,9 @@ function App() {
   const [opportunities, setOpportunities] = useState(0)
   const [pipeline, setPipeline] = useState(0)
   
+  // Execution tracking state
+  const [actualCost, setActualCost] = useState<number | "">("")
+  
   // Regional budget management
   const [regionalBudgets, setRegionalBudgets] = useState<RegionalBudgets>({
     "SAARC": { assignedBudget: "", programs: [] },
