@@ -9,9 +9,10 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table } from "@phosphor-icons/react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
+import { CampaignTable, Campaign } from "@/components/campaign-table"
 
 // Type definitions for regional budget tracking
 interface RegionalBudget {
@@ -62,6 +63,9 @@ function App() {
   
   // Program ID for tracking
   const [programId, setProgramId] = useState<string>("")
+
+  // Campaign Table Data
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
 
   // Preset data
   const pillars = [
@@ -137,15 +141,6 @@ function App() {
       setProgramId(generateId());
     }
   }, [programId]);
-
-  // Handle strategic pillar selection
-  const togglePillar = (pillar: string) => {
-    setStrategicPillars(prev => 
-      prev.includes(pillar) 
-        ? prev.filter(p => p !== pillar) 
-        : [...prev, pillar]
-    )
-  }
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -234,40 +229,6 @@ function App() {
     }
   }, [forecastedCost, actualCost, selectedRegion])
 
-  // Reset form for new program
-  const resetForm = () => {
-    setCampaignOwner("");
-    setCampaignType("_none");
-    setCountry("_none");
-    setStrategicPillars([]);
-    setRevenuePlay("_none");
-    setForecastedCost("");
-    setExpectedLeads("");
-    setStatus("_none");
-    setPoRaised(false);
-    setCampaignCode("");
-    setIssueLink("");
-    setActualCost("");
-    setProgramId(generateId());
-  }
-
-  // Handle numeric input changes
-  const handleNumericChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setter: React.Dispatch<React.SetStateAction<number | "">>
-  ) => {
-    const value = e.target.value
-    
-    if (value === "") {
-      setter("")
-    } else {
-      const numValue = parseFloat(value)
-      if (!isNaN(numValue) && numValue >= 0) {
-        setter(numValue)
-      }
-    }
-  }
-
   // Handle regional budget change
   const handleRegionalBudgetChange = (region: string, value: string) => {
     if (value === "") {
@@ -291,6 +252,43 @@ function App() {
       }
     }
   }
+  
+  // Update regional budgets based on campaign table data
+  useEffect(() => {
+    const campaignsByRegion: { [key: string]: any[] } = {};
+    
+    // Group campaigns by region
+    campaigns.forEach(campaign => {
+      if (campaign.region && typeof campaign.forecastedCost === 'number') {
+        if (!campaignsByRegion[campaign.region]) {
+          campaignsByRegion[campaign.region] = [];
+        }
+        
+        campaignsByRegion[campaign.region].push({
+          id: campaign.id,
+          forecastedCost: campaign.forecastedCost,
+          actualCost: 0 // Default actual cost
+        });
+      }
+    });
+    
+    // Update regional budgets
+    setRegionalBudgets(prev => {
+      const updated = { ...prev };
+      
+      // Update programs for each region
+      Object.keys(campaignsByRegion).forEach(region => {
+        if (updated[region]) {
+          updated[region] = {
+            ...updated[region],
+            programs: campaignsByRegion[region]
+          };
+        }
+      });
+      
+      return updated;
+    });
+  }, [campaigns]);
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground p-4 md:p-8">
@@ -320,181 +318,14 @@ function App() {
             <Card className="border shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2">
-                  <Calculator className="h-5 w-5" /> Campaign Parameters
+                  <Table className="h-5 w-5" /> Campaign Planning Table
                 </CardTitle>
-                <CardDescription>Enter your campaign details to calculate expected outcomes</CardDescription>
+                <CardDescription>Plan and track multiple marketing campaigns</CardDescription>
               </CardHeader>
 
-              <CardContent className="space-y-6">
-                {/* Region Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="region">Region</Label>
-                  <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                    <SelectTrigger id="region" className="w-full">
-                      <SelectValue placeholder="Select region" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_all">All Regions</SelectItem>
-                      {regions.map(region => (
-                        <SelectItem key={region} value={region}>{region}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Campaign Owner */}
-                <div className="space-y-2">
-                  <Label htmlFor="campaign-owner">Campaign Owner</Label>
-                  <Input 
-                    id="campaign-owner" 
-                    placeholder="Enter owner name" 
-                    value={campaignOwner}
-                    onChange={(e) => setCampaignOwner(e.target.value)}
-                  />
-                </div>
-
-                {/* Campaign Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="campaign-type">Campaign Type</Label>
-                  <Select value={campaignType} onValueChange={setCampaignType}>
-                    <SelectTrigger id="campaign-type" className="w-full">
-                      <SelectValue placeholder="Select campaign type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Select campaign type</SelectItem>
-                      {campaignTypes.map(type => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Country */}
-                <div className="space-y-2">
-                  <Label htmlFor="country">Country</Label>
-                  <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger id="country" className="w-full">
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Select country</SelectItem>
-                      {countries.map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Strategic Pillar */}
-                <div className="space-y-2">
-                  <Label>Strategic Pillar (select multiple)</Label>
-                  <div className="grid grid-cols-1 gap-3 pt-1">
-                    {pillars.map(pillar => (
-                      <div key={pillar} className="flex items-start space-x-2">
-                        <Checkbox 
-                          id={`pillar-${pillar}`} 
-                          checked={strategicPillars.includes(pillar)}
-                          onCheckedChange={() => togglePillar(pillar)}
-                          className="mt-0.5"
-                        />
-                        <Label htmlFor={`pillar-${pillar}`} className="font-normal cursor-pointer text-sm">{pillar}</Label>
-                      </div>
-                    ))}
-                  </div>
-                  {strategicPillars.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {strategicPillars.map(pillar => (
-                        <Badge key={pillar} variant="secondary" className="text-xs">
-                          {pillar}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Revenue Play */}
-                <div className="space-y-2">
-                  <Label htmlFor="revenue-play">Revenue Play</Label>
-                  <Select value={revenuePlay} onValueChange={setRevenuePlay}>
-                    <SelectTrigger id="revenue-play" className="w-full">
-                      <SelectValue placeholder="Select revenue play" />
-                    </SelectTrigger>
-                    <SelectContent className="max-w-[350px]">
-                      <SelectItem value="_none">Select revenue play</SelectItem>
-                      {revenuePlays.map(play => (
-                        <SelectItem key={play} value={play} className="whitespace-normal py-2">{play}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Numeric Inputs */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="forecasted-cost">Forecasted Cost ($)</Label>
-                    <Input 
-                      id="forecasted-cost" 
-                      type="number" 
-                      placeholder="Enter amount" 
-                      value={forecastedCost.toString()}
-                      onChange={(e) => handleNumericChange(e, setForecastedCost)}
-                      min="0"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expected-leads">Expected Leads</Label>
-                    <Input 
-                      id="expected-leads" 
-                      type="number" 
-                      placeholder="Enter number" 
-                      value={expectedLeads.toString()}
-                      onChange={(e) => handleNumericChange(e, setExpectedLeads)}
-                      min="0"
-                    />
-                  </div>
-                </div>
+              <CardContent className="p-0 overflow-auto">
+                <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
               </CardContent>
-            </Card>
-
-            {/* Results Card */}
-            <Card className="border shadow-sm bg-muted/50">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <ChartLineUp className="h-5 w-5" /> Calculated Outcomes
-                </CardTitle>
-                <CardDescription>Estimated performance metrics based on your inputs</CardDescription>
-              </CardHeader>
-              
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-card rounded-md p-3 shadow-sm">
-                    <div className="text-sm text-muted-foreground mb-1">MQLs (10%)</div>
-                    <div className="text-2xl font-semibold">{mql}</div>
-                  </div>
-                  <div className="bg-card rounded-md p-3 shadow-sm">
-                    <div className="text-sm text-muted-foreground mb-1">SQLs (6%)</div>
-                    <div className="text-2xl font-semibold">{sql}</div>
-                  </div>
-                  <div className="bg-card rounded-md p-3 shadow-sm">
-                    <div className="text-sm text-muted-foreground mb-1">Opportunities (80% of SQL)</div>
-                    <div className="text-2xl font-semibold">{opportunities}</div>
-                  </div>
-                  <div className="bg-accent rounded-md p-3 shadow-sm">
-                    <div className="text-sm text-accent-foreground mb-1">Pipeline ($50K × Opps)</div>
-                    <div className="text-2xl font-semibold text-accent-foreground">{formatCurrency(pipeline)}</div>
-                  </div>
-                </div>
-              </CardContent>
-
-              <CardFooter className="text-sm text-muted-foreground">
-                {forecastedCost && typeof forecastedCost === 'number' && pipeline > 0 ? (
-                  <div>
-                    ROI: {Math.round((pipeline / forecastedCost) * 100) / 100}x
-                  </div>
-                ) : (
-                  <div>Enter expected leads to see calculated outcomes</div>
-                )}
-              </CardFooter>
             </Card>
           </TabsContent>
 

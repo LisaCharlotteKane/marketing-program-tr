@@ -2,39 +2,39 @@
 
 ## Core Purpose & Success
 - **Mission Statement**: A real-time calculator for marketing teams to forecast campaign performance metrics and financial outcomes, with execution tracking and data-driven reporting.
-- **Success Indicators**: Accurate calculations, intuitive form inputs, clear visualization of results, effective tracking of campaign execution, and comprehensive reporting dashboards.
+- **Success Indicators**: Accurate calculations, intuitive table-based inputs, clear visualization of results, effective tracking of campaign execution, and comprehensive reporting dashboards.
 - **Experience Qualities**: Efficient, Professional, Responsive
 
 ## Project Classification & Approach
-- **Complexity Level**: Light Application (form with real-time calculations, status tracking, and reporting)
+- **Complexity Level**: Light Application (table-based data entry with real-time calculations, status tracking, and reporting)
 - **Primary User Activity**: Creating, Tracking, and Analyzing (inputting data, updating status, and reviewing performance)
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Marketing teams need to quickly estimate campaign performance metrics, track execution status, and analyze aggregate data across regions and time periods.
+- **Core Problem Analysis**: Marketing teams need to quickly estimate campaign performance metrics for multiple initiatives, track execution status, and analyze aggregate data across regions and time periods.
 - **User Context**: Users will engage with this tool during campaign planning, budget meetings, execution reviews, and quarterly performance reporting.
-- **Critical Path**: Select region → Assign budget → Select campaign parameters → Input forecasted values → View calculated metrics → Update execution status → Monitor budget utilization → Generate reports
+- **Critical Path**: Add campaign entry → Input campaign details → View calculated metrics → Manage multiple campaigns → Update execution status → Monitor budget utilization → Generate reports
 - **Key Moments**: 
-  1. Selecting all required campaign parameters
-  2. Viewing the real-time calculation of derived metrics
-  3. Seeing the financial impact (pipeline value)
+  1. Adding and managing multiple campaign entries in a table format
+  2. Viewing the real-time calculation of derived metrics for each campaign
+  3. Seeing the total financial impact (pipeline value) across all campaigns
   4. Updating campaign execution status and details
   5. Analyzing filtered data across multiple campaigns
 
 ## Essential Features
-1. **Input Form**
-   - What: Form with text input, dropdown, multi-select, and numeric inputs
-   - Why: Capture necessary campaign parameters including campaign owner, campaign type, country, strategic pillars, and revenue play
-   - Success: All inputs function properly with appropriate validation
+1. **Table-Based Campaign Planning**
+   - What: Interactive table with multiple rows for campaign entries, each with dropdown selectors, text inputs, and numeric fields
+   - Why: Enable planning and tracking of multiple campaigns in a single view
+   - Success: Users can efficiently add, edit, and remove multiple campaign entries
 
-2. **Live Calculations**
-   - What: Real-time calculation of MQLs, SQLs, Opportunities, and Pipeline value
-   - Why: Provide immediate feedback on campaign potential
-   - Success: Calculations update instantly and accurately
+2. **Live Calculations Per Row**
+   - What: Real-time calculation of MQLs, SQLs, Opportunities, and Pipeline value for each campaign row
+   - Why: Provide immediate feedback on each campaign's potential
+   - Success: Calculations update instantly and accurately per row
 
-3. **Clean Visual Display**
-   - What: Clear presentation of inputs and calculated results
-   - Why: Enable quick understanding of the forecast
-   - Success: Users can easily distinguish between inputs and calculated values
+3. **Campaign Data Management**
+   - What: Add/remove capabilities, export functionality, and total calculations
+   - Why: Enable comprehensive management of multiple campaigns
+   - Success: Users can efficiently organize their campaign data
 
 4. **Execution Tracking**
    - What: Fields to track campaign status, PO status, campaign codes, issue links, and actual costs with visualization
@@ -56,8 +56,8 @@
 ### Visual Tone & Identity
 - **Emotional Response**: Confidence, clarity, professionalism
 - **Design Personality**: Professional, clean, organized
-- **Visual Metaphors**: Dashboard, calculator, progress tracker
-- **Simplicity Spectrum**: Minimal interface to focus on the data
+- **Visual Metaphors**: Dashboard, spreadsheet, progress tracker
+- **Simplicity Spectrum**: Focused interface with data-dense table layout
 
 ### Color Strategy
 - **Color Scheme Type**: Monochromatic with accent
@@ -79,20 +79,27 @@
 - **Font Pairing Strategy**: Single sans-serif font with varying weights for hierarchy
 - **Typographic Hierarchy**: Bold headings, medium subheadings, regular body text
 - **Font Personality**: Clean, professional, readable
-- **Readability Focus**: Generous line height, optimal character count
+- **Readability Focus**: Compact but readable text in table cells
 - **Typography Consistency**: Consistent sizes and weights across similar elements
 - **Which fonts**: Inter, a professional and highly readable Google font
-- **Legibility Check**: Inter provides excellent legibility at all sizes
+- **Legibility Check**: Inter provides excellent legibility even at smaller sizes needed for table cells
 
 ### Visual Hierarchy & Layout
-- **Attention Direction**: Form on top, results highlighted below, budget status prominently displayed, reporting dashboard with clear visualizations
-- **White Space Philosophy**: Generous spacing for form groups, compact results display
-- **Grid System**: Simple card-based layout with consistent padding
-- **Responsive Approach**: Stack form elements vertically on mobile
-- **Content Density**: Focused density around calculated results, budget visualizations, and dashboard reports
+- **Attention Direction**: Table with campaign entries at the top, calculated fields clearly distinguished, total row at bottom
+- **White Space Philosophy**: Compact spacing for table rows, clear headers
+- **Grid System**: Table-based layout with consistent column widths
+- **Responsive Approach**: Horizontal scrolling for tables on mobile
+- **Content Density**: High density in the table for efficient data entry and review
+
+### Table Design & UX
+- **Column Organization**: Group related fields together, calculation fields at the end
+- **Cell Styling**: Clear distinction between editable and read-only cells
+- **Interaction Design**: Inline editing, dropdown menus, multi-select controls
+- **Row Management**: Add/remove functionality with clear visual cues
+- **Totals Row**: Prominent display of aggregated values
 
 ### Animations
-- **Purposeful Meaning**: Subtle transitions when calculation values change
+- **Purposeful Meaning**: Subtle transitions when rows are added/removed
 - **Hierarchy of Movement**: No animations on inputs, gentle animations on outputs
 - **Contextual Appropriateness**: Minimal animations to maintain professional feel
 
@@ -112,34 +119,36 @@
   - Responsive design for all screen sizes
 
 ### UI Elements & Component Selection
-- **Component Usage**: Form components (Select, Input, Switch, Card) for inputs; Card for results; Tabs for separating planning, execution, and reporting sections
-- **Component Customization**: Rounded corners, subtle shadows
+- **Component Usage**: Table components for campaign planning; Form components (Select, Input, Switch) for cell editing; Tabs for separating planning, execution, and reporting sections
+- **Component Customization**: Compact design for table cells, clear section headings
 - **Component States**: Clear hover and focus states for interactive elements
-- **Icon Selection**: Calculator, chart, and status icons where appropriate
-- **Component Hierarchy**: Form card primary, results card secondary, execution tracking card tertiary, reporting dashboard card quaternary
-- **Spacing System**: Consistent 4px-based spacing (p-4, m-2, etc.)
-- **Mobile Adaptation**: Full-width inputs on mobile, responsive charts and filters
+- **Icon Selection**: Table, add/remove, chart, and status icons where appropriate
+- **Component Hierarchy**: Campaign table primary, budget management secondary, reporting dashboard tertiary
+- **Spacing System**: Tighter spacing within table cells, consistent padding for sections
+- **Mobile Adaptation**: Horizontal scrolling for tables, responsive charts and filters
 
 ### Visual Consistency Framework
-- **Design System Approach**: Component-based design
-- **Style Guide Elements**: Colors, typography, spacing
-- **Visual Rhythm**: Consistent spacing between form groups
+- **Design System Approach**: Component-based design with table focus
+- **Style Guide Elements**: Colors, typography, spacing, table styling
+- **Visual Rhythm**: Consistent column widths and row heights
 - **Brand Alignment**: Professional appearance for business context
 
 ### Accessibility & Readability
 - **Contrast Goal**: WCAG AA compliance for all text elements
+- **Keyboard Navigation**: Full keyboard accessibility for table navigation and editing
+- **Screen Reader Support**: Properly labeled table cells and interactive elements
 
 ## Edge Cases & Problem Scenarios
-- **Potential Obstacles**: Users entering negative or unrealistic values; tracking status changes over time; filtering with no matching data
-- **Edge Case Handling**: Input validation to ensure positive numbers; clear status indicators; empty state messaging for filtered results
-- **Technical Constraints**: Form needs to handle both text and numeric inputs; URL validation for issue links; export functionality for filtered data
+- **Potential Obstacles**: Managing many campaigns in a single view; validating multi-column entries; maintaining visual clarity with dense data
+- **Edge Case Handling**: Pagination or filtering for large datasets; inline validation; clear visual separation between rows
+- **Technical Constraints**: Table responsiveness on mobile; performance with many rows; export formatting
 
 ## Implementation Considerations
-- **Scalability Needs**: Potential to add more calculation fields, execution metrics, and reporting dimensions later
-- **Testing Focus**: Validate calculation accuracy, status transitions, and report filtering logic
-- **Critical Questions**: Are the calculation formulas accurate to business needs? Do the execution tracking fields cover all necessary information? Does the reporting dashboard provide actionable insights?
+- **Scalability Needs**: Potential to handle hundreds of campaign entries, additional columns, and more complex filtering
+- **Testing Focus**: Validate table interactions, calculation accuracy, data export functionality
+- **Critical Questions**: Does the table format make data entry more efficient? Are all important fields accessible? Does the export functionality capture all relevant data?
 
 ## Reflection
-- This approach provides a comprehensive tool that spans the entire campaign lifecycle from planning to execution to analysis.
-- We assume users understand the terminology, calculation relationships, and execution tracking workflow.
-- Adding the ability to save campaigns, export calculations, and visualize historical performance would make this solution truly exceptional.
+- This table-based approach provides a more spreadsheet-like experience that marketing teams will find familiar and efficient.
+- We assume users are comfortable with dense data entry interfaces and understand the calculation relationships.
+- Adding inline data validation, row filtering/sorting, and the ability to save campaign sets would make this solution truly exceptional.
