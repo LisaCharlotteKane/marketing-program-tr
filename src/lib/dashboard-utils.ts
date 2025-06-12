@@ -89,6 +89,22 @@ const campaignData = [
     actualLeads: 120,
     actualMQLs: 14,
     actualSQLs: 8
+  },
+  {
+    id: "camp-007",
+    region: "Digital",
+    country: "Multiple Regions",
+    quarter: "Q2 2023",
+    campaignOwner: "Jennifer Lee",
+    programType: "Targeted Paid Ads & Content Syndication",
+    status: "On Track",
+    forecastedCost: 75000,
+    actualCost: 40000,
+    expectedLeads: 300,
+    actualLeads: 150,
+    actualMQLs: 18,
+    actualSQLs: 10,
+    impactedRegions: ["SAARC", "North Asia", "South Asia"]
   }
 ];
 
@@ -96,13 +112,14 @@ const campaignData = [
 export const quarters = ["Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023"];
 
 // Define regions
-export const regions = ["SAARC", "North Asia", "South Asia"];
+export const regions = ["SAARC", "North Asia", "South Asia", "Digital"];
 
 // Define countries by region
 const countriesByRegion = {
   "SAARC": ["India", "Pakistan", "Bangladesh", "Sri Lanka", "Nepal"],
   "North Asia": ["Japan", "China", "South Korea", "Taiwan"],
-  "South Asia": ["Singapore", "Malaysia", "Indonesia", "Thailand", "Philippines", "Vietnam"]
+  "South Asia": ["Singapore", "Malaysia", "Indonesia", "Thailand", "Philippines", "Vietnam"],
+  "Digital": ["Multiple Regions"] // Digital is cross-regional
 };
 
 // Get countries by region
@@ -229,6 +246,7 @@ export const exportToCSV = (campaigns) => {
   const headers = [
     "Region",
     "Country",
+    "Impacted Regions",
     "Quarter",
     "Campaign Owner",
     "Program Type",
@@ -245,6 +263,7 @@ export const exportToCSV = (campaigns) => {
   const rows = campaigns.map(campaign => [
     campaign.region,
     campaign.country,
+    campaign.impactedRegions ? campaign.impactedRegions.join(', ') : '',
     campaign.quarter,
     campaign.campaignOwner,
     campaign.programType,

@@ -365,6 +365,7 @@ export function ReportingDashboard() {
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Region</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Country</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Impacted Regions</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Quarter</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Campaign Owner</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Program Type</th>
@@ -378,6 +379,17 @@ export function ReportingDashboard() {
                     <tr key={campaign.id}>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.region}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.country}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {campaign.impactedRegions && campaign.impactedRegions.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {campaign.impactedRegions.map(region => (
+                              <Badge key={region} variant="outline" className="text-xs">
+                                {region}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : null}
+                      </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.quarter}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.campaignOwner}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.programType}</td>

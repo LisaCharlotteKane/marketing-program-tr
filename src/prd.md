@@ -42,8 +42,8 @@
    - Success: Users can effectively update campaign status and visualize cost comparisons throughout its lifecycle
 
 5. **Budget Management**
-   - What: Regional budget tracking and comparison against forecasted and actual costs
-   - Why: Enable financial oversight and budget adherence across regions
+   - What: Regional budget tracking and comparison against forecasted and actual costs, including cross-regional "Digital" campaigns
+   - Why: Enable financial oversight and budget adherence across regions and for digital initiatives
    - Success: Clear visual indicators when budgets are exceeded with appropriate alerts
 
 6. **Reporting Dashboard**
@@ -55,6 +55,11 @@
    - What: Visual dashboard showing ROI metrics, funnel progression, and performance indicators based on campaign table data
    - Why: Provide at-a-glance insight into campaign effectiveness and return on investment
    - Success: Accurate ROI calculation and visualization that updates dynamically with campaign changes
+
+8. **Cross-Regional Campaign Management**
+   - What: Support for "Digital" campaign region with ability to select multiple impacted regions
+   - Why: Enable proper tracking and attribution of campaigns that span multiple regions
+   - Success: Digital campaigns can be properly budgeted and their impact across regions can be tracked
 
 ## Design Direction
 

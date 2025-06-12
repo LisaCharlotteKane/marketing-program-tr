@@ -58,7 +58,8 @@ function App() {
   const [regionalBudgets, setRegionalBudgets] = useState<RegionalBudgets>({
     "SAARC": { assignedBudget: "", programs: [] },
     "North Asia": { assignedBudget: "", programs: [] },
-    "South Asia": { assignedBudget: "", programs: [] }
+    "South Asia": { assignedBudget: "", programs: [] },
+    "Digital": { assignedBudget: "", programs: [] }
   })
   
   // Program ID for tracking
@@ -80,7 +81,7 @@ function App() {
     "All"
   ]
   const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"]
-  const regions = ["SAARC", "North Asia", "South Asia"]
+  const regions = ["SAARC", "North Asia", "South Asia", "Digital"]
   
   // Campaign types
   const campaignTypes = [

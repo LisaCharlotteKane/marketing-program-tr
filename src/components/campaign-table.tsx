@@ -31,6 +31,7 @@ export interface Campaign {
   description: string;
   forecastedCost: number | "";
   expectedLeads: number | "";
+  impactedRegions?: string[]; // Optional field for Digital region campaigns
   // Calculated fields (not editable)
   mql?: number;
   sql?: number;
@@ -84,7 +85,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     "Q4 - April", "Q4 - May", "Q4 - June"
   ];
   
-  const regions = ["SAARC", "North Asia", "South Asia"];
+  const regions = ["SAARC", "North Asia", "South Asia", "Digital"];
   
   const countries = [
     "Afghanistan", "Australia", "Bangladesh", "Bhutan", "Brunei", 
@@ -120,6 +121,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
       description: "",
       forecastedCost: "",
       expectedLeads: "",
+      impactedRegions: [],
     };
     setCampaigns([...campaigns, newCampaign]);
   };
@@ -173,6 +175,25 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     }));
   };
 
+  // Handle impacted regions selection
+  const toggleImpactedRegion = (id: string, region: string) => {
+    setCampaigns(campaigns.map(campaign => {
+      if (campaign.id === id) {
+        const impactedRegions = [...(campaign.impactedRegions || [])];
+        const index = impactedRegions.indexOf(region);
+        
+        if (index > -1) {
+          impactedRegions.splice(index, 1);
+        } else {
+          impactedRegions.push(region);
+        }
+        
+        return { ...campaign, impactedRegions };
+      }
+      return campaign;
+    }));
+  };
+
   // Handle numeric input changes
   const handleNumericChange = (
     id: string,
@@ -194,7 +215,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     // Headers including calculated fields
     const headers = [
       "Campaign Type", "Strategic Pillars", "Revenue Play", 
-      "Fiscal Year", "Quarter/Month", "Region", "Country", "Owner", 
+      "Fiscal Year", "Quarter/Month", "Region", "Country", "Impacted Regions", "Owner", 
       "Description", "Forecasted Cost", "Expected Leads",
       "MQLs (10%)", "SQLs (6%)", "Opportunities (80% of SQL)", "Pipeline Forecast"
     ];
@@ -208,6 +229,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
       campaign.quarterMonth,
       campaign.region,
       campaign.country,
+      campaign.impactedRegions ? campaign.impactedRegions.join(', ') : '',
       campaign.owner,
       campaign.description,
       typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0,
@@ -466,6 +488,58 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
                           ))}
                         </SelectContent>
                       </Select>
+                      
+                      {/* Impacted Regions (only show for Digital region) */}
+                      {campaign.region === "Digital" && (
+                        <div className="mt-2">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button 
+                                variant="outline" 
+                                className="w-[180px] justify-start text-left font-normal"
+                                size="sm"
+                              >
+                                {campaign.impactedRegions && campaign.impactedRegions.length > 0 
+                                  ? `${campaign.impactedRegions.length} region(s) impacted`
+                                  : "Select impacted regions"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[220px] p-0" align="start">
+                              <Command>
+                                <CommandInput placeholder="Search regions..." />
+                                <CommandEmpty>No results found.</CommandEmpty>
+                                <CommandGroup>
+                                  {regions.filter(r => r !== "Digital").map((region) => (
+                                    <CommandItem
+                                      key={region}
+                                      onSelect={() => toggleImpactedRegion(campaign.id, region)}
+                                      className="flex items-center gap-2"
+                                    >
+                                      <Checkbox 
+                                        checked={campaign.impactedRegions?.includes(region)}
+                                        className="mr-2"
+                                      />
+                                      <span>{region}</span>
+                                      {campaign.impactedRegions?.includes(region) && (
+                                        <Check className="h-4 w-4 ml-auto" />
+                                      )}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
+                          {campaign.impactedRegions && campaign.impactedRegions.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {campaign.impactedRegions.map((region) => (
+                                <Badge key={region} variant="outline" className="text-xs px-1 py-0">
+                                  {region}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </TableCell>
 
                     {/* Owner */}
