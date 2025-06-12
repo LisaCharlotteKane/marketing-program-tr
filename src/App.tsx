@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Calculator, ChartLineUp } from "@phosphor-icons/react"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle } from "@phosphor-icons/react"
 
 function App() {
   // Form state
@@ -21,11 +23,19 @@ function App() {
   const [sql, setSql] = useState(0)
   const [opportunities, setOpportunities] = useState(0)
   const [pipeline, setPipeline] = useState(0)
+  
+  // Execution tracking state
+  const [status, setStatus] = useState("")
+  const [poRaised, setPoRaised] = useState(false)
+  const [campaignCode, setCampaignCode] = useState("")
+  const [issueLink, setIssueLink] = useState("")
+  const [actualCost, setActualCost] = useState<number | "">("")
 
   // Preset data
   const programTypes = ["Event", "Webinar", "Content", "Email", "Social", "Paid Media", "Partner"]
   const pillars = ["Customer Acquisition", "Customer Retention", "Brand Awareness", "Market Expansion", "Product Launch"]
   const revenuePlays = ["New Business", "Cross-sell", "Upsell", "Renewal", "Reactivation"]
+  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"]
 
   // Handle strategic pillar selection
   const togglePillar = (pillar: string) => {
@@ -91,153 +101,274 @@ function App() {
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-bold mb-2">Marketing Campaign Calculator</h1>
-          <p className="text-muted-foreground">Forecast campaign performance and financial outcomes</p>
+          <p className="text-muted-foreground">Forecast campaign performance and track execution</p>
         </header>
 
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <Calculator className="h-5 w-5" /> Campaign Parameters
-            </CardTitle>
-            <CardDescription>Enter your campaign details to calculate expected outcomes</CardDescription>
-          </CardHeader>
+        <Tabs defaultValue="planning" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="planning" className="flex items-center gap-2">
+              <Calculator className="h-4 w-4" /> Planning
+            </TabsTrigger>
+            <TabsTrigger value="execution" className="flex items-center gap-2">
+              <ClipboardText className="h-4 w-4" /> Execution Tracking
+            </TabsTrigger>
+          </TabsList>
 
-          <CardContent className="space-y-6">
-            {/* Campaign Owner */}
-            <div className="space-y-2">
-              <Label htmlFor="campaign-owner">Campaign Owner</Label>
-              <Input 
-                id="campaign-owner" 
-                placeholder="Enter owner name" 
-                value={campaignOwner}
-                onChange={(e) => setCampaignOwner(e.target.value)}
-              />
-            </div>
+          <TabsContent value="planning" className="space-y-6">
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Calculator className="h-5 w-5" /> Campaign Parameters
+                </CardTitle>
+                <CardDescription>Enter your campaign details to calculate expected outcomes</CardDescription>
+              </CardHeader>
 
-            {/* Program Type */}
-            <div className="space-y-2">
-              <Label htmlFor="program-type">Program Type</Label>
-              <Select value={programType} onValueChange={setProgramType}>
-                <SelectTrigger id="program-type" className="w-full">
-                  <SelectValue placeholder="Select program type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {programTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Strategic Pillar */}
-            <div className="space-y-2">
-              <Label>Strategic Pillar (select multiple)</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                {pillars.map(pillar => (
-                  <div key={pillar} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`pillar-${pillar}`} 
-                      checked={strategicPillars.includes(pillar)}
-                      onCheckedChange={() => togglePillar(pillar)}
-                    />
-                    <Label htmlFor={`pillar-${pillar}`} className="font-normal cursor-pointer">{pillar}</Label>
-                  </div>
-                ))}
-              </div>
-              {strategicPillars.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {strategicPillars.map(pillar => (
-                    <Badge key={pillar} variant="secondary" className="text-xs">
-                      {pillar}
-                    </Badge>
-                  ))}
+              <CardContent className="space-y-6">
+                {/* Campaign Owner */}
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-owner">Campaign Owner</Label>
+                  <Input 
+                    id="campaign-owner" 
+                    placeholder="Enter owner name" 
+                    value={campaignOwner}
+                    onChange={(e) => setCampaignOwner(e.target.value)}
+                  />
                 </div>
-              )}
-            </div>
 
-            {/* Revenue Play */}
-            <div className="space-y-2">
-              <Label htmlFor="revenue-play">Revenue Play</Label>
-              <Select value={revenuePlay} onValueChange={setRevenuePlay}>
-                <SelectTrigger id="revenue-play" className="w-full">
-                  <SelectValue placeholder="Select revenue play" />
-                </SelectTrigger>
-                <SelectContent>
-                  {revenuePlays.map(play => (
-                    <SelectItem key={play} value={play}>{play}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {/* Program Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="program-type">Program Type</Label>
+                  <Select value={programType} onValueChange={setProgramType}>
+                    <SelectTrigger id="program-type" className="w-full">
+                      <SelectValue placeholder="Select program type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {programTypes.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Numeric Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="forecasted-cost">Forecasted Cost ($)</Label>
-                <Input 
-                  id="forecasted-cost" 
-                  type="number" 
-                  placeholder="Enter amount" 
-                  value={forecastedCost.toString()}
-                  onChange={(e) => handleNumericChange(e, setForecastedCost)}
-                  min="0"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="expected-leads">Expected Leads</Label>
-                <Input 
-                  id="expected-leads" 
-                  type="number" 
-                  placeholder="Enter number" 
-                  value={expectedLeads.toString()}
-                  onChange={(e) => handleNumericChange(e, setExpectedLeads)}
-                  min="0"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                {/* Strategic Pillar */}
+                <div className="space-y-2">
+                  <Label>Strategic Pillar (select multiple)</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    {pillars.map(pillar => (
+                      <div key={pillar} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`pillar-${pillar}`} 
+                          checked={strategicPillars.includes(pillar)}
+                          onCheckedChange={() => togglePillar(pillar)}
+                        />
+                        <Label htmlFor={`pillar-${pillar}`} className="font-normal cursor-pointer">{pillar}</Label>
+                      </div>
+                    ))}
+                  </div>
+                  {strategicPillars.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {strategicPillars.map(pillar => (
+                        <Badge key={pillar} variant="secondary" className="text-xs">
+                          {pillar}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-        {/* Results Card */}
-        <Card className="border shadow-sm bg-muted/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <ChartLineUp className="h-5 w-5" /> Calculated Outcomes
-            </CardTitle>
-            <CardDescription>Estimated performance metrics based on your inputs</CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-card rounded-md p-3 shadow-sm">
-                <div className="text-sm text-muted-foreground mb-1">MQLs (10%)</div>
-                <div className="text-2xl font-semibold">{mql}</div>
-              </div>
-              <div className="bg-card rounded-md p-3 shadow-sm">
-                <div className="text-sm text-muted-foreground mb-1">SQLs (6%)</div>
-                <div className="text-2xl font-semibold">{sql}</div>
-              </div>
-              <div className="bg-card rounded-md p-3 shadow-sm">
-                <div className="text-sm text-muted-foreground mb-1">Opportunities (80% of SQL)</div>
-                <div className="text-2xl font-semibold">{opportunities}</div>
-              </div>
-              <div className="bg-accent rounded-md p-3 shadow-sm">
-                <div className="text-sm text-accent-foreground mb-1">Pipeline ($50K × Opps)</div>
-                <div className="text-2xl font-semibold text-accent-foreground">{formatCurrency(pipeline)}</div>
-              </div>
-            </div>
-          </CardContent>
+                {/* Revenue Play */}
+                <div className="space-y-2">
+                  <Label htmlFor="revenue-play">Revenue Play</Label>
+                  <Select value={revenuePlay} onValueChange={setRevenuePlay}>
+                    <SelectTrigger id="revenue-play" className="w-full">
+                      <SelectValue placeholder="Select revenue play" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {revenuePlays.map(play => (
+                        <SelectItem key={play} value={play}>{play}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          <CardFooter className="text-sm text-muted-foreground">
-            {forecastedCost && typeof forecastedCost === 'number' && pipeline > 0 ? (
-              <div>
-                ROI: {Math.round((pipeline / forecastedCost) * 100) / 100}x
-              </div>
-            ) : (
-              <div>Enter expected leads to see calculated outcomes</div>
-            )}
-          </CardFooter>
-        </Card>
+                {/* Numeric Inputs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="forecasted-cost">Forecasted Cost ($)</Label>
+                    <Input 
+                      id="forecasted-cost" 
+                      type="number" 
+                      placeholder="Enter amount" 
+                      value={forecastedCost.toString()}
+                      onChange={(e) => handleNumericChange(e, setForecastedCost)}
+                      min="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expected-leads">Expected Leads</Label>
+                    <Input 
+                      id="expected-leads" 
+                      type="number" 
+                      placeholder="Enter number" 
+                      value={expectedLeads.toString()}
+                      onChange={(e) => handleNumericChange(e, setExpectedLeads)}
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Results Card */}
+            <Card className="border shadow-sm bg-muted/50">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <ChartLineUp className="h-5 w-5" /> Calculated Outcomes
+                </CardTitle>
+                <CardDescription>Estimated performance metrics based on your inputs</CardDescription>
+              </CardHeader>
+              
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-card rounded-md p-3 shadow-sm">
+                    <div className="text-sm text-muted-foreground mb-1">MQLs (10%)</div>
+                    <div className="text-2xl font-semibold">{mql}</div>
+                  </div>
+                  <div className="bg-card rounded-md p-3 shadow-sm">
+                    <div className="text-sm text-muted-foreground mb-1">SQLs (6%)</div>
+                    <div className="text-2xl font-semibold">{sql}</div>
+                  </div>
+                  <div className="bg-card rounded-md p-3 shadow-sm">
+                    <div className="text-sm text-muted-foreground mb-1">Opportunities (80% of SQL)</div>
+                    <div className="text-2xl font-semibold">{opportunities}</div>
+                  </div>
+                  <div className="bg-accent rounded-md p-3 shadow-sm">
+                    <div className="text-sm text-accent-foreground mb-1">Pipeline ($50K × Opps)</div>
+                    <div className="text-2xl font-semibold text-accent-foreground">{formatCurrency(pipeline)}</div>
+                  </div>
+                </div>
+              </CardContent>
+
+              <CardFooter className="text-sm text-muted-foreground">
+                {forecastedCost && typeof forecastedCost === 'number' && pipeline > 0 ? (
+                  <div>
+                    ROI: {Math.round((pipeline / forecastedCost) * 100) / 100}x
+                  </div>
+                ) : (
+                  <div>Enter expected leads to see calculated outcomes</div>
+                )}
+              </CardFooter>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="execution" className="space-y-6">
+            <Card className="border shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkle className="h-5 w-5" /> Execution Status
+                </CardTitle>
+                <CardDescription>Track the current state of your marketing campaign</CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-6">
+                {/* Status */}
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger id="status" className="w-full">
+                      <SelectValue placeholder="Select campaign status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* PO Raised */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="po-raised">PO Raised?</Label>
+                    <div className="text-sm text-muted-foreground">Has a purchase order been issued</div>
+                  </div>
+                  <Switch
+                    id="po-raised"
+                    checked={poRaised}
+                    onCheckedChange={setPoRaised}
+                  />
+                </div>
+
+                {/* Salesforce Campaign Code */}
+                <div className="space-y-2">
+                  <Label htmlFor="campaign-code">Salesforce Campaign Code</Label>
+                  <Input 
+                    id="campaign-code" 
+                    placeholder="Enter campaign code" 
+                    value={campaignCode}
+                    onChange={(e) => setCampaignCode(e.target.value)}
+                  />
+                </div>
+
+                {/* Issue Link */}
+                <div className="space-y-2">
+                  <Label htmlFor="issue-link">Issue Link</Label>
+                  <Input 
+                    id="issue-link" 
+                    type="url"
+                    placeholder="https://..." 
+                    value={issueLink}
+                    onChange={(e) => setIssueLink(e.target.value)}
+                  />
+                </div>
+
+                {/* Actual Cost */}
+                <div className="space-y-2">
+                  <Label htmlFor="actual-cost">Actual Cost ($)</Label>
+                  <Input 
+                    id="actual-cost" 
+                    type="number" 
+                    placeholder="Enter actual amount spent" 
+                    value={actualCost.toString()}
+                    onChange={(e) => handleNumericChange(e, setActualCost)}
+                    min="0"
+                  />
+                </div>
+              </CardContent>
+
+              <CardFooter>
+                {status && (
+                  <div className="w-full">
+                    <div className="text-sm font-medium mb-2">Status Summary</div>
+                    <div className="flex items-center justify-between gap-4">
+                      <Badge 
+                        className={`${
+                          status === "Planning" ? "bg-blue-100 text-blue-800" : 
+                          status === "On Track" ? "bg-yellow-100 text-yellow-800" :
+                          status === "Shipped" ? "bg-green-100 text-green-800" :
+                          "bg-red-100 text-red-800"
+                        } px-3 py-1 rounded-full text-xs`}
+                      >
+                        {status}
+                      </Badge>
+                      <div className="text-sm text-muted-foreground">
+                        {forecastedCost && typeof forecastedCost === 'number' && 
+                         actualCost && typeof actualCost === 'number' ? (
+                          <span>
+                            Budget variance: {formatCurrency(actualCost - forecastedCost)} 
+                            ({Math.round((actualCost / forecastedCost - 1) * 100)}%)
+                          </span>
+                        ) : (
+                          <span>Enter actual cost to see budget variance</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardFooter>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )

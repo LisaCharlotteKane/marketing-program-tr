@@ -1,22 +1,23 @@
 # Marketing Campaign Calculator PRD
 
 ## Core Purpose & Success
-- **Mission Statement**: A real-time calculator for marketing teams to forecast campaign performance metrics and financial outcomes.
-- **Success Indicators**: Accurate calculations, intuitive form inputs, and clear visualization of results.
+- **Mission Statement**: A real-time calculator for marketing teams to forecast campaign performance metrics and financial outcomes, with execution tracking.
+- **Success Indicators**: Accurate calculations, intuitive form inputs, clear visualization of results, and effective tracking of campaign execution.
 - **Experience Qualities**: Efficient, Professional, Responsive
 
 ## Project Classification & Approach
-- **Complexity Level**: Light Application (form with real-time calculations)
-- **Primary User Activity**: Creating (inputting data to generate forecasts)
+- **Complexity Level**: Light Application (form with real-time calculations and status tracking)
+- **Primary User Activity**: Creating and Tracking (inputting data to generate forecasts and updating execution status)
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Marketing teams need to quickly estimate campaign performance metrics to make informed decisions.
-- **User Context**: Users will engage with this tool during campaign planning and budget meetings.
-- **Critical Path**: Select campaign parameters → Input forecasted values → View calculated metrics
+- **Core Problem Analysis**: Marketing teams need to quickly estimate campaign performance metrics and track execution status throughout the campaign lifecycle.
+- **User Context**: Users will engage with this tool during campaign planning, budget meetings, and execution reviews.
+- **Critical Path**: Select campaign parameters → Input forecasted values → View calculated metrics → Update execution status
 - **Key Moments**: 
   1. Selecting all required campaign parameters
   2. Viewing the real-time calculation of derived metrics
   3. Seeing the financial impact (pipeline value)
+  4. Updating campaign execution status and details
 
 ## Essential Features
 1. **Input Form**
@@ -34,12 +35,17 @@
    - Why: Enable quick understanding of the forecast
    - Success: Users can easily distinguish between inputs and calculated values
 
+4. **Execution Tracking**
+   - What: Fields to track campaign status, PO status, campaign codes, issue links, and actual costs
+   - Why: Enable teams to monitor campaign progress and compare actual vs. forecasted performance
+   - Success: Users can effectively update campaign status throughout its lifecycle
+
 ## Design Direction
 
 ### Visual Tone & Identity
 - **Emotional Response**: Confidence, clarity, professionalism
 - **Design Personality**: Professional, clean, organized
-- **Visual Metaphors**: Dashboard, calculator
+- **Visual Metaphors**: Dashboard, calculator, progress tracker
 - **Simplicity Spectrum**: Minimal interface to focus on the data
 
 ### Color Strategy
@@ -47,6 +53,7 @@
 - **Primary Color**: Deep blue (#1a365d) - represents trust and professionalism
 - **Secondary Colors**: Lighter blues for supporting elements
 - **Accent Color**: Teal (#0d9488) for highlighting important metrics and CTAs
+- **Status Colors**: Green for "Shipped", Yellow for "On Track", Blue for "Planning", Red for "Cancelled"
 - **Color Psychology**: Blues convey trust and reliability in financial contexts
 - **Color Accessibility**: High contrast between text and backgrounds
 - **Foreground/Background Pairings**:
@@ -79,11 +86,11 @@
 - **Contextual Appropriateness**: Minimal animations to maintain professional feel
 
 ### UI Elements & Component Selection
-- **Component Usage**: Form components (Select, Input, Card) for inputs; Card for results
+- **Component Usage**: Form components (Select, Input, Switch, Card) for inputs; Card for results; Tabs for separating planning and execution sections
 - **Component Customization**: Rounded corners, subtle shadows
 - **Component States**: Clear hover and focus states for interactive elements
-- **Icon Selection**: Calculator and chart icons where appropriate
-- **Component Hierarchy**: Form card primary, results card secondary
+- **Icon Selection**: Calculator, chart, and status icons where appropriate
+- **Component Hierarchy**: Form card primary, results card secondary, execution tracking card tertiary
 - **Spacing System**: Consistent 4px-based spacing (p-4, m-2, etc.)
 - **Mobile Adaptation**: Full-width inputs on mobile
 
@@ -97,16 +104,16 @@
 - **Contrast Goal**: WCAG AA compliance for all text elements
 
 ## Edge Cases & Problem Scenarios
-- **Potential Obstacles**: Users entering negative or unrealistic values
-- **Edge Case Handling**: Input validation to ensure positive numbers
-- **Technical Constraints**: Form needs to handle both text and numeric inputs
+- **Potential Obstacles**: Users entering negative or unrealistic values; tracking status changes over time
+- **Edge Case Handling**: Input validation to ensure positive numbers; clear status indicators
+- **Technical Constraints**: Form needs to handle both text and numeric inputs; URL validation for issue links
 
 ## Implementation Considerations
-- **Scalability Needs**: Potential to add more calculation fields later
-- **Testing Focus**: Validate calculation accuracy
-- **Critical Questions**: Are the calculation formulas accurate to business needs?
+- **Scalability Needs**: Potential to add more calculation fields and execution metrics later
+- **Testing Focus**: Validate calculation accuracy and status transitions
+- **Critical Questions**: Are the calculation formulas accurate to business needs? Do the execution tracking fields cover all necessary information?
 
 ## Reflection
-- This approach provides a straightforward, professional tool focused on accuracy and clarity.
-- We assume users understand the terminology and calculation relationships.
-- Adding the ability to save or export calculations would make this solution truly exceptional.
+- This approach provides a comprehensive tool that spans the entire campaign lifecycle from planning to execution.
+- We assume users understand the terminology, calculation relationships, and execution tracking workflow.
+- Adding the ability to save campaigns, export calculations, and visualize historical performance would make this solution truly exceptional.
