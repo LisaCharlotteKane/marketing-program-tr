@@ -12,7 +12,7 @@
 ## Thought Process for Feature Selection
 - **Core Problem Analysis**: Marketing teams need to quickly estimate campaign performance metrics and track execution status throughout the campaign lifecycle.
 - **User Context**: Users will engage with this tool during campaign planning, budget meetings, and execution reviews.
-- **Critical Path**: Select campaign parameters → Input forecasted values → View calculated metrics → Update execution status
+- **Critical Path**: Select region → Assign budget → Select campaign parameters → Input forecasted values → View calculated metrics → Update execution status → Monitor budget utilization
 - **Key Moments**: 
   1. Selecting all required campaign parameters
   2. Viewing the real-time calculation of derived metrics
@@ -39,6 +39,11 @@
    - What: Fields to track campaign status, PO status, campaign codes, issue links, and actual costs with visualization
    - Why: Enable teams to monitor campaign progress and compare actual vs. forecasted performance
    - Success: Users can effectively update campaign status and visualize cost comparisons throughout its lifecycle
+
+5. **Budget Management**
+   - What: Regional budget tracking and comparison against forecasted and actual costs
+   - Why: Enable financial oversight and budget adherence across regions
+   - Success: Clear visual indicators when budgets are exceeded with appropriate alerts
 
 ## Design Direction
 
@@ -74,11 +79,11 @@
 - **Legibility Check**: Inter provides excellent legibility at all sizes
 
 ### Visual Hierarchy & Layout
-- **Attention Direction**: Form on top, results highlighted below
+- **Attention Direction**: Form on top, results highlighted below, budget status prominently displayed
 - **White Space Philosophy**: Generous spacing for form groups, compact results display
 - **Grid System**: Simple card-based layout with consistent padding
 - **Responsive Approach**: Stack form elements vertically on mobile
-- **Content Density**: Focused density around calculated results
+- **Content Density**: Focused density around calculated results and budget visualizations
 
 ### Animations
 - **Purposeful Meaning**: Subtle transitions when calculation values change
@@ -86,10 +91,11 @@
 - **Contextual Appropriateness**: Minimal animations to maintain professional feel
 
 ### Data Visualization
-- **Chart Types**: Bar chart for cost comparison
-- **Chart Purpose**: Visual representation of forecasted vs. actual costs
+- **Chart Types**: Bar charts for cost comparison and budget visualization
+- **Chart Purpose**: Visual representation of forecasted vs. actual costs and budget allocation
 - **Chart Styling**: Consistent color scheme with the application
 - **Chart Interactivity**: Hover tooltips to show exact values
+- **Budget Visualization**: Progress bars to show percentage of budget utilized with clear warning indicators
 
 ### UI Elements & Component Selection
 - **Component Usage**: Form components (Select, Input, Switch, Card) for inputs; Card for results; Tabs for separating planning and execution sections
