@@ -58,6 +58,7 @@ export function useEnhancedCampaigns(
   useEffect(() => {
     const loadInitialData = async () => {
       try {
+        // First try to load from storage
         const loadedData = await loadFromBestAvailableSource(key, initialValue);
         setCampaigns(loadedData);
         setDataLoaded(true);
@@ -73,14 +74,25 @@ export function useEnhancedCampaigns(
           }
         } catch (e) {
           console.error('Error parsing last save timestamp:', e);
+          // Non-critical error, continue
         }
       } catch (e) {
         console.error('Error loading initial campaign data:', e);
         setError('Failed to load saved data. Using default data instead.');
-        toast.error('Error loading saved campaign data');
         
-        // Still mark as loaded so we don't get stuck
+        // Use the initialValue instead and mark as loaded
+        setCampaigns(initialValue);
         setDataLoaded(true);
+        
+        // Notify the user with more helpful message
+        toast.error('Error loading saved campaign data', {
+          description: 'Your data will be initialized with default values.',
+          duration: 5000,
+          action: {
+            label: 'Retry',
+            onClick: () => window.location.reload()
+          }
+        });
       }
     };
     

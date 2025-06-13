@@ -22,9 +22,20 @@ const DB_VERSION = 1;
 // Initialize the IndexedDB database
 function initDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    let request: IDBOpenDBRequest;
     
-    request.onerror = () => reject(new Error('Failed to open IndexedDB'));
+    try {
+      request = indexedDB.open(DB_NAME, DB_VERSION);
+    } catch (error) {
+      console.error('Error opening IndexedDB:', error);
+      reject(new Error('IndexedDB not supported in this browser'));
+      return;
+    }
+    
+    request.onerror = (event) => {
+      console.error('IndexedDB error:', event);
+      reject(new Error('Failed to open IndexedDB'));
+    };
     
     request.onsuccess = () => resolve(request.result);
     
@@ -84,9 +95,18 @@ async function loadFromIndexedDB(key: string): Promise<Campaign[] | null> {
     const db = await initDB();
     const transaction = db.transaction(STORE_NAME, 'readonly');
     const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(key);
     
     return new Promise((resolve, reject) => {
+      let request: IDBRequest;
+      
+      try {
+        request = store.get(key);
+      } catch (error) {
+        console.error('Error accessing IndexedDB store:', error);
+        reject(new Error('Failed to access IndexedDB store'));
+        return;
+      }
+      
       request.onsuccess = () => {
         if (request.result) {
           resolve(request.result.data);
@@ -94,11 +114,15 @@ async function loadFromIndexedDB(key: string): Promise<Campaign[] | null> {
           resolve(null);
         }
       };
-      request.onerror = () => reject(new Error('Failed to load from IndexedDB'));
+      
+      request.onerror = (event) => {
+        console.error('IndexedDB request error:', event);
+        reject(new Error('Failed to load from IndexedDB'));
+      };
     });
   } catch (error) {
     console.error('Error loading from IndexedDB:', error);
-    return null;
+    throw error; // Re-throw to be handled by the caller
   }
 }
 
@@ -133,9 +157,26 @@ function saveToLocalStorage(key: string, campaigns: Campaign[]): void {
 function loadFromLocalStorage(key: string, defaultValue: Campaign[] = []): Campaign[] {
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
+    if (!item) {
+      return defaultValue;
+    }
+    
+    try {
+      const parsed = JSON.parse(item);
+      // Validate the parsed data is an array
+      if (!Array.isArray(parsed)) {
+        console.warn('Invalid campaign data format in localStorage, using default');
+        return defaultValue;
+      }
+      return parsed;
+    } catch (parseError) {
+      console.error('Error parsing JSON from localStorage:', parseError);
+      // If JSON is invalid, remove it to prevent future errors
+      localStorage.removeItem(key);
+      return defaultValue;
+    }
   } catch (error) {
-    console.error('Error loading from localStorage:', error);
+    console.error('Error accessing localStorage:', error);
     return defaultValue;
   }
 }
@@ -183,16 +224,79 @@ export async function loadFromBestAvailableSource(
   key: string = DEFAULT_STORAGE_KEY,
   defaultValue: Campaign[] = []
 ): Promise<Campaign[]> {
-  // Try IndexedDB first (more robust)
-  const idbData = await loadFromIndexedDB(key);
-  if (idbData) {
-    // Also sync back to localStorage for faster future access
-    saveToLocalStorage(key, idbData);
-    return idbData;
+  try {
+    // Try IndexedDB first (more robust)
+    try {
+      const idbData = await loadFromIndexedDB(key);
+      if (idbData) {
+        // Validate and repair data if needed
+        const validatedData = validateAndRepairCampaignData(idbData);
+        
+        // Also sync back to localStorage for faster future access
+        saveToLocalStorage(key, validatedData);
+        return validatedData;
+      }
+    } catch (error) {
+      console.warn('IndexedDB load failed, falling back to localStorage:', error);
+    }
+    
+    // Fall back to localStorage
+    try {
+      const localData = loadFromLocalStorage(key, defaultValue);
+      // Validate and repair data if needed
+      return validateAndRepairCampaignData(localData);
+    } catch (localError) {
+      console.error('LocalStorage load failed:', localError);
+      return defaultValue;
+    }
+  } catch (error) {
+    // Fallback to default in case of any unexpected errors
+    console.error('Error loading campaign data:', error);
+    return defaultValue;
+  }
+}
+
+/**
+ * Validates and repairs campaign data to ensure it's in the correct format
+ * 
+ * @param campaigns Campaign data to validate
+ * @returns Validated and repaired campaign data
+ */
+function validateAndRepairCampaignData(campaigns: any[]): Campaign[] {
+  if (!Array.isArray(campaigns)) {
+    console.warn('Campaign data is not an array, using empty array instead');
+    return [];
   }
   
-  // Fall back to localStorage
-  return loadFromLocalStorage(key, defaultValue);
+  // Filter out non-object entries and ensure minimum valid properties
+  return campaigns.filter(campaign => {
+    // Must be an object
+    if (typeof campaign !== 'object' || campaign === null) {
+      console.warn('Filtered out non-object campaign entry:', campaign);
+      return false;
+    }
+    
+    // Must have at least id, campaignType, and country
+    if (!campaign.id) {
+      // Try to fix by adding an id
+      campaign.id = Math.random().toString(36).substring(2, 9);
+    }
+    
+    // Set defaults for missing required fields
+    if (!campaign.campaignType) campaign.campaignType = "_none";
+    if (!campaign.country) campaign.country = "_none";
+    
+    // Fix forecastedCost and expectedLeads to be numeric
+    if (campaign.forecastedCost && isNaN(Number(campaign.forecastedCost))) {
+      campaign.forecastedCost = 0;
+    }
+    
+    if (campaign.expectedLeads && isNaN(Number(campaign.expectedLeads))) {
+      campaign.expectedLeads = 0;
+    }
+    
+    return true;
+  });
 }
 
 /**

@@ -18,6 +18,7 @@ import { GitHubSync } from "@/components/github-sync"
 import { PersistentStorageInfo } from "@/components/persistent-storage-info"
 import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator"
+import { DataLoadingError } from "@/components/data-loading-error"
 import { Toaster } from "sonner"
 import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
 import { useRegionalBudgets, RegionalBudget, RegionalBudgets } from "@/hooks/useRegionalBudgets"
@@ -63,6 +64,11 @@ function App() {
 
   // Campaign Table Data
   const [campaigns, setCampaigns, saveStatus] = useEnhancedCampaigns('campaignData', [])
+
+  // Handle manual retry of data loading
+  const handleRetryDataLoad = () => {
+    window.location.reload();
+  }
 
   // Preset data
   const pillars = [
@@ -286,6 +292,15 @@ function App() {
             <AutoSaveIndicator className="ml-2" forceSave={saveStatus.forceSave} />
           </p>
         </header>
+
+        {saveStatus.error && (
+          <DataLoadingError 
+            error={saveStatus.error} 
+            onRetry={handleRetryDataLoad}
+            campaigns={campaigns}
+            className="max-w-2xl mx-auto"
+          />
+        )}
 
         <Tabs defaultValue="planning" className="w-full">
           <TabsList className="grid w-full grid-cols-5 mb-4">

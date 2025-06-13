@@ -52,12 +52,17 @@ export function initAutoGitHubSync(): boolean {
         }
       } catch (e) {
         console.error('Error loading GitHub settings from localStorage:', e);
+        // Reset the configuration to prevent further errors
+        isInitialized = false;
+        return false;
       }
     }
     
     return false;
   } catch (error) {
     console.error("Failed to initialize auto GitHub sync:", error);
+    // Reset the configuration to prevent further errors
+    isInitialized = false;
     return false;
   }
 }
