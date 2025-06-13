@@ -252,22 +252,15 @@ Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,
         </div>
 
         <div className="flex items-center gap-2">
-          <a 
-            href="campaign_template.csv" 
-            download="campaign_template.csv"
-            onClick={(e) => {
-              // If download button doesn't work directly, generate it dynamically
-              if (!window.location.href.includes('file:')) {
-                e.preventDefault();
-                generateTemplateCSV();
-              }
-            }}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-2"
+            onClick={generateTemplateCSV}
           >
-            <Button variant="ghost" size="sm" className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Download Template
-            </Button>
-          </a>
+            <Download className="h-4 w-4" />
+            Download Template
+          </Button>
           <div className="text-sm text-muted-foreground">
             Get a sample CSV template
           </div>

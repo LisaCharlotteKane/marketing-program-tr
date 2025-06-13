@@ -9,11 +9,13 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database } from "@phosphor-icons/react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { CampaignTable, Campaign } from "@/components/campaign-table"
 import { ExecutionTracking } from "@/components/execution-tracking"
+import { GitHubSync } from "@/components/github-sync"
+import { Toaster } from "sonner"
 
 // Type definitions for regional budget tracking
 interface RegionalBudget {
@@ -286,6 +288,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground p-4 md:p-8">
+      <Toaster position="top-right" richColors closeButton />
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-bold mb-2">Marketing Campaign Calculator</h1>
@@ -293,7 +296,7 @@ function App() {
         </header>
 
         <Tabs defaultValue="planning" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-4">
+          <TabsList className="grid w-full grid-cols-5 mb-4">
             <TabsTrigger value="planning" className="flex items-center gap-2">
               <Calculator className="h-4 w-4" /> Planning
             </TabsTrigger>
@@ -302,6 +305,9 @@ function App() {
             </TabsTrigger>
             <TabsTrigger value="budget" className="flex items-center gap-2">
               <Buildings className="h-4 w-4" /> Budget Management
+            </TabsTrigger>
+            <TabsTrigger value="github" className="flex items-center gap-2">
+              <Database className="h-4 w-4" /> GitHub Sync
             </TabsTrigger>
             <TabsTrigger value="reporting" className="flex items-center gap-2">
               <PresentationChart className="h-4 w-4" /> Reporting
@@ -471,6 +477,10 @@ function App() {
 
           <TabsContent value="reporting" className="space-y-6">
             <ReportingDashboard />
+          </TabsContent>
+
+          <TabsContent value="github" className="space-y-6">
+            <GitHubSync campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
         </Tabs>
       </div>

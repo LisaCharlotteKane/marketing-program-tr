@@ -163,10 +163,11 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                     // Calculate variance
                     const hasBothCosts = typeof campaign.forecastedCost === 'number' && 
                                          typeof campaign.actualCost === 'number';
-                    const variance = hasBothCosts ? 
-                      (campaign.actualCost as number) - (campaign.forecastedCost as number) : null;
-                    const variancePercent = hasBothCosts && campaign.forecastedCost !== 0 ? 
-                      (variance as number) / (campaign.forecastedCost as number) * 100 : null;
+                    const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
+                    const actualCost = typeof campaign.actualCost === 'number' ? campaign.actualCost : 0;
+                    const variance = hasBothCosts ? actualCost - forecastedCost : null;
+                    const variancePercent = hasBothCosts && forecastedCost !== 0 ? 
+                      (variance as number) / forecastedCost * 100 : null;
 
                     return (
                       <TableRow key={campaign.id}>
