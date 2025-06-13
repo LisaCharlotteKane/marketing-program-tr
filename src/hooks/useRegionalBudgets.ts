@@ -6,6 +6,9 @@ import { syncBudgetsToGitHub, isAutoGitHubSyncAvailable } from '@/services/auto-
 // Define regional budget data type
 export interface RegionalBudget {
   assignedBudget: number | "";
+  lockedByOwner?: boolean;
+  lockedValue?: number;
+  lastLockedBy?: string;
   programs: {
     id: string;
     forecastedCost: number;

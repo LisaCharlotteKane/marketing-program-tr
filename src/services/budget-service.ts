@@ -26,25 +26,49 @@ export function saveBudgetAssignments(budgets: RegionalBudgets): boolean {
 }
 
 /**
- * Loads regional budget data from localStorage
+ * Loads regional budget data from localStorage with predefined locked values
  * 
  * @param defaultRegions Default regions to ensure exist in the result
- * @returns The loaded budget data or an empty object with default regions
+ * @returns The loaded budget data or an object with predefined budget values
  */
 export function loadBudgetAssignments(defaultRegions: string[] = []): RegionalBudgets {
+  // Predefined locked budget values
+  const predefinedBudgets = {
+    "North APAC": 358000,
+    "South APAC": 385500,
+    "SAARC": 265000,
+    "Digital": 68000
+  };
+  
   try {
     const stored = localStorage.getItem(BUDGET_STORAGE_KEY);
     
     if (stored) {
       const parsed = JSON.parse(stored) as RegionalBudgets;
       
-      // Ensure all default regions exist
+      // Ensure all default regions exist with predefined values
       if (defaultRegions.length > 0) {
         const result = { ...parsed };
         
         defaultRegions.forEach(region => {
+          // If region doesn't exist, create it with locked value
           if (!result[region]) {
-            result[region] = { assignedBudget: "", programs: [] };
+            const predefinedValue = predefinedBudgets[region as keyof typeof predefinedBudgets] || "";
+            result[region] = { 
+              assignedBudget: predefinedValue, 
+              lockedByOwner: true,
+              lockedValue: predefinedValue as number,
+              lastLockedBy: "admin",
+              programs: [] 
+            };
+          } 
+          // If region exists but isn't locked, check if we should lock it
+          else if (!result[region].lockedByOwner && region in predefinedBudgets) {
+            const predefinedValue = predefinedBudgets[region as keyof typeof predefinedBudgets];
+            result[region].lockedByOwner = true;
+            result[region].lockedValue = predefinedValue;
+            result[region].assignedBudget = predefinedValue;
+            result[region].lastLockedBy = "admin";
           }
         });
         
@@ -57,22 +81,70 @@ export function loadBudgetAssignments(defaultRegions: string[] = []): RegionalBu
     console.error('Error loading budget data:', e);
   }
   
-  // Return empty object with default regions if loading fails
+  // Return object with predefined budget values if loading fails
   return defaultRegions.reduce((acc, region) => {
-    acc[region] = { assignedBudget: "", programs: [] };
+    const predefinedValue = predefinedBudgets[region as keyof typeof predefinedBudgets] || "";
+    acc[region] = { 
+      assignedBudget: predefinedValue, 
+      lockedByOwner: true,
+      lockedValue: predefinedValue as number,
+      lastLockedBy: "admin",
+      programs: [] 
+    };
     return acc;
   }, {} as RegionalBudgets);
 }
 
 /**
- * Reset all budget values to defaults
+ * Reset all budget values to defaults, preserving locked values
  * 
  * @param defaultRegions The regions to include in the reset
- * @returns A fresh budget object with empty values
+ * @returns A fresh budget object with empty or locked values
  */
 export function resetBudgetAssignments(defaultRegions: string[] = []): RegionalBudgets {
+  // Predefined locked budget values
+  const predefinedBudgets = {
+    "North APAC": 358000,
+    "South APAC": 385500,
+    "SAARC": 265000,
+    "Digital": 68000
+  };
+  
+  // Try to get existing budgets to preserve locked status
+  let existingBudgets: RegionalBudgets = {};
+  try {
+    const stored = localStorage.getItem(BUDGET_STORAGE_KEY);
+    if (stored) {
+      existingBudgets = JSON.parse(stored) as RegionalBudgets;
+    }
+  } catch (e) {
+    console.error('Error loading existing budgets for reset:', e);
+  }
+  
   const resetBudgets = defaultRegions.reduce((acc, region) => {
-    acc[region] = { assignedBudget: "", programs: [] };
+    // Check if region should be locked with predefined value
+    const predefinedValue = predefinedBudgets[region as keyof typeof predefinedBudgets];
+    
+    if (predefinedValue) {
+      // Create or preserve locked region
+      acc[region] = { 
+        assignedBudget: predefinedValue,
+        lockedByOwner: true,
+        lockedValue: predefinedValue,
+        lastLockedBy: "admin",
+        programs: [] 
+      };
+    } else if (existingBudgets[region]?.lockedByOwner && existingBudgets[region]?.lockedValue) {
+      // Preserve existing locked values if not in predefined list
+      acc[region] = {
+        ...existingBudgets[region],
+        programs: []
+      };
+    } else {
+      // Default empty for non-locked regions
+      acc[region] = { assignedBudget: "", programs: [] };
+    }
+    
     return acc;
   }, {} as RegionalBudgets);
   

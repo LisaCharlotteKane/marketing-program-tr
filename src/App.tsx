@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise, LockKey } from "@phosphor-icons/react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { CampaignTable, Campaign } from "@/components/campaign-table"
@@ -19,6 +19,7 @@ import { PersistentStorageInfo } from "@/components/persistent-storage-info"
 import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator"
 import { DataLoadingError } from "@/components/data-loading-error"
+import { BudgetLockInfo } from "@/components/budget-lock-info"
 import { Toaster } from "sonner"
 import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
 import { useRegionalBudgets, RegionalBudget, RegionalBudgets } from "@/hooks/useRegionalBudgets"
@@ -222,6 +223,12 @@ function App() {
 
   // Handle regional budget change
   const handleRegionalBudgetChange = (region: string, value: string) => {
+    // Don't allow changes if budget is locked
+    if (regionalBudgets[region]?.lockedByOwner) {
+      toast.error('This budget is locked by an administrator');
+      return;
+    }
+    
     if (value === "") {
       setRegionalBudgets(prev => ({
         ...prev,
@@ -347,7 +354,12 @@ function App() {
                   <Buildings className="h-5 w-5" /> Regional Budget Management
                 </CardTitle>
                 <CardDescription className="flex items-center justify-between">
-                  <span>Assign and monitor budgets across different regions</span>
+                  <div className="flex flex-col">
+                    <span>Assigned and locked budgets across different regions</span>
+                    <span className="text-xs mt-1 text-muted-foreground flex items-center gap-1">
+                      <LockKey className="h-3 w-3" /> Admin-locked budgets cannot be modified
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Button 
                       variant="outline" 
@@ -384,22 +396,43 @@ function App() {
                     <div key={region} className="space-y-4 border rounded-md p-4">
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold">{region}</h3>
+                          <h3 className="text-lg font-semibold flex items-center gap-2">
+                            {region}
+                            {regionalBudgets[region]?.lockedByOwner && (
+                              <BudgetLockInfo 
+                                region={region} 
+                                budget={regionalBudgets[region]} 
+                              />
+                            )}
+                          </h3>
                           <p className="text-sm text-muted-foreground">
                             {regionalBudgets[region]?.programs.length || 0} program(s) assigned
                           </p>
                         </div>
                         <div className="flex-1 max-w-48">
                           <Label htmlFor={`budget-${region}`}>Assigned Budget ($)</Label>
-                          <Input 
-                            id={`budget-${region}`}
-                            type="number"
-                            placeholder="Enter regional budget"
-                            value={assignedBudget === "" ? "" : assignedBudget.toString()}
-                            onChange={(e) => handleRegionalBudgetChange(region, e.target.value)}
-                            min="0"
-                            className="mt-1"
-                          />
+                          <div className="relative">
+                            <Input 
+                              id={`budget-${region}`}
+                              type="number"
+                              placeholder="Enter regional budget"
+                              value={assignedBudget === "" ? "" : assignedBudget.toString()}
+                              onChange={(e) => handleRegionalBudgetChange(region, e.target.value)}
+                              min="0"
+                              className={`mt-1 ${regionalBudgets[region]?.lockedByOwner ? 'bg-muted pr-10' : ''}`}
+                              disabled={regionalBudgets[region]?.lockedByOwner}
+                            />
+                            {regionalBudgets[region]?.lockedByOwner && (
+                              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                <LockKey className="h-4 w-4" />
+                              </div>
+                            )}
+                          </div>
+                          {regionalBudgets[region]?.lockedByOwner && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Locked by administrator
+                            </p>
+                          )}
                         </div>
                       </div>
 
