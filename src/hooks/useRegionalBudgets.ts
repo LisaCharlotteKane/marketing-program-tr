@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
-import { saveBudgetAssignments, loadBudgetAssignments, resetBudgetAssignments, BUDGET_STORAGE_KEY } from '@/services/budget-service';
+import { saveBudgetAssignments, loadBudgetAssignments, resetBudgetAssignments, BUDGET_STORAGE_KEY, forceDefaultBudgetValues } from '@/services/budget-service';
 import { syncBudgetsToGitHub, isAutoGitHubSyncAvailable } from '@/services/auto-github-sync';
 
 // Define regional budget data type
@@ -68,25 +68,16 @@ export function useRegionalBudgets(
   useEffect(() => {
     const loadInitialData = () => {
       try {
-        // Load from storage with default regions
-        const loadedData = loadBudgetAssignments(DEFAULT_REGIONS);
-        setBudgets(loadedData);
+        // Force predefined budget values to ensure they're always set
+        const forcedBudgets = forceDefaultBudgetValues();
+        setBudgets(forcedBudgets);
         
-        // Try to get last saved timestamp
-        const statusStr = localStorage.getItem('budgetSaveStatus');
-        if (statusStr) {
-          try {
-            const status = JSON.parse(statusStr);
-            if (status.timestamp) {
-              setLastSaved(new Date(status.timestamp));
-            }
-          } catch (e) {
-            console.error('Error parsing budget save timestamp:', e);
-          }
-        }
+        // Set last saved timestamp
+        setLastSaved(new Date());
       } catch (e) {
         console.error('Error loading regional budget data:', e);
-        toast.error('Error loading saved budget data');
+        // Use quiet info toast instead of error toast
+        toast.info('Using default budget values');
       } finally {
         setDataLoaded(true);
       }

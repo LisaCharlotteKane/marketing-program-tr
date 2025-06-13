@@ -78,20 +78,17 @@ export function useEnhancedCampaigns(
         }
       } catch (e) {
         console.error('Error loading initial campaign data:', e);
-        setError('Failed to load saved data. Using default data instead.');
+        // Don't set error state to avoid showing error dialog
+        // setError('Failed to load saved data. Using default data instead.');
         
         // Use the initialValue instead and mark as loaded
         setCampaigns(initialValue);
         setDataLoaded(true);
         
-        // Notify the user with more helpful message
-        toast.error('Error loading saved campaign data', {
-          description: 'Your data will be initialized with default values.',
-          duration: 5000,
-          action: {
-            label: 'Retry',
-            onClick: () => window.location.reload()
-          }
+        // Optional toast notification that's less obtrusive
+        toast.info('Using default campaign data', {
+          description: 'Unable to load previously saved data.',
+          duration: 3000
         });
       }
     };

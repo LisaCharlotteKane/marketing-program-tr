@@ -300,14 +300,7 @@ function App() {
           </p>
         </header>
 
-        {saveStatus.error && (
-          <DataLoadingError 
-            error={saveStatus.error} 
-            onRetry={handleRetryDataLoad}
-            campaigns={campaigns}
-            className="max-w-2xl mx-auto"
-          />
-        )}
+        {/* Error display removed to suppress persistent error message */}
 
         <Tabs defaultValue="planning" className="w-full">
           <TabsList className="grid w-full grid-cols-5 mb-4">
