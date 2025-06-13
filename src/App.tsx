@@ -15,9 +15,11 @@ import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { CampaignTable, Campaign } from "@/components/campaign-table"
 import { ExecutionTracking } from "@/components/execution-tracking"
 import { GitHubSync } from "@/components/github-sync"
+import { PersistentStorageInfo } from "@/components/persistent-storage-info"
 import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { Toaster } from "sonner"
-import { useLocalCampaigns } from "@/hooks/useLocalCampaigns"
+import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
+import { runDataMigrations } from "@/services/migration-service"
 
 // Type definitions for regional budget tracking
 interface RegionalBudget {
@@ -46,6 +48,13 @@ function App() {
   // Region selection
   const [selectedRegion, setSelectedRegion] = useState("_all")
 
+  // Run data migrations on initial load
+  useEffect(() => {
+    runDataMigrations().catch(error => {
+      console.error("Failed to run data migrations:", error);
+    });
+  }, []);
+
   // Calculated metrics
   const [mql, setMql] = useState(0)
   const [sql, setSql] = useState(0)
@@ -64,7 +73,7 @@ function App() {
   const [programId, setProgramId] = useState<string>("")
 
   // Campaign Table Data
-  const [campaigns, setCampaigns] = useLocalCampaigns('campaignData', [])
+  const [campaigns, setCampaigns, saveStatus] = useEnhancedCampaigns('campaignData', [])
 
   // Preset data
   const pillars = [
@@ -296,7 +305,7 @@ function App() {
           <h1 className="text-2xl md:text-3xl font-bold mb-2">Marketing Campaign Calculator</h1>
           <p className="text-muted-foreground flex items-center justify-center gap-2">
             Forecast campaign performance and track execution
-            <AutoSaveIndicator className="ml-2" />
+            <AutoSaveIndicator className="ml-2" forceSave={saveStatus.forceSave} />
           </p>
         </header>
 
@@ -485,6 +494,7 @@ function App() {
           </TabsContent>
 
           <TabsContent value="github" className="space-y-6">
+            <PersistentStorageInfo />
             <GitHubSync campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
         </Tabs>
