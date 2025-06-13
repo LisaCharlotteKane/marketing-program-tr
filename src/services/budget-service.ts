@@ -115,8 +115,8 @@ export function calculateRegionalMetrics(
     };
   }
 
-  const totalForecasted = budgetData.programs.reduce((sum, program) => sum + program.forecastedCost, 0);
-  const totalActual = budgetData.programs.reduce((sum, program) => sum + program.actualCost, 0);
+  const totalForecasted = budgetData.programs.reduce((sum, program) => sum + (program.forecastedCost || 0), 0);
+  const totalActual = budgetData.programs.reduce((sum, program) => sum + (typeof program.actualCost === 'number' ? program.actualCost : 0), 0);
   const assignedBudget = budgetData.assignedBudget;
   
   const hasAssignedBudget = typeof assignedBudget === "number";

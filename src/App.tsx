@@ -252,7 +252,7 @@ import { calculateRegionalMetrics } from "@/services/budget-service"
         
         campaignsByRegion[campaign.region].push({
           id: campaign.id,
-          forecastedCost: campaign.forecastedCost,
+          forecastedCost: typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0,
           actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 0
         });
       }
