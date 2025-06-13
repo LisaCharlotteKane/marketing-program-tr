@@ -1,130 +1,153 @@
-# Marketing Campaign Tool GitHub Sync PRD
+# Marketing Campaign Tool PRD
 
 ## Core Purpose & Success
 
 ### Mission Statement
-Allow marketing teams to persist campaign planning data across sessions and team members by saving data to a GitHub repository.
+A comprehensive planning and tracking tool for marketing campaigns that helps teams forecast performance, track execution, and manage budgets.
 
 ### Success Indicators
-- Successful saving and loading of campaign data to/from GitHub repositories
-- No data loss during synchronization
-- User confidence in data persistence
+- Accurate forecasting of marketing campaign performance metrics
+- Streamlined campaign planning and execution tracking
+- Effective budget management across regions
+- Reliable data persistence and sharing between team members
 
 ### Experience Qualities
-- Reliable: Data is consistently saved and retrieved without errors
-- Transparent: Clear feedback on operation success or failure
-- Secure: Handles authentication properly with token-based access
+- Efficient: Streamlines the campaign planning workflow
+- Insightful: Provides clear visualization of performance metrics
+- Reliable: Dependably stores and retrieves campaign data
 
 ## Project Classification & Approach
 
 ### Complexity Level
-Light Application Feature: Adds persistence functionality to an existing feature-rich application
+Light Application: Multiple features with state management and persistence
 
 ### Primary User Activity
-Acting: Users primarily use this feature to save and retrieve their work
+Creating: Users primarily create and manage marketing campaign plans
 
 ## Thought Process for Feature Selection
 
 ### Core Problem Analysis
-Marketing teams need to persist campaign planning data across sessions and share it between team members, especially when planning spans multiple quarters.
+Marketing teams need to plan campaigns, forecast results, track execution, and manage budgets across regions, all while ensuring data is properly saved and accessible.
 
 ### User Context
-Users will engage with this feature after creating or updating campaign plans, or when they need to retrieve previously saved data.
+Users will engage with this tool during campaign planning sessions, execution tracking meetings, and budget reviews.
 
 ### Critical Path
-1. User enters GitHub credentials and repository details
-2. User chooses to save current data or load existing data
-3. System performs the requested operation and provides feedback
-4. User continues working with the updated/loaded data
+1. User creates campaign plans with forecasted metrics
+2. User monitors execution status as campaigns progress
+3. User compares actual vs. forecasted performance
+4. User tracks budget utilization across regions
 
 ### Key Moments
-- Successful first-time save to GitHub (creating the persistence file)
-- Loading data from different fiscal years/files
-- Handling error states gracefully when network or permission issues occur
+- Initial campaign planning and forecasting
+- Updating execution status as campaigns progress
+- Budget allocation and management decisions
+- Data persistence and sharing with team members
 
 ## Essential Features
 
-### GitHub Repository Integration
-- **Functionality**: Connect to GitHub API to read/write campaign data
-- **Purpose**: Provide persistent storage in a familiar developer environment
-- **Success Criteria**: Successfully authenticate, read, and write to GitHub repositories
+### Campaign Planning
+- **Functionality**: Plan marketing campaigns with detailed information
+- **Purpose**: Capture all relevant campaign details in one place
+- **Success Criteria**: All required campaign information can be entered and stored
 
-### Campaign Data Serialization
-- **Functionality**: Convert campaign data to/from JSON format
-- **Purpose**: Enable storage in GitHub repository files
-- **Success Criteria**: No data loss or corruption during conversion
+### Performance Forecasting
+- **Functionality**: Calculate expected MQLs, SQLs, opportunities, and pipeline
+- **Purpose**: Predict campaign outcomes based on input parameters
+- **Success Criteria**: Accurate calculations based on established formulas
 
-### Multi-File Support
-- **Functionality**: Support different files for different fiscal years
-- **Purpose**: Allow organizing campaign data by time periods
-- **Success Criteria**: Successfully save to and load from different path names
+### Execution Tracking
+- **Functionality**: Monitor campaign status, costs, and actual results
+- **Purpose**: Track campaign progress and compare against forecasts
+- **Success Criteria**: All execution data is captured and properly displayed
 
-### Error Handling
-- **Functionality**: Provide clear feedback for success and failure states
-- **Purpose**: Help users understand and resolve issues
-- **Success Criteria**: User can successfully troubleshoot common errors
+### Budget Management
+- **Functionality**: Track budgets and spending across regions
+- **Purpose**: Ensure campaigns stay within budget constraints
+- **Success Criteria**: Clear visualization of budget utilization and alerts for overruns
+
+### Data Persistence
+- **Functionality**: Save campaign data to localStorage and GitHub
+- **Purpose**: Ensure data is not lost and can be shared between team members
+- **Success Criteria**: Reliable data saving with appropriate feedback to users
+
+### Auto-Save
+- **Functionality**: Automatically save changes to prevent data loss
+- **Purpose**: Ensure user work is continuously preserved without manual intervention
+- **Success Criteria**: Changes are saved immediately after edits with clear feedback
 
 ## Design Direction
 
 ### Visual Tone & Identity
-- **Emotional Response**: Confidence and reliability
-- **Design Personality**: Professional and trustworthy
-- **Visual Metaphors**: Cloud storage, syncing, databases
-- **Simplicity Spectrum**: Minimal interface with just essential controls
+- **Emotional Response**: Confidence and clarity
+- **Design Personality**: Professional, organized, and efficient
+- **Visual Metaphors**: Dashboard, planning tools, analytics
+- **Simplicity Spectrum**: Clean interface with powerful features
 
 ### Color Strategy
-- **Color Scheme Type**: Matches the existing application's color scheme
-- **Primary Color**: Blue (#3b82f6) to match the primary app color
-- **Secondary Colors**: Green for success states, red for errors
-- **Accent Color**: None needed for this feature
-- **Color Psychology**: Blue conveys trust and reliability for data operations
+- **Color Scheme Type**: Professional with purposeful accent colors
+- **Primary Color**: Purple (#6366f1) for primary actions and branding
+- **Secondary Colors**: Neutral grays for interface elements
+- **Accent Color**: Different colors for different data visualizations
+- **Color Psychology**: Purple conveys creativity and strategy
 - **Color Accessibility**: All colors maintain WCAG AA compliance
-- **Foreground/Background Pairings**: Maintaining existing app standards
+- **Foreground/Background Pairings**: High contrast for readability
 
 ### Typography System
-- **Font Pairing Strategy**: Using the existing app's font (Inter)
-- **Typographic Hierarchy**: Clear distinction between labels, values, and messages
-- **Font Personality**: Clean and professional
-- **Readability Focus**: High contrast for form inputs and status messages
-- **Typography Consistency**: Maintaining existing typographic system
-- **Legibility Check**: All text remains highly legible even in error states
+- **Font Pairing Strategy**: Inter for all text, with weight variations for hierarchy
+- **Typographic Hierarchy**: Clear size and weight differences between headers and body text
+- **Font Personality**: Clean, modern, and professional
+- **Readability Focus**: Generous line height and spacing for form-heavy interface
+- **Typography Consistency**: Consistent type scale throughout the application
 
 ### Visual Hierarchy & Layout
-- **Attention Direction**: Form fields at top, status messages below, action buttons at bottom
-- **White Space Philosophy**: Generous spacing between form elements for clarity
-- **Grid System**: Card-based layout with form controls in a responsive grid
-- **Responsive Approach**: Stack controls vertically on mobile, side-by-side on desktop
-- **Content Density**: Low density to emphasize the importance of each input
+- **Attention Direction**: Tab-based navigation with clear focus on active section
+- **White Space Philosophy**: Sufficient spacing to keep dense information readable
+- **Grid System**: Card-based layout with responsive grids for form elements
+- **Responsive Approach**: Adapts to different screen sizes with priority on data visibility
+- **Content Density**: Balanced to show sufficient information without overwhelming
+
+### Animations
+- **Purposeful Meaning**: Subtle animations for saving indicators and state changes
+- **Hierarchy of Movement**: More important actions (like saving) get more noticeable animations
+- **Contextual Appropriateness**: Animations provide feedback without distracting
 
 ### UI Elements & Component Selection
-- **Component Usage**: Card container, form inputs, select dropdowns, buttons
-- **Component Customization**: Status alerts with appropriate colors for feedback
-- **Component States**: Clear disabled states for buttons when required fields are missing
-- **Icon Selection**: Database icon for tab, cloud icons for save/load operations
-- **Component Hierarchy**: Card > Form > Actions flow
-- **Spacing System**: Consistent spacing using Tailwind's spacing scale
-- **Mobile Adaptation**: Stack form inputs vertically on smaller screens
+- **Component Usage**: Tables, cards, form inputs, charts, alerts
+- **Component Customization**: Consistent styling with the application theme
+- **Component States**: Clear visual feedback for all interactive states
+- **Icon Selection**: Phosphor icons for clarity and consistency
+- **Component Hierarchy**: Clear visual distinction between primary and secondary elements
+- **Spacing System**: Consistent spacing using Tailwind's scale
+- **Mobile Adaptation**: Responsive adjustments for smaller screens
 
 ### Visual Consistency Framework
-- **Design System Approach**: Component-based, reusing existing UI components
-- **Style Guide Elements**: Following existing application conventions
-- **Visual Rhythm**: Consistent spacing and alignment of all elements
-- **Brand Alignment**: Extends the existing application design language
-
-### Accessibility & Readability
-- **Contrast Goal**: WCAG AA compliance for all text and UI elements
+- **Design System Approach**: Component-based using shadcn/ui
+- **Style Guide Elements**: Consistent color, typography, and spacing
+- **Visual Rhythm**: Regular patterns of UI elements for predictability
+- **Brand Alignment**: Professional appearance consistent with marketing tools
 
 ## Edge Cases & Problem Scenarios
-- **Potential Obstacles**: Missing or invalid GitHub tokens, network failures
-- **Edge Case Handling**: Clear error messages for common failure modes
-- **Technical Constraints**: GitHub API rate limiting, file size limitations
+- **Potential Obstacles**: Network issues during GitHub sync, large datasets
+- **Edge Case Handling**: Graceful degradation when services are unavailable
+- **Technical Constraints**: Browser storage limitations, GitHub API rate limits
 
 ## Implementation Considerations
-- **Scalability Needs**: Support for multiple files as campaign data grows
-- **Testing Focus**: Network failure handling, authentication edge cases
-- **Critical Questions**: How to handle merge conflicts if multiple users update the same file?
+- **Scalability Needs**: Support for growing campaign datasets over time
+- **Testing Focus**: Data persistence, calculation accuracy, performance with large datasets
+- **Critical Questions**: How to handle multi-user edits and potential conflicts?
 
-## Reflection
-- This approach uniquely combines familiar GitHub tools with marketing planning needs
-- We've assumed users will have GitHub access and know how to create tokens
-- Making this solution exceptional would involve adding automated background sync and conflict resolution
+## Auto-Save Feature
+
+### Purpose
+Automatically save campaign data as users make changes to prevent data loss and provide continuous feedback on save status.
+
+### Implementation
+- Debounced saves to reduce performance impact during rapid input
+- Visual indicators showing save status (saving, saved, error)
+- Multiple storage targets (localStorage for immediate persistence, GitHub for sharing)
+
+### User Experience
+- Subtle indicators that don't interrupt workflow
+- Clear timestamps of last save for user confidence
+- Graceful error handling when saves fail

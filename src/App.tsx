@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,7 @@ import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { CampaignTable, Campaign } from "@/components/campaign-table"
 import { ExecutionTracking } from "@/components/execution-tracking"
 import { GitHubSync } from "@/components/github-sync"
+import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { Toaster } from "sonner"
 import { useLocalCampaigns } from "@/hooks/useLocalCampaigns"
 
@@ -293,7 +294,10 @@ function App() {
       <div className="max-w-4xl mx-auto space-y-6">
         <header className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-bold mb-2">Marketing Campaign Calculator</h1>
-          <p className="text-muted-foreground">Forecast campaign performance and track execution</p>
+          <p className="text-muted-foreground flex items-center justify-center gap-2">
+            Forecast campaign performance and track execution
+            <AutoSaveIndicator className="ml-2" />
+          </p>
         </header>
 
         <Tabs defaultValue="planning" className="w-full">

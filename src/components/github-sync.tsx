@@ -274,22 +274,24 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
             onCheckedChange={setAutoSaveEnabled}
             disabled={!canSave}
           />
-          <div className="space-y-0.5">
+          <div className="space-y-0.5 flex-1">
             <Label htmlFor="auto-save" className="text-sm font-medium">
-              Enable Auto-Save
+              Enable Auto-Save to GitHub
             </Label>
             <p className="text-xs text-muted-foreground">
               Automatically save changes to GitHub when data is modified
             </p>
           </div>
           
-          {lastSaved && autoSaveEnabled && (
-            <div className="ml-auto flex items-center gap-1.5">
-              <Badge variant="outline" className="text-xs gap-1 py-0">
-                <ClockClockwise className="h-3 w-3" />
-                Last saved: {lastSaved.toLocaleTimeString()}
-              </Badge>
-              {isSaving && <Badge variant="secondary" className="text-xs py-0">Saving...</Badge>}
+          {autoSaveEnabled && (
+            <div className="flex items-center gap-1.5">
+              {isSaving && <Badge variant="secondary" className="text-xs py-0">Saving to GitHub...</Badge>}
+              {lastSaved && !isSaving && (
+                <Badge variant="outline" className="text-xs gap-1 py-0">
+                  <ClockClockwise className="h-3 w-3" />
+                  Last GitHub sync: {lastSaved.toLocaleTimeString()}
+                </Badge>
+              )}
             </div>
           )}
         </div>
