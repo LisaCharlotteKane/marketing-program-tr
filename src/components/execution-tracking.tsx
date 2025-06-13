@@ -246,7 +246,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                         <TableCell>
                           <Input
                             type="number"
-                            value={campaign.actualCost === "" ? "" : campaign.actualCost}
+                            value={typeof campaign.actualCost !== 'undefined' ? (campaign.actualCost === "" ? "" : campaign.actualCost) : ""}
                             onChange={(e) => handleNumericChange(campaign.id, 'actualCost', e.target.value)}
                             placeholder="USD"
                             className="w-[100px]"
@@ -258,7 +258,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                         <TableCell>
                           <Input
                             type="number"
-                            value={campaign.actualLeads === "" ? "" : campaign.actualLeads}
+                            value={typeof campaign.actualLeads !== 'undefined' ? (campaign.actualLeads === "" ? "" : campaign.actualLeads) : ""}
                             onChange={(e) => handleNumericChange(campaign.id, 'actualLeads', e.target.value)}
                             placeholder="#"
                             className="w-[80px]"
@@ -270,7 +270,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                         <TableCell>
                           <Input
                             type="number"
-                            value={campaign.actualMQLs === "" ? "" : campaign.actualMQLs}
+                            value={typeof campaign.actualMQLs !== 'undefined' ? (campaign.actualMQLs === "" ? "" : campaign.actualMQLs) : ""}
                             onChange={(e) => handleNumericChange(campaign.id, 'actualMQLs', e.target.value)}
                             placeholder="#"
                             className="w-[80px]"

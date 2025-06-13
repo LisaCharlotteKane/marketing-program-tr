@@ -48,29 +48,33 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
   // Generate template CSV for download
   const generateTemplateCSV = () => {
     try {
+      // Create template CSV content
       const csvContent = `Campaign Type,Strategic Pillars,Revenue Play,Fiscal Year,Quarter/Month,Region,Country,Owner,Description,Forecasted Cost,Expected Leads,Impacted Regions
 In-Account Events (1:1),"Account Growth and Product Adoption,Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY24,Q2 - November,North APAC,Japan,Tomoko Tanaka,Enterprise customer workshop,15000,50,"South APAC,SAARC"
 Localized Events,Brand Awareness & Top of Funnel Demand Generation,Secure all developer workloads with the power of AI,FY24,Q3 - January,SAARC,India,Shruti Narang,Developer community meetup,8000,100,
 Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,Cross-regional webinar series,5000,150,"North APAC,South APAC,SAARC"`;
 
+      // Create blob and download link
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
       link.setAttribute("download", "campaign_template.csv");
+      
+      // Append to document, click, and clean up
       document.body.appendChild(link);
       link.click();
-      
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       setUploadStatus({
         message: "Template downloaded successfully",
         type: "success"
       });
+      
+      setTimeout(() => {
+        setUploadStatus({ message: "", type: null });
+      }, 3000);
     } catch (error) {
       console.error("Error generating template:", error);
       setUploadStatus({
@@ -194,9 +198,6 @@ Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,
                 if (!validRegions.includes(campaign.region)) {
                   errors.push(`Row ${index + 2}: Invalid region "${campaign.region}".`);
                 } else {
-                  // Set owner filter based on uploader identity (optional)
-                  // setOwnerFilter(campaign.owner); // Assuming you track uploader identity
-                  
                   validCampaigns.push(campaign);
                 }
               }
@@ -271,10 +272,11 @@ Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,
 
         <div className="flex items-center gap-2">
           <Button 
-            variant="ghost" 
+            variant="outline" 
             size="sm" 
             className="flex items-center gap-2"
             onClick={generateTemplateCSV}
+            type="button"
           >
             <Download className="h-4 w-4" />
             Download Template

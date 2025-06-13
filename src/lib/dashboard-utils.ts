@@ -109,7 +109,12 @@ export const campaignData = [
 ];
 
 // Define quarters
-export const quarters = ["Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023"];
+export const quarters = [
+  "Q1 - July", "Q1 - August", "Q1 - September",
+  "Q2 - October", "Q2 - November", "Q2 - December", 
+  "Q3 - January", "Q3 - February", "Q3 - March",
+  "Q4 - April", "Q4 - May", "Q4 - June"
+];
 
 // Define regions
 export const regions = ["North APAC", "South APAC", "SAARC", "Digital"];
@@ -161,7 +166,7 @@ export const filterCampaigns = (region, country, quarter) => {
     }
     
     // Apply quarter filter
-    if (quarter && quarter !== "_all" && campaign.quarter !== quarter) {
+    if (quarter && quarter !== "_all" && campaign.quarterMonth !== quarter) {
       return false;
     }
     
@@ -284,16 +289,16 @@ export const exportToCSV = (campaigns) => {
     campaign.region,
     campaign.country,
     campaign.impactedRegions ? campaign.impactedRegions.join(', ') : '',
-    campaign.quarter,
-    campaign.campaignOwner,
-    campaign.programType,
+    campaign.quarterMonth,
+    campaign.owner,
+    campaign.campaignType,
     campaign.status,
     campaign.forecastedCost,
     campaign.actualCost,
     campaign.expectedLeads,
     campaign.actualLeads,
     campaign.actualMQLs,
-    campaign.actualSQLs
+    typeof campaign.sql === 'number' ? Math.round(campaign.sql * 0.8) : 0  // Calculate SQLs from SQL
   ]);
   
   // Combine header and rows

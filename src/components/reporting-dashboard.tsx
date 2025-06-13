@@ -71,7 +71,7 @@ export function ReportingDashboard({ campaigns = [] }: ReportingDashboardProps) 
           }
           
           // Apply quarter filter
-          if (selectedQuarter && selectedQuarter !== "_all" && campaign.quarter !== selectedQuarter) {
+          if (selectedQuarter && selectedQuarter !== "_all" && campaign.quarterMonth !== selectedQuarter) {
             return false;
           }
           
@@ -416,9 +416,9 @@ export function ReportingDashboard({ campaigns = [] }: ReportingDashboardProps) 
                           </div>
                         ) : null}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.quarter}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.campaignOwner}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.programType}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.quarterMonth}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.owner}</td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.campaignType}</td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm">
                         <Badge 
                           className={`${
