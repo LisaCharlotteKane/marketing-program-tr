@@ -48,9 +48,6 @@ function App() {
   const [opportunities, setOpportunities] = useState(0)
   const [pipeline, setPipeline] = useState(0)
   
-  // Execution tracking state
-  const [actualCost, setActualCost] = useState<number | "">("")
-  
   // Regional budget management
   const [regionalBudgets, setRegionalBudgets] = useState<RegionalBudgets>({
     "SAARC": { assignedBudget: "", programs: [] },
@@ -174,14 +171,14 @@ function App() {
         currentPrograms[programIndex] = {
           ...currentPrograms[programIndex],
           forecastedCost: forecastedCost || 0,
-          actualCost: typeof actualCost === 'number' ? actualCost : 0
+          actualCost: 0
         };
       } else {
         // Add new program
         currentPrograms.push({
           id: programId,
           forecastedCost: forecastedCost || 0,
-          actualCost: typeof actualCost === 'number' ? actualCost : 0
+          actualCost: 0
         });
       }
       
@@ -219,12 +216,12 @@ function App() {
     }
   }, [expectedLeads])
 
-  // Update regional program data when forecasted or actual costs change
+  // Update regional program data when forecasted cost changes
   useEffect(() => {
     if (selectedRegion) {
       updateRegionalProgramData();
     }
-  }, [forecastedCost, actualCost, selectedRegion])
+  }, [forecastedCost, selectedRegion])
 
   // Handle regional budget change
   const handleRegionalBudgetChange = (region: string, value: string) => {
