@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise } from "@phosphor-icons/react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { CampaignTable, Campaign } from "@/components/campaign-table"
@@ -17,24 +17,13 @@ import { ExecutionTracking } from "@/components/execution-tracking"
 import { GitHubSync } from "@/components/github-sync"
 import { PersistentStorageInfo } from "@/components/persistent-storage-info"
 import { AutoSaveIndicator } from "@/components/auto-save-indicator"
+import { BudgetSaveIndicator } from "@/components/budget-save-indicator"
 import { Toaster } from "sonner"
 import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
+import { useRegionalBudgets, RegionalBudget, RegionalBudgets } from "@/hooks/useRegionalBudgets"
 import { runDataMigrations } from "@/services/migration-service"
 import { initAutoGitHubSync } from "@/services/auto-github-sync"
-
-// Type definitions for regional budget tracking
-interface RegionalBudget {
-  assignedBudget: number | "";
-  programs: {
-    id: string;
-    forecastedCost: number;
-    actualCost: number;
-  }[];
-}
-
-interface RegionalBudgets {
-  [key: string]: RegionalBudget;
-}
+import { Button } from "@/components/ui/button"
 
 function App() {
   // Form state
@@ -65,13 +54,8 @@ function App() {
   const [opportunities, setOpportunities] = useState(0)
   const [pipeline, setPipeline] = useState(0)
   
-  // Regional budget management
-  const [regionalBudgets, setRegionalBudgets] = useState<RegionalBudgets>({
-    "North APAC": { assignedBudget: "", programs: [] },
-    "South APAC": { assignedBudget: "", programs: [] },
-    "SAARC": { assignedBudget: "", programs: [] },
-    "Digital": { assignedBudget: "", programs: [] }
-  })
+  // Regional budget management with persistence
+  const [regionalBudgets, setRegionalBudgets, budgetStatus] = useRegionalBudgets()
   
   // Program ID for tracking
   const [programId, setProgramId] = useState<string>("")
@@ -162,16 +146,7 @@ function App() {
     }).format(value)
   }
 
-  // Calculate budget metrics for a region
-  const calculateRegionalMetrics = (region: string) => {
-    const budgetData = regionalBudgets[region];
-    if (!budgetData) return { totalForecasted: 0, totalActual: 0 };
-
-    const totalForecasted = budgetData.programs.reduce((sum, program) => sum + program.forecastedCost, 0);
-    const totalActual = budgetData.programs.reduce((sum, program) => sum + program.actualCost, 0);
-
-    return { totalForecasted, totalActual };
-  }
+import { calculateRegionalMetrics } from "@/services/budget-service"
 
   // Update regional budget program data
   const updateRegionalProgramData = () => {
@@ -357,22 +332,39 @@ function App() {
                 <CardTitle className="flex items-center gap-2">
                   <Buildings className="h-5 w-5" /> Regional Budget Management
                 </CardTitle>
-                <CardDescription>Assign and monitor budgets across different regions</CardDescription>
+                <CardDescription className="flex items-center justify-between">
+                  <span>Assign and monitor budgets across different regions</span>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={budgetStatus.resetToDefaults}
+                      className="flex items-center gap-1 text-xs"
+                    >
+                      <ArrowClockwise className="h-3 w-3" /> Reset All
+                    </Button>
+                    <BudgetSaveIndicator 
+                      className="ml-2" 
+                      lastSaved={budgetStatus.lastSaved}
+                      isSaving={budgetStatus.isSaving}
+                    />
+                  </div>
+                </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6">
                 {regions.map(region => {
-                  const { totalForecasted, totalActual } = calculateRegionalMetrics(region);
-                  const assignedBudget = regionalBudgets[region]?.assignedBudget;
+                  const { 
+                    totalForecasted, 
+                    totalActual,
+                    assignedBudget,
+                    forecastedPercent,
+                    actualPercent,
+                    forecastedExceedsBudget,
+                    actualExceedsBudget 
+                  } = calculateRegionalMetrics(regionalBudgets, region);
+                  
                   const hasAssignedBudget = typeof assignedBudget === "number";
-                  
-                  // Calculate budget utilization percentages
-                  const forecastedPercent = hasAssignedBudget ? Math.min(100, (totalForecasted / assignedBudget) * 100) : 0;
-                  const actualPercent = hasAssignedBudget ? Math.min(100, (totalActual / assignedBudget) * 100) : 0;
-                  
-                  // Determine warning/alert status
-                  const forecastedExceedsBudget = hasAssignedBudget && totalForecasted > assignedBudget;
-                  const actualExceedsBudget = hasAssignedBudget && totalActual > assignedBudget;
 
                   return (
                     <div key={region} className="space-y-4 border rounded-md p-4">
@@ -421,7 +413,7 @@ function App() {
                               <Warning className="h-4 w-4 text-yellow-600" />
                               <AlertTitle className="text-yellow-800">Warning</AlertTitle>
                               <AlertDescription className="text-yellow-700">
-                                Forecasted cost ({formatCurrency(totalForecasted)}) exceeds assigned budget ({formatCurrency(assignedBudget)})
+                                Forecasted cost ({formatCurrency(totalForecasted)}) exceeds assigned budget ({formatCurrency(assignedBudget as number)})
                               </AlertDescription>
                             </Alert>
                           )}
@@ -431,7 +423,7 @@ function App() {
                               <X className="h-4 w-4 text-red-600" />
                               <AlertTitle className="text-red-800">Critical Alert</AlertTitle>
                               <AlertDescription className="text-red-700">
-                                Actual cost ({formatCurrency(totalActual)}) exceeds assigned budget ({formatCurrency(assignedBudget)})
+                                Actual cost ({formatCurrency(totalActual)}) exceeds assigned budget ({formatCurrency(assignedBudget as number)})
                               </AlertDescription>
                             </Alert>
                           )}

@@ -6,6 +6,7 @@
 
 // Campaign data type import
 import { Campaign } from "@/components/campaign-table";
+import { RegionalBudgets } from "@/hooks/useRegionalBudgets";
 
 // Base configuration
 interface GitHubConfig {
@@ -84,15 +85,17 @@ function decodeFromBase64(content: string): string {
 }
 
 /**
- * Saves campaign data to GitHub repository
+ * Generic function to save data to GitHub repository
  * 
- * @param campaigns Array of campaign data to save
+ * @param data Data to save
  * @param config GitHub repository configuration
+ * @param commitMessage Optional commit message
  * @returns Promise that resolves with success message or rejects with error
  */
-export async function saveCampaignsToGitHub(
-  campaigns: Campaign[],
-  config: Partial<GitHubConfig> = {}
+export async function saveDataToGitHub<T>(
+  data: T,
+  config: Partial<GitHubConfig> = {},
+  commitMessage: string = 'Update data'
 ): Promise<{ success: boolean; message: string }> {
   // Merge with default config
   const fullConfig: GitHubConfig = { ...defaultConfig, ...config };
@@ -108,7 +111,7 @@ export async function saveCampaignsToGitHub(
 
   try {
     // Prepare the data for saving
-    const content = JSON.stringify(campaigns, null, 2);
+    const content = JSON.stringify(data, null, 2);
     const encodedContent = encodeToBase64(content);
     
     // Try to get existing file to obtain the SHA (needed for updates)
@@ -136,7 +139,7 @@ export async function saveCampaignsToGitHub(
     
     // Create or update the file
     const requestBody: any = {
-      message: 'Update campaign planning data',
+      message: commitMessage,
       content: encodedContent,
       committer: {
         name: 'Marketing Campaign Tool',
@@ -175,7 +178,7 @@ export async function saveCampaignsToGitHub(
     
     return { 
       success: true, 
-      message: `Campaign data successfully saved to ${fullConfig.path}` 
+      message: `Data successfully saved to ${fullConfig.path}` 
     };
   } catch (error) {
     console.error('Error saving to GitHub:', error);
@@ -187,14 +190,14 @@ export async function saveCampaignsToGitHub(
 }
 
 /**
- * Loads campaign data from GitHub repository
+ * Generic function to load data from GitHub repository
  * 
  * @param config GitHub repository configuration
- * @returns Promise that resolves with campaign data or rejects with error
+ * @returns Promise that resolves with loaded data or rejects with error
  */
-export async function loadCampaignsFromGitHub(
+export async function loadDataFromGitHub<T>(
   config: Partial<GitHubConfig> = {}
-): Promise<{ success: boolean; campaigns?: Campaign[]; message: string }> {
+): Promise<{ success: boolean; data?: T; message: string }> {
   // Merge with default config
   const fullConfig: GitHubConfig = { ...defaultConfig, ...config };
   
@@ -224,7 +227,7 @@ export async function loadCampaignsFromGitHub(
       if (response.status === 404) {
         return { 
           success: false, 
-          message: `File not found at ${fullConfig.path}. Save campaigns first to create it.` 
+          message: `File not found at ${fullConfig.path}. Save data first to create it.` 
         };
       }
       
@@ -237,16 +240,16 @@ export async function loadCampaignsFromGitHub(
       }
     }
     
-    const data = await response.json() as GitHubFileResponse;
+    const fileData = await response.json() as GitHubFileResponse;
     
     // Decode the content
-    const decodedContent = decodeFromBase64(data.content);
-    const campaigns = JSON.parse(decodedContent) as Campaign[];
+    const decodedContent = decodeFromBase64(fileData.content);
+    const data = JSON.parse(decodedContent) as T;
     
     return { 
       success: true, 
-      campaigns, 
-      message: `Successfully loaded ${campaigns.length} campaigns from GitHub` 
+      data, 
+      message: `Successfully loaded data from GitHub` 
     };
   } catch (error) {
     console.error('Error loading from GitHub:', error);
@@ -255,4 +258,78 @@ export async function loadCampaignsFromGitHub(
       message: error instanceof Error ? error.message : 'Unknown error occurred' 
     };
   }
+}
+
+/**
+ * Saves campaign data to GitHub repository
+ * 
+ * @param campaigns Array of campaign data to save
+ * @param config GitHub repository configuration
+ * @returns Promise that resolves with success message or rejects with error
+ */
+export async function saveCampaignsToGitHub(
+  campaigns: Campaign[],
+  config: Partial<GitHubConfig> = {}
+): Promise<{ success: boolean; message: string }> {
+  return saveDataToGitHub(campaigns, config, 'Update campaign planning data');
+}
+
+/**
+ * Loads campaign data from GitHub repository
+ * 
+ * @param config GitHub repository configuration
+ * @returns Promise that resolves with campaign data or rejects with error
+ */
+export async function loadCampaignsFromGitHub(
+  config: Partial<GitHubConfig> = {}
+): Promise<{ success: boolean; campaigns?: Campaign[]; message: string }> {
+  const result = await loadDataFromGitHub<Campaign[]>(config);
+  
+  return {
+    success: result.success,
+    campaigns: result.data,
+    message: result.message
+  };
+}
+
+/**
+ * Saves budget data to GitHub repository
+ * 
+ * @param budgets Regional budget data to save
+ * @param config GitHub repository configuration
+ * @returns Promise that resolves with success message or rejects with error
+ */
+export async function saveBudgetsToGitHub(
+  budgets: RegionalBudgets,
+  config: Partial<GitHubConfig> = {}
+): Promise<{ success: boolean; message: string }> {
+  return saveDataToGitHub(
+    budgets, 
+    {
+      ...config,
+      path: config.path || 'campaign-data/budgets.json'
+    },
+    'Update regional budget data'
+  );
+}
+
+/**
+ * Loads budget data from GitHub repository
+ * 
+ * @param config GitHub repository configuration
+ * @returns Promise that resolves with budget data or rejects with error
+ */
+export async function loadBudgetsFromGitHub(
+  config: Partial<GitHubConfig> = {}
+): Promise<{ success: boolean; budgets?: RegionalBudgets; message: string }> {
+  const result = await loadDataFromGitHub<RegionalBudgets>({
+    ...config,
+    path: config.path || 'campaign-data/budgets.json'
+  });
+  
+  return {
+    success: result.success,
+    budgets: result.data,
+    message: result.message
+  };
 }

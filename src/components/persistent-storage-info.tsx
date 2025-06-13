@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { InfoCircle, CloudCheck, Database, GithubLogo } from "@phosphor-icons/react";
+import { InfoCircle, CloudCheck, Database, GithubLogo, ChartDonut } from "@phosphor-icons/react";
 import { countTotalSavedCampaigns } from "@/services/persistent-storage";
 import { Badge } from "@/components/ui/badge";
 import { isAutoGitHubSyncAvailable } from "@/services/auto-github-sync";
@@ -9,6 +9,7 @@ export function PersistentStorageInfo() {
   const [storageSummary, setStorageSummary] = useState({
     totalCampaigns: 0,
     lastSaved: null as Date | null,
+    lastBudgetSaved: null as Date | null,
     storageType: "local",
     githubSyncActive: false
   });
@@ -34,6 +35,20 @@ export function PersistentStorageInfo() {
           console.error("Error parsing last save status:", e);
         }
         
+        // Get last budget saved timestamp
+        let lastBudgetSaved: Date | null = null;
+        try {
+          const statusStr = localStorage.getItem('budgetSaveStatus');
+          if (statusStr) {
+            const status = JSON.parse(statusStr);
+            if (status.timestamp) {
+              lastBudgetSaved = new Date(status.timestamp);
+            }
+          }
+        } catch (e) {
+          console.error("Error parsing budget save status:", e);
+        }
+        
         // Determine storage type
         const storageType = window.indexedDB ? "multi-layer" : "local";
         
@@ -43,6 +58,7 @@ export function PersistentStorageInfo() {
         setStorageSummary({
           totalCampaigns,
           lastSaved,
+          lastBudgetSaved,
           storageType,
           githubSyncActive
         });
@@ -70,11 +86,11 @@ export function PersistentStorageInfo() {
   }, []);
   
   // Format the last saved time
-  const formatLastSaved = () => {
-    if (!storageSummary.lastSaved) return "Never";
+  const formatLastSaved = (date: Date | null) => {
+    if (!date) return "Never";
     
     const now = new Date();
-    const diffMs = now.getTime() - storageSummary.lastSaved.getTime();
+    const diffMs = now.getTime() - date.getTime();
     const diffSecs = Math.floor(diffMs / 1000);
     
     if (diffSecs < 60) {
@@ -84,7 +100,7 @@ export function PersistentStorageInfo() {
     } else if (diffSecs < 86400) {
       return `${Math.floor(diffSecs / 3600)} hours ago`;
     } else {
-      return storageSummary.lastSaved.toLocaleDateString();
+      return date.toLocaleDateString();
     }
   };
   
@@ -95,12 +111,12 @@ export function PersistentStorageInfo() {
           <Database className="h-5 w-5" /> Local Storage Status
         </CardTitle>
         <CardDescription>
-          Your campaign data is automatically saved in your browser
+          Your campaign and budget data is automatically saved in your browser
         </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
           <div className="rounded-lg border p-3 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Storage Type</h3>
@@ -129,13 +145,25 @@ export function PersistentStorageInfo() {
           
           <div className="rounded-lg border p-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium">Last Auto-Save</h3>
+              <h3 className="font-medium">Campaign Save</h3>
               <Badge variant="outline">
-                {formatLastSaved()}
+                {formatLastSaved(storageSummary.lastSaved)}
               </Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Data is saved automatically after changes
+              Campaigns auto-saved
+            </p>
+          </div>
+          
+          <div className="rounded-lg border p-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">Budget Save</h3>
+              <Badge variant="outline">
+                {formatLastSaved(storageSummary.lastBudgetSaved)}
+              </Badge>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Budgets auto-saved
             </p>
           </div>
           
@@ -164,9 +192,11 @@ export function PersistentStorageInfo() {
             <div>
               <h4 className="text-sm font-medium">GitHub Auto-Sync Active</h4>
               <p className="mt-1 text-xs text-muted-foreground">
-                Your campaign data is now automatically syncing to GitHub with the provided token.
+                Your campaign and budget data is now automatically syncing to GitHub with the provided token.
                 <ul className="list-disc pl-4 mt-1 space-y-1">
                   <li>Auto-sync happens in the background with each edit</li>
+                  <li>Campaign data syncs to: <code>campaign-data/campaigns.json</code></li>
+                  <li>Budget data syncs to: <code>campaign-data/budgets.json</code></li>
                   <li>A GitHub repository name and owner must be configured in the GitHub Sync tab</li>
                   <li>Your token has been pre-configured</li>
                   <li>You can still use the manual GitHub Sync controls for specific operations</li>
@@ -192,7 +222,7 @@ export function PersistentStorageInfo() {
               </p>
               <p className="mt-2 text-xs text-muted-foreground flex gap-1 items-center font-medium">
                 <CloudCheck className="h-3.5 w-3.5 text-green-600" />
-                For data backup, use the "Export JSON" function in the campaign table.
+                For data backup, use the GitHub Sync feature or export options.
               </p>
             </div>
           </div>

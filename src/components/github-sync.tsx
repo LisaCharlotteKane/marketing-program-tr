@@ -7,12 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { saveCampaignsToGitHub, loadCampaignsFromGitHub } from "@/services/github-api";
+import { saveCampaignsToGitHub, loadCampaignsFromGitHub, saveBudgetsToGitHub, loadBudgetsFromGitHub } from "@/services/github-api";
 import { Campaign } from "@/components/campaign-table";
-import { CloudArrowUp, CloudArrowDown, CheckCircle, WarningCircle, Key, ClockClockwise } from "@phosphor-icons/react";
+import { RegionalBudgets } from "@/hooks/useRegionalBudgets";
+import { CloudArrowUp, CloudArrowDown, CheckCircle, WarningCircle, Key, ClockClockwise, ChartDonut } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { updateGitHubSyncConfig } from "@/services/auto-github-sync";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface GitHubSyncProps {
   campaigns: Campaign[];
@@ -25,6 +27,7 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   const [owner, setOwner] = useState("");
   const [repo, setRepo] = useState("");
   const [path, setPath] = useState("campaign-data/campaigns.json");
+  const [budgetPath, setBudgetPath] = useState("campaign-data/budgets.json");
   const [status, setStatus] = useState<{ type: "success" | "error" | "idle"; message: string }>({ 
     type: "idle", 
     message: "" 
@@ -32,8 +35,14 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   const [selectedFiscalYear, setSelectedFiscalYear] = useState("_default");
   const [isLoading, setIsLoading] = useState(false);
   
+  // Budgets state for loading from GitHub
+  const [budgets, setBudgets] = useState<RegionalBudgets | null>(null);
+  
   // Auto-save state
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  
+  // Active tab
+  const [activeTab, setActiveTab] = useState("campaigns");
   
   // Load saved GitHub settings from localStorage on component mount
   useEffect(() => {
@@ -44,6 +53,7 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
         if (settings.owner) setOwner(settings.owner);
         if (settings.repo) setRepo(settings.repo);
         if (settings.path) setPath(settings.path);
+        if (settings.budgetPath) setBudgetPath(settings.budgetPath);
         if (settings.selectedFiscalYear) setSelectedFiscalYear(settings.selectedFiscalYear);
         if (settings.autoSaveEnabled) setAutoSaveEnabled(settings.autoSaveEnabled);
       } catch (e) {
@@ -54,11 +64,12 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   
   // Save GitHub settings to localStorage when they change
   useEffect(() => {
-    if (owner || repo || path || selectedFiscalYear !== "_default" || autoSaveEnabled) {
+    if (owner || repo || path || budgetPath || selectedFiscalYear !== "_default" || autoSaveEnabled) {
       const settings = {
         owner,
         repo,
         path,
+        budgetPath,
         selectedFiscalYear,
         autoSaveEnabled
       };
@@ -71,10 +82,11 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
         repo,
         path: selectedFiscalYear !== "_default" 
           ? `campaign-data/${selectedFiscalYear.toLowerCase()}.json`
-          : path
+          : path,
+        budgetPath
       });
     }
-  }, [owner, repo, path, selectedFiscalYear, autoSaveEnabled, token]);
+  }, [owner, repo, path, budgetPath, selectedFiscalYear, autoSaveEnabled, token]);
   
   // Use the auto-save hook
   const { lastSaved, isSaving, error: autoSaveError, canSave } = useAutoSave(campaigns, {
@@ -92,7 +104,7 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   const fiscalYears = ["FY24", "FY25", "FY26"];
 
   // Handle saving campaigns to GitHub
-  const handleSave = async () => {
+  const handleSaveCampaigns = async () => {
     if (!token || !owner || !repo) {
       setStatus({
         type: "error",
@@ -142,7 +154,7 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   };
 
   // Handle loading campaigns from GitHub
-  const handleLoad = async () => {
+  const handleLoadCampaigns = async () => {
     if (!token || !owner || !repo) {
       setStatus({
         type: "error",
@@ -180,6 +192,121 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
           message: result.message
         });
         toast.error(`Error loading from GitHub: ${result.message}`);
+      }
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Unknown error occurred"
+      });
+      toast.error(`Error: ${error instanceof Error ? error.message : "Unknown error occurred"}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle saving budgets to GitHub
+  const handleSaveBudgets = async () => {
+    if (!token || !owner || !repo) {
+      setStatus({
+        type: "error",
+        message: "GitHub token, owner, and repository name are required"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setStatus({ type: "idle", message: "" });
+
+    try {
+      // Get budgets from localStorage
+      const budgetData = localStorage.getItem('regionalBudgets');
+      if (!budgetData) {
+        setStatus({
+          type: "error",
+          message: "No budget data available to save"
+        });
+        return;
+      }
+
+      const budgets = JSON.parse(budgetData) as RegionalBudgets;
+
+      const result = await saveBudgetsToGitHub(budgets, {
+        token,
+        owner,
+        repo,
+        path: budgetPath
+      });
+
+      if (result.success) {
+        setStatus({
+          type: "success",
+          message: result.message
+        });
+        toast.success(`Successfully saved regional budgets to GitHub`);
+      } else {
+        setStatus({
+          type: "error",
+          message: result.message
+        });
+        toast.error(`Error saving budgets to GitHub: ${result.message}`);
+      }
+    } catch (error) {
+      setStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Unknown error occurred"
+      });
+      toast.error(`Error: ${error instanceof Error ? error.message : "Unknown error occurred"}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle loading budgets from GitHub
+  const handleLoadBudgets = async () => {
+    if (!token || !owner || !repo) {
+      setStatus({
+        type: "error",
+        message: "GitHub token, owner, and repository name are required"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    setStatus({ type: "idle", message: "" });
+
+    try {
+      const result = await loadBudgetsFromGitHub({
+        token,
+        owner,
+        repo,
+        path: budgetPath
+      });
+
+      if (result.success && result.budgets) {
+        setBudgets(result.budgets);
+        
+        // Save to localStorage
+        localStorage.setItem('regionalBudgets', JSON.stringify(result.budgets));
+        
+        // Update timestamp
+        localStorage.setItem('budgetSaveStatus', JSON.stringify({
+          timestamp: new Date().toISOString()
+        }));
+        
+        setStatus({
+          type: "success",
+          message: result.message
+        });
+        toast.success(`Successfully loaded regional budgets from GitHub`);
+        
+        // Reload the page to apply the loaded budgets
+        window.location.reload();
+      } else {
+        setStatus({
+          type: "error",
+          message: result.message
+        });
+        toast.error(`Error loading budgets from GitHub: ${result.message}`);
       }
     } catch (error) {
       setStatus({
@@ -338,27 +465,75 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
             </AlertDescription>
           </Alert>
         )}
+        
+        {/* Sync Options */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="campaigns" className="flex items-center gap-2">
+              <CloudArrowUp className="h-4 w-4" /> Campaign Data
+            </TabsTrigger>
+            <TabsTrigger value="budgets" className="flex items-center gap-2">
+              <ChartDonut className="h-4 w-4" /> Budget Data
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="campaigns">
+            <div className="p-4 border rounded-md bg-muted/30 mt-2">
+              <p className="text-sm text-muted-foreground mb-4">
+                Campaign data includes all planned and executed marketing campaigns.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleLoadCampaigns}
+                  disabled={isLoading || !token || !owner || !repo}
+                  className="flex items-center gap-2"
+                >
+                  <CloudArrowDown className="h-4 w-4" />
+                  Load Campaigns
+                </Button>
+                <Button
+                  onClick={handleSaveCampaigns}
+                  disabled={isLoading || !token || !owner || !repo || campaigns.length === 0}
+                  className="flex items-center gap-2"
+                >
+                  <CloudArrowUp className="h-4 w-4" />
+                  Save Campaigns
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="budgets">
+            <div className="p-4 border rounded-md bg-muted/30 mt-2">
+              <p className="text-sm text-muted-foreground mb-4">
+                Budget data includes regional budget assignments and program allocations.
+                <br />
+                <span className="text-xs">Stored at: <code>{budgetPath}</code></span>
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={handleLoadBudgets}
+                  disabled={isLoading || !token || !owner || !repo}
+                  className="flex items-center gap-2"
+                >
+                  <CloudArrowDown className="h-4 w-4" />
+                  Load Budgets
+                </Button>
+                <Button
+                  onClick={handleSaveBudgets}
+                  disabled={isLoading || !token || !owner || !repo}
+                  className="flex items-center gap-2"
+                >
+                  <CloudArrowUp className="h-4 w-4" />
+                  Save Budgets
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
-
-      <CardFooter className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={handleLoad}
-          disabled={isLoading || !token || !owner || !repo}
-          className="flex items-center gap-2"
-        >
-          <CloudArrowDown className="h-4 w-4" />
-          Load from GitHub
-        </Button>
-        <Button
-          onClick={handleSave}
-          disabled={isLoading || !token || !owner || !repo || campaigns.length === 0}
-          className="flex items-center gap-2"
-        >
-          <CloudArrowUp className="h-4 w-4" />
-          Save to GitHub
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

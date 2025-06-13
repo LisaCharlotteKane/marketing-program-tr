@@ -6,7 +6,8 @@
  */
 
 import { Campaign } from "@/components/campaign-table";
-import { saveCampaignsToGitHub } from "./github-api";
+import { RegionalBudgets } from "@/hooks/useRegionalBudgets";
+import { saveCampaignsToGitHub, saveDataToGitHub } from "./github-api";
 import { toast } from "sonner";
 
 // Default GitHub configuration
@@ -14,14 +15,16 @@ const DEFAULT_GITHUB_CONFIG = {
   token: "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", // Pre-configured token
   owner: "",
   repo: "",
-  path: "campaign-data/campaigns.json"
+  path: "campaign-data/campaigns.json",
+  budgetPath: "campaign-data/budgets.json"
 };
 
 // Flag to track initialization state
 let isInitialized = false;
 
-// Debounce timer
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+// Debounce timers
+let campaignDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+let budgetDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Initialize the auto-sync system
@@ -86,13 +89,13 @@ export async function syncCampaignsToGitHub(
   }
   
   // Clear any existing timeout
-  if (debounceTimer) {
-    clearTimeout(debounceTimer);
+  if (campaignDebounceTimer) {
+    clearTimeout(campaignDebounceTimer);
   }
   
   // Set a new timeout
   return new Promise((resolve) => {
-    debounceTimer = setTimeout(async () => {
+    campaignDebounceTimer = setTimeout(async () => {
       try {
         const result = await saveCampaignsToGitHub(campaigns, DEFAULT_GITHUB_CONFIG);
         
@@ -120,6 +123,62 @@ export async function syncCampaignsToGitHub(
 }
 
 /**
+ * Sync budget data to GitHub with debouncing
+ * 
+ * @param budgets Budget data to sync
+ * @param silent Whether to show toast notifications
+ * @returns Promise that resolves when sync is complete
+ */
+export async function syncBudgetsToGitHub(
+  budgets: RegionalBudgets,
+  silent: boolean = true
+): Promise<boolean> {
+  // Don't proceed if not initialized or missing required config
+  if (!isAutoGitHubSyncAvailable()) {
+    return false;
+  }
+  
+  // Clear any existing timeout
+  if (budgetDebounceTimer) {
+    clearTimeout(budgetDebounceTimer);
+  }
+  
+  // Set a new timeout
+  return new Promise((resolve) => {
+    budgetDebounceTimer = setTimeout(async () => {
+      try {
+        const result = await saveDataToGitHub(
+          budgets, 
+          {
+            ...DEFAULT_GITHUB_CONFIG,
+            path: DEFAULT_GITHUB_CONFIG.budgetPath
+          }
+        );
+        
+        if (result.success) {
+          if (!silent) {
+            toast.success(`Budget data auto-synced to GitHub`);
+          }
+          resolve(true);
+        } else {
+          console.error("Budget GitHub sync failed:", result.message);
+          if (!silent) {
+            toast.error(`Budget sync failed: ${result.message}`);
+          }
+          resolve(false);
+        }
+      } catch (error) {
+        console.error("Error during budget GitHub sync:", error);
+        if (!silent) {
+          toast.error(`Budget sync error: ${error instanceof Error ? error.message : "Unknown error"}`);
+        }
+        resolve(false);
+      }
+    }, 2000); // 2 second debounce
+  });
+}
+
+/**
  * Update GitHub configuration settings
  * 
  * @param settings New settings to apply
@@ -139,6 +198,10 @@ export function updateGitHubSyncConfig(settings: Partial<typeof DEFAULT_GITHUB_C
   
   if (settings.path) {
     DEFAULT_GITHUB_CONFIG.path = settings.path;
+  }
+  
+  if (settings.budgetPath) {
+    DEFAULT_GITHUB_CONFIG.budgetPath = settings.budgetPath;
   }
   
   // Mark as initialized if we have the minimum required settings
