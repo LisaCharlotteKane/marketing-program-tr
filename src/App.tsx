@@ -50,9 +50,9 @@ function App() {
   
   // Regional budget management
   const [regionalBudgets, setRegionalBudgets] = useState<RegionalBudgets>({
+    "North APAC": { assignedBudget: "", programs: [] },
+    "South APAC": { assignedBudget: "", programs: [] },
     "SAARC": { assignedBudget: "", programs: [] },
-    "North Asia": { assignedBudget: "", programs: [] },
-    "South Asia": { assignedBudget: "", programs: [] },
     "Digital": { assignedBudget: "", programs: [] }
   })
   
@@ -74,7 +74,7 @@ function App() {
     "Secure all developer workloads with the power of AI",
     "All"
   ]
-  const regions = ["SAARC", "North Asia", "South Asia", "Digital"]
+  const regions = ["North APAC", "South APAC", "SAARC", "Digital"]
   
   // Campaign types
   const campaignTypes = [

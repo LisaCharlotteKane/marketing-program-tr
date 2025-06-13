@@ -97,7 +97,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     "Q4 - April", "Q4 - May", "Q4 - June"
   ];
   
-  const regions = ["SAARC", "North Asia", "South Asia", "Digital"];
+  const regions = ["North APAC", "South APAC", "SAARC", "Digital"];
   
   const countries = [
     "Afghanistan", "Australia", "Bangladesh", "Bhutan", "Brunei", 

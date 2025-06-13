@@ -17,7 +17,7 @@ const campaignData = [
   },
   {
     id: "camp-002",
-    region: "North Asia",
+    region: "North APAC",
     country: "Japan",
     quarter: "Q1 2023",
     campaignOwner: "Sarah Kim",
@@ -32,7 +32,7 @@ const campaignData = [
   },
   {
     id: "camp-003",
-    region: "South Asia",
+    region: "South APAC",
     country: "Singapore",
     quarter: "Q2 2023",
     campaignOwner: "Alex Chen",
@@ -62,7 +62,7 @@ const campaignData = [
   },
   {
     id: "camp-005",
-    region: "North Asia",
+    region: "North APAC",
     country: "China",
     quarter: "Q3 2023",
     campaignOwner: "Li Wei",
@@ -77,7 +77,7 @@ const campaignData = [
   },
   {
     id: "camp-006",
-    region: "South Asia",
+    region: "South APAC",
     country: "Malaysia",
     quarter: "Q3 2023",
     campaignOwner: "David Tan",
@@ -104,7 +104,7 @@ const campaignData = [
     actualLeads: 150,
     actualMQLs: 18,
     actualSQLs: 10,
-    impactedRegions: ["SAARC", "North Asia", "South Asia"]
+    impactedRegions: ["SAARC", "North APAC", "South APAC"]
   }
 ];
 
@@ -112,13 +112,13 @@ const campaignData = [
 export const quarters = ["Q1 2023", "Q2 2023", "Q3 2023", "Q4 2023"];
 
 // Define regions
-export const regions = ["SAARC", "North Asia", "South Asia", "Digital"];
+export const regions = ["North APAC", "South APAC", "SAARC", "Digital"];
 
 // Define countries by region
 const countriesByRegion = {
   "SAARC": ["India", "Pakistan", "Bangladesh", "Sri Lanka", "Nepal"],
-  "North Asia": ["Japan", "China", "South Korea", "Taiwan"],
-  "South Asia": ["Singapore", "Malaysia", "Indonesia", "Thailand", "Philippines", "Vietnam"],
+  "North APAC": ["Japan", "China", "South Korea", "Taiwan"],
+  "South APAC": ["Singapore", "Malaysia", "Indonesia", "Thailand", "Philippines", "Vietnam"],
   "Digital": ["Multiple Regions"] // Digital is cross-regional
 };
 

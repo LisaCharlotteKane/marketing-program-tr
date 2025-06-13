@@ -45,6 +45,23 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
     "Expected Leads": "expectedLeads"
   };
 
+  // Generate template CSV for download (fallback method)
+  const generateTemplateCSV = () => {
+    const csvContent = `Campaign Type,Strategic Pillars,Revenue Play,Fiscal Year,Quarter/Month,Region,Country,Owner,Description,Forecasted Cost,Expected Leads,Impacted Regions
+In-Account Events (1:1),"Account Growth and Product Adoption,Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY24,Q2 - November,North APAC,Japan,Jane Smith,Enterprise customer workshop,15000,50,"South APAC,SAARC"
+Localized Events,Brand Awareness & Top of Funnel Demand Generation,Secure all developer workloads with the power of AI,FY24,Q3 - January,SAARC,India,John Doe,Developer community meetup,8000,100,
+Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Alex Johnson,Cross-regional webinar series,5000,150,"North APAC,South APAC,SAARC"`;
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "campaign_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -154,7 +171,16 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
               if (missingFields.length > 0) {
                 errors.push(`Row ${index + 2}: Missing values for ${missingFields.join(", ")}`);
               } else {
-                validCampaigns.push(campaign);
+                // Validate region
+                const validRegions = ["North APAC", "South APAC", "SAARC", "Digital"];
+                if (!validRegions.includes(campaign.region)) {
+                  errors.push(`Row ${index + 2}: Invalid region "${campaign.region}".`);
+                } else {
+                  // Set owner filter based on uploader identity (optional)
+                  // setOwnerFilter(campaign.owner); // Assuming you track uploader identity
+                  
+                  validCampaigns.push(campaign);
+                }
               }
             } catch (err) {
               errors.push(`Error processing row ${index + 2}: ${err}`);
@@ -226,7 +252,17 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
         </div>
 
         <div className="flex items-center gap-2">
-          <a href="/public/campaign_template.csv" download="campaign_template.csv">
+          <a 
+            href="campaign_template.csv" 
+            download="campaign_template.csv"
+            onClick={(e) => {
+              // If download button doesn't work directly, generate it dynamically
+              if (!window.location.href.includes('file:')) {
+                e.preventDefault();
+                generateTemplateCSV();
+              }
+            }}
+          >
             <Button variant="ghost" size="sm" className="flex items-center gap-2">
               <Download className="h-4 w-4" />
               Download Template
