@@ -1,5 +1,5 @@
 // Sample data
-const campaignData = [
+export const campaignData = [
   {
     id: "camp-001",
     region: "SAARC",
@@ -127,9 +127,29 @@ export const getCountriesByRegion = (region) => {
   return countriesByRegion[region] || [];
 };
 
+// Get all campaigns from storage
+const getCampaignsFromStorage = () => {
+  try {
+    // Try to load from localStorage first
+    const storedData = localStorage.getItem('campaignData');
+    if (storedData) {
+      return JSON.parse(storedData);
+    }
+    
+    // Fall back to sample data if nothing in storage
+    return campaignData;
+  } catch (error) {
+    console.error("Error loading campaign data:", error);
+    return campaignData; // Fall back to sample data on error
+  }
+};
+
 // Filter campaigns based on selected filters
 export const filterCampaigns = (region, country, quarter) => {
-  return campaignData.filter(campaign => {
+  // Get real campaigns from storage instead of using sample data
+  const realCampaigns = getCampaignsFromStorage();
+  
+  return realCampaigns.filter(campaign => {
     // Apply region filter
     if (region && region !== "_all" && campaign.region !== region) {
       return false;

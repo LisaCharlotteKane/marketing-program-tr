@@ -18,7 +18,11 @@ import {
   getCountriesByRegion
 } from "@/lib/dashboard-utils"
 
-export function ReportingDashboard() {
+export interface ReportingDashboardProps {
+  campaigns?: any[];
+}
+
+export function ReportingDashboard({ campaigns = [] }: ReportingDashboardProps) {
   // Filter states
   const [selectedRegion, setSelectedRegion] = useState("_all")
   const [selectedCountry, setSelectedCountry] = useState("_all")
@@ -52,16 +56,38 @@ export function ReportingDashboard() {
 
   // Update filtered data when filters change
   useEffect(() => {
-    const filtered = filterCampaigns(selectedRegion, selectedCountry, selectedQuarter)
-    setFilteredCampaigns(filtered)
+    // If campaigns were passed as props, filter those directly
+    // Otherwise use the utility function to get from storage
+    const filtered = campaigns.length > 0 
+      ? campaigns.filter(campaign => {
+          // Apply region filter
+          if (selectedRegion && selectedRegion !== "_all" && campaign.region !== selectedRegion) {
+            return false;
+          }
+          
+          // Apply country filter
+          if (selectedCountry && selectedCountry !== "_all" && campaign.country !== selectedCountry) {
+            return false;
+          }
+          
+          // Apply quarter filter
+          if (selectedQuarter && selectedQuarter !== "_all" && campaign.quarter !== selectedQuarter) {
+            return false;
+          }
+          
+          return true;
+        })
+      : filterCampaigns(selectedRegion, selectedCountry, selectedQuarter);
+    
+    setFilteredCampaigns(filtered);
     
     // Calculate summary metrics
-    setSummaryMetrics(calculateSummaryMetrics(filtered))
+    setSummaryMetrics(calculateSummaryMetrics(filtered));
     
     // Prepare data for charts
-    setRegionalCostData(prepareRegionalCostData(filtered))
-    setLeadsComparisonData(prepareLeadsComparisonData(filtered))
-  }, [selectedRegion, selectedCountry, selectedQuarter])
+    setRegionalCostData(prepareRegionalCostData(filtered));
+    setLeadsComparisonData(prepareLeadsComparisonData(filtered));
+  }, [selectedRegion, selectedCountry, selectedQuarter, campaigns]);
 
   // Format currency values
   const formatCurrency = (value) => {
@@ -81,7 +107,7 @@ export function ReportingDashboard() {
 
   // Handle export to CSV
   const handleExport = () => {
-    exportToCSV(filteredCampaigns)
+    exportToCSV(filteredCampaigns);
   }
 
   return (

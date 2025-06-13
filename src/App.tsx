@@ -490,7 +490,7 @@ function App() {
           </TabsContent>
 
           <TabsContent value="reporting" className="space-y-6">
-            <ReportingDashboard />
+            <ReportingDashboard campaigns={campaigns} />
           </TabsContent>
 
           <TabsContent value="github" className="space-y-6">
