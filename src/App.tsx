@@ -18,7 +18,6 @@ import { GitHubSync } from "@/components/github-sync"
 import { PersistentStorageInfo } from "@/components/persistent-storage-info"
 import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator"
-import { DataLoadingError } from "@/components/data-loading-error"
 import { BudgetLockInfo } from "@/components/budget-lock-info"
 import { Toaster } from "sonner"
 import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
@@ -66,7 +65,7 @@ function App() {
   // Campaign Table Data
   const [campaigns, setCampaigns, saveStatus] = useEnhancedCampaigns('campaignData', [])
 
-  // Handle manual retry of data loading
+  // Handle manual retry of data loading - not currently used but kept for future
   const handleRetryDataLoad = () => {
     window.location.reload();
   }
@@ -300,7 +299,6 @@ function App() {
           </p>
         </header>
 
-        {/* Error display removed to suppress persistent error message */}
 
         <Tabs defaultValue="planning" className="w-full">
           <TabsList className="grid w-full grid-cols-5 mb-4">

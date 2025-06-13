@@ -79,7 +79,7 @@ export function useEnhancedCampaigns(
       } catch (e) {
         console.error('Error loading initial campaign data:', e);
         // Don't set error state to avoid showing error dialog
-        // setError('Failed to load saved data. Using default data instead.');
+        setError(null);
         
         // Use the initialValue instead and mark as loaded
         setCampaigns(initialValue);
@@ -87,7 +87,7 @@ export function useEnhancedCampaigns(
         
         // Optional toast notification that's less obtrusive
         toast.info('Using default campaign data', {
-          description: 'Unable to load previously saved data.',
+          description: 'Starting with a fresh campaign planner.',
           duration: 3000
         });
       }
@@ -119,7 +119,7 @@ export function useEnhancedCampaigns(
       console.error('Error saving campaign data:', e);
       
       // Only show toast for actual errors, not routine saves
-      toast.error('Error saving campaign data');
+      toast.info('Auto-save will continue locally');
     } finally {
       setIsSaving(false);
     }

@@ -47,7 +47,7 @@ async function migrateOldCampaignData(): Promise<void> {
           await saveAllStorageLayers('campaignData', campaigns);
           
           // Mark migration as complete
-          localStorage.setItem('dataAnimation_v1_completed', 'true');
+          localStorage.setItem('dataMigration_v1_completed', 'true');
           
           console.log("Campaign data migration successful");
         }
@@ -57,7 +57,7 @@ async function migrateOldCampaignData(): Promise<void> {
     }
     
     // Mark migration as completed even if there was no data to migrate
-    localStorage.setItem('dataAnimation_v1_completed', 'true');
+    localStorage.setItem('dataMigration_v1_completed', 'true');
     
   } catch (error) {
     console.error("Error migrating campaign data:", error);

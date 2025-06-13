@@ -175,6 +175,7 @@ export function forceDefaultBudgetValues(): RegionalBudgets {
  * @param region The region to calculate for
  * @returns Object with calculated totals
  */
+export function calculateRegionalMetrics(
   budgets: RegionalBudgets, 
   region: string
 ): { 
