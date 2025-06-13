@@ -16,6 +16,7 @@ import { CampaignTable, Campaign } from "@/components/campaign-table"
 import { ExecutionTracking } from "@/components/execution-tracking"
 import { GitHubSync } from "@/components/github-sync"
 import { Toaster } from "sonner"
+import { useLocalCampaigns } from "@/hooks/useLocalCampaigns"
 
 // Type definitions for regional budget tracking
 interface RegionalBudget {
@@ -62,7 +63,7 @@ function App() {
   const [programId, setProgramId] = useState<string>("")
 
   // Campaign Table Data
-  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [campaigns, setCampaigns] = useLocalCampaigns('campaignData', [])
 
   // Preset data
   const pillars = [

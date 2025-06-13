@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { saveCampaignsToGitHub, loadCampaignsFromGitHub } from "@/services/github-api";
 import { Campaign } from "@/components/campaign-table";
-import { CloudArrowUp, CloudArrowDown, CheckCircle, WarningCircle, Key } from "@phosphor-icons/react";
+import { CloudArrowUp, CloudArrowDown, CheckCircle, WarningCircle, Key, ClockClockwise } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { useAutoSave } from "@/hooks/useAutoSave";
 
 interface GitHubSyncProps {
   campaigns: Campaign[];
@@ -27,6 +30,52 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   });
   const [selectedFiscalYear, setSelectedFiscalYear] = useState("_default");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Auto-save state
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
+  
+  // Load saved GitHub settings from localStorage on component mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('githubSyncSettings');
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        if (settings.owner) setOwner(settings.owner);
+        if (settings.repo) setRepo(settings.repo);
+        if (settings.path) setPath(settings.path);
+        if (settings.selectedFiscalYear) setSelectedFiscalYear(settings.selectedFiscalYear);
+        if (settings.autoSaveEnabled) setAutoSaveEnabled(settings.autoSaveEnabled);
+      } catch (e) {
+        console.error('Error loading GitHub settings from localStorage:', e);
+      }
+    }
+  }, []);
+  
+  // Save GitHub settings to localStorage when they change
+  useEffect(() => {
+    if (owner || repo || path || selectedFiscalYear !== "_default" || autoSaveEnabled) {
+      const settings = {
+        owner,
+        repo,
+        path,
+        selectedFiscalYear,
+        autoSaveEnabled
+      };
+      localStorage.setItem('githubSyncSettings', JSON.stringify(settings));
+    }
+  }, [owner, repo, path, selectedFiscalYear, autoSaveEnabled]);
+  
+  // Use the auto-save hook
+  const { lastSaved, isSaving, error: autoSaveError, canSave } = useAutoSave(campaigns, {
+    token: token || null,
+    owner,
+    repo,
+    path: selectedFiscalYear !== "_default" 
+      ? `campaign-data/${selectedFiscalYear.toLowerCase()}.json`
+      : path,
+    enabled: autoSaveEnabled,
+    delay: 2000 // 2 seconds delay
+  });
 
   // Fiscal year options for file selection
   const fiscalYears = ["FY24", "FY25", "FY26"];
@@ -215,6 +264,34 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
                 : `Will use path: campaign-data/${selectedFiscalYear.toLowerCase()}.json`}
             </p>
           </div>
+        </div>
+        
+        {/* Auto-save toggle */}
+        <div className="flex items-center space-x-2 border p-3 rounded-md mt-4">
+          <Switch
+            id="auto-save"
+            checked={autoSaveEnabled}
+            onCheckedChange={setAutoSaveEnabled}
+            disabled={!canSave}
+          />
+          <div className="space-y-0.5">
+            <Label htmlFor="auto-save" className="text-sm font-medium">
+              Enable Auto-Save
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              Automatically save changes to GitHub when data is modified
+            </p>
+          </div>
+          
+          {lastSaved && autoSaveEnabled && (
+            <div className="ml-auto flex items-center gap-1.5">
+              <Badge variant="outline" className="text-xs gap-1 py-0">
+                <ClockClockwise className="h-3 w-3" />
+                Last saved: {lastSaved.toLocaleTimeString()}
+              </Badge>
+              {isSaving && <Badge variant="secondary" className="text-xs py-0">Saving...</Badge>}
+            </div>
+          )}
         </div>
 
         {/* Status Alerts */}

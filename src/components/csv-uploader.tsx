@@ -45,21 +45,39 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
     "Expected Leads": "expectedLeads"
   };
 
-  // Generate template CSV for download (fallback method)
+  // Generate template CSV for download
   const generateTemplateCSV = () => {
-    const csvContent = `Campaign Type,Strategic Pillars,Revenue Play,Fiscal Year,Quarter/Month,Region,Country,Owner,Description,Forecasted Cost,Expected Leads,Impacted Regions
+    try {
+      const csvContent = `Campaign Type,Strategic Pillars,Revenue Play,Fiscal Year,Quarter/Month,Region,Country,Owner,Description,Forecasted Cost,Expected Leads,Impacted Regions
 In-Account Events (1:1),"Account Growth and Product Adoption,Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY24,Q2 - November,North APAC,Japan,Tomoko Tanaka,Enterprise customer workshop,15000,50,"South APAC,SAARC"
 Localized Events,Brand Awareness & Top of Funnel Demand Generation,Secure all developer workloads with the power of AI,FY24,Q3 - January,SAARC,India,Shruti Narang,Developer community meetup,8000,100,
 Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,Cross-regional webinar series,5000,150,"North APAC,South APAC,SAARC"`;
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "campaign_template.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "campaign_template.csv");
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+      
+      setUploadStatus({
+        message: "Template downloaded successfully",
+        type: "success"
+      });
+    } catch (error) {
+      console.error("Error generating template:", error);
+      setUploadStatus({
+        message: "Failed to download template",
+        type: "error"
+      });
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

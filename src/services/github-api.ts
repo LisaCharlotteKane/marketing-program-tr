@@ -31,6 +31,43 @@ interface GitHubFileResponse {
 }
 
 /**
+ * Attempts to perform a fetch operation with retries
+ * 
+ * @param url The URL to fetch
+ * @param options Fetch options
+ * @param retries Number of retries
+ * @returns Promise with the fetch response
+ */
+async function retryableFetch(url: string, options: RequestInit, retries = 2): Promise<Response> {
+  try {
+    const response = await fetch(url, options);
+    if (response.ok) {
+      return response;
+    }
+    
+    // For 429 Too Many Requests, retry with backoff
+    if (response.status === 429 && retries > 0) {
+      // Get retry-after header or use default backoff
+      const retryAfter = response.headers.get('retry-after');
+      const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : 2000;
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return retryableFetch(url, options, retries - 1);
+    }
+    
+    return response;
+  } catch (error) {
+    // For network errors, retry if we have retries left
+    if (retries > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return retryableFetch(url, options, retries - 1);
+    }
+    throw error;
+  }
+}
+
+/**
  * Encodes content to base64 (required for GitHub API)
  */
 function encodeToBase64(content: string): string {
@@ -77,7 +114,7 @@ export async function saveCampaignsToGitHub(
     // Try to get existing file to obtain the SHA (needed for updates)
     let sha: string | undefined;
     try {
-      const response = await fetch(
+      const response = await retryableFetch(
         `https://api.github.com/repos/${fullConfig.owner}/${fullConfig.repo}/contents/${fullConfig.path}`,
         {
           headers: {
@@ -113,7 +150,7 @@ export async function saveCampaignsToGitHub(
     }
     
     // Make the API call to update or create the file
-    const response = await fetch(
+    const response = await retryableFetch(
       `https://api.github.com/repos/${fullConfig.owner}/${fullConfig.repo}/contents/${fullConfig.path}`,
       {
         method: 'PUT',
@@ -167,7 +204,7 @@ export async function loadCampaignsFromGitHub(
 
   try {
     // Get file content from GitHub
-    const response = await fetch(
+    const response = await retryableFetch(
       `https://api.github.com/repos/${fullConfig.owner}/${fullConfig.repo}/contents/${fullConfig.path}`,
       {
         headers: {

@@ -288,8 +288,8 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                         {/* Variance */}
                         <TableCell>
                           {hasBothCosts && (
-                            <div className={`${variance && variance > 0 ? "text-red-600" : "text-green-600"}`}>
-                              {formatCurrency(variance || 0)} 
+                            <div className={`${variance as number > 0 ? "text-red-600" : "text-green-600"}`}>
+                              {formatCurrency(variance as number)} 
                               {variancePercent !== null && (
                                 <span className="text-xs ml-1">
                                   ({variancePercent > 0 ? "+" : ""}{Math.round(variancePercent)}%)
