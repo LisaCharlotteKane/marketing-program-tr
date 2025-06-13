@@ -57,15 +57,22 @@ Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,
       // Create blob and download link
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", "campaign_template.csv");
       
-      // Append to document, click, and clean up
+      // Create and configure link element
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "campaign_template.csv";
+      link.style.display = "none";
+      
+      // Append to document, trigger click, and clean up
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
       
       setUploadStatus({
         message: "Template downloaded successfully",
@@ -78,7 +85,7 @@ Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,
     } catch (error) {
       console.error("Error generating template:", error);
       setUploadStatus({
-        message: "Failed to download template",
+        message: "Failed to download template: " + (error instanceof Error ? error.message : String(error)),
         type: "error"
       });
     }
@@ -140,7 +147,15 @@ Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,
                 description: "",
                 forecastedCost: "",
                 expectedLeads: "",
-                impactedRegions: []
+                impactedRegions: [],
+                // Initialize execution tracking fields
+                status: "Planning",
+                poRaised: false,
+                campaignCode: "",
+                issueLink: "",
+                actualCost: "",
+                actualLeads: "",
+                actualMQLs: ""
               };
               
               // Map CSV data to campaign object

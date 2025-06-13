@@ -24,6 +24,7 @@ import { useRegionalBudgets, RegionalBudget, RegionalBudgets } from "@/hooks/use
 import { runDataMigrations } from "@/services/migration-service"
 import { initAutoGitHubSync } from "@/services/auto-github-sync"
 import { Button } from "@/components/ui/button"
+import { calculateRegionalMetrics } from "@/services/budget-service"
 
 function App() {
   // Form state
@@ -145,8 +146,6 @@ function App() {
       maximumFractionDigits: 0
     }).format(value)
   }
-
-import { calculateRegionalMetrics } from "@/services/budget-service"
 
   // Update regional budget program data
   const updateRegionalProgramData = () => {

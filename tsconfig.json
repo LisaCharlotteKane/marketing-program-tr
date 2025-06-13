@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": [
@@ -11,7 +10,7 @@
     "module": "ESNext",
     "skipLibCheck": true,
     /* Bundler mode */
-    "moduleResolution": "bundler",
+    "moduleResolution": "Node",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -26,6 +25,8 @@
         "src/*"
       ]
     },
+    "esModuleInterop": true,
+    "strict": true
   },
   "include": [
     "src"

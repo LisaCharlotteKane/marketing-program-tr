@@ -46,8 +46,9 @@ export interface Campaign {
   poRaised?: boolean;
   campaignCode?: string;
   issueLink?: string;
-  actualCost?: number | "";
+  actualCost: number | "";
   actualLeads?: number | "";
+  actualMQLs?: number | "";
   actualMQLs?: number | "";
 }
 
