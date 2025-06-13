@@ -106,20 +106,21 @@ export function useEnhancedCampaigns(
   // Auto-save effect when campaigns change
   useEffect(() => {
     // Don't save until initial data is loaded (prevents overwriting with empty data)
-    if (!dataLoaded || campaigns.length === 0) return;
+    if (!dataLoaded) return;
     
     // Clear any existing timeout
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     
+    // Always save (even if empty array) to allow clearing data
     // Debounce save (500ms)
     saveTimeoutRef.current = setTimeout(() => {
       saveCampaigns(campaigns);
       
       // Optional: Show toast notification (less frequently)
       // Only do this for significant changes to avoid notification fatigue
-      if (campaigns.length > 0 && JSON.stringify(campaigns) !== JSON.stringify(initialValue)) {
+      if (JSON.stringify(campaigns) !== JSON.stringify(initialValue)) {
         // Clear any existing toast timeout
         if (toastTimeoutRef.current) {
           clearTimeout(toastTimeoutRef.current);

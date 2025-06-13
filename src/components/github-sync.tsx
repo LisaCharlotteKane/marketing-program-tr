@@ -311,8 +311,19 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
           <Alert className="bg-red-50 border-red-200 text-red-800">
             <WarningCircle className="h-4 w-4 text-red-600" />
             <AlertTitle>Error</AlertTitle>
-            <AlertDescription className="text-red-700">
-              {status.message}
+            <AlertDescription className="text-red-700 space-y-2">
+              <p>{status.message}</p>
+              {status.message.includes("Not Found") && (
+                <div className="text-sm mt-2 p-2 bg-red-100 rounded">
+                  <p><strong>Common "Not Found" reasons:</strong></p>
+                  <ul className="list-disc pl-4 mt-1">
+                    <li>Repository doesn't exist - create it on GitHub first</li>
+                    <li>Token doesn't have write access to the repository</li>
+                    <li>Repository owner name is incorrect (check for typos)</li>
+                    <li>You're using an organization repo without proper permissions</li>
+                  </ul>
+                </div>
+              )}
             </AlertDescription>
           </Alert>
         )}

@@ -15,7 +15,7 @@ export function AutoSaveIndicator({ className = "", forceSave }: AutoSaveIndicat
   const { isSaving, lastSaved, formattedLastSaved } = useAutoSaveStatus();
   
   // State to control visibility of the indicator
-  const [showDetails, setShowDetails] = useState(false);
+  const [showDetails, setShowDetails] = useState(true); // Always show details
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Handle manual save click
@@ -23,72 +23,13 @@ export function AutoSaveIndicator({ className = "", forceSave }: AutoSaveIndicat
     if (forceSave) {
       try {
         await forceSave();
+        toast.success("Data saved successfully to browser storage");
       } catch (error) {
         toast.error("Failed to save data");
       }
     }
   };
   
-  // Show details when saving happens, hide after delay
-  useEffect(() => {
-    if (isSaving) {
-      setShowDetails(true);
-      
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    } else if (lastSaved && !isSaving) {
-      setShowDetails(true);
-      
-      // Clear any existing timeout
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      
-      // Hide the details after 5 seconds
-      timeoutRef.current = setTimeout(() => {
-        setShowDetails(false);
-      }, 5000);
-    }
-    
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isSaving, lastSaved]);
-  
-  // Simple indicator mode
-  if (!showDetails) {
-    return (
-      <div className={`flex items-center gap-1 ${className}`}>
-        <Badge 
-          variant="outline" 
-          className="text-xs flex items-center gap-1 py-0.5 px-2"
-          onClick={() => setShowDetails(true)}
-        >
-          <FloppyDisk className="h-3 w-3" />
-          Auto-save enabled
-        </Badge>
-        
-        {forceSave && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-6 px-2 text-xs"
-            onClick={handleForceSave}
-            title="Save now"
-          >
-            <ArrowClockwise className="h-3 w-3 mr-1" />
-            Save
-          </Button>
-        )}
-      </div>
-    );
-  }
-  
-  // Detailed indicator mode
   return (
     <div className={`flex items-center gap-1 ${className}`}>
       <Badge 
@@ -103,7 +44,7 @@ export function AutoSaveIndicator({ className = "", forceSave }: AutoSaveIndicat
         ) : (
           <>
             <ClockClockwise className="h-3 w-3" />
-            Saved {formattedLastSaved}
+            {lastSaved ? `Saved ${formattedLastSaved}` : "Auto-save ready"}
           </>
         )}
       </Badge>

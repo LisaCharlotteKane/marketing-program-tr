@@ -148,8 +148,29 @@ export function PersistentStorageInfo() {
                   <li>Different browsers/devices will have separate data</li>
                 </ul>
               </p>
+              <p className="mt-2 text-xs text-muted-foreground flex gap-1 items-center font-medium">
+                <CloudCheck className="h-3.5 w-3.5 text-green-600" />
+                For data backup, use the "Export JSON" function in the campaign table.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="rounded-lg border bg-yellow-50 p-3">
+          <div className="flex items-start gap-3">
+            <InfoCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-medium">Using GitHub Sync</h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                <strong>Important:</strong> GitHub sync requires:
+                <ul className="list-disc pl-4 mt-1 space-y-1">
+                  <li>A valid GitHub personal access token with repo scope</li>
+                  <li>Owner name and repository name that you have write access to</li>
+                  <li>The repository must already exist (cannot be created through this tool)</li>
+                </ul>
+              </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                For team collaboration, use the GitHub sync option above.
+                If you encounter "Not Found" errors, please verify the repository exists and your token has proper permissions.
               </p>
             </div>
           </div>

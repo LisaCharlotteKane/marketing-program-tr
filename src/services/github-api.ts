@@ -164,8 +164,13 @@ export async function saveCampaignsToGitHub(
     );
     
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`GitHub API error: ${errorData.message}`);
+      try {
+        const errorData = await response.json();
+        throw new Error(`GitHub API error: ${errorData.message || response.statusText}`);
+      } catch (jsonError) {
+        // If we can't parse the error as JSON, use the status text
+        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+      }
     }
     
     return { 
@@ -223,8 +228,13 @@ export async function loadCampaignsFromGitHub(
         };
       }
       
-      const errorData = await response.json();
-      throw new Error(`GitHub API error: ${errorData.message}`);
+      try {
+        const errorData = await response.json();
+        throw new Error(`GitHub API error: ${errorData.message || response.statusText}`);
+      } catch (jsonError) {
+        // If we can't parse the error as JSON, use the status text
+        throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+      }
     }
     
     const data = await response.json() as GitHubFileResponse;

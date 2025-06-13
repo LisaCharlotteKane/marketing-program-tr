@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,16 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Checkbox } from "@/components/ui/checkbox";
 import { ROIDashboard } from "@/components/roi-dashboard";
 import { CSVUploader } from "@/components/csv-uploader";
+import { toast } from "sonner";
 import { 
   PlusCircle, 
   Trash, 
   Download,
+  UploadSimple,
   Check,
   ChartLineUp,
-  InfoCircle
+  InfoCircle,
+  FloppyDisk
 } from "@phosphor-icons/react";
 
 // Type definitions
@@ -216,6 +219,87 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     }));
   };
 
+  // Function to export campaigns as JSON
+  const exportCampaignsAsJSON = () => {
+    try {
+      // Create a JSON blob
+      const campaignsJson = JSON.stringify(campaigns, null, 2);
+      const blob = new Blob([campaignsJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `marketing-campaigns-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error exporting campaigns:', error);
+      toast.error("Failed to export campaigns");
+    }
+  };
+  
+  // Function to export campaigns as CSV
+  const exportCampaignsAsCSV = () => {
+    try {
+      // Convert campaigns to CSV format
+      const headers = [
+        'Campaign Type', 'Strategic Pillars', 'Revenue Play', 'Fiscal Year',
+        'Quarter/Month', 'Region', 'Country', 'Owner', 'Description',
+        'Forecasted Cost', 'Expected Leads', 'MQLs', 'SQLs',
+        'Opportunities', 'Pipeline Forecast', 'Status', 'PO Raised',
+        'Campaign Code', 'Issue Link', 'Actual Cost', 'Actual Leads', 'Actual MQLs'
+      ].join(',');
+      
+      const rows = campaigns.map(c => [
+        `"${c.campaignType || ''}"`,
+        `"${c.strategicPillars?.join('; ') || ''}"`,
+        `"${c.revenuePlay || ''}"`,
+        `"${c.fiscalYear || ''}"`,
+        `"${c.quarterMonth || ''}"`,
+        `"${c.region || ''}"`,
+        `"${c.country || ''}"`,
+        `"${c.owner || ''}"`,
+        `"${c.description?.replace(/"/g, '""') || ''}"`,
+        c.forecastedCost !== '' ? c.forecastedCost : '',
+        c.expectedLeads !== '' ? c.expectedLeads : '',
+        c.mql || '',
+        c.sql || '',
+        c.opportunities || '',
+        c.pipelineForecast || '',
+        `"${c.status || ''}"`,
+        c.poRaised ? 'Yes' : 'No',
+        `"${c.campaignCode || ''}"`,
+        `"${c.issueLink || ''}"`,
+        c.actualCost !== '' ? c.actualCost : '',
+        c.actualLeads !== '' ? c.actualLeads : '',
+        c.actualMQLs !== '' ? c.actualMQLs : ''
+      ].join(','));
+      
+      const csv = [headers, ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      
+      // Create download link
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `marketing-campaigns-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error exporting campaigns as CSV:', error);
+      toast.error("Failed to export campaigns as CSV");
+    }
+  };
+
   // Handle numeric input changes
   const handleNumericChange = (
     id: string,
@@ -303,6 +387,44 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     return total + (typeof campaign.actualCost === 'number' ? campaign.actualCost : 0);
   }, 0);
 
+  // Import JSON data
+  const importFromJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importedCampaigns = JSON.parse(content) as Campaign[];
+        
+        // Validate campaigns
+        const validCampaigns = importedCampaigns.filter(c => 
+          c.id && typeof c.id === 'string'
+        );
+        
+        // Ask for confirmation if replacing existing data
+        if (campaigns.length > 0) {
+          if (confirm(`You currently have ${campaigns.length} campaigns. Do you want to replace them with ${validCampaigns.length} imported campaigns?`)) {
+            setCampaigns(validCampaigns);
+            toast.success(`Imported ${validCampaigns.length} campaigns successfully`);
+          }
+        } else {
+          setCampaigns(validCampaigns);
+          toast.success(`Imported ${validCampaigns.length} campaigns successfully`);
+        }
+      } catch (error) {
+        console.error('Error importing campaigns:', error);
+        toast.error('Failed to import campaigns. Invalid file format.');
+      }
+      
+      // Reset file input
+      event.target.value = '';
+    };
+    
+    reader.readAsText(file);
+  };
+  
   // Check if campaign is locked (cancelled or shipped)
   const isCampaignLocked = (campaign: Campaign) => {
     return campaign.status === "Cancelled" || campaign.status === "Shipped";
@@ -312,21 +434,57 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
   const filteredCampaigns = selectedOwner === "_all"
     ? campaigns
     : campaigns.filter(campaign => campaign.owner === selectedOwner);
+    
+  // Reference for file input
+  const jsonFileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Campaign Planning</h2>
         <div className="flex space-x-2">
+          {/* Export Buttons */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={exportCampaignsAsJSON}
+            className="flex items-center gap-2"
+            title="Export data to JSON file (for backup)"
+          >
+            <FloppyDisk className="h-4 w-4" />
+            Export JSON
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 
             onClick={exportToCSV}
             className="flex items-center gap-2"
+            title="Export data to CSV"
           >
             <Download className="h-4 w-4" />
             Export CSV
           </Button>
+          
+          {/* Import JSON Button */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => jsonFileInputRef.current?.click()}
+            className="flex items-center gap-2"
+            title="Import from JSON backup file"
+          >
+            <UploadSimple className="h-4 w-4" />
+            Import JSON
+          </Button>
+          <input
+            type="file"
+            ref={jsonFileInputRef}
+            onChange={importFromJSON}
+            accept=".json"
+            className="hidden"
+          />
+          
+          {/* Add Campaign Button */}
           <Button 
             onClick={addCampaign} 
             size="sm"
