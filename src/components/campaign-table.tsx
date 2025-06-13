@@ -107,7 +107,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     "Taiwan", "Thailand", "Vietnam", "X Apac"
   ];
 
-  const owners = ["John Doe", "Jane Smith", "Michael Johnson", "Emily Brown", "David Wilson"];
+  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
   
   const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
 
