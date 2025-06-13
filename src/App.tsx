@@ -20,6 +20,7 @@ import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { Toaster } from "sonner"
 import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
 import { runDataMigrations } from "@/services/migration-service"
+import { initAutoGitHubSync } from "@/services/auto-github-sync"
 
 // Type definitions for regional budget tracking
 interface RegionalBudget {
@@ -53,6 +54,9 @@ function App() {
     runDataMigrations().catch(error => {
       console.error("Failed to run data migrations:", error);
     });
+    
+    // Initialize auto GitHub sync
+    initAutoGitHubSync();
   }, []);
 
   // Calculated metrics

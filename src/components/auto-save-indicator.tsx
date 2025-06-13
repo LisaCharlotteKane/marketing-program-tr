@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
-import { FloppyDisk, ClockClockwise, ArrowClockwise } from "@phosphor-icons/react";
+import { FloppyDisk, ClockClockwise, ArrowClockwise, GithubLogo } from "@phosphor-icons/react";
 import { useAutoSaveStatus } from "@/hooks/useAutoSaveStatus";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { isAutoGitHubSyncAvailable } from "@/services/auto-github-sync";
 
 interface AutoSaveIndicatorProps {
   className?: string;
@@ -18,12 +19,26 @@ export function AutoSaveIndicator({ className = "", forceSave }: AutoSaveIndicat
   const [showDetails, setShowDetails] = useState(true); // Always show details
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Check if GitHub sync is available
+  const [isGitHubSyncActive, setIsGitHubSyncActive] = useState(false);
+  
+  useEffect(() => {
+    setIsGitHubSyncActive(isAutoGitHubSyncAvailable());
+    
+    // Check periodically if GitHub sync status changes
+    const interval = setInterval(() => {
+      setIsGitHubSyncActive(isAutoGitHubSyncAvailable());
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
   // Handle manual save click
   const handleForceSave = async () => {
     if (forceSave) {
       try {
         await forceSave();
-        toast.success("Data saved successfully to browser storage");
+        // Toast is handled in the forceSave function
       } catch (error) {
         toast.error("Failed to save data");
       }
@@ -43,7 +58,11 @@ export function AutoSaveIndicator({ className = "", forceSave }: AutoSaveIndicat
           </>
         ) : (
           <>
-            <ClockClockwise className="h-3 w-3" />
+            {isGitHubSyncActive ? (
+              <GithubLogo className="h-3 w-3 text-black" />
+            ) : (
+              <ClockClockwise className="h-3 w-3" />
+            )}
             {lastSaved ? `Saved ${formattedLastSaved}` : "Auto-save ready"}
           </>
         )}

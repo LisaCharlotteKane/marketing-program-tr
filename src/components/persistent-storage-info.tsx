@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { InfoCircle, CloudCheck, Database } from "@phosphor-icons/react";
+import { InfoCircle, CloudCheck, Database, GithubLogo } from "@phosphor-icons/react";
 import { countTotalSavedCampaigns } from "@/services/persistent-storage";
 import { Badge } from "@/components/ui/badge";
+import { isAutoGitHubSyncAvailable } from "@/services/auto-github-sync";
 
 export function PersistentStorageInfo() {
   const [storageSummary, setStorageSummary] = useState({
     totalCampaigns: 0,
     lastSaved: null as Date | null,
     storageType: "local",
+    githubSyncActive: false
   });
   
   // Get storage information on mount
@@ -35,10 +37,14 @@ export function PersistentStorageInfo() {
         // Determine storage type
         const storageType = window.indexedDB ? "multi-layer" : "local";
         
+        // Check if GitHub sync is active
+        const githubSyncActive = isAutoGitHubSyncAvailable();
+        
         setStorageSummary({
           totalCampaigns,
           lastSaved,
           storageType,
+          githubSyncActive
         });
       } catch (error) {
         console.error("Error getting storage summary:", error);
@@ -94,7 +100,7 @@ export function PersistentStorageInfo() {
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <div className="rounded-lg border p-3 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">Storage Type</h3>
@@ -131,6 +137,42 @@ export function PersistentStorageInfo() {
             <p className="mt-1 text-sm text-muted-foreground">
               Data is saved automatically after changes
             </p>
+          </div>
+          
+          <div className="rounded-lg border p-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h3 className="font-medium">GitHub Sync</h3>
+              <Badge variant={storageSummary.githubSyncActive ? "default" : "outline"} className={`capitalize ${storageSummary.githubSyncActive ? 'bg-green-500 hover:bg-green-500/90' : ''}`}>
+                {storageSummary.githubSyncActive ? "Active" : "Inactive"}
+              </Badge>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1">
+              {storageSummary.githubSyncActive ? (
+                <>
+                  <GithubLogo className="h-3.5 w-3.5" /> Auto-sync to GitHub enabled
+                </>
+              ) : (
+                "Not configured in GitHub Sync tab"
+              )}
+            </p>
+          </div>
+        </div>
+        
+        <div className="rounded-lg border bg-green-50 p-3 mt-4">
+          <div className="flex items-start gap-3">
+            <GithubLogo className="h-5 w-5 text-gray-800 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-sm font-medium">GitHub Auto-Sync Active</h4>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Your campaign data is now automatically syncing to GitHub with the provided token.
+                <ul className="list-disc pl-4 mt-1 space-y-1">
+                  <li>Auto-sync happens in the background with each edit</li>
+                  <li>A GitHub repository name and owner must be configured in the GitHub Sync tab</li>
+                  <li>Your token has been pre-configured</li>
+                  <li>You can still use the manual GitHub Sync controls for specific operations</li>
+                </ul>
+              </p>
+            </div>
           </div>
         </div>
         

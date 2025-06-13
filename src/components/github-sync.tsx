@@ -12,6 +12,7 @@ import { Campaign } from "@/components/campaign-table";
 import { CloudArrowUp, CloudArrowDown, CheckCircle, WarningCircle, Key, ClockClockwise } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useAutoSave } from "@/hooks/useAutoSave";
+import { updateGitHubSyncConfig } from "@/services/auto-github-sync";
 
 interface GitHubSyncProps {
   campaigns: Campaign[];
@@ -20,7 +21,7 @@ interface GitHubSyncProps {
 
 export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   // State for GitHub configuration
-  const [token, setToken] = useState("");
+  const [token, setToken] = useState("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");
   const [owner, setOwner] = useState("");
   const [repo, setRepo] = useState("");
   const [path, setPath] = useState("campaign-data/campaigns.json");
@@ -32,7 +33,7 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   const [isLoading, setIsLoading] = useState(false);
   
   // Auto-save state
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(false);
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   
   // Load saved GitHub settings from localStorage on component mount
   useEffect(() => {
@@ -62,8 +63,18 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
         autoSaveEnabled
       };
       localStorage.setItem('githubSyncSettings', JSON.stringify(settings));
+      
+      // Update auto GitHub sync configuration
+      updateGitHubSyncConfig({
+        token,
+        owner,
+        repo,
+        path: selectedFiscalYear !== "_default" 
+          ? `campaign-data/${selectedFiscalYear.toLowerCase()}.json`
+          : path
+      });
     }
-  }, [owner, repo, path, selectedFiscalYear, autoSaveEnabled]);
+  }, [owner, repo, path, selectedFiscalYear, autoSaveEnabled, token]);
   
   // Use the auto-save hook
   const { lastSaved, isSaving, error: autoSaveError, canSave } = useAutoSave(campaigns, {
@@ -188,7 +199,7 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
           <Key className="h-5 w-5" /> GitHub Repository Sync
         </CardTitle>
         <CardDescription>
-          Save and load campaign data to/from a GitHub repository
+          Your token is pre-configured. Just enter repository details below.
         </CardDescription>
       </CardHeader>
       
@@ -206,11 +217,11 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
               placeholder="ghp_..."
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              className="font-mono"
+              className="font-mono bg-green-50"
               required
             />
             <p className="text-xs text-muted-foreground">
-              Token needs repo scope. <a href="https://github.com/settings/tokens/new" target="_blank" rel="noreferrer" className="underline text-primary">Create a token</a>
+              Token pre-configured. <a href="https://github.com/settings/tokens/new" target="_blank" rel="noreferrer" className="underline text-primary">Create a new token</a> if needed.
             </p>
           </div>
 

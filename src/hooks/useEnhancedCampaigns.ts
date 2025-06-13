@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Campaign } from '@/components/campaign-table';
 import { saveAllStorageLayers, loadFromBestAvailableSource } from '@/services/persistent-storage';
 import { toast } from 'sonner';
+import { initAutoGitHubSync, syncCampaignsToGitHub, isAutoGitHubSyncAvailable } from '@/services/auto-github-sync';
 
 /**
  * Enhanced hook to manage campaign data with robust auto-save
@@ -44,6 +45,15 @@ export function useEnhancedCampaigns(
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // State to track GitHub sync status
+  const [githubSyncEnabled, setGithubSyncEnabled] = useState(false);
+  
+  // Initialize GitHub sync
+  useEffect(() => {
+    const syncAvailable = initAutoGitHubSync();
+    setGithubSyncEnabled(syncAvailable && isAutoGitHubSyncAvailable());
+  }, []);
+
   // Load initial data from storage
   useEffect(() => {
     const loadInitialData = async () => {
@@ -77,14 +87,23 @@ export function useEnhancedCampaigns(
     loadInitialData();
   }, [key, initialValue]);
 
-  // Save function that handles both storage layers
+  // Save function that handles both storage layers and GitHub sync
   const saveCampaigns = useCallback(async (data: Campaign[]) => {
     setIsSaving(true);
     setError(null);
     
     try {
+      // First save to local storage layers
       await saveAllStorageLayers(key, data);
       setLastSaved(new Date());
+      
+      // Then attempt to sync to GitHub if enabled
+      if (githubSyncEnabled) {
+        syncCampaignsToGitHub(data).catch(error => {
+          console.error("GitHub auto-sync error:", error);
+          // Intentionally not setting error state for silent GitHub sync failures
+        });
+      }
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown error saving data';
       setError(errorMsg);
@@ -95,13 +114,23 @@ export function useEnhancedCampaigns(
     } finally {
       setIsSaving(false);
     }
-  }, [key]);
+  }, [key, githubSyncEnabled]);
 
   // Force save function (for manual triggers)
   const forceSave = useCallback(async () => {
     await saveCampaigns(campaigns);
-    toast.success('Campaign data saved successfully');
-  }, [campaigns, saveCampaigns]);
+    
+    // Show success toast that includes GitHub sync info
+    if (githubSyncEnabled) {
+      toast.success('Campaign data saved locally and syncing to GitHub');
+      // Attempt explicit GitHub sync with notification
+      syncCampaignsToGitHub(campaigns, false).catch(error => {
+        console.error("Explicit GitHub sync error:", error);
+      });
+    } else {
+      toast.success('Campaign data saved successfully to browser storage');
+    }
+  }, [campaigns, saveCampaigns, githubSyncEnabled]);
 
   // Auto-save effect when campaigns change
   useEffect(() => {
