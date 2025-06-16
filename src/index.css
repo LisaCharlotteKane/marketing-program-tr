@@ -9,55 +9,55 @@
 
 :root {
   /* Base colors */
-  --background: #f8fafc;
-  --foreground: #1e293b;
+  --background: #ffffff;
+  --foreground: #0f1419;
 
-  --card: #ffffff;
-  --card-foreground: #1e293b;
+  --card: #f7f8f8;
+  --card-foreground: #0f1419;
   --popover: #ffffff;
-  --popover-foreground: #1e293b;
+  --popover-foreground: #0f1419;
 
   /* Action colors */
-  --primary: #6366f1;
+  --primary: #1e9df1;
   --primary-foreground: #ffffff;
-  --secondary: #e5e7eb;
-  --secondary-foreground: #374151;
-  --accent: #e0e7ff;
-  --accent-foreground: #374151;
-  --destructive: #ef4444;
+  --secondary: #0f1419;
+  --secondary-foreground: #ffffff;
+  --accent: #E3ECF6;
+  --accent-foreground: #1e9df1;
+  --destructive: #f4212e;
   --destructive-foreground: #ffffff;
 
   /* Supporting UI colors */
-  --muted: #f3f4f6;
-  --muted-foreground: #6b7280;
-  --border: #d1d5db;
-  --input: #d1d5db;
-  --ring: #6366f1;
+  --muted: #E5E5E6;
+  --muted-foreground: #0f1419;
+  --border: #e1eaef;
+  --input: #f7f9fa;
+  --ring: #1da1f2;
 
   /* Border radius */
-  --radius: 0.5rem;
-  --chart-1: #6366f1;
-  --chart-2: #4f46e5;
-  --chart-3: #4338ca;
-  --chart-4: #3730a3;
-  --chart-5: #312e81;
-  --sidebar: #f3f4f6;
-  --sidebar-foreground: #1e293b;
-  --sidebar-primary: #6366f1;
+  --radius: 1.3rem;
+  --chart-1: #1e9df1;
+  --chart-2: #00b87a;
+  --chart-3: #f7b928;
+  --chart-4: #17bf63;
+  --chart-5: #e0245e;
+  --sidebar: #f7f8f8;
+  --sidebar-foreground: #0f1419;
+  --sidebar-primary: #1e9df1;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #e0e7ff;
-  --sidebar-accent-foreground: #374151;
-  --sidebar-border: #d1d5db;
-  --sidebar-ring: #6366f1;
-  --font-sans: Inter, sans-serif;
-  --font-serif: Merriweather, serif;
-  --font-mono: JetBrains Mono, monospace;
-  --shadow-color: hsl(0 0% 0%);
-  --shadow-opacity: 0.1;
-  --shadow-blur: 8px;
-  --shadow-spread: -1px;
+  --sidebar-accent: #E3ECF6;
+  --sidebar-accent-foreground: #1e9df1;
+  --sidebar-border: #e1e8ed;
+  --sidebar-ring: #1da1f2;
+  --font-sans: Open Sans, sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --shadow-color: rgba(29,161,242,0.15);
+  --shadow-opacity: 0;
+  --shadow-blur: 0px;
+  --shadow-spread: 0px;
   --shadow-offset-x: 0px;
-  --shadow-offset-y: 4px;
+  --shadow-offset-y: 2px;
   --spacing: 0.25rem;
   --letter-spacing: 0em;
 }
