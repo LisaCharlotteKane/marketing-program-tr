@@ -61,6 +61,63 @@ async function clearIndexedDB(): Promise<void> {
 }
 
 /**
+ * Fix corrupted campaign data by ensuring all required fields exist
+ * 
+ * @param campaigns Array of potentially corrupted campaign data
+ * @returns Fixed campaign array with all required fields
+ */
+export function fixCorruptedCampaignData(campaigns: any[]): any[] {
+  if (!Array.isArray(campaigns)) {
+    return [];
+  }
+  
+  return campaigns.map(campaign => {
+    // Ensure the campaign is an object
+    if (typeof campaign !== 'object' || campaign === null) {
+      return {
+        id: Math.random().toString(36).substring(2, 9),
+        campaignType: "Unknown",
+        strategicPillars: [],
+        revenuePlay: "All",
+        fiscalYear: "FY25",
+        quarterMonth: "Q1",
+        region: "Unknown",
+        country: "Unknown",
+        owner: "Unknown",
+        description: "",
+        forecastedCost: 0,
+        expectedLeads: 0,
+        actualCost: 0,
+        status: "Planning"
+      };
+    }
+    
+    // Ensure all required fields exist
+    return {
+      id: campaign.id || Math.random().toString(36).substring(2, 9),
+      campaignType: campaign.campaignType || "Unknown",
+      strategicPillars: Array.isArray(campaign.strategicPillars) ? campaign.strategicPillars : [],
+      revenuePlay: campaign.revenuePlay || "All",
+      fiscalYear: campaign.fiscalYear || "FY25",
+      quarterMonth: campaign.quarterMonth || "Q1",
+      region: campaign.region || "Unknown",
+      country: campaign.country || "Unknown",
+      owner: campaign.owner || "Unknown",
+      description: campaign.description || "",
+      forecastedCost: typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0,
+      expectedLeads: typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0,
+      actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 0,
+      status: campaign.status || "Planning",
+      poRaised: Boolean(campaign.poRaised),
+      campaignCode: campaign.campaignCode || "",
+      issueLink: campaign.issueLink || "",
+      actualLeads: typeof campaign.actualLeads === 'number' ? campaign.actualLeads : 0,
+      actualMQLs: typeof campaign.actualMQLs === 'number' ? campaign.actualMQLs : 0,
+    };
+  });
+}
+
+/**
  * Exports all current data to a downloadable JSON file
  * Useful for backing up data before reset
  * 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Campaign } from '@/components/campaign-table';
 import { saveAllStorageLayers, loadFromBestAvailableSource } from '@/services/persistent-storage';
+import { fixCorruptedCampaignData } from '@/services/storage-recovery';
 import { toast } from 'sonner';
 import { initAutoGitHubSync, syncCampaignsToGitHub, isAutoGitHubSyncAvailable } from '@/services/auto-github-sync';
 
@@ -60,7 +61,11 @@ export function useEnhancedCampaigns(
       try {
         // First try to load from storage
         const loadedData = await loadFromBestAvailableSource(key, []);
-        setCampaigns(Array.isArray(loadedData) ? loadedData : []);
+        
+        // Apply fixes to corrupted data and ensure all required fields exist
+        const processedData = fixCorruptedCampaignData(Array.isArray(loadedData) ? loadedData : []);
+        
+        setCampaigns(processedData);
         setDataLoaded(true);
         
         // Check if we have stored timestamp

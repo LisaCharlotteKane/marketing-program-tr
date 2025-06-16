@@ -27,7 +27,13 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
   const filteredCampaigns = campaigns.filter(campaign => 
     (regionFilter === "_all" || campaign.region === regionFilter) &&
     (ownerFilter === "_all" || campaign.owner === ownerFilter)
-  );
+  ).map(campaign => {
+    // Ensure actualCost exists to prevent "actualCost is not defined" errors
+    if (campaign.actualCost === undefined) {
+      return { ...campaign, actualCost: "" };
+    }
+    return campaign;
+  });
 
   // Calculate totals for the filtered campaigns
   const totalForecastedCost = filteredCampaigns.reduce(

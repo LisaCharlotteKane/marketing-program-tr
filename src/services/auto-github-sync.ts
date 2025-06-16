@@ -13,8 +13,8 @@ import { toast } from "sonner";
 // Default GitHub configuration
 const DEFAULT_GITHUB_CONFIG = {
   token: "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", // Using the provided token
-  owner: "",
-  repo: "",
+  owner: "username", // Default placeholder, will be replaced from localStorage if available
+  repo: "repo-name",  // Default placeholder, will be replaced from localStorage if available
   path: "campaign-data/campaigns.json",
   budgetPath: "campaign-data/budgets.json"
 };
@@ -102,6 +102,12 @@ export async function syncCampaignsToGitHub(
   return new Promise((resolve) => {
     campaignDebounceTimer = setTimeout(async () => {
       try {
+        // Check again if still available right before making the API call
+        if (!isAutoGitHubSyncAvailable()) {
+          resolve(false);
+          return;
+        }
+
         const result = await saveCampaignsToGitHub(campaigns, DEFAULT_GITHUB_CONFIG);
         
         if (result.success) {
@@ -152,6 +158,12 @@ export async function syncBudgetsToGitHub(
   return new Promise((resolve) => {
     budgetDebounceTimer = setTimeout(async () => {
       try {
+        // Check again if still available right before making the API call
+        if (!isAutoGitHubSyncAvailable()) {
+          resolve(false);
+          return;
+        }
+
         const result = await saveDataToGitHub(
           budgets, 
           {

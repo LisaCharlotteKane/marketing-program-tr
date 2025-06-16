@@ -20,6 +20,7 @@ export function StorageErrorHandler({ onRetry }: StorageErrorHandlerProps) {
     const handleStorageError = (event: any) => {
       // Intentionally not showing errors
       console.log("Storage error received but suppressed:", event.detail?.message);
+      // Do not set showError to true to avoid displaying the error UI
     };
 
     window.addEventListener('storageError', handleStorageError as EventListener);

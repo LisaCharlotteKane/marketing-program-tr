@@ -7,6 +7,7 @@
 
 import { Campaign } from "@/components/campaign-table";
 import { saveAllStorageLayers } from "./persistent-storage";
+import { fixCorruptedCampaignData } from "./storage-recovery";
 
 /**
  * Runs data migration tasks to ensure compatibility with older app versions
@@ -37,10 +38,13 @@ async function migrateOldCampaignData(): Promise<void> {
     const oldData = localStorage.getItem('campaignData');
     if (oldData) {
       try {
-        const campaigns = JSON.parse(oldData) as Campaign[];
+        const rawCampaigns = JSON.parse(oldData);
+        
+        // Fix any corrupted data and ensure all required fields exist
+        const campaigns = fixCorruptedCampaignData(Array.isArray(rawCampaigns) ? rawCampaigns : []);
         
         // Only migrate if we have valid data
-        if (Array.isArray(campaigns) && campaigns.length > 0) {
+        if (campaigns.length > 0) {
           console.log(`Migrating ${campaigns.length} campaigns to new storage format`);
           
           // Save to the new storage system

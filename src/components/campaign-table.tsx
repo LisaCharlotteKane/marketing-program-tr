@@ -144,10 +144,12 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
       poRaised: false,
       campaignCode: "",
       issueLink: "",
-      actualCost: "",
+      actualCost: "", // Ensure this is always initialized
       actualLeads: "",
       actualMQLs: "",
-      // Initialize calculated fields
+    };
+    setCampaigns([...campaigns, newCampaign]);
+  };
       mql: 0,
       sql: 0,
       opportunities: 0,
@@ -193,7 +195,6 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
             updatedCampaign.pipelineForecast = 0;
           }
         }
-          updatedCampaign.pipelineForecast = pipelineValue;
         }
         
         return updatedCampaign;
