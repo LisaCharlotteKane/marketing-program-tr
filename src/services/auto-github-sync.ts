@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 // Default GitHub configuration
 const DEFAULT_GITHUB_CONFIG = {
-  token: "", // Token should be provided by user, not hardcoded
+  token: "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", // Using the provided token
   owner: "",
   repo: "",
   path: "campaign-data/campaigns.json",

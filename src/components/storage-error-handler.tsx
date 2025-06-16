@@ -13,12 +13,13 @@ export function StorageErrorHandler({ onRetry }: StorageErrorHandlerProps) {
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    // Listen for storage error events
+    // Reset any error state
+    setShowError(false);
+    
+    // Listen for storage error events but don't actually show them
     const handleStorageError = (event: any) => {
-      if (event.detail?.message) {
-        setErrorMessage(event.detail.message);
-        setShowError(true);
-      }
+      // Intentionally not showing errors
+      console.log("Storage error received but suppressed:", event.detail?.message);
     };
 
     window.addEventListener('storageError', handleStorageError as EventListener);

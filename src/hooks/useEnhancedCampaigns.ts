@@ -85,16 +85,13 @@ export function useEnhancedCampaigns(
         setCampaigns([]);
         setDataLoaded(true);
         
-        // Dispatch an event that can be caught by the error handler component
-        window.dispatchEvent(new CustomEvent('storageError', {
-          detail: {
-            message: e instanceof Error 
-              ? e.message 
-              : "Failed to load saved campaign data. Starting with a fresh campaign planner."
-          }
-        }));
+        // Intentionally not dispatching storage error event to avoid showing error dialogs
+        // Just log it to console
+        console.warn("Storage error suppressed:", e instanceof Error 
+          ? e.message 
+          : "Failed to load saved campaign data. Starting with a fresh campaign planner.");
         
-        // Optional toast notification that's less obtrusive
+        // Show non-blocking toast
         toast.info('Starting with a fresh campaign planner', {
           duration: 3000
         });

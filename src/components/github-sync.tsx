@@ -44,6 +44,20 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   // Active tab
   const [activeTab, setActiveTab] = useState("campaigns");
   
+  // Set token to the hardcoded value
+  useEffect(() => {
+    const hardcodedToken = "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";
+    setToken(hardcodedToken);
+    
+    // Update GitHub sync config with the token
+    updateGitHubSyncConfig({
+      token: hardcodedToken,
+      owner,
+      repo,
+      path,
+      budgetPath
+    });
+  }, []);
   // Load saved GitHub settings from localStorage on component mount
   useEffect(() => {
     const savedSettings = localStorage.getItem('githubSyncSettings');
@@ -55,7 +69,7 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
         if (settings.path) setPath(settings.path);
         if (settings.budgetPath) setBudgetPath(settings.budgetPath);
         if (settings.selectedFiscalYear) setSelectedFiscalYear(settings.selectedFiscalYear);
-        if (settings.autoSaveEnabled) setAutoSaveEnabled(settings.autoSaveEnabled);
+        if (settings.autoSaveEnabled !== undefined) setAutoSaveEnabled(settings.autoSaveEnabled);
       } catch (e) {
         console.error('Error loading GitHub settings from localStorage:', e);
       }
@@ -338,17 +352,20 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
               GitHub Personal Access Token
               <span className="text-destructive"> *</span>
             </Label>
-            <Input
-              id="github-token"
-              type="password"
-              placeholder="ghp_..."
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              className="font-mono bg-green-50"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="github-token"
+                type="password"
+                placeholder="ghp_..."
+                value="••••••••••••••••••••••••••••••••"
+                className="font-mono bg-green-50 pr-28"
+                disabled
+                required
+              />
+              <Badge className="absolute right-2 top-1/2 -translate-y-1/2 bg-green-600 text-white">Pre-configured</Badge>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Required for GitHub API access. <a href="https://github.com/settings/tokens/new" target="_blank" rel="noreferrer" className="underline text-primary">Create a token</a> with 'repo' scope.
+              Token is pre-configured for this application.
             </p>
           </div>
 

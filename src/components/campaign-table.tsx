@@ -49,7 +49,6 @@ export interface Campaign {
   actualCost: number | "";
   actualLeads?: number | "";
   actualMQLs?: number | "";
-  actualMQLs?: number | "";
 }
 
 interface CampaignTableProps {
@@ -128,14 +127,14 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
   const addCampaign = () => {
     const newCampaign: Campaign = {
       id: Math.random().toString(36).substring(2, 9),
-      campaignType: "",
-      strategicPillars: [],
-      revenuePlay: "",
-      fiscalYear: "",
-      quarterMonth: "",
-      region: "",
-      country: "",
-      owner: "",
+      campaignType: campaignTypes[0] || "In-Account Events (1:1)",
+      strategicPillars: [pillars[0]], // Add at least one pillar by default
+      revenuePlay: revenuePlays[0] || "All",
+      fiscalYear: fiscalYears[0] || "FY25",
+      quarterMonth: quarters[0] || "Q1 - July",
+      region: regions[0] || "North APAC",
+      country: countries[0] || "Afghanistan",
+      owner: selectedOwner !== "_all" ? selectedOwner : owners[0] || "Giorgia Parham", // Pre-select current filter owner or default
       description: "",
       forecastedCost: "",
       expectedLeads: "",
@@ -146,6 +145,17 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
       campaignCode: "",
       issueLink: "",
       actualCost: "",
+      actualLeads: "",
+      actualMQLs: "",
+      // Initialize calculated fields
+      mql: 0,
+      sql: 0,
+      opportunities: 0,
+      pipelineForecast: 0
+    };
+    setCampaigns([...campaigns, newCampaign]);
+    toast.success('New campaign added successfully');
+  };
       actualLeads: "",
       actualMQLs: ""
     };
@@ -164,15 +174,25 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
         const updatedCampaign = { ...campaign, [field]: value };
         
         // Recalculate derived metrics if needed
-        if (field === 'expectedLeads' && typeof value === 'number') {
-          const mqlValue = Math.round(value * 0.1); // 10% of leads
-          const sqlValue = Math.round(value * 0.06); // 6% of leads
-          const oppsValue = Math.round(sqlValue * 0.8); // 80% of SQLs
-          const pipelineValue = oppsValue * 50000; // $50K per opportunity
+        if (field === 'expectedLeads') {
+          if (typeof value === 'number' && !isNaN(value)) {
+            const mqlValue = Math.round(value * 0.1); // 10% of leads
+            const sqlValue = Math.round(value * 0.06); // 6% of leads
+            const oppsValue = Math.round(sqlValue * 0.8); // 80% of SQLs
+            const pipelineValue = oppsValue * 50000; // $50K per opportunity
 
-          updatedCampaign.mql = mqlValue;
-          updatedCampaign.sql = sqlValue;
-          updatedCampaign.opportunities = oppsValue;
+            updatedCampaign.mql = mqlValue;
+            updatedCampaign.sql = sqlValue;
+            updatedCampaign.opportunities = oppsValue;
+            updatedCampaign.pipelineForecast = pipelineValue;
+          } else {
+            // Reset calculated values if expectedLeads is empty or invalid
+            updatedCampaign.mql = 0;
+            updatedCampaign.sql = 0;
+            updatedCampaign.opportunities = 0;
+            updatedCampaign.pipelineForecast = 0;
+          }
+        }
           updatedCampaign.pipelineForecast = pipelineValue;
         }
         

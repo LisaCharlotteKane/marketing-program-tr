@@ -169,7 +169,7 @@ function App() {
         currentPrograms[programIndex] = {
           ...currentPrograms[programIndex],
           forecastedCost: forecastedCost || 0,
-          actualCost: 0
+          actualCost: currentPrograms[programIndex].actualCost || 0
         };
       } else {
         // Add new program
