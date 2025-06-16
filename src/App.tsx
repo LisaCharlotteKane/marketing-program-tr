@@ -19,7 +19,8 @@ import { PersistentStorageInfo } from "@/components/persistent-storage-info"
 import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator"
 import { BudgetLockInfo } from "@/components/budget-lock-info"
-import { Toaster } from "sonner"
+import { StorageErrorHandler } from "@/components/storage-error-handler"
+import { Toaster, toast } from "sonner"
 import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
 import { useRegionalBudgets, RegionalBudget, RegionalBudgets } from "@/hooks/useRegionalBudgets"
 import { runDataMigrations } from "@/services/migration-service"
@@ -291,6 +292,8 @@ function App() {
     <div className="min-h-screen bg-background font-sans text-foreground p-4 md:p-8">
       <Toaster position="top-right" richColors closeButton />
       <div className="max-w-4xl mx-auto space-y-6">
+        <StorageErrorHandler onRetry={handleRetryDataLoad} />
+        
         <header className="text-center mb-8">
           <h1 className="text-2xl md:text-3xl font-bold mb-2">Marketing Campaign Calculator</h1>
           <p className="text-muted-foreground flex items-center justify-center gap-2">

@@ -59,8 +59,8 @@ export function useEnhancedCampaigns(
     const loadInitialData = async () => {
       try {
         // First try to load from storage
-        const loadedData = await loadFromBestAvailableSource(key, initialValue);
-        setCampaigns(loadedData);
+        const loadedData = await loadFromBestAvailableSource(key, []);
+        setCampaigns(Array.isArray(loadedData) ? loadedData : []);
         setDataLoaded(true);
         
         // Check if we have stored timestamp
@@ -81,20 +81,28 @@ export function useEnhancedCampaigns(
         // Don't set error state to avoid showing error dialog
         setError(null);
         
-        // Use the initialValue instead and mark as loaded
-        setCampaigns(initialValue);
+        // Use an empty array instead of initialValue to avoid potential issues
+        setCampaigns([]);
         setDataLoaded(true);
         
+        // Dispatch an event that can be caught by the error handler component
+        window.dispatchEvent(new CustomEvent('storageError', {
+          detail: {
+            message: e instanceof Error 
+              ? e.message 
+              : "Failed to load saved campaign data. Starting with a fresh campaign planner."
+          }
+        }));
+        
         // Optional toast notification that's less obtrusive
-        toast.info('Using default campaign data', {
-          description: 'Starting with a fresh campaign planner.',
+        toast.info('Starting with a fresh campaign planner', {
           duration: 3000
         });
       }
     };
     
     loadInitialData();
-  }, [key, initialValue]);
+  }, [key]);
 
   // Save function that handles both storage layers and GitHub sync
   const saveCampaigns = useCallback(async (data: Campaign[]) => {

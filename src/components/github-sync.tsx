@@ -23,7 +23,7 @@ interface GitHubSyncProps {
 
 export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
   // State for GitHub configuration
-  const [token, setToken] = useState("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");
+  const [token, setToken] = useState("");
   const [owner, setOwner] = useState("");
   const [repo, setRepo] = useState("");
   const [path, setPath] = useState("campaign-data/campaigns.json");
@@ -326,7 +326,7 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
           <Key className="h-5 w-5" /> GitHub Repository Sync
         </CardTitle>
         <CardDescription>
-          Your token is pre-configured. Just enter repository details below.
+          Enter your GitHub repository details and access token to sync data.
         </CardDescription>
       </CardHeader>
       
@@ -348,7 +348,7 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
               required
             />
             <p className="text-xs text-muted-foreground">
-              Token pre-configured. <a href="https://github.com/settings/tokens/new" target="_blank" rel="noreferrer" className="underline text-primary">Create a new token</a> if needed.
+              Required for GitHub API access. <a href="https://github.com/settings/tokens/new" target="_blank" rel="noreferrer" className="underline text-primary">Create a token</a> with 'repo' scope.
             </p>
           </div>
 

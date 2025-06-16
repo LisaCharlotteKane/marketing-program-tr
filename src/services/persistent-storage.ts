@@ -252,7 +252,8 @@ export async function loadFromBestAvailableSource(
   } catch (error) {
     // Fallback to default in case of any unexpected errors
     console.error('Error loading campaign data:', error);
-    return defaultValue;
+    // Return a fresh empty array rather than potentially problematic defaultValue
+    return [];
   }
 }
 

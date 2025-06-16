@@ -186,7 +186,7 @@ export function PersistentStorageInfo() {
           </div>
         </div>
         
-        <div className="rounded-lg border bg-green-50 p-3 mt-4">
+        <div className="rounded-lg border bg-green-50 p-3 mt-4" style={{ display: storageSummary.githubSyncActive ? 'block' : 'none' }}>
           <div className="flex items-start gap-3">
             <GithubLogo className="h-5 w-5 text-gray-800 flex-shrink-0 mt-0.5" />
             <div>
@@ -198,7 +198,6 @@ export function PersistentStorageInfo() {
                   <li>Campaign data syncs to: <code>campaign-data/campaigns.json</code></li>
                   <li>Budget data syncs to: <code>campaign-data/budgets.json</code></li>
                   <li>A GitHub repository name and owner must be configured in the GitHub Sync tab</li>
-                  <li>Your token has been pre-configured</li>
                   <li>You can still use the manual GitHub Sync controls for specific operations</li>
                 </ul>
               </p>
