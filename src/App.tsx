@@ -58,47 +58,7 @@ function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) 
   );
 }
 
-function PromoBanner({ 
-  message, 
-  actionText, 
-  actionUrl, 
-  onDismiss 
-}: { 
-  message: string; 
-  actionText: string; 
-  actionUrl: string; 
-  onDismiss: () => void 
-}) {
-  return (
-    <div className="bg-primary/10 border border-primary/20 text-primary-foreground py-3 px-5 mb-8 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <div className="flex items-center gap-3">
-        <svg className="h-5 w-5 text-primary flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M11 7H13V9H11V7Z" fill="currentColor" />
-          <path d="M11 11H13V17H11V11Z" fill="currentColor" />
-          <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM4 12C4 16.418 7.582 20 12 20C16.418 20 20 16.418 20 12C20 7.582 16.418 4 12 4C7.582 4 4 7.582 4 12Z" fill="currentColor" />
-        </svg>
-        <p className="text-sm font-medium text-primary">{message}</p>
-      </div>
-      <div className="flex items-center gap-4 ml-8 sm:ml-0">
-        <a 
-          href={actionUrl} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          {actionText}
-        </a>
-        <button 
-          onClick={onDismiss} 
-          className="p-1.5 rounded-full hover:bg-primary/20 text-primary transition-colors"
-          aria-label="Dismiss"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
+
 
 function App() {
   // Form state
@@ -360,20 +320,9 @@ function App() {
     });
   }, [campaigns]);
 
-  // Handle banner dismiss
-  const [showBanner, setShowBanner] = useState(true);
-
   return (
     <div className="min-h-screen bg-background font-sans text-foreground p-3 sm:p-5 md:p-8">
       <Toaster position="top-right" richColors closeButton />
-      {showBanner && (
-        <PromoBanner 
-          message="Introducing GitHub Copilot for Marketing Planning - Get AI-powered campaign ideas" 
-          actionText="Learn more" 
-          actionUrl="https://github.com/features/copilot"
-          onDismiss={() => setShowBanner(false)}
-        />
-      )}
       <div className="max-w-5xl mx-auto space-y-6">
         <StorageErrorHandler onRetry={handleRetryDataLoad} />
         
