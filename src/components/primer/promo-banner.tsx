@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button, InlineLink, Stack, Text, ThemeProvider } from "@primer/react-brand";
+import { X } from "@phosphor-icons/react";
 
 interface PromoBannerProps {
   message: string;
@@ -15,57 +15,31 @@ export const PromoBanner = ({
   onDismiss,
 }: PromoBannerProps) => {
   return (
-    <ThemeProvider colorMode="light">
-      <Box
-        sx={{
-          bg: "accent.default",
-          py: 1,
-          px: 6,
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          position: "relative",
-        }}
-      >
-        <Stack
-          direction="horizontal"
-          gap={3}
-          sx={{
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-            maxWidth: "900px",
-          }}
-        >
-          <Text as="p" size="300" variant="default">
-            {message}
-          </Text>
-          
-          {actionText && actionUrl && (
-            <InlineLink href={actionUrl} target="_blank">
-              {actionText}
-            </InlineLink>
-          )}
-        </Stack>
+    <div className="w-full bg-accent py-2 px-4 relative">
+      <div className="max-w-3xl mx-auto flex items-center justify-center gap-4 flex-wrap">
+        <p className="text-accent-foreground text-sm">{message}</p>
         
-        {onDismiss && (
-          <Button
-            variant="invisible"
-            size="small"
-            onClick={onDismiss}
-            sx={{
-              position: "absolute",
-              right: 3,
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: "fg.subtle",
-            }}
+        {actionText && actionUrl && (
+          <a 
+            href={actionUrl} 
+            target="_blank" 
+            rel="noopener"
+            className="text-sm font-medium text-primary hover:underline"
           >
-            ✕
-          </Button>
+            {actionText}
+          </a>
         )}
-      </Box>
-    </ThemeProvider>
+      </div>
+      
+      {onDismiss && (
+        <button
+          onClick={onDismiss}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          aria-label="Dismiss"
+        >
+          <X size={16} />
+        </button>
+      )}
+    </div>
   );
 };

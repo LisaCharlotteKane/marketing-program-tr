@@ -1,33 +1,21 @@
 import React from "react";
-import { Box, Footer, Grid, Link, Text, ThemeProvider } from "@primer/react-brand";
 
 export const PrimerFooter = () => {
   return (
-    <ThemeProvider colorMode="light">
-      <Footer>
-        <Grid>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "24px 0",
-              width: "100%",
-            }}
-          >
-            <Text as="p" size="1" variant="muted">
-              &copy; {new Date().getFullYear()} GitHub, Inc. All rights reserved.
-            </Text>
-            <Box sx={{ display: "flex", gap: 3, marginTop: 2 }}>
-              <Link href="https://github.com/about" target="_blank">About</Link>
-              <Link href="https://github.com/pricing" target="_blank">Pricing</Link>
-              <Link href="https://github.com/enterprise" target="_blank">Enterprise</Link>
-              <Link href="https://github.com/support" target="_blank">Support</Link>
-            </Box>
-          </Box>
-        </Grid>
-      </Footer>
-    </ThemeProvider>
+    <footer className="py-6 border-t border-border">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col items-center justify-center text-center">
+          <p className="text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} GitHub, Inc. All rights reserved.
+          </p>
+          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+            <a href="https://github.com/about" target="_blank" rel="noopener" className="hover:text-foreground transition-colors">About</a>
+            <a href="https://github.com/pricing" target="_blank" rel="noopener" className="hover:text-foreground transition-colors">Pricing</a>
+            <a href="https://github.com/enterprise" target="_blank" rel="noopener" className="hover:text-foreground transition-colors">Enterprise</a>
+            <a href="https://github.com/support" target="_blank" rel="noopener" className="hover:text-foreground transition-colors">Support</a>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };

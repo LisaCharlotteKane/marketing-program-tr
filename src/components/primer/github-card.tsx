@@ -1,5 +1,6 @@
 import React from "react";
-import { Box, Heading, Stack, Text, ThemeProvider } from "@primer/react-brand";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface GitHubCardProps {
   title: string;
@@ -8,6 +9,7 @@ interface GitHubCardProps {
   icon?: React.ReactNode;
   variant?: "default" | "emphasized" | "subtle";
   fullWidth?: boolean;
+  className?: string;
 }
 
 export const GitHubCard = ({
@@ -17,67 +19,33 @@ export const GitHubCard = ({
   icon,
   variant = "default",
   fullWidth = false,
+  className
 }: GitHubCardProps) => {
-  const getBorderColor = () => {
+  const getVariantClasses = () => {
     switch (variant) {
       case "emphasized":
-        return "border.default";
+        return "border-2 shadow-md";
       case "subtle":
-        return "border.subtle";
+        return "bg-muted/50";
       default:
-        return "border.muted";
-    }
-  };
-
-  const getBackgroundColor = () => {
-    switch (variant) {
-      case "emphasized":
-        return "bg.emphasis";
-      case "subtle":
-        return "bg.subtle";
-      default:
-        return "bg.default";
+        return "";
     }
   };
 
   return (
-    <ThemeProvider colorMode="light">
-      <Box
-        sx={{
-          border: "1px solid",
-          borderColor: getBorderColor(),
-          borderRadius: 2,
-          bg: getBackgroundColor(),
-          p: 4,
-          width: fullWidth ? "100%" : "auto",
-          boxShadow: "shadow.small",
-        }}
-      >
-        <Stack gap={3}>
-          <Stack direction="horizontal" gap={2} sx={{ alignItems: "center" }}>
-            {icon && (
-              <Box sx={{ color: "accent.fg" }}>
-                {icon}
-              </Box>
-            )}
-            <Heading as="h3" size="3">
-              {title}
-            </Heading>
-          </Stack>
-          
-          {description && (
-            <Text as="p" size="2" variant="muted">
-              {description}
-            </Text>
-          )}
-          
-          {children && (
-            <Box sx={{ mt: 2 }}>
-              {children}
-            </Box>
-          )}
-        </Stack>
-      </Box>
-    </ThemeProvider>
+    <Card className={cn(
+      getVariantClasses(),
+      fullWidth && "w-full",
+      className
+    )}>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          {icon && <span className="text-primary">{icon}</span>}
+          {title}
+        </CardTitle>
+        {description && <CardDescription>{description}</CardDescription>}
+      </CardHeader>
+      {children && <CardContent>{children}</CardContent>}
+    </Card>
   );
 };
