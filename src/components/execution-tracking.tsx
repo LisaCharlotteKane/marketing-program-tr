@@ -121,10 +121,10 @@ export function ExecutionTracking({
             <Table>
               <TableHeader className="bg-muted/50 sticky top-0">
                 <TableRow>
-                  <TableHead className="w-[300px]">Campaign</TableHead>
+                  <TableHead className="w-[200px]">Campaign Name</TableHead>
+                  <TableHead className="w-[300px]">Details</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>PO Raised?</TableHead>
-                  <TableHead>Campaign Code</TableHead>
                   <TableHead>Issue Link</TableHead>
                   <TableHead>Actual Cost</TableHead>
                   <TableHead>Actual Leads</TableHead>
@@ -137,7 +137,10 @@ export function ExecutionTracking({
                   <TableRow key={campaign.id} className={campaign.status === "Cancelled" ? "opacity-60" : ""}>
                     <TableCell className="font-medium">
                       <div className="text-sm font-medium">{campaign.description || "Untitled Campaign"}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
+                    </TableCell>
+                    
+                    <TableCell>
+                      <div className="text-xs text-muted-foreground">
                         {campaign.owner} • {campaign.region} • {campaign.country}
                       </div>
                     </TableCell>
@@ -172,16 +175,6 @@ export function ExecutionTracking({
                           {campaign.poRaised ? "Yes" : "No"}
                         </Label>
                       </div>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Input
-                        placeholder="SF-12345"
-                        value={campaign.campaignCode || ""}
-                        disabled={campaign.status === "Cancelled"}
-                        onChange={(e) => updateCampaign(campaign.id, "campaignCode", e.target.value)}
-                        className="w-32"
-                      />
                     </TableCell>
                     
                     <TableCell>
