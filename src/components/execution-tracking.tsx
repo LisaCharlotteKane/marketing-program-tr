@@ -136,7 +136,14 @@ export function ExecutionTracking({
                 {filteredCampaigns.map((campaign) => (
                   <TableRow key={campaign.id} className={campaign.status === "Cancelled" ? "opacity-60" : ""}>
                     <TableCell className="font-medium">
-                      <div className="text-sm font-medium">{campaign.description || "Untitled Campaign"}</div>
+                      <Input
+                        type="text"
+                        value={campaign.campaignName || ""}
+                        onChange={(e) => updateCampaign(campaign.id, "campaignName", e.target.value)}
+                        placeholder="Enter campaign name"
+                        className="w-full"
+                        disabled={campaign.status === "Cancelled"}
+                      />
                     </TableCell>
                     
                     <TableCell>

@@ -18,6 +18,7 @@ import Papa from "papaparse";
 // Campaign type interface
 export interface Campaign {
   id: string;
+  campaignName: string; // Added campaign name field
   campaignType: string;
   strategicPillars: string[];
   revenuePlay: string;
@@ -173,6 +174,7 @@ export function CampaignTable({
   const addCampaign = () => {
     const newCampaign: Campaign = {
       id: Math.random().toString(36).substring(2, 9),
+      campaignName: "", // Initialize campaign name
       campaignType: campaignTypes[0] || "In-Account Events (1:1)",
       strategicPillars: [pillars[0]], // Add at least one pillar by default
       revenuePlay: revenuePlays[0] || "All",
@@ -368,6 +370,7 @@ export function CampaignTable({
     const templateData = [
       {
         id: "",
+        campaignName: "Example Webinar Campaign",
         campaignType: "Webinars",
         strategicPillars: "Account Growth and Product Adoption, New Logo Acquisition",
         revenuePlay: "All",
@@ -522,6 +525,7 @@ export function CampaignTable({
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow>
+              <TableHead className="w-[180px]">Campaign Name</TableHead>
               <TableHead className="w-[180px]">Campaign Type</TableHead>
               <TableHead className="w-[140px]">Strategic Pillar</TableHead>
               <TableHead className="w-[140px]">Revenue Play</TableHead>
@@ -546,6 +550,18 @@ export function CampaignTable({
                 key={campaign.id}
                 className={isCampaignComplete(campaign) ? "bg-muted/20" : ""}
               >
+                {/* Campaign Name */}
+                <TableCell>
+                  <Input
+                    type="text"
+                    value={campaign.campaignName || ""}
+                    onChange={(e) => updateCampaign(campaign.id, 'campaignName', e.target.value)}
+                    placeholder="Enter campaign name"
+                    className="w-full"
+                    disabled={isCampaignComplete(campaign)}
+                  />
+                </TableCell>
+                
                 {/* Campaign Type */}
                 <TableCell>
                   <Select
@@ -878,6 +894,7 @@ export function CampaignTable({
                     // Validate and convert row data
                     const campaign: Partial<Campaign> = {
                       id: row.id || Math.random().toString(36).substring(2, 9),
+                      campaignName: row.campaignName || "",
                       campaignType: row.campaignType || campaignTypes[0],
                       strategicPillars: row.strategicPillars?.split(",").map((p: string) => p.trim()) || [pillars[0]],
                       revenuePlay: row.revenuePlay || revenuePlays[0],
