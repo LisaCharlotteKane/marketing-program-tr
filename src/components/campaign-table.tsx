@@ -102,7 +102,7 @@ export function CampaignTable({
   
   const fiscalYears = ["FY25", "FY26"];
   
-  const quarters = [
+  const quarterOptions = [
     "Q1 - July",
     "Q1 - August",
     "Q1 - September",
@@ -117,7 +117,7 @@ export function CampaignTable({
     "Q4 - June"
   ];
   
-  const regions = ["North APAC", "South APAC", "SAARC", "Digital"];
+  const regionOptions = ["North APAC", "South APAC", "SAARC", "Digital"];
   
   const countries = [
     "Afghanistan",
@@ -148,7 +148,7 @@ export function CampaignTable({
     "X Apac"
   ];
   
-  const owners = [
+  const ownerOptions = [
     "Giorgia Parham",
     "Tomoko Tanaka",
     "Beverly Leung",
@@ -163,10 +163,10 @@ export function CampaignTable({
       strategicPillars: [pillars[0]], // Add at least one pillar by default
       revenuePlay: revenuePlays[0] || "All",
       fiscalYear: fiscalYears[0] || "FY25",
-      quarterMonth: quarters[0] || "Q1 - July",
-      region: regions[0] || "North APAC",
+      quarterMonth: quarterOptions[0] || "Q1 - July",
+      region: regionOptions[0] || "North APAC",
       country: countries[0] || "Afghanistan",
-      owner: selectedOwner !== "_all" ? selectedOwner : owners[0] || "Giorgia Parham", // Pre-select current filter owner or default
+      owner: selectedOwner !== "_all" ? selectedOwner : ownerOptions[0] || "Giorgia Parham", // Pre-select current filter owner or default
       description: "",
       forecastedCost: "",
       expectedLeads: "",
@@ -612,7 +612,7 @@ export function CampaignTable({
                       <SelectValue placeholder="Quarter" />
                     </SelectTrigger>
                     <SelectContent>
-                      {quarters.map(q => (
+                      {quarterOptions.map(q => (
                         <SelectItem key={q} value={q}>{q}</SelectItem>
                       ))}
                     </SelectContent>
@@ -630,7 +630,7 @@ export function CampaignTable({
                       <SelectValue placeholder="Region" />
                     </SelectTrigger>
                     <SelectContent>
-                      {regions.map(region => (
+                      {regionOptions.map(region => (
                         <SelectItem key={region} value={region}>{region}</SelectItem>
                       ))}
                     </SelectContent>
@@ -666,7 +666,7 @@ export function CampaignTable({
                       <SelectValue placeholder="Owner" />
                     </SelectTrigger>
                     <SelectContent>
-                      {owners.map(owner => (
+                      {ownerOptions.map(owner => (
                         <SelectItem key={owner} value={owner}>{owner}</SelectItem>
                       ))}
                     </SelectContent>
@@ -818,10 +818,10 @@ export function CampaignTable({
                       strategicPillars: row.strategicPillars?.split(",").map((p: string) => p.trim()) || [pillars[0]],
                       revenuePlay: row.revenuePlay || revenuePlays[0],
                       fiscalYear: row.fiscalYear || fiscalYears[0],
-                      quarterMonth: row.quarterMonth || quarters[0],
-                      region: row.region || regions[0],
+                      quarterMonth: row.quarterMonth || quarterOptions[0],
+                      region: row.region || regionOptions[0],
                       country: row.country || countries[0],
-                      owner: row.owner || owners[0],
+                      owner: row.owner || ownerOptions[0],
                       description: row.description || "",
                       forecastedCost: row.forecastedCost !== undefined ? Number(row.forecastedCost) : "",
                       expectedLeads: row.expectedLeads !== undefined ? Number(row.expectedLeads) : "",
@@ -840,7 +840,7 @@ export function CampaignTable({
                     };
                     
                     // Validate required fields
-                    const validRegions = ["North APAC", "South APAC", "SAARC", "Digital"];
+                    const validRegions = regionOptions;
                     if (!validRegions.includes(campaign.region as string)) {
                       errors.push(`Row ${index + 2}: Invalid region "${campaign.region}".`);
                     }
