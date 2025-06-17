@@ -35,24 +35,22 @@ import { calculateRegionalMetrics } from "@/services/budget-service"
 // Header component with GitHub branding
 function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <header className="py-4 border-b mb-6 bg-card rounded-lg shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4">
+    <header className="py-5 border-b mb-8 bg-card rounded-lg shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6">
         <div className="flex items-center gap-4">
           <Logo size="md" />
           <div>
-            {subtitle && <p className="text-muted-foreground mt-1 ">{subtitle}</p>}
+            {subtitle && <p className="text-muted-foreground text-sm">{subtitle}</p>}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className="hidden md:flex items-center gap-2">
-            <span className="bg-accent px-2 py-1 rounded-full text-xs font-medium text-primary">Regional Marketing</span>
-            <span className="px-2 py-1 rounded-full border text-xs text-muted-foreground"></span>
+            <span className="bg-accent px-3 py-1 rounded-full text-xs font-medium text-primary">Regional Marketing</span>
           </div>
           <ThemeSwitch className="hidden md:block" />
-          <div className="h-8 w-px bg-border mx-1 hidden md:block" />
+          <div className="h-8 w-px bg-border mx-2 hidden md:block" />
           <div className="flex items-center gap-2">
             <Avatar username="gh" size="sm" />
-            <span className="text-sm text-muted-foreground hidden md:inline-block"></span>
           </div>
         </div>
       </div>
@@ -72,16 +70,16 @@ function PromoBanner({
   onDismiss: () => void 
 }) {
   return (
-    <div className="bg-primary/10 border border-primary/20 text-primary-foreground py-2 px-4 mb-6 rounded-md flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <svg className="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div className="bg-primary/10 border border-primary/20 text-primary-foreground py-3 px-5 mb-8 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <svg className="h-5 w-5 text-primary flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M11 7H13V9H11V7Z" fill="currentColor" />
           <path d="M11 11H13V17H11V11Z" fill="currentColor" />
           <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM4 12C4 16.418 7.582 20 12 20C16.418 20 20 16.418 20 12C20 7.582 16.418 4 12 4C7.582 4 4 7.582 4 12Z" fill="currentColor" />
         </svg>
         <p className="text-sm font-medium text-primary">{message}</p>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 ml-8 sm:ml-0">
         <a 
           href={actionUrl} 
           target="_blank" 
@@ -92,7 +90,7 @@ function PromoBanner({
         </a>
         <button 
           onClick={onDismiss} 
-          className="p-1 rounded-full hover:bg-primary/20 text-primary transition-colors"
+          className="p-1.5 rounded-full hover:bg-primary/20 text-primary transition-colors"
           aria-label="Dismiss"
         >
           <X className="h-4 w-4" />
@@ -366,7 +364,7 @@ function App() {
   const [showBanner, setShowBanner] = useState(true);
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground p-4 md:p-8">
+    <div className="min-h-screen bg-background font-sans text-foreground p-3 sm:p-5 md:p-8">
       <Toaster position="top-right" richColors closeButton />
       {showBanner && (
         <PromoBanner 
@@ -376,47 +374,54 @@ function App() {
           onDismiss={() => setShowBanner(false)}
         />
       )}
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6">
         <StorageErrorHandler onRetry={handleRetryDataLoad} />
         
         <PrimerHeader 
           title="Marketing Campaign Calculator" 
           subtitle="Forecast campaign performance and track execution" 
         />
-        <div className="flex items-center justify-center mb-4">
-          <AutoSaveIndicator className="ml-2" forceSave={saveStatus.forceSave} />
+        <div className="flex items-center justify-end mb-2">
+          <AutoSaveIndicator forceSave={saveStatus.forceSave} />
         </div>
 
-
         <Tabs defaultValue="planning" className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-4">
-            <TabsTrigger value="planning" className="flex items-center gap-2">
-              <Calculator className="h-4 w-4" /> Planning
-            </TabsTrigger>
-            <TabsTrigger value="execution" className="flex items-center gap-2">
-              <ClipboardText className="h-4 w-4" /> Execution Tracking
-            </TabsTrigger>
-            <TabsTrigger value="budget" className="flex items-center gap-2">
-              <Buildings className="h-4 w-4" /> Budget Management
-            </TabsTrigger>
-            <TabsTrigger value="roi" className="flex items-center gap-2">
-              <TrendUp className="h-4 w-4" /> ROI Performance
-            </TabsTrigger>
-            <TabsTrigger value="github" className="flex items-center gap-2">
-              <Database className="h-4 w-4" /> GitHub Sync
-            </TabsTrigger>
-            <TabsTrigger value="reporting" className="flex items-center gap-2">
-              <PresentationChart className="h-4 w-4" /> Reporting
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="w-full mb-6 flex-nowrap md:grid md:grid-cols-6">
+              <TabsTrigger value="planning" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <Calculator className="h-4 w-4 flex-shrink-0" /> 
+                <span>Planning</span>
+              </TabsTrigger>
+              <TabsTrigger value="execution" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <ClipboardText className="h-4 w-4 flex-shrink-0" /> 
+                <span>Execution</span>
+              </TabsTrigger>
+              <TabsTrigger value="budget" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <Buildings className="h-4 w-4 flex-shrink-0" /> 
+                <span>Budget</span>
+              </TabsTrigger>
+              <TabsTrigger value="roi" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <TrendUp className="h-4 w-4 flex-shrink-0" /> 
+                <span>ROI</span>
+              </TabsTrigger>
+              <TabsTrigger value="github" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <Database className="h-4 w-4 flex-shrink-0" /> 
+                <span>GitHub</span>
+              </TabsTrigger>
+              <TabsTrigger value="reporting" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <PresentationChart className="h-4 w-4 flex-shrink-0" /> 
+                <span>Reporting</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="planning" className="space-y-6">
-            <Card className="border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
+          <TabsContent value="planning" className="space-y-8 pt-2">
+            <Card className="border shadow-sm overflow-hidden">
+              <CardHeader className="pb-4 pt-5 px-6">
+                <CardTitle className="flex items-center gap-2 text-xl">
                   <Table className="h-5 w-5" /> Campaign Planning Table
                 </CardTitle>
-                <CardDescription>Plan and track multiple marketing campaigns</CardDescription>
+                <CardDescription className="text-sm mt-1">Plan and track multiple marketing campaigns</CardDescription>
               </CardHeader>
 
               <CardContent className="p-0 overflow-auto">
@@ -425,14 +430,14 @@ function App() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="execution" className="space-y-6">
+          <TabsContent value="execution" className="space-y-8 pt-2">
             <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
 
-          <TabsContent value="budget" className="space-y-6">
+          <TabsContent value="budget" className="space-y-8 pt-2">
             <Card className="border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="pb-4 pt-5 px-6">
+                <CardTitle className="flex items-center gap-2 text-xl">
                   <Buildings className="h-5 w-5" /> Regional Budget Management
                 </CardTitle>
                 <CardDescription className="flex items-center justify-between">
@@ -614,15 +619,15 @@ function App() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="reporting" className="space-y-6">
+          <TabsContent value="reporting" className="space-y-8 pt-2">
             <ReportingDashboard campaigns={campaigns} />
           </TabsContent>
 
-          <TabsContent value="roi" className="space-y-6">
+          <TabsContent value="roi" className="space-y-8 pt-2">
             <ROIDashboard campaigns={campaigns} />
           </TabsContent>
 
-          <TabsContent value="github" className="space-y-6">
+          <TabsContent value="github" className="space-y-8 pt-2">
             <PersistentStorageInfo />
             <GitHubSync campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
