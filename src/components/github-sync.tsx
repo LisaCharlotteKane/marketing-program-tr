@@ -10,11 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { saveCampaignsToGitHub, loadCampaignsFromGitHub, saveBudgetsToGitHub, loadBudgetsFromGitHub } from "@/services/github-api";
 import { Campaign } from "@/components/campaign-table";
 import { RegionalBudgets } from "@/hooks/useRegionalBudgets";
-import { CloudArrowUp, CloudArrowDown, CheckCircle, WarningCircle, Key, ClockClockwise, ChartDonut } from "@phosphor-icons/react";
+import { CloudArrowUp, CloudArrowDown, CheckCircle, WarningCircle, Key, ClockClockwise, ChartDonut, Package } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useAutoSave } from "@/hooks/useAutoSave";
 import { updateGitHubSyncConfig } from "@/services/auto-github-sync";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ExportCode } from "@/components/export-code";
 
 interface GitHubSyncProps {
   campaigns: Campaign[];
@@ -485,12 +486,15 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
         
         {/* Sync Options */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="campaigns" className="flex items-center gap-2">
               <CloudArrowUp className="h-4 w-4" /> Campaign Data
             </TabsTrigger>
             <TabsTrigger value="budgets" className="flex items-center gap-2">
               <ChartDonut className="h-4 w-4" /> Budget Data
+            </TabsTrigger>
+            <TabsTrigger value="export" className="flex items-center gap-2">
+              <Package className="h-4 w-4" /> Export Code
             </TabsTrigger>
           </TabsList>
           
@@ -546,6 +550,19 @@ export function GitHubSync({ campaigns, setCampaigns }: GitHubSyncProps) {
                   <CloudArrowUp className="h-4 w-4" />
                   Save Budgets
                 </Button>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="export">
+            <div className="p-4 border rounded-md bg-muted/30 mt-2">
+              <p className="text-sm text-muted-foreground mb-4">
+                Export all application code as a downloadable ZIP file for offline use or backup.
+                <br />
+                <span className="text-xs">Includes source files, configurations, and project structure.</span>
+              </p>
+              <div className="flex justify-end">
+                <ExportCode />
               </div>
             </div>
           </TabsContent>
