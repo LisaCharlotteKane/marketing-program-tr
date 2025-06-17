@@ -149,6 +149,11 @@ export function ExecutionTracking({
                     <TableCell>
                       <div className="text-xs text-muted-foreground">
                         {campaign.owner} • {campaign.region} • {campaign.country}
+                        {campaign.description && (
+                          <div className="mt-1 text-foreground">
+                            {campaign.description}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     

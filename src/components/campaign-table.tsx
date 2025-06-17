@@ -534,6 +534,7 @@ export function CampaignTable({
               <TableHead className="w-[100px]">Region</TableHead>
               <TableHead className="w-[120px]">Country</TableHead>
               <TableHead className="w-[120px]">Owner</TableHead>
+              <TableHead className="w-[200px]">Description</TableHead>
               <TableHead className="w-[120px]">Forecasted Cost</TableHead>
               <TableHead className="w-[110px]">Expected Leads</TableHead>
               <TableHead className="w-[80px]">MQLs (10%)</TableHead>
@@ -733,6 +734,18 @@ export function CampaignTable({
                       ))}
                     </SelectContent>
                   </Select>
+                </TableCell>
+                
+                {/* Description */}
+                <TableCell>
+                  <Input
+                    type="text"
+                    value={campaign.description || ""}
+                    onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
+                    placeholder="Enter description"
+                    className="w-full"
+                    disabled={isCampaignComplete(campaign)}
+                  />
                 </TableCell>
                 
                 {/* Forecasted Cost */}
