@@ -163,7 +163,11 @@ export function CampaignTable({
     "Taiwan",
     "Thailand",
     "Vietnam",
-    "X Apac"
+    "X Apac",
+    "X APAC English",
+    "X APAC Non English",
+    "X South APAC",
+    "X SAARC"
   ];
   
   const ownerOptions = [
