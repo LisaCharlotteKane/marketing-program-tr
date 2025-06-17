@@ -11,7 +11,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
-import { TrashSimple, FileCsv, Plus, ChartBar, FilterX, DownloadSimple, UploadSimple } from "@phosphor-icons/react";
+import { TrashSimple, FileCsv, Plus, ChartBar, FilterX, DownloadSimple, UploadSimple, Calculator } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 
@@ -537,6 +537,23 @@ export function CampaignTable({
         </Alert>
       )}
       
+      {/* Auto-calculation Info Alert */}
+      <div className="bg-accent/30 border border-accent rounded-md p-3 mb-4">
+        <h4 className="text-sm font-semibold flex items-center gap-2 mb-1">
+          <Calculator className="h-4 w-4" />
+          Auto-Calculated Metrics
+        </h4>
+        <p className="text-sm text-muted-foreground">
+          When you enter <strong>Expected Leads</strong>, the following metrics are automatically calculated:
+        </p>
+        <ul className="text-sm text-muted-foreground mt-1 space-y-1 list-disc pl-5">
+          <li>MQL Forecast = 10% of Expected Leads</li>
+          <li>SQL Forecast = 6% of Expected Leads</li>
+          <li>Opportunities = 80% of SQLs</li>
+          <li>Pipeline Forecast = Opportunities × $50,000</li>
+        </ul>
+      </div>
+      
       {/* Campaign table */}
       <div className="border rounded-md overflow-auto">
         <Table>
@@ -552,10 +569,10 @@ export function CampaignTable({
               <TableHead className="w-[120px]">Owner</TableHead>
               <TableHead className="w-[120px]">Forecasted Cost</TableHead>
               <TableHead className="w-[110px]">Expected Leads</TableHead>
-              <TableHead className="w-[80px]">MQLs</TableHead>
-              <TableHead className="w-[80px]">SQLs</TableHead>
-              <TableHead className="w-[110px]">Opportunities</TableHead>
-              <TableHead className="w-[130px]">Pipeline Forecast</TableHead>
+              <TableHead className="w-[80px]">MQLs (10%)</TableHead>
+              <TableHead className="w-[80px]">SQLs (6%)</TableHead>
+              <TableHead className="w-[110px]">Opps (80% of SQL)</TableHead>
+              <TableHead className="w-[130px]">Pipeline ($50K × Opps)</TableHead>
               <TableHead className="w-[80px]">Status</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
@@ -771,22 +788,42 @@ export function CampaignTable({
                 
                 {/* MQLs (Calculated) */}
                 <TableCell className="text-muted-foreground">
-                  {campaign.mql}
+                  <div className="relative group">
+                    <span>{campaign.mql}</span>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-popover text-popover-foreground text-xs p-2 rounded shadow-md whitespace-nowrap z-50">
+                      Auto-calculated: 10% of {typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0} leads
+                    </div>
+                  </div>
                 </TableCell>
                 
                 {/* SQLs (Calculated) */}
                 <TableCell className="text-muted-foreground">
-                  {campaign.sql}
+                  <div className="relative group">
+                    <span>{campaign.sql}</span>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-popover text-popover-foreground text-xs p-2 rounded shadow-md whitespace-nowrap z-50">
+                      Auto-calculated: 6% of {typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0} leads
+                    </div>
+                  </div>
                 </TableCell>
                 
                 {/* Opportunities (Calculated) */}
                 <TableCell className="text-muted-foreground">
-                  {campaign.opportunities}
+                  <div className="relative group">
+                    <span>{campaign.opportunities}</span>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-popover text-popover-foreground text-xs p-2 rounded shadow-md whitespace-nowrap z-50">
+                      Auto-calculated: 80% of {campaign.sql} SQLs
+                    </div>
+                  </div>
                 </TableCell>
                 
                 {/* Pipeline Forecast (Calculated) */}
                 <TableCell className="text-muted-foreground">
-                  {formatCurrency(campaign.pipelineForecast)}
+                  <div className="relative group">
+                    <span>{formatCurrency(campaign.pipelineForecast)}</span>
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-popover text-popover-foreground text-xs p-2 rounded shadow-md whitespace-nowrap z-50">
+                      Auto-calculated: ${campaign.opportunities} × $50,000
+                    </div>
+                  </div>
                 </TableCell>
                 
                 {/* Status */}
