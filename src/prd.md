@@ -1,116 +1,116 @@
 # Marketing Campaign Calculator PRD
 
 ## Core Purpose & Success
-- **Mission Statement**: A comprehensive marketing campaign planning, tracking, and reporting tool for regional teams.
-- **Success Indicators**: Accurate campaign budget forecasting, execution tracking, and ROI measurement.
-- **Experience Qualities**: Efficient, Analytical, Professional
+- **Mission Statement**: A comprehensive tool for marketing teams to plan, budget, track, and analyze marketing campaigns and their ROI.
+- **Success Indicators**: Accurate budget tracking, campaign performance metrics, and forecasting capabilities.
+- **Experience Qualities**: Professional, Intuitive, Comprehensive
 
 ## Project Classification & Approach
-- **Complexity Level**: Light Application (multiple features with basic state)
-- **Primary User Activity**: Creating and Tracking
+- **Complexity Level**: Complex Application (multiple features with advanced state management)
+- **Primary User Activity**: Creating and Interacting (planning campaigns and analyzing performance)
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Marketing teams need to plan, track, and report on campaign performance across APAC regions.
-- **User Context**: Regional marketing managers will use this to plan budgets, track execution, and report outcomes.
-- **Critical Path**: Create campaign → Track execution → Report performance → Optimize future campaigns
-- **Key Moments**: Budget allocation, Campaign planning, Execution tracking, Performance reporting
+- **Core Problem Analysis**: Marketing teams need a centralized tool to plan campaigns, allocate budgets, and track ROI across regions.
+- **User Context**: Marketing managers will use this tool during planning sessions, budget reviews, and performance analysis meetings.
+- **Critical Path**: Campaign creation → budget allocation → execution tracking → performance reporting
+- **Key Moments**: Budget allocation decisions, campaign performance analysis, reporting dashboard visualization
 
 ## Essential Features
 1. **Campaign Planning Table**
-   - What: Input and manage multiple campaign initiatives at once
-   - Why: Streamlines the planning process for marketing teams
-   - Success: Users can easily add, edit, and remove campaign entries
+   - Functionality: Create, edit, and manage marketing campaigns with details like type, region, cost, etc.
+   - Purpose: Central repository for all campaign information
+   - Success Criteria: Smooth editing experience, proper data validation
 
 2. **Budget Management**
-   - What: Track and allocate budgets by region with visual warnings
-   - Why: Prevent budget overruns and ensure proper resource allocation
-   - Success: Clear visualization of budget status with appropriate alerts
+   - Functionality: Allocate and track budgets across regions
+   - Purpose: Ensure campaigns stay within budget constraints
+   - Success Criteria: Visual indicators of budget usage, warnings for overages
 
 3. **Execution Tracking**
-   - What: Update campaign status, actual costs, and performance metrics
-   - Why: Monitor campaign progress and actual vs. forecasted performance
-   - Success: Complete visibility into campaign execution status
+   - Functionality: Track campaign progress and actual costs vs. forecasts
+   - Purpose: Monitor real-time campaign performance
+   - Success Criteria: Clear status indicators, easy update process
 
 4. **Reporting Dashboard**
-   - What: Visual representation of campaign performance metrics
-   - Why: Provide insights for decision-making and optimization
-   - Success: Actionable data visualization for stakeholders
+   - Functionality: Visual representation of campaign performance metrics
+   - Purpose: Aid decision-making with data visualization
+   - Success Criteria: Clear charts, filterable data views
 
 5. **Data Persistence**
-   - What: Save and load campaign data with GitHub integration
-   - Why: Ensure data continuity across sessions and team members
-   - Success: Seamless data persistence without manual export/import
+   - Functionality: Save campaign data locally and sync with GitHub
+   - Purpose: Ensure data safety and sharing capabilities
+   - Success Criteria: Reliable saving, successful GitHub integration
 
 ## Design Direction
 
 ### Visual Tone & Identity
 - **Emotional Response**: Confidence, clarity, and professionalism
-- **Design Personality**: Clean, data-focused, and business-oriented
-- **Visual Metaphors**: Dashboard, calculator, and planning tools
-- **Simplicity Spectrum**: Balanced - comprehensive data with clean presentation
+- **Design Personality**: Professional and efficient with a modern edge
+- **Visual Metaphors**: Dashboard gauges, budget meters, and performance charts
+- **Simplicity Spectrum**: Clean interface with rich data visualizations where needed
 
 ### Color Strategy
-- **Color Scheme Type**: Professional business palette with Twitter Blue as primary
-- **Primary Color**: Twitter Blue (#1e9df1) - representing trust and clarity
-- **Secondary Colors**: Dark gray (#0f1419) for UI elements
-- **Accent Color**: Light blue (#E3ECF6) for highlighting and secondary elements
-- **Color Psychology**: Blue conveys trust and professionalism, critical for financial planning
-- **Color Accessibility**: High contrast between text and backgrounds for readability
+- **Color Scheme Type**: Monochromatic with accent colors for emphasis
+- **Primary Color**: Twitter blue (#1e9df1) - communicates trust and professionalism
+- **Secondary Colors**: Dark gray (#0f1419) for structure and organization
+- **Accent Color**: Light blue (#E3ECF6) for highlighting and emphasis
+- **Color Psychology**: Blue promotes trust and efficiency; grays provide stability
+- **Color Accessibility**: All color combinations meet WCAG AA contrast ratios
 - **Foreground/Background Pairings**: 
-  - Background/Foreground: #ffffff/#0f1419 (high contrast)
-  - Card/Card-Foreground: #f7f8f8/#0f1419 (subtle distinction)
-  - Primary/Primary-Foreground: #1e9df1/#ffffff (clear visibility)
+  - Background (#ffffff) / Foreground (#0f1419) - Main content
+  - Card (#f7f8f8) / Card-foreground (#0f1419) - Content containers
+  - Primary (#1e9df1) / Primary-foreground (#ffffff) - Actions
 
 ### Typography System
-- **Font Pairing Strategy**: Single font family (Inter) for consistency
-- **Typographic Hierarchy**: Clear size distinction between headings, labels, and body text
-- **Font Personality**: Professional, clean, highly legible
-- **Readability Focus**: Generous line height and appropriate spacing
-- **Typography Consistency**: Consistent font weights for different UI elements
-- **Which fonts**: Inter (Google Font)
-- **Legibility Check**: High legibility with clean sans-serif design
+- **Font Pairing Strategy**: Single sans-serif font family (Inter) for consistency
+- **Typographic Hierarchy**: Clear size distinction between headers, subheaders, and body text
+- **Font Personality**: Clean, professional, highly readable
+- **Readability Focus**: Generous line-height and optimal line length
+- **Typography Consistency**: Consistent font weights (400, 500, 600, 700) across the application
+- **Which fonts**: Inter (Google font)
+- **Legibility Check**: High legibility for both data-dense tables and headings
 
 ### Visual Hierarchy & Layout
-- **Attention Direction**: Tab navigation for main sections, cards for content grouping
-- **White Space Philosophy**: Generous spacing for clarity and focus
-- **Grid System**: Card-based layout with responsive sizing
-- **Responsive Approach**: Flexible containers with appropriate padding
-- **Content Density**: Balanced - comprehensive data without overwhelming
+- **Attention Direction**: Card-based layout draws attention to key areas
+- **White Space Philosophy**: Generous spacing to separate logical sections
+- **Grid System**: Responsive 12-column grid with appropriate gutters
+- **Responsive Approach**: Mobile-first with appropriate breakpoints
+- **Content Density**: Balanced density, with data-dense tables offset by clean surrounding areas
 
 ### Animations
-- **Purposeful Meaning**: Subtle transitions between tabs and states
-- **Hierarchy of Movement**: Minimal animations focused on feedback
-- **Contextual Appropriateness**: Business-appropriate subtle transitions
+- **Purposeful Meaning**: Subtle animations for state changes and loading
+- **Hierarchy of Movement**: Priority to user feedback animations
+- **Contextual Appropriateness**: Professional environment requires restraint
 
 ### UI Elements & Component Selection
-- **Component Usage**: Tabs for navigation, Cards for content grouping, Tables for data display
-- **Component Customization**: Rounded corners and light shadows for depth
-- **Component States**: Clear hover and active states for interactive elements
+- **Component Usage**: Cards for content grouping, tabs for section organization, tables for data
+- **Component Customization**: Rounded corners and subtle shadows for cards
+- **Component States**: Distinct hover and active states for interactive elements
 - **Icon Selection**: Phosphor icons for consistent visual language
-- **Component Hierarchy**: Primary actions highlighted, secondary actions subdued
-- **Spacing System**: Consistent padding using Tailwind's spacing scale
-- **Mobile Adaptation**: Stack elements vertically on smaller screens
+- **Component Hierarchy**: Primary actions use solid buttons, secondary actions use outline variants
+- **Spacing System**: Consistent padding and margin using Tailwind scale
+- **Mobile Adaptation**: Stack horizontal layouts vertically, adjust table views
 
 ### Visual Consistency Framework
-- **Design System Approach**: Component-based for scalability
-- **Style Guide Elements**: Color, typography, spacing, and component styles
-- **Visual Rhythm**: Consistent card styling and spacing
-- **Brand Alignment**: Professional appearance aligned with business context
+- **Design System Approach**: Component-based with consistent styling
+- **Style Guide Elements**: Color palette, typography, spacing, component usage
+- **Visual Rhythm**: Consistent card styling and section spacing
+- **Brand Alignment**: Professional appearance aligns with business application
 
 ### Accessibility & Readability
 - **Contrast Goal**: WCAG AA compliance for all text elements
 
 ## Edge Cases & Problem Scenarios
 - **Potential Obstacles**: Data loss during session changes
-- **Edge Case Handling**: Autosave functionality and error handling
+- **Edge Case Handling**: Autosave functionality, local storage backup
 - **Technical Constraints**: Browser storage limitations
 
 ## Implementation Considerations
-- **Scalability Needs**: Support for additional regions and metrics
-- **Testing Focus**: Budget calculation accuracy and data persistence
-- **Critical Questions**: How to handle multi-user edits and conflicts
+- **Scalability Needs**: Support for increasing number of campaigns
+- **Testing Focus**: Data persistence, calculation accuracy
+- **Critical Questions**: How to handle large datasets in browser?
 
 ## Reflection
-- This approach uniquely combines planning and tracking in a single interface
-- The budget management system helps prevent overspending while maintaining flexibility
-- The solution could be exceptional with enhanced data visualization and export options
+- This approach uniquely combines comprehensive planning features with rigorous budget tracking
+- The assumption that users need region-specific budgeting could be challenged
+- Exceptional solution would include AI-powered insights for campaign optimization

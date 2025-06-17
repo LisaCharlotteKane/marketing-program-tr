@@ -1,9 +1,9 @@
-import { useTheme } from "next-themes"
 import { CSSProperties } from "react"
 import { Toaster as Sonner, ToasterProps } from "sonner"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
+  // Use light theme by default instead of depending on next-themes
+  const theme = "light";
 
   return (
     <Sonner
