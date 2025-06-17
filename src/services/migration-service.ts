@@ -1,70 +1,41 @@
-/**
- * Data Migration Service
- * 
- * Handles one-time migration of data from old storage patterns to new ones
- * Ensures backward compatibility with previous app versions
- */
+import { toast } from "sonner";
 
-import { Campaign } from "@/components/campaign-table";
-import { saveAllStorageLayers } from "./persistent-storage";
-import { fixCorruptedCampaignData } from "./storage-recovery";
-
-/**
- * Runs data migration tasks to ensure compatibility with older app versions
- * 
- * @returns Promise that resolves when migrations are complete
- */
-export async function runDataMigrations(): Promise<void> {
-  try {
-    await migrateOldCampaignData();
-    console.log("Data migration complete");
-  } catch (error) {
-    console.error("Error during data migration:", error);
-  }
-}
-
-/**
- * Migrates campaign data from old localStorage-only format to new multi-layer storage
- */
-async function migrateOldCampaignData(): Promise<void> {
-  try {
-    // Check if we've already run this migration
-    const migrationCompleted = localStorage.getItem('dataMigration_v1_completed');
-    if (migrationCompleted === 'true') {
-      return;
-    }
-    
-    // Look for campaign data in the old format
-    const oldData = localStorage.getItem('campaignData');
-    if (oldData) {
-      try {
-        const rawCampaigns = JSON.parse(oldData);
-        
-        // Fix any corrupted data and ensure all required fields exist
-        const campaigns = fixCorruptedCampaignData(Array.isArray(rawCampaigns) ? rawCampaigns : []);
-        
-        // Only migrate if we have valid data
-        if (campaigns.length > 0) {
-          console.log(`Migrating ${campaigns.length} campaigns to new storage format`);
+export function runDataMigrations() {
+  return new Promise<void>((resolve, reject) => {
+    try {
+      // Check for any legacy data formats and migrate them
+      
+      // Example migration: convert old campaign format to new format
+      const oldCampaigns = localStorage.getItem("campaigns");
+      if (oldCampaigns) {
+        try {
+          const parsed = JSON.parse(oldCampaigns);
           
-          // Save to the new storage system
-          await saveAllStorageLayers('campaignData', campaigns);
-          
-          // Mark migration as complete
-          localStorage.setItem('dataMigration_v1_completed', 'true');
-          
-          console.log("Campaign data migration successful");
+          // Check if we need to migrate
+          if (Array.isArray(parsed) && parsed.length > 0 && !parsed[0].id) {
+            // Add IDs to campaigns
+            const migratedCampaigns = parsed.map(campaign => ({
+              ...campaign,
+              id: Math.random().toString(36).substring(2, 9)
+            }));
+            
+            // Save migrated data
+            localStorage.setItem("campaignData", JSON.stringify(migratedCampaigns));
+            
+            // Remove old data
+            localStorage.removeItem("campaigns");
+            
+            console.log("Migrated campaign data to new format");
+          }
+        } catch (e) {
+          console.error("Error migrating campaign data:", e);
         }
-      } catch (parseError) {
-        console.error("Error parsing old campaign data:", parseError);
       }
+      
+      resolve();
+    } catch (error) {
+      console.error("Error running data migrations:", error);
+      reject(error);
     }
-    
-    // Mark migration as completed even if there was no data to migrate
-    localStorage.setItem('dataMigration_v1_completed', 'true');
-    
-  } catch (error) {
-    console.error("Error migrating campaign data:", error);
-    throw error;
-  }
+  });
 }

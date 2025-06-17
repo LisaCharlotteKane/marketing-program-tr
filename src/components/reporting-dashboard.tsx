@@ -1,450 +1,370 @@
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ChartBar, DownloadSimple, Filter, FunnelSimple, CurrencyCircleDollar, SquaresFour } from "@phosphor-icons/react"
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { PresentationChart, Download, ChartLine, ChartPie, ChartBar } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
+import { type Campaign } from "@/components/campaign-table";
 
-import { 
-  filterCampaigns, 
-  calculateSummaryMetrics, 
-  prepareRegionalCostData, 
-  prepareLeadsComparisonData,
-  exportToCSV,
-  quarters,
-  regions,
-  getCountriesByRegion
-} from "@/lib/dashboard-utils"
-
-export interface ReportingDashboardProps {
-  campaigns?: any[];
-}
-
-export function ReportingDashboard({ campaigns = [] }: ReportingDashboardProps) {
-  // Filter states
-  const [selectedRegion, setSelectedRegion] = useState("_all")
-  const [selectedCountry, setSelectedCountry] = useState("_all")
-  const [selectedQuarter, setSelectedQuarter] = useState("_all")
-  const [availableCountries, setAvailableCountries] = useState([])
+export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
+  // Filters
+  const [regionFilter, setRegionFilter] = useState("_all");
+  const [countryFilter, setCountryFilter] = useState("_all");
+  const [quarterFilter, setQuarterFilter] = useState("_all");
   
-  // Data states
-  const [filteredCampaigns, setFilteredCampaigns] = useState([])
-  const [summaryMetrics, setSummaryMetrics] = useState({
-    totalForecastedSpend: 0,
-    totalActualSpend: 0,
-    totalPipelineForecast: 0,
-    totalMQLs: 0,
-    totalSQLs: 0,
-    totalActualMQLs: 0,
-    totalActualSQLs: 0
-  })
-  const [regionalCostData, setRegionalCostData] = useState([])
-  const [leadsComparisonData, setLeadsComparisonData] = useState([])
-
-  // Update available countries when region changes
-  useEffect(() => {
-    if (selectedRegion && selectedRegion !== "_all") {
-      setAvailableCountries(getCountriesByRegion(selectedRegion))
-      // Reset country selection when region changes
-      setSelectedCountry("_all")
-    } else {
-      setAvailableCountries([])
+  // Get unique filter options from campaigns
+  const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
+  const countries = ["_all", ...new Set(campaigns.map(c => c.country))].filter(Boolean);
+  const quarters = ["_all", ...new Set(campaigns.map(c => c.quarter))].filter(Boolean);
+  
+  // Filter campaigns based on selected filters
+  const filteredCampaigns = campaigns.filter(campaign => {
+    // Apply region filter
+    if (regionFilter !== "_all" && campaign.region !== regionFilter) return false;
+    
+    // Apply country filter
+    if (countryFilter !== "_all" && campaign.country !== countryFilter) return false;
+    
+    // Apply quarter filter
+    if (quarterFilter !== "_all" && campaign.quarter !== quarterFilter) return false;
+    
+    return true;
+  });
+  
+  // Calculate summary metrics
+  const totalForecastedSpend = filteredCampaigns.reduce(
+    (total, campaign) => total + (typeof campaign.forecastedCost === "number" ? campaign.forecastedCost : 0),
+    0
+  );
+  
+  const totalActualSpend = filteredCampaigns.reduce(
+    (total, campaign) => total + (typeof campaign.actualCost === "number" ? campaign.actualCost : 0),
+    0
+  );
+  
+  const totalExpectedLeads = filteredCampaigns.reduce(
+    (total, campaign) => total + (typeof campaign.expectedLeads === "number" ? campaign.expectedLeads : 0),
+    0
+  );
+  
+  const totalActualLeads = filteredCampaigns.reduce(
+    (total, campaign) => total + (typeof campaign.actualLeads === "number" ? campaign.actualLeads : 0),
+    0
+  );
+  
+  const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of Expected Leads
+  const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of Expected Leads
+  const totalOpportunities = Math.round(totalSQLs * 0.8); // 80% of SQLs
+  const totalPipelineForecast = totalOpportunities * 50000; // $50K per opportunity
+  
+  // Data for charts
+  const costComparisonData = filteredCampaigns.map(campaign => ({
+    name: campaign.description?.substring(0, 20) || "Untitled",
+    forecastedCost: typeof campaign.forecastedCost === "number" ? campaign.forecastedCost : 0,
+    actualCost: typeof campaign.actualCost === "number" ? campaign.actualCost : 0
+  }));
+  
+  // Aggregate by region for region-based chart
+  const regionData = regions
+    .filter(region => region !== "_all")
+    .map(region => {
+      const regionCampaigns = filteredCampaigns.filter(c => c.region === region);
+      const forecastedCost = regionCampaigns.reduce((sum, c) => sum + (typeof c.forecastedCost === "number" ? c.forecastedCost : 0), 0);
+      const actualCost = regionCampaigns.reduce((sum, c) => sum + (typeof c.actualCost === "number" ? c.actualCost : 0), 0);
+      
+      return {
+        name: region,
+        forecastedCost,
+        actualCost
+      };
+    });
+  
+  // Data for leads pipeline chart
+  const pipelineData = [
+    { name: "Expected Leads", value: totalExpectedLeads },
+    { name: "MQLs (10%)", value: totalMQLs },
+    { name: "SQLs (6%)", value: totalSQLs },
+    { name: "Opps (80% of SQL)", value: totalOpportunities }
+  ];
+  
+  // Export to CSV function
+  const exportToCSV = () => {
+    if (filteredCampaigns.length === 0) {
+      return;
     }
-  }, [selectedRegion])
-
-  // Update filtered data when filters change
-  useEffect(() => {
-    // If campaigns were passed as props, filter those directly
-    // Otherwise use the utility function to get from storage
-    const filtered = campaigns.length > 0 
-      ? campaigns.filter(campaign => {
-          // Apply region filter
-          if (selectedRegion && selectedRegion !== "_all" && campaign.region !== selectedRegion) {
-            return false;
-          }
-          
-          // Apply country filter
-          if (selectedCountry && selectedCountry !== "_all" && campaign.country !== selectedCountry) {
-            return false;
-          }
-          
-          // Apply quarter filter
-          if (selectedQuarter && selectedQuarter !== "_all" && campaign.quarterMonth !== selectedQuarter) {
-            return false;
-          }
-          
-          return true;
-        })
-      : filterCampaigns(selectedRegion, selectedCountry, selectedQuarter);
     
-    setFilteredCampaigns(filtered);
+    // Create CSV header
+    const headers = [
+      "Campaign Type",
+      "Strategic Pillar",
+      "Revenue Play",
+      "FY",
+      "Quarter",
+      "Region",
+      "Country",
+      "Owner",
+      "Description",
+      "Forecasted Cost",
+      "Expected Leads",
+      "MQLs",
+      "SQLs",
+      "Opportunities",
+      "Pipeline Forecast",
+      "Status",
+      "PO Raised",
+      "Campaign Code",
+      "Issue Link",
+      "Actual Cost",
+      "Actual Leads",
+      "Actual MQLs"
+    ].join(",");
     
-    // Calculate summary metrics
-    setSummaryMetrics(calculateSummaryMetrics(filtered));
+    // Create CSV rows
+    const rows = filteredCampaigns.map(campaign => {
+      // Format multi-select fields (like strategic pillars)
+      const pillars = Array.isArray(campaign.strategicPillar) 
+        ? `"${campaign.strategicPillar.join("; ")}"` 
+        : campaign.strategicPillar || "";
+      
+      return [
+        campaign.campaignType || "",
+        pillars,
+        campaign.revenuePlay || "",
+        campaign.fy || "",
+        campaign.quarter || "",
+        campaign.region || "",
+        campaign.country || "",
+        campaign.owner || "",
+        `"${(campaign.description || "").replace(/"/g, '""')}"`, // Escape quotes in description
+        typeof campaign.forecastedCost === "number" ? campaign.forecastedCost : "",
+        typeof campaign.expectedLeads === "number" ? campaign.expectedLeads : "",
+        campaign.mql || "",
+        campaign.sql || "",
+        campaign.opportunities || "",
+        campaign.pipelineForecast || "",
+        campaign.status || "",
+        campaign.poRaised ? "Yes" : "No",
+        campaign.campaignCode || "",
+        campaign.issueLink || "",
+        typeof campaign.actualCost === "number" ? campaign.actualCost : "",
+        typeof campaign.actualLeads === "number" ? campaign.actualLeads : "",
+        typeof campaign.actualMQLs === "number" ? campaign.actualMQLs : ""
+      ].join(",");
+    });
     
-    // Prepare data for charts
-    setRegionalCostData(prepareRegionalCostData(filtered));
-    setLeadsComparisonData(prepareLeadsComparisonData(filtered));
-  }, [selectedRegion, selectedCountry, selectedQuarter, campaigns]);
-
-  // Format currency values
-  const formatCurrency = (value) => {
+    // Combine header and rows
+    const csv = [headers, ...rows].join("\n");
+    
+    // Create download link
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "campaign_report.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  // Format currency
+  const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       maximumFractionDigits: 0
     }).format(value)
-  }
-
-  // Reset all filters
-  const resetFilters = () => {
-    setSelectedRegion("_all")
-    setSelectedCountry("_all")
-    setSelectedQuarter("_all")
-  }
-
-  // Handle export to CSV
-  const handleExport = () => {
-    exportToCSV(filteredCampaigns);
-  }
-
+  };
+  
   return (
-    <div className="space-y-6">
-      <Card className="border shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" /> Dashboard Filters
-          </CardTitle>
-          <CardDescription>Filter campaign data by region, country, and quarter</CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Region Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="filter-region">Region</Label>
-              <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                <SelectTrigger id="filter-region">
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">All Regions</SelectItem>
-                  {regions.map(region => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Country Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="filter-country">Country</Label>
-              <Select 
-                value={selectedCountry} 
-                onValueChange={setSelectedCountry}
-                disabled={selectedRegion === "_all"}
-              >
-                <SelectTrigger id="filter-country">
-                  <SelectValue placeholder={selectedRegion !== "_all" ? "All Countries" : "Select a region first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">All Countries</SelectItem>
-                  {availableCountries.map(country => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Quarter Filter */}
-            <div className="space-y-2">
-              <Label htmlFor="filter-quarter">Quarter</Label>
-              <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-                <SelectTrigger id="filter-quarter">
-                  <SelectValue placeholder="All Quarters" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">All Quarters</SelectItem>
-                  {quarters.map(quarter => (
-                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex items-end gap-2">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={resetFilters}
-              >
-                Reset
-              </Button>
-              <Button 
-                variant="default" 
-                className="flex-1 gap-1"
-                onClick={handleExport}
-              >
-                <DownloadSimple className="h-4 w-4" />
-                Export CSV
-              </Button>
-            </div>
+    <Card className="border shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <PresentationChart className="h-5 w-5" /> Campaign Reporting Dashboard
           </div>
-
-          {/* Applied Filters */}
-          {(selectedRegion !== "_all" || selectedCountry !== "_all" || selectedQuarter !== "_all") && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              <div className="text-sm text-muted-foreground mr-1">Applied filters:</div>
-              {selectedRegion !== "_all" && (
-                <Badge variant="outline" className="text-xs">
-                  Region: {selectedRegion}
-                </Badge>
-              )}
-              {selectedCountry !== "_all" && (
-                <Badge variant="outline" className="text-xs">
-                  Country: {selectedCountry}
-                </Badge>
-              )}
-              {selectedQuarter !== "_all" && (
-                <Badge variant="outline" className="text-xs">
-                  Quarter: {selectedQuarter}
-                </Badge>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Summary Metrics */}
-      <Card className="border shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <SquaresFour className="h-5 w-5" /> Summary Metrics
-          </CardTitle>
-          <CardDescription>
-            Key performance indicators across {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''}
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="bg-card rounded-md p-3 shadow-sm">
-              <div className="text-sm text-muted-foreground mb-1">Forecasted Spend</div>
-              <div className="text-xl font-semibold">{formatCurrency(summaryMetrics.totalForecastedSpend)}</div>
-            </div>
-            <div className="bg-card rounded-md p-3 shadow-sm">
-              <div className="text-sm text-muted-foreground mb-1">Actual Spend</div>
-              <div className="text-xl font-semibold">{formatCurrency(summaryMetrics.totalActualSpend)}</div>
-            </div>
-            <div className="bg-accent rounded-md p-3 shadow-sm">
-              <div className="text-sm text-accent-foreground mb-1">Pipeline Forecast</div>
-              <div className="text-xl font-semibold text-accent-foreground">{formatCurrency(summaryMetrics.totalPipelineForecast)}</div>
-            </div>
-            <div className="bg-card rounded-md p-3 shadow-sm">
-              <div className="text-sm text-muted-foreground mb-1">Total MQLs (10%)</div>
-              <div className="text-xl font-semibold flex justify-between">
-                <span>{summaryMetrics.totalMQLs}</span>
-                {summaryMetrics.totalActualMQLs > 0 && (
-                  <span className="text-sm text-muted-foreground self-end">
-                    Act: {summaryMetrics.totalActualMQLs}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="bg-card rounded-md p-3 shadow-sm">
-              <div className="text-sm text-muted-foreground mb-1">Total SQLs (6%)</div>
-              <div className="text-xl font-semibold flex justify-between">
-                <span>{summaryMetrics.totalSQLs}</span>
-                {summaryMetrics.totalActualSQLs > 0 && (
-                  <span className="text-sm text-muted-foreground self-end">
-                    Act: {summaryMetrics.totalActualSQLs}
-                  </span>
-                )}
-              </div>
-            </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1"
+            onClick={exportToCSV}
+          >
+            <Download className="h-4 w-4" /> Export to CSV
+          </Button>
+        </CardTitle>
+        <CardDescription>Analyze campaign performance metrics</CardDescription>
+      </CardHeader>
+      
+      <CardContent className="space-y-6">
+        {/* Filters */}
+        <div className="grid grid-cols-3 gap-4 p-4 bg-muted/20 rounded-md">
+          <div>
+            <Label htmlFor="region-filter">Region</Label>
+            <Select 
+              value={regionFilter}
+              onValueChange={setRegionFilter}
+            >
+              <SelectTrigger id="region-filter" className="mt-1">
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Regions</SelectItem>
+                {regions.filter(r => r !== "_all").map((region) => (
+                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Visualizations */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Cost Comparison Chart */}
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <CurrencyCircleDollar className="h-5 w-5" /> Forecasted vs Actual Cost
-            </CardTitle>
-            <CardDescription>Cost comparison by region</CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {regionalCostData.length > 0 ? (
-              <div className="h-64 w-full">
+          
+          <div>
+            <Label htmlFor="country-filter">Country</Label>
+            <Select 
+              value={countryFilter}
+              onValueChange={setCountryFilter}
+            >
+              <SelectTrigger id="country-filter" className="mt-1">
+                <SelectValue placeholder="All Countries" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Countries</SelectItem>
+                {countries.filter(c => c !== "_all").map((country) => (
+                  <SelectItem key={country} value={country}>{country}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="quarter-filter">Quarter</Label>
+            <Select 
+              value={quarterFilter}
+              onValueChange={setQuarterFilter}
+            >
+              <SelectTrigger id="quarter-filter" className="mt-1">
+                <SelectValue placeholder="All Quarters" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Quarters</SelectItem>
+                {quarters.filter(q => q !== "_all").map((quarter) => (
+                  <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        {/* Summary Metrics */}
+        <div className="grid grid-cols-5 gap-4">
+          <Card className="border shadow-sm bg-primary/5">
+            <CardContent className="p-4">
+              <div className="text-sm font-medium text-muted-foreground">Total Forecasted Spend</div>
+              <div className="text-2xl font-bold mt-1">{formatCurrency(totalForecastedSpend)}</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border shadow-sm bg-primary/5">
+            <CardContent className="p-4">
+              <div className="text-sm font-medium text-muted-foreground">Total Actual Spend</div>
+              <div className="text-2xl font-bold mt-1">{formatCurrency(totalActualSpend)}</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border shadow-sm bg-primary/5">
+            <CardContent className="p-4">
+              <div className="text-sm font-medium text-muted-foreground">Total Pipeline Forecast</div>
+              <div className="text-2xl font-bold mt-1">{formatCurrency(totalPipelineForecast)}</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border shadow-sm bg-primary/5">
+            <CardContent className="p-4">
+              <div className="text-sm font-medium text-muted-foreground">Total MQLs (10%)</div>
+              <div className="text-2xl font-bold mt-1">{totalMQLs.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border shadow-sm bg-primary/5">
+            <CardContent className="p-4">
+              <div className="text-sm font-medium text-muted-foreground">Total SQLs (6%)</div>
+              <div className="text-2xl font-bold mt-1">{totalSQLs.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Charts */}
+        <div className="grid grid-cols-2 gap-6">
+          {/* Region Cost Comparison Chart */}
+          <Card className="border shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ChartBar className="h-4 w-4" /> Cost Comparison by Region
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={regionalCostData}
-                    margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
+                    data={regionData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="region" />
-                    <YAxis 
-                      tickFormatter={(value) => `$${value.toLocaleString()}`}
-                      domain={[0, 'auto']}
-                    />
+                    <XAxis dataKey="name" />
+                    <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
                     <Tooltip 
                       formatter={(value) => [`$${value.toLocaleString()}`, undefined]}
-                      labelFormatter={(value) => `Region: ${value}`}
+                      labelFormatter={(label) => `Region: ${label}`}
                     />
                     <Legend />
                     <Bar 
                       dataKey="forecastedCost" 
                       name="Forecasted Cost"
-                      fill="var(--primary)" 
+                      fill="var(--chart-1)" 
                       radius={[4, 4, 0, 0]} 
                     />
                     <Bar 
                       dataKey="actualCost" 
                       name="Actual Cost"
-                      fill="var(--accent)" 
+                      fill="var(--chart-2)" 
                       radius={[4, 4, 0, 0]} 
                     />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            ) : (
-              <div className="h-64 w-full flex items-center justify-center text-muted-foreground">
-                No data available for the selected filters
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Leads Comparison Chart */}
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2">
-              <FunnelSimple className="h-5 w-5" /> Lead Generation Metrics
-            </CardTitle>
-            <CardDescription>Forecasted vs actual lead metrics</CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {leadsComparisonData.length > 0 && leadsComparisonData[0].Leads > 0 ? (
-              <div className="h-64 w-full">
+            </CardContent>
+          </Card>
+          
+          {/* Leads Pipeline Chart */}
+          <Card className="border shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ChartLine className="h-4 w-4" /> Lead Generation Pipeline
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={leadsComparisonData}
-                    margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-                    barGap={20}
+                    data={pipelineData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip />
-                    <Legend />
+                    <Tooltip formatter={(value) => [value.toLocaleString(), undefined]} />
                     <Bar 
-                      dataKey="Leads" 
-                      fill="var(--primary)" 
-                      radius={[4, 4, 0, 0]} 
-                    />
-                    <Bar 
-                      dataKey="MQLs" 
-                      fill="var(--accent)" 
-                      radius={[4, 4, 0, 0]} 
-                    />
-                    <Bar 
-                      dataKey="SQLs" 
-                      fill="var(--secondary)" 
+                      dataKey="value" 
+                      name="Count"
+                      fill="var(--chart-3)" 
                       radius={[4, 4, 0, 0]} 
                     />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            ) : (
-              <div className="h-64 w-full flex items-center justify-center text-muted-foreground">
-                No leads data available for the selected filters
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Campaign List Preview */}
-      <Card className="border shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2">
-            <ChartBar className="h-5 w-5" /> Campaign List
-          </CardTitle>
-          <CardDescription>
-            Showing {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} {(selectedRegion !== "_all" || selectedCountry !== "_all" || selectedQuarter !== "_all") ? 'matching your filters' : ''}
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent>
-          {filteredCampaigns.length > 0 ? (
-            <div className="border rounded-md overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Region</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Country</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Impacted Regions</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Quarter</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Campaign Owner</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Program Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Forecasted Cost</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actual Cost</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-card divide-y divide-border">
-                  {filteredCampaigns.map(campaign => (
-                    <tr key={campaign.id}>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.region}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.country}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        {campaign.impactedRegions && campaign.impactedRegions.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {campaign.impactedRegions.map(region => (
-                              <Badge key={region} variant="outline" className="text-xs">
-                                {region}
-                              </Badge>
-                            ))}
-                          </div>
-                        ) : null}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.quarterMonth}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.owner}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">{campaign.campaignType}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm">
-                        <Badge 
-                          className={`${
-                            campaign.status === "Planning" ? "bg-blue-100 text-blue-800" : 
-                            campaign.status === "On Track" ? "bg-yellow-100 text-yellow-800" :
-                            campaign.status === "Shipped" ? "bg-green-100 text-green-800" :
-                            "bg-red-100 text-red-800"
-                          } px-2 py-0.5 rounded-full text-xs`}
-                        >
-                          {campaign.status}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-right">{formatCurrency(campaign.forecastedCost)}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-right">{formatCurrency(campaign.actualCost)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No campaigns found matching your filter criteria.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
+            </CardContent>
+          </Card>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }

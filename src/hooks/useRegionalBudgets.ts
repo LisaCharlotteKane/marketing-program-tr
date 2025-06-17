@@ -1,190 +1,119 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { toast } from 'sonner';
-import { saveBudgetAssignments, loadBudgetAssignments, resetBudgetAssignments, BUDGET_STORAGE_KEY, forceDefaultBudgetValues } from '@/services/budget-service';
-import { syncBudgetsToGitHub, isAutoGitHubSyncAvailable } from '@/services/auto-github-sync';
+import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 
-// Define regional budget data type
 export interface RegionalBudget {
   assignedBudget: number | "";
-  lockedByOwner?: boolean;
-  lockedValue?: number;
-  lastLockedBy?: string;
   programs: {
     id: string;
     forecastedCost: number;
     actualCost: number;
   }[];
+  lockedByOwner?: boolean;
+  lockedTimestamp?: number;
 }
 
 export interface RegionalBudgets {
-  [key: string]: RegionalBudget;
+  [region: string]: RegionalBudget;
 }
 
-// Default regions
-const DEFAULT_REGIONS = ["North APAC", "South APAC", "SAARC", "Digital"];
+interface BudgetStatus {
+  isSaving: boolean;
+  lastSaved?: Date;
+  resetToDefaults: () => void;
+}
 
-/**
- * Custom hook to manage and persist regional budget data
- * 
- * @param initialValue Default budget structure if nothing is in storage
- * @returns Regional budgets state, setter, and status info
- */
-export function useRegionalBudgets(
-  initialValue: RegionalBudgets = DEFAULT_REGIONS.reduce((acc, region) => {
-    acc[region] = { assignedBudget: "", programs: [] };
-    return acc;
-  }, {} as RegionalBudgets)
-): [
-  RegionalBudgets,                          // Budget data
-  React.Dispatch<React.SetStateAction<RegionalBudgets>>, // Setter function
-  {                                        // Status object
-    isSaving: boolean,                     // Whether saving is in progress
-    lastSaved: Date | null,                // When last save completed
-    resetToDefaults: () => void            // Function to reset budgets to defaults
+// Default regional budgets - set as per management directive
+const DEFAULT_BUDGETS: RegionalBudgets = {
+  "North APAC": {
+    assignedBudget: 358000,
+    programs: [],
+    lockedByOwner: true,
+    lockedTimestamp: Date.now()
+  },
+  "South APAC": {
+    assignedBudget: 385500,
+    programs: [],
+    lockedByOwner: true,
+    lockedTimestamp: Date.now()
+  },
+  "SAARC": {
+    assignedBudget: 265000,
+    programs: [],
+    lockedByOwner: true,
+    lockedTimestamp: Date.now()
+  },
+  "Digital": {
+    assignedBudget: 68000,
+    programs: [],
+    lockedByOwner: true,
+    lockedTimestamp: Date.now()
   }
-] {
-  // State to store budgets
-  const [budgets, setBudgets] = useState<RegionalBudgets>(initialValue);
-  
-  // Save status tracking
+};
+
+export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.SetStateAction<RegionalBudgets>>, BudgetStatus] {
+  // Initialize with default budgets
+  const [budgets, setBudgets] = useState<RegionalBudgets>(DEFAULT_BUDGETS);
   const [isSaving, setIsSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [lastSaved, setLastSaved] = useState<Date | undefined>(undefined);
   
-  // Data loaded flag - prevents overwriting with initialValue after loading
-  const [dataLoaded, setDataLoaded] = useState(false);
-  
-  // State to track GitHub sync status
-  const [githubSyncEnabled, setGithubSyncEnabled] = useState(false);
-  
-  // Ref for debounce handling
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Initialize GitHub sync check
+  // Load saved budgets from localStorage on mount
   useEffect(() => {
-    setGithubSyncEnabled(isAutoGitHubSyncAvailable());
-  }, []);
-  
-  // Load initial data from storage
-  useEffect(() => {
-    const loadInitialData = () => {
-      try {
-        // Force predefined budget values to ensure they're always set
-        const forcedBudgets = forceDefaultBudgetValues();
-        setBudgets(forcedBudgets);
-        
-        // Set last saved timestamp
-        setLastSaved(new Date());
-      } catch (e) {
-        console.error('Error loading regional budget data:', e);
-        // Use quiet info toast instead of error toast
-        toast.info('Using default budget values');
-      } finally {
-        setDataLoaded(true);
-      }
-    };
-    
-    loadInitialData();
-  }, []);
-
-  // Save function
-  const saveBudgets = useCallback(async (data: RegionalBudgets) => {
-    setIsSaving(true);
-    
     try {
-      const success = saveBudgetAssignments(data);
-      
-      if (success) {
+      const savedBudgets = localStorage.getItem("regionalBudgets");
+      if (savedBudgets) {
+        const parsedBudgets = JSON.parse(savedBudgets);
+        
+        // Make sure we have entries for all regions from defaults
+        const mergedBudgets = { ...DEFAULT_BUDGETS };
+        
+        // Overwrite with saved values, preserving locks
+        Object.keys(parsedBudgets).forEach(region => {
+          if (mergedBudgets[region]) {
+            // Preserve the locked status from defaults
+            const lockedByOwner = mergedBudgets[region].lockedByOwner;
+            const lockedTimestamp = mergedBudgets[region].lockedTimestamp;
+            
+            mergedBudgets[region] = {
+              ...parsedBudgets[region],
+              lockedByOwner,
+              lockedTimestamp
+            };
+          } else {
+            mergedBudgets[region] = parsedBudgets[region];
+          }
+        });
+        
+        setBudgets(mergedBudgets);
+      }
+    } catch (error) {
+      console.error("Error loading regional budgets:", error);
+      // Silently fall back to defaults
+    }
+  }, []);
+  
+  // Save budgets to localStorage whenever they change
+  useEffect(() => {
+    const saveData = async () => {
+      setIsSaving(true);
+      try {
+        localStorage.setItem("regionalBudgets", JSON.stringify(budgets));
         setLastSaved(new Date());
-        
-        // Attempt to sync to GitHub if enabled
-        if (githubSyncEnabled) {
-          syncBudgetsToGitHub(data).catch(error => {
-            console.error("GitHub budget sync error:", error);
-            // Silent failure for auto-sync
-          });
-        }
-      } else {
-        toast.error('Error saving budget data');
-      }
-    } catch (e) {
-      console.error('Error saving budget data:', e);
-      toast.error('Error saving budget data');
-    } finally {
-      setIsSaving(false);
-    }
-  }, [githubSyncEnabled]);
-
-  // Reset to defaults function
-  const resetToDefaults = useCallback(() => {
-    const defaultData = resetBudgetAssignments(DEFAULT_REGIONS);
-    setBudgets(defaultData);
-    setLastSaved(new Date());
-    
-    // Sync reset to GitHub if enabled
-    if (githubSyncEnabled) {
-      syncBudgetsToGitHub(defaultData).catch(error => {
-        console.error("GitHub budget sync error on reset:", error);
-      });
-    }
-    
-    toast.success('Budget values reset to defaults');
-  }, [githubSyncEnabled]);
-
-  // Auto-save effect when budgets change
-  useEffect(() => {
-    // Don't save until initial data is loaded
-    if (!dataLoaded) return;
-    
-    // Clear any existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
-    // Debounce save (500ms)
-    saveTimeoutRef.current = setTimeout(() => {
-      saveBudgets(budgets);
-    }, 500);
-    
-    // Clean up timeout on unmount
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [budgets, dataLoaded, saveBudgets]);
-
-  // Handle beforeunload to ensure data is saved
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-        saveTimeoutRef.current = null;
-        
-        // Synchronous localStorage save as a fallback
-        try {
-          localStorage.setItem(BUDGET_STORAGE_KEY, JSON.stringify(budgets));
-          localStorage.setItem('budgetSaveStatus', JSON.stringify({
-            timestamp: new Date().toISOString()
-          }));
-        } catch (e) {
-          console.error('Error in emergency budget save:', e);
-        }
+      } catch (error) {
+        console.error("Error saving regional budgets:", error);
+        toast.error("Failed to save budget data");
+      } finally {
+        setIsSaving(false);
       }
     };
     
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
+    saveData();
   }, [budgets]);
-
-  return [
-    budgets,
-    setBudgets,
-    {
-      isSaving,
-      lastSaved,
-      resetToDefaults
-    }
-  ];
+  
+  // Function to reset budgets to defaults
+  const resetToDefaults = () => {
+    setBudgets(DEFAULT_BUDGETS);
+    toast.success("Regional budgets reset to defaults");
+  };
+  
+  return [budgets, setBudgets, { isSaving, lastSaved, resetToDefaults }];
 }

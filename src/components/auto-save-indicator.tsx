@@ -1,85 +1,53 @@
-import { useState, useEffect, useRef } from "react";
-import { Badge } from "@/components/ui/badge";
-import { FloppyDisk, ClockClockwise, ArrowClockwise, GithubLogo } from "@phosphor-icons/react";
-import { useAutoSaveStatus } from "@/hooks/useAutoSaveStatus";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { isAutoGitHubSyncAvailable } from "@/services/auto-github-sync";
+import React from "react";
+import { FloppyDisk, Check } from "@phosphor-icons/react";
 
-interface AutoSaveIndicatorProps {
+export function AutoSaveIndicator({ 
+  className = "", 
+  forceSave
+}: { 
   className?: string;
-  forceSave?: () => Promise<void>;
-}
-
-export function AutoSaveIndicator({ className = "", forceSave }: AutoSaveIndicatorProps) {
-  // Use the auto-save status hook
-  const { isSaving, lastSaved, formattedLastSaved } = useAutoSaveStatus();
+  forceSave?: () => void;
+}) {
+  const [saveStatus, setSaveStatus] = React.useState<"idle" | "saving" | "saved">("idle");
   
-  // State to control visibility of the indicator
-  const [showDetails, setShowDetails] = useState(true); // Always show details
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Check if GitHub sync is available
-  const [isGitHubSyncActive, setIsGitHubSyncActive] = useState(false);
-  
-  useEffect(() => {
-    setIsGitHubSyncActive(isAutoGitHubSyncAvailable());
-    
-    // Check periodically if GitHub sync status changes
-    const interval = setInterval(() => {
-      setIsGitHubSyncActive(isAutoGitHubSyncAvailable());
-    }, 10000);
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  // Handle manual save click
-  const handleForceSave = async () => {
-    if (forceSave) {
-      try {
-        await forceSave();
-        // Toast is handled in the forceSave function
-      } catch (error) {
-        toast.error("Failed to save data");
-      }
-    }
-  };
-  
-  return (
-    <div className={`flex items-center gap-1 ${className}`}>
-      <Badge 
-        variant={isSaving ? "secondary" : "outline"} 
-        className={`text-xs flex items-center gap-1 py-0.5 px-2 ${isSaving ? 'animate-pulse' : ''}`}
-      >
-        {isSaving ? (
-          <>
-            <FloppyDisk className="h-3 w-3" />
-            Saving...
-          </>
-        ) : (
-          <>
-            {isGitHubSyncActive ? (
-              <GithubLogo className="h-3 w-3 text-black" />
-            ) : (
-              <ClockClockwise className="h-3 w-3" />
-            )}
-            {lastSaved ? `Saved ${formattedLastSaved}` : "Auto-save ready"}
-          </>
-        )}
-      </Badge>
+  // Reset to idle after showing saved status
+  React.useEffect(() => {
+    if (saveStatus === "saved") {
+      const timer = setTimeout(() => {
+        setSaveStatus("idle");
+      }, 2000);
       
-      {forceSave && !isSaving && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-6 px-2 text-xs"
-          onClick={handleForceSave}
-          title="Save now"
-        >
-          <ArrowClockwise className="h-3 w-3 mr-1" />
-          Save
-        </Button>
-      )}
-    </div>
-  );
+      return () => clearTimeout(timer);
+    }
+  }, [saveStatus]);
+  
+  // Show saving indicator when triggered by parent
+  React.useEffect(() => {
+    if (forceSave) {
+      setSaveStatus("saving");
+      setTimeout(() => {
+        setSaveStatus("saved");
+      }, 800);
+    }
+  }, [forceSave]);
+  
+  if (saveStatus === "saving") {
+    return (
+      <div className={`flex items-center text-xs text-muted-foreground ${className}`}>
+        <FloppyDisk className="h-3 w-3 mr-1 animate-pulse" />
+        Auto-saving...
+      </div>
+    );
+  }
+  
+  if (saveStatus === "saved") {
+    return (
+      <div className={`flex items-center text-xs text-muted-foreground ${className}`}>
+        <Check className="h-3 w-3 mr-1 text-green-500" />
+        Changes saved
+      </div>
+    );
+  }
+  
+  return null;
 }

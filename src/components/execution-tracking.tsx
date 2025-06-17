@@ -1,384 +1,247 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ClipboardText, Link as LinkIcon } from "@phosphor-icons/react";
-import { Campaign } from "./campaign-table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { FilterX, ClipboardText, Search } from "@phosphor-icons/react";
+import { type Campaign } from "@/components/campaign-table";
 
-// Props for ExecutionTracking
-interface ExecutionTrackingProps {
-  campaigns: Campaign[];
-  setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>>;
-}
-
-export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTrackingProps) {
+export function ExecutionTracking({ 
+  campaigns, 
+  setCampaigns 
+}: { 
+  campaigns: Campaign[], 
+  setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>> 
+}) {
   // Filters
   const [regionFilter, setRegionFilter] = useState("_all");
   const [ownerFilter, setOwnerFilter] = useState("_all");
-  const [quarterFilter, setQuarterFilter] = useState("_all");
-
-  // Extract unique regions, owners, and quarters for filter options
-  const regions = Array.from(new Set(campaigns.map(c => c.region))).filter(Boolean);
-  const owners = Array.from(new Set(campaigns.map(c => c.owner))).filter(Boolean);
-  const quarters = Array.from(new Set(campaigns.map(c => c.quarterMonth))).filter(Boolean);
-
-  // Filter campaigns based on selected filters
-  const filteredCampaigns = campaigns.filter(campaign => 
-    (regionFilter === "_all" || campaign.region === regionFilter) &&
-    (ownerFilter === "_all" || campaign.owner === ownerFilter) &&
-    (quarterFilter === "_all" || campaign.quarterMonth === quarterFilter)
-  ).map(campaign => {
-    // Ensure actualCost exists to prevent "actualCost is not defined" errors
-    if (campaign.actualCost === undefined) {
-      return { ...campaign, actualCost: "" };
-    }
-    return campaign;
-  });
-
-  // Calculate totals for the filtered campaigns
-  const totalForecastedCost = filteredCampaigns.reduce(
-    (sum, campaign) => sum + (typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0), 
-    0
-  );
   
-  const totalActualCost = filteredCampaigns.reduce(
-    (sum, campaign) => sum + (typeof campaign.actualCost === 'number' ? campaign.actualCost : 0), 
-    0
-  );
-
-  // Format currency values
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(value);
-  };
-
-  // Handle numeric input changes
-  const handleNumericChange = (id: string, field: string, value: string) => {
-    setCampaigns(prev => 
-      prev.map(campaign => {
-        if (campaign.id === id) {
-          if (value === "") {
-            return { ...campaign, [field]: "" };
-          } else {
-            const numValue = parseFloat(value);
-            if (!isNaN(numValue) && numValue >= 0) {
-              return { ...campaign, [field]: numValue };
-            }
-          }
-        }
-        return campaign;
-      })
-    );
-  };
-
-  // Handle text input changes
-  const handleTextChange = (id: string, field: string, value: string) => {
+  // Get unique regions and owners from campaigns
+  const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
+  const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
+  
+  // Update a campaign with new execution data
+  const updateCampaign = (id: string, key: keyof Campaign, value: any) => {
     setCampaigns(prev => 
       prev.map(campaign => 
-        campaign.id === id ? { ...campaign, [field]: value } : campaign
+        campaign.id === id ? { ...campaign, [key]: value } : campaign
       )
     );
   };
-
-  // Handle boolean toggle changes
-  const handleToggleChange = (id: string, field: string, checked: boolean) => {
-    setCampaigns(prev => 
-      prev.map(campaign => 
-        campaign.id === id ? { ...campaign, [field]: checked } : campaign
-      )
-    );
-  };
-
-  // Check if a campaign is locked (cancelled or shipped)
-  const isCampaignLocked = (campaign: Campaign) => {
-    return campaign.status === "Cancelled" || campaign.status === "Shipped";
-  };
-
+  
+  // Filter campaigns based on selected filters
+  const filteredCampaigns = campaigns.filter(campaign => {
+    // Skip campaigns with no region or owner
+    if (!campaign.region || !campaign.owner) return false;
+    
+    // Apply region filter
+    if (regionFilter !== "_all" && campaign.region !== regionFilter) return false;
+    
+    // Apply owner filter
+    if (ownerFilter !== "_all" && campaign.owner !== ownerFilter) return false;
+    
+    return true;
+  });
+  
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
           <ClipboardText className="h-5 w-5" /> Execution Tracking
         </CardTitle>
-        <CardDescription>Update execution status and performance metrics</CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        <div className="space-y-4">
-          {/* Filters */}
-          <div className="flex flex-col gap-3 mb-4 border rounded-md p-3 bg-card">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold">Filter Campaigns</h3>
-              {(regionFilter !== "_all" || ownerFilter !== "_all" || quarterFilter !== "_all") && (
-                <button 
-                  onClick={() => {
-                    setRegionFilter("_all");
-                    setOwnerFilter("_all");
-                    setQuarterFilter("_all");
-                  }}
-                  className="text-xs text-primary hover:underline"
-                >
-                  Clear All Filters
-                </button>
-              )}
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="w-full">
-                <Label htmlFor="region-filter">Region</Label>
-                <Select value={regionFilter} onValueChange={setRegionFilter}>
-                  <SelectTrigger id="region-filter" className="w-full">
-                    <SelectValue placeholder="All Regions" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">All Regions</SelectItem>
-                    {regions.map(region => (
-                      <SelectItem key={region} value={region}>{region}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="w-full">
-                <Label htmlFor="owner-filter">Owner</Label>
-                <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-                  <SelectTrigger id="owner-filter" className="w-full">
-                    <SelectValue placeholder="All Owners" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">All Owners</SelectItem>
-                    {owners.map(owner => (
-                      <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="w-full">
-                <Label htmlFor="quarter-filter">Quarter/Month</Label>
-                <Select value={quarterFilter} onValueChange={setQuarterFilter}>
-                  <SelectTrigger id="quarter-filter" className="w-full">
-                    <SelectValue placeholder="All Quarters" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="_all">All Quarters</SelectItem>
-                    {quarters.map(quarter => (
-                      <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="text-sm mt-2">
-              Showing {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''}
-              {regionFilter !== "_all" ? ` in ${regionFilter}` : ''}
-              {ownerFilter !== "_all" ? ` for ${ownerFilter}` : ''}
-              {quarterFilter !== "_all" ? ` during ${quarterFilter}` : ''}
-            </div>
+        <CardDescription className="flex justify-between items-center">
+          <span>Update status and performance metrics for your campaigns</span>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 gap-1"
+              onClick={() => {
+                setRegionFilter("_all");
+                setOwnerFilter("_all");
+              }}
+            >
+              <FilterX className="h-3.5 w-3.5" /> Clear Filters
+            </Button>
           </div>
-
-          {/* Campaign Execution Table */}
-          <div className="overflow-auto border rounded-md">
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <Label htmlFor="region-filter">Filter by Region</Label>
+            <Select 
+              value={regionFilter}
+              onValueChange={setRegionFilter}
+            >
+              <SelectTrigger id="region-filter" className="mt-1">
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Regions</SelectItem>
+                {regions.filter(r => r !== "_all").map((region) => (
+                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="owner-filter">Filter by Owner</Label>
+            <Select 
+              value={ownerFilter}
+              onValueChange={setOwnerFilter}
+            >
+              <SelectTrigger id="owner-filter" className="mt-1">
+                <SelectValue placeholder="All Owners" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Owners</SelectItem>
+                {owners.filter(o => o !== "_all").map((owner) => (
+                  <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        {filteredCampaigns.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Search className="h-12 w-12 mx-auto mb-3 opacity-20" />
+            <p>No campaigns match your current filters</p>
+            <p className="text-sm mt-1">Try changing your filter criteria</p>
+          </div>
+        ) : (
+          <div className="rounded-md border overflow-auto max-h-[calc(100vh-24rem)]">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-muted/50 sticky top-0">
                 <TableRow>
-                  <TableHead className="w-[200px]">Campaign</TableHead>
+                  <TableHead className="w-[300px]">Campaign</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>PO Raised?</TableHead>
-                  <TableHead>Campaign Code / Issue Link</TableHead>
+                  <TableHead>Campaign Code</TableHead>
+                  <TableHead>Issue Link</TableHead>
                   <TableHead>Actual Cost</TableHead>
                   <TableHead>Actual Leads</TableHead>
                   <TableHead>Actual MQLs</TableHead>
-                  <TableHead>Forecasted Cost</TableHead>
-                  <TableHead>Variance</TableHead>
                 </TableRow>
               </TableHeader>
+              
               <TableBody>
-                {filteredCampaigns.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center">
-                      No campaigns to display. Please adjust your filters or add campaigns in the Planning tab.
+                {filteredCampaigns.map((campaign) => (
+                  <TableRow key={campaign.id} className={campaign.status === "Cancelled" ? "opacity-60" : ""}>
+                    <TableCell className="font-medium">
+                      <div className="text-sm font-medium">{campaign.description || "Untitled Campaign"}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {campaign.owner} • {campaign.region} • {campaign.country}
+                      </div>
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Select 
+                        value={campaign.status || "Planning"} 
+                        disabled={campaign.status === "Cancelled"}
+                        onValueChange={(value) => updateCampaign(campaign.id, "status", value)}
+                      >
+                        <SelectTrigger className="w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Planning">Planning</SelectItem>
+                          <SelectItem value="On Track">On Track</SelectItem>
+                          <SelectItem value="Shipped">Shipped</SelectItem>
+                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id={`po-${campaign.id}`}
+                          checked={campaign.poRaised}
+                          disabled={campaign.status === "Cancelled"}
+                          onCheckedChange={(checked) => updateCampaign(campaign.id, "poRaised", checked)}
+                        />
+                        <Label htmlFor={`po-${campaign.id}`} className="cursor-pointer">
+                          {campaign.poRaised ? "Yes" : "No"}
+                        </Label>
+                      </div>
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Input
+                        placeholder="SF-12345"
+                        value={campaign.campaignCode || ""}
+                        disabled={campaign.status === "Cancelled"}
+                        onChange={(e) => updateCampaign(campaign.id, "campaignCode", e.target.value)}
+                        className="w-32"
+                      />
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Input
+                        type="url"
+                        placeholder="https://..."
+                        value={campaign.issueLink || ""}
+                        disabled={campaign.status === "Cancelled"}
+                        onChange={(e) => updateCampaign(campaign.id, "issueLink", e.target.value)}
+                        className="w-40"
+                      />
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Input
+                        type="number"
+                        placeholder="$"
+                        value={campaign.actualCost === "" ? "" : campaign.actualCost}
+                        disabled={campaign.status === "Cancelled"}
+                        onChange={(e) => {
+                          const value = e.target.value === "" ? "" : Number(e.target.value);
+                          updateCampaign(campaign.id, "actualCost", value);
+                        }}
+                        className="w-24"
+                      />
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Input
+                        type="number"
+                        placeholder="#"
+                        value={campaign.actualLeads === "" ? "" : campaign.actualLeads}
+                        disabled={campaign.status === "Cancelled"}
+                        onChange={(e) => {
+                          const value = e.target.value === "" ? "" : Number(e.target.value);
+                          updateCampaign(campaign.id, "actualLeads", value);
+                        }}
+                        className="w-20"
+                      />
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Input
+                        type="number"
+                        placeholder="#"
+                        value={campaign.actualMQLs === "" ? "" : campaign.actualMQLs}
+                        disabled={campaign.status === "Cancelled"}
+                        onChange={(e) => {
+                          const value = e.target.value === "" ? "" : Number(e.target.value);
+                          updateCampaign(campaign.id, "actualMQLs", value);
+                        }}
+                        className="w-20"
+                      />
                     </TableCell>
                   </TableRow>
-                ) : (
-                  filteredCampaigns.map(campaign => {
-                    // Calculate variance
-                    const hasBothCosts = typeof campaign.forecastedCost === 'number' && 
-                                         typeof campaign.actualCost === 'number';
-                    const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
-                    const actualCost = typeof campaign.actualCost === 'number' ? campaign.actualCost : 0;
-                    const variance = hasBothCosts ? actualCost - forecastedCost : null;
-                    const variancePercent = hasBothCosts && forecastedCost !== 0 ? 
-                      (variance as number) / forecastedCost * 100 : null;
-
-                    return (
-                      <TableRow key={campaign.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex flex-col">
-                            <span>{campaign.description || "Untitled Campaign"}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {campaign.campaignType} • {campaign.region} • {campaign.country}
-                            </span>
-                          </div>
-                        </TableCell>
-
-                        {/* Status Dropdown */}
-                        <TableCell>
-                          <Select 
-                            value={campaign.status || "_none"} 
-                            onValueChange={(value) => handleTextChange(campaign.id, 'status', value)}
-                          >
-                            <SelectTrigger className="w-[130px]">
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="_none">Select...</SelectItem>
-                              <SelectItem value="Planning">Planning</SelectItem>
-                              <SelectItem value="On Track">On Track</SelectItem>
-                              <SelectItem value="Shipped">Shipped</SelectItem>
-                              <SelectItem value="Cancelled">Cancelled</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-
-                        {/* PO Raised Toggle */}
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id={`po-raised-${campaign.id}`}
-                              checked={campaign.poRaised || false}
-                              onCheckedChange={(checked) => handleToggleChange(campaign.id, 'poRaised', checked)}
-                              disabled={isCampaignLocked(campaign)}
-                            />
-                            <Label htmlFor={`po-raised-${campaign.id}`} className="sr-only">PO Raised</Label>
-                          </div>
-                        </TableCell>
-
-                        {/* Campaign Code and Issue Link */}
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              value={campaign.campaignCode || ""}
-                              onChange={(e) => handleTextChange(campaign.id, 'campaignCode', e.target.value)}
-                              placeholder="SF Campaign Code"
-                              className="w-[120px]"
-                              disabled={isCampaignLocked(campaign)}
-                            />
-                            <Input
-                              value={campaign.issueLink || ""}
-                              onChange={(e) => handleTextChange(campaign.id, 'issueLink', e.target.value)}
-                              placeholder="Issue URL"
-                              className="w-[120px]"
-                              disabled={isCampaignLocked(campaign)}
-                            />
-                            {campaign.issueLink && (
-                              <a 
-                                href={campaign.issueLink} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-primary hover:text-primary/80"
-                              >
-                                <LinkIcon className="h-4 w-4" />
-                              </a>
-                            )}
-                          </div>
-                        </TableCell>
-
-                        {/* Actual Cost */}
-                        <TableCell>
-                          <Input
-                            type="number"
-                            value={typeof campaign.actualCost !== 'undefined' ? (campaign.actualCost === "" ? "" : campaign.actualCost) : ""}
-                            onChange={(e) => handleNumericChange(campaign.id, 'actualCost', e.target.value)}
-                            placeholder="USD"
-                            className="w-[100px]"
-                            disabled={isCampaignLocked(campaign)}
-                          />
-                        </TableCell>
-
-                        {/* Actual Leads */}
-                        <TableCell>
-                          <Input
-                            type="number"
-                            value={typeof campaign.actualLeads !== 'undefined' ? (campaign.actualLeads === "" ? "" : campaign.actualLeads) : ""}
-                            onChange={(e) => handleNumericChange(campaign.id, 'actualLeads', e.target.value)}
-                            placeholder="#"
-                            className="w-[80px]"
-                            disabled={isCampaignLocked(campaign)}
-                          />
-                        </TableCell>
-
-                        {/* Actual MQLs */}
-                        <TableCell>
-                          <Input
-                            type="number"
-                            value={typeof campaign.actualMQLs !== 'undefined' ? (campaign.actualMQLs === "" ? "" : campaign.actualMQLs) : ""}
-                            onChange={(e) => handleNumericChange(campaign.id, 'actualMQLs', e.target.value)}
-                            placeholder="#"
-                            className="w-[80px]"
-                            disabled={isCampaignLocked(campaign)}
-                          />
-                        </TableCell>
-
-                        {/* Forecasted Cost (read-only) */}
-                        <TableCell className="text-muted-foreground">
-                          {typeof campaign.forecastedCost === 'number' 
-                            ? formatCurrency(campaign.forecastedCost) 
-                            : "$0"}
-                        </TableCell>
-
-                        {/* Variance */}
-                        <TableCell>
-                          {hasBothCosts && (
-                            <div className={`${variance as number > 0 ? "text-red-600" : "text-green-600"}`}>
-                              {formatCurrency(variance as number)} 
-                              {variancePercent !== null && (
-                                <span className="text-xs ml-1">
-                                  ({variancePercent > 0 ? "+" : ""}{Math.round(variancePercent)}%)
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
+                ))}
               </TableBody>
-              {filteredCampaigns.length > 0 && (
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-right font-medium">
-                      Total Costs:
-                    </TableCell>
-                    <TableCell className="font-bold">
-                      {formatCurrency(totalActualCost)}
-                    </TableCell>
-                    <TableCell colSpan={2}></TableCell>
-                    <TableCell className="font-bold">
-                      {formatCurrency(totalForecastedCost)}
-                    </TableCell>
-                    <TableCell className={`font-bold ${totalActualCost > totalForecastedCost ? "text-red-600" : "text-green-600"}`}>
-                      {formatCurrency(totalActualCost - totalForecastedCost)}
-                      {totalForecastedCost > 0 && (
-                        <span className="text-xs ml-1">
-                          ({Math.round((totalActualCost / totalForecastedCost - 1) * 100)}%)
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
-              )}
             </Table>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );

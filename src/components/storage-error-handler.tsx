@@ -1,88 +1,44 @@
-import { useEffect, useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { X, WarningCircle, ArrowClockwise } from "@phosphor-icons/react";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Info } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface StorageErrorHandlerProps {
-  onRetry?: () => void;
-}
-
-export function StorageErrorHandler({ onRetry }: StorageErrorHandlerProps) {
-  const [showError, setShowError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    // Reset any error state
-    setShowError(false);
-    
-    // Listen for storage error events but don't actually show them
+export function StorageErrorHandler({ onRetry }: { onRetry: () => void }) {
+  const [hasError, setHasError] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState("");
+  
+  // Listen for storage errors
+  React.useEffect(() => {
     const handleStorageError = (event: any) => {
-      // Intentionally not showing errors
-      console.log("Storage error received but suppressed:", event.detail?.message);
-      // Do not set showError to true to avoid displaying the error UI
+      if (event.detail?.type === "storage" && event.detail?.message) {
+        setHasError(true);
+        setErrorMessage(event.detail.message);
+      }
     };
-
-    window.addEventListener('storageError', handleStorageError as EventListener);
     
-    return () => {
-      window.removeEventListener('storageError', handleStorageError as EventListener);
-    };
+    window.addEventListener("app:error", handleStorageError);
+    return () => window.removeEventListener("app:error", handleStorageError);
   }, []);
-
-  const handleRetry = () => {
-    if (onRetry) {
-      onRetry();
-    } else {
-      // Default retry action: reload the page
-      window.location.reload();
-    }
-    setShowError(false);
-  };
-
-  const handleDismiss = () => {
-    setShowError(false);
-  };
-
-  if (!showError) {
-    return null;
-  }
-
+  
+  // If no errors, don't render anything
+  if (!hasError) return null;
+  
   return (
-    <Card className="border border-red-300 shadow-sm mb-6">
+    <Card className="border border-red-200 bg-red-50">
       <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-red-700">
-          <WarningCircle className="h-5 w-5" /> Storage Error Detected
+        <CardTitle className="text-red-700 flex items-center gap-2">
+          <Info className="h-5 w-5" />
+          Storage Error
         </CardTitle>
-        <CardDescription className="text-red-600">
-          There was a problem loading your saved data
-        </CardDescription>
       </CardHeader>
-      
-      <CardContent className="space-y-4">
-        <Alert variant="destructive" className="bg-red-50 border-red-200">
-          <WarningCircle className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-800">Error Details</AlertTitle>
-          <AlertDescription className="text-red-700">
-            {errorMessage || "Failed to load saved data. This may be due to corrupted local storage."}
-          </AlertDescription>
-        </Alert>
-        
-        <div className="flex justify-end gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleDismiss}
-            className="flex items-center gap-1"
-          >
-            <X className="h-4 w-4" /> Dismiss
-          </Button>
-          <Button 
-            onClick={handleRetry}
-            className="flex items-center gap-1 bg-red-600 hover:bg-red-700"
-          >
-            <ArrowClockwise className="h-4 w-4" /> Retry Loading
-          </Button>
-        </div>
+      <CardContent>
+        <p className="text-red-600 mb-4">{errorMessage || "There was an error loading saved data"}</p>
+        <Button variant="outline" onClick={() => {
+          setHasError(false);
+          onRetry();
+        }}>
+          Try Again
+        </Button>
       </CardContent>
     </Card>
   );
