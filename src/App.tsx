@@ -27,7 +27,7 @@ import { runDataMigrations } from "@/services/migration-service"
 import { initAutoGitHubSync } from "@/services/auto-github-sync"
 import { Button } from "@/components/ui/button"
 import { calculateRegionalMetrics } from "@/services/budget-service"
-import { PrimerFooter } from "@/components/primer/footer"
+import { PrimerFooter } from "@/components/primer"
 
 // Simple Header component
 function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) {
