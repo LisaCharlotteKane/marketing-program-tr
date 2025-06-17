@@ -66,7 +66,7 @@ export function CampaignTable({
   
   // Derive unique values for filters
   const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
-  const quarters = ["_all", ...new Set(campaigns.map(c => c.quarterMonth))].filter(Boolean);
+  const availableQuarters = ["_all", ...new Set(campaigns.map(c => c.quarterMonth))].filter(Boolean);
   const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
   
   // Default data options
@@ -382,7 +382,7 @@ export function CampaignTable({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_all">All Quarters</SelectItem>
-                {quarters.map(quarter => (
+                {availableQuarters.map(quarter => (
                   <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                 ))}
               </SelectContent>
