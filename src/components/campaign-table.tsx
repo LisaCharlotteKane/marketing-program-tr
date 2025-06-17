@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Checkbox } from "@/components/ui/checkbox";
 import { ROIDashboard } from "@/components/roi-dashboard";
 import { CSVUploader } from "@/components/csv-uploader";
+import { GitHubButton, GitHubAvatar } from "@/components/primer";
 import { toast } from "sonner";
 import { 
   PlusCircle, 
@@ -555,9 +556,15 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
         <div className="flex flex-col md:flex-row justify-between items-center gap-3">
           {/* Campaign count and status info */}
           <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-            <div className="text-sm font-medium">
+            <div className="text-sm font-medium flex items-center gap-2">
               {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} 
-              {selectedOwner !== "_all" ? ` for ${selectedOwner}` : ''}
+              {selectedOwner !== "_all" ? (
+                <div className="flex items-center gap-2">
+                  <span>for</span>
+                  <GitHubAvatar name={selectedOwner} size="small" />
+                  <span>{selectedOwner}</span>
+                </div>
+              ) : ''}
               {selectedRegion !== "_all" ? ` in ${selectedRegion}` : ''}
               {selectedQuarter !== "_all" ? ` during ${selectedQuarter}` : ''}
             </div>
@@ -571,38 +578,32 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
           {/* Action buttons */}
           <div className="flex space-x-2">
             {/* Export Buttons */}
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <GitHubButton 
+              variant="secondary" 
+              size="small" 
               onClick={exportCampaignsAsJSON}
-              className="flex items-center gap-2"
-              title="Export data to JSON file (for backup)"
+              icon={<FloppyDisk className="h-4 w-4" />}
             >
-              <FloppyDisk className="h-4 w-4" />
               Export JSON
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            </GitHubButton>
+            <GitHubButton 
+              variant="secondary" 
+              size="small" 
               onClick={exportToCSV}
-              className="flex items-center gap-2"
-              title="Export data to CSV"
+              icon={<Download className="h-4 w-4" />}
             >
-              <Download className="h-4 w-4" />
               Export CSV
-            </Button>
+            </GitHubButton>
             
             {/* Import JSON Button */}
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <GitHubButton 
+              variant="secondary" 
+              size="small" 
               onClick={() => jsonFileInputRef.current?.click()}
-              className="flex items-center gap-2"
-              title="Import from JSON backup file"
+              icon={<UploadSimple className="h-4 w-4" />}
             >
-              <UploadSimple className="h-4 w-4" />
               Import JSON
-            </Button>
+            </GitHubButton>
             <input
               type="file"
               ref={jsonFileInputRef}
@@ -612,14 +613,13 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
             />
             
             {/* Add Campaign Button */}
-            <Button 
+            <GitHubButton 
               onClick={addCampaign} 
-              size="sm"
-              className="flex items-center gap-2"
+              size="small"
+              icon={<PlusCircle className="h-4 w-4" />}
             >
-              <PlusCircle className="h-4 w-4" />
               Add Campaign
-            </Button>
+            </GitHubButton>
           </div>
         </div>
       </div>

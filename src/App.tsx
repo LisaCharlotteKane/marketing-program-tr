@@ -20,6 +20,7 @@ import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator"
 import { BudgetLockInfo } from "@/components/budget-lock-info"
 import { StorageErrorHandler } from "@/components/storage-error-handler"
+import { PrimerHeader, PrimerFooter, PromoBanner } from "@/components/primer"
 import { Toaster, toast } from "sonner"
 import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
 import { useRegionalBudgets, RegionalBudget, RegionalBudgets } from "@/hooks/useRegionalBudgets"
@@ -288,19 +289,30 @@ function App() {
     });
   }, [campaigns]);
 
+  // Handle banner dismiss
+  const [showBanner, setShowBanner] = useState(true);
+
   return (
     <div className="min-h-screen bg-background font-sans text-foreground p-4 md:p-8">
       <Toaster position="top-right" richColors closeButton />
+      {showBanner && (
+        <PromoBanner 
+          message="Introducing GitHub Copilot for Marketing Planning - Get AI-powered campaign ideas" 
+          actionText="Learn more" 
+          actionUrl="https://github.com/features/copilot"
+          onDismiss={() => setShowBanner(false)}
+        />
+      )}
       <div className="max-w-4xl mx-auto space-y-6">
         <StorageErrorHandler onRetry={handleRetryDataLoad} />
         
-        <header className="text-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Marketing Campaign Calculator</h1>
-          <p className="text-muted-foreground flex items-center justify-center gap-2">
-            Forecast campaign performance and track execution
-            <AutoSaveIndicator className="ml-2" forceSave={saveStatus.forceSave} />
-          </p>
-        </header>
+        <PrimerHeader 
+          title="Marketing Campaign Calculator" 
+          subtitle="Forecast campaign performance and track execution" 
+        />
+        <div className="flex items-center justify-center mb-4">
+          <AutoSaveIndicator className="ml-2" forceSave={saveStatus.forceSave} />
+        </div>
 
 
         <Tabs defaultValue="planning" className="w-full">
@@ -535,6 +547,9 @@ function App() {
             <GitHubSync campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
         </Tabs>
+      </div>
+      <div className="mt-8">
+        <PrimerFooter />
       </div>
     </div>
   )

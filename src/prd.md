@@ -43,12 +43,13 @@
 - **Simplicity Spectrum**: Clean, focused interface that prioritizes clear information hierarchy
 
 ### Color Strategy
-- **Color Scheme Type**: Analogous with accent colors
-- **Primary Color**: Blue (#1e9df1) - representing technology and intelligence
+- **Color Scheme Type**: Analogous with accent colors aligned with GitHub's design language
+- **Primary Color**: Blue (#1e9df1) - representing GitHub's brand color
 - **Secondary Colors**: Dark gray (#0f1419) for UI elements and text
 - **Accent Color**: Light blue (#E3ECF6) for highlighting areas of focus
 - **Color Psychology**: Blue conveys trust and reliability while maintaining professional appearance
 - **Foreground/Background Pairings**: High contrast between text and background elements to ensure readability
+- **GitHub Branding**: Integration with @primer/react-brand ensures components match GitHub's visual identity
 
 ### Typography System
 - **Font Pairing Strategy**: Inter for both headings and body text, maintaining visual consistency
@@ -79,6 +80,13 @@
 - **Component Hierarchy**: Primary generate button, secondary add buttons
 - **Spacing System**: Consistent padding using Tailwind's spacing scale
 - **Mobile Adaptation**: Stacked cards on mobile versus side-by-side on desktop
+- **GitHub Primer Integration**: Uses @primer/react-brand for consistent GitHub branding through:
+  - PrimerHeader: GitHub-styled header with title and subtitle
+  - PrimerFooter: Standard GitHub footer with copyright and links
+  - GitHubButton: Branded buttons matching GitHub's design system
+  - GitHubAvatar: User avatars with initials fallback
+  - GitHubCard: Content cards with various emphasis levels
+  - PromoBanner: Promotional announcement banner
 
 ### Visual Consistency Framework
 - **Design System Approach**: Component-based design consistent with existing application

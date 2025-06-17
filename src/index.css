@@ -7,6 +7,11 @@
   }
 }
 
+/* Primer React Brand integration */
+div[data-primer-theme] {
+  font-family: var(--font-sans, 'Inter', sans-serif) !important;
+}
+
 :root {
   /* Base colors */
   --background: #ffffff;
