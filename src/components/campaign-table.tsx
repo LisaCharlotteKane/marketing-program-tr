@@ -490,41 +490,7 @@ export function CampaignTable({
             Add Campaign
           </Button>
           
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={exportToCsv}
-          >
-            <DownloadSimple className="h-4 w-4" />
-            Export CSV
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={downloadTemplate}
-          >
-            <DownloadSimple className="h-4 w-4" />
-            Download Template
-          </Button>
-          
-          <div className="relative">
-            <Button
-              variant="outline"
-              className="flex items-center gap-2"
-              onClick={() => jsonFileInputRef.current?.click()}
-            >
-              <UploadSimple className="h-4 w-4" />
-              Upload JSON
-            </Button>
-            <input
-              type="file"
-              ref={jsonFileInputRef}
-              accept=".json"
-              className="hidden"
-              onChange={importFromJson}
-            />
-          </div>
+          {/* Export CSV and Upload JSON buttons removed */}
         </div>
       </div>
       {/* Display error if no campaigns match filters */}

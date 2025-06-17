@@ -184,14 +184,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           <div className="flex items-center gap-2">
             <PresentationChart className="h-5 w-5" /> Campaign Reporting Dashboard
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-1"
-            onClick={exportToCSV}
-          >
-            <Download className="h-4 w-4" /> Export to CSV
-          </Button>
+          {/* Export to CSV button removed */}
         </CardTitle>
         <CardDescription>Analyze campaign performance metrics</CardDescription>
       </CardHeader>
