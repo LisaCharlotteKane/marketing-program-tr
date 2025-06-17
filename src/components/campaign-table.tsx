@@ -58,6 +58,9 @@ export function CampaignTable({
   // Mobile responsive state
   const [isMobile, setIsMobile] = useState(false);
   
+  // Selected campaigns for bulk operations
+  const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
+  
   // Check for mobile on mount
   useEffect(() => {
     const checkMobile = () => {
@@ -208,6 +211,37 @@ export function CampaignTable({
   // Remove a row (campaign)
   const removeCampaign = (id: string) => {
     setCampaigns(campaigns.filter(campaign => campaign.id !== id));
+  };
+
+  // Handle bulk deletion of selected campaigns
+  const removeSelectedCampaigns = () => {
+    if (selectedCampaigns.length === 0) return;
+    
+    setCampaigns(campaigns.filter(campaign => !selectedCampaigns.includes(campaign.id)));
+    setSelectedCampaigns([]); // Clear selection after deletion
+    toast.success(`${selectedCampaigns.length} campaign(s) deleted successfully`);
+  };
+  
+  // Toggle selection of a campaign for bulk operations
+  const toggleCampaignSelection = (id: string) => {
+    setSelectedCampaigns(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(campaignId => campaignId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+  
+  // Toggle selection of all filtered campaigns
+  const toggleSelectAll = () => {
+    if (selectedCampaigns.length === filteredCampaigns.length) {
+      // If all are selected, deselect all
+      setSelectedCampaigns([]);
+    } else {
+      // Otherwise, select all filtered campaigns
+      setSelectedCampaigns(filteredCampaigns.map(c => c.id));
+    }
   };
 
   // Handle cell value changes
@@ -493,6 +527,17 @@ export function CampaignTable({
             Add Campaign
           </Button>
           
+          {selectedCampaigns.length > 0 && (
+            <Button 
+              variant="destructive" 
+              className="flex items-center gap-2"
+              onClick={removeSelectedCampaigns}
+            >
+              <TrashSimple className="h-4 w-4" />
+              Delete Selected ({selectedCampaigns.length})
+            </Button>
+          )}
+          
           {/* Export CSV and Upload JSON buttons removed */}
         </div>
       </div>
@@ -525,6 +570,13 @@ export function CampaignTable({
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow>
+              <TableHead className="w-[50px]">
+                <Checkbox 
+                  checked={filteredCampaigns.length > 0 && selectedCampaigns.length === filteredCampaigns.length}
+                  onCheckedChange={toggleSelectAll}
+                  aria-label="Select all campaigns"
+                />
+              </TableHead>
               <TableHead className="w-[180px]">Campaign Name</TableHead>
               <TableHead className="w-[180px]">Campaign Type</TableHead>
               <TableHead className="w-[140px]">Strategic Pillar</TableHead>
@@ -549,8 +601,17 @@ export function CampaignTable({
             {filteredCampaigns.map(campaign => (
               <TableRow 
                 key={campaign.id}
-                className={isCampaignComplete(campaign) ? "bg-muted/20" : ""}
+                className={`${isCampaignComplete(campaign) ? "bg-muted/20" : ""} ${selectedCampaigns.includes(campaign.id) ? "bg-accent/30" : ""}`}
               >
+                {/* Selection Checkbox */}
+                <TableCell>
+                  <Checkbox 
+                    checked={selectedCampaigns.includes(campaign.id)}
+                    onCheckedChange={() => toggleCampaignSelection(campaign.id)}
+                    aria-label={`Select campaign ${campaign.campaignName}`}
+                  />
+                </TableCell>
+                
                 {/* Campaign Name */}
                 <TableCell>
                   <Input

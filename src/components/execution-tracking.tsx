@@ -5,9 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FilterX, ClipboardText, Search } from "@phosphor-icons/react";
+import { FilterX, ClipboardText, Search, TrashSimple } from "@phosphor-icons/react";
 import { type Campaign } from "@/components/campaign-table";
+import { toast } from "sonner";
 
 export function ExecutionTracking({ 
   campaigns, 
@@ -20,6 +22,9 @@ export function ExecutionTracking({
   const [regionFilter, setRegionFilter] = useState("_all");
   const [ownerFilter, setOwnerFilter] = useState("_all");
   
+  // Selected campaigns for bulk operations
+  const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
+  
   // Get unique regions and owners from campaigns
   const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
   const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
@@ -31,6 +36,37 @@ export function ExecutionTracking({
         campaign.id === id ? { ...campaign, [key]: value } : campaign
       )
     );
+  };
+  
+  // Handle bulk deletion of selected campaigns
+  const removeSelectedCampaigns = () => {
+    if (selectedCampaigns.length === 0) return;
+    
+    setCampaigns(campaigns.filter(campaign => !selectedCampaigns.includes(campaign.id)));
+    setSelectedCampaigns([]); // Clear selection after deletion
+    toast.success(`${selectedCampaigns.length} campaign(s) deleted successfully`);
+  };
+  
+  // Toggle selection of a campaign for bulk operations
+  const toggleCampaignSelection = (id: string) => {
+    setSelectedCampaigns(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(campaignId => campaignId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+  
+  // Toggle selection of all filtered campaigns
+  const toggleSelectAll = () => {
+    if (selectedCampaigns.length === filteredCampaigns.length) {
+      // If all are selected, deselect all
+      setSelectedCampaigns([]);
+    } else {
+      // Otherwise, select all filtered campaigns
+      setSelectedCampaigns(filteredCampaigns.map(c => c.id));
+    }
   };
   
   // Filter campaigns based on selected filters
@@ -56,6 +92,16 @@ export function ExecutionTracking({
         <CardDescription className="flex justify-between items-center">
           <span>Update status and performance metrics for your campaigns</span>
           <div className="flex items-center gap-2">
+            {selectedCampaigns.length > 0 && (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                className="h-8 gap-1"
+                onClick={removeSelectedCampaigns}
+              >
+                <TrashSimple className="h-3.5 w-3.5" /> Delete ({selectedCampaigns.length})
+              </Button>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
@@ -63,6 +109,7 @@ export function ExecutionTracking({
               onClick={() => {
                 setRegionFilter("_all");
                 setOwnerFilter("_all");
+                setSelectedCampaigns([]);
               }}
             >
               <FilterX className="h-3.5 w-3.5" /> Clear Filters
@@ -121,6 +168,13 @@ export function ExecutionTracking({
             <Table>
               <TableHeader className="bg-muted/50 sticky top-0">
                 <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox 
+                      checked={filteredCampaigns.length > 0 && selectedCampaigns.length === filteredCampaigns.length}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all campaigns"
+                    />
+                  </TableHead>
                   <TableHead className="w-[200px]">Campaign Name</TableHead>
                   <TableHead className="w-[300px]">Details</TableHead>
                   <TableHead>Status</TableHead>
@@ -134,7 +188,17 @@ export function ExecutionTracking({
               
               <TableBody>
                 {filteredCampaigns.map((campaign) => (
-                  <TableRow key={campaign.id} className={campaign.status === "Cancelled" ? "opacity-60" : ""}>
+                  <TableRow 
+                    key={campaign.id} 
+                    className={`${campaign.status === "Cancelled" ? "opacity-60" : ""} ${selectedCampaigns.includes(campaign.id) ? "bg-accent/30" : ""}`}
+                  >
+                    <TableCell>
+                      <Checkbox 
+                        checked={selectedCampaigns.includes(campaign.id)}
+                        onCheckedChange={() => toggleCampaignSelection(campaign.id)}
+                        aria-label={`Select campaign ${campaign.campaignName}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">
                       <Input
                         type="text"
