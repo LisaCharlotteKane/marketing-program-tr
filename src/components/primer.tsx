@@ -14,7 +14,7 @@ export function PrimerFooter() {
   const year = new Date().getFullYear();
   
   return (
-    <footer className="border-t py-6 text-center text-sm text-muted-foreground">
+    <div className="primer-footer border-t py-6 text-center text-sm text-muted-foreground">
       <div className="max-w-4xl mx-auto">
         <p>© {year} GitHub, Inc. All rights reserved.</p>
         <p className="mt-2">
@@ -25,7 +25,7 @@ export function PrimerFooter() {
           <a href="https://github.com/about" className="hover:underline">About</a>
         </p>
       </div>
-    </footer>
+    </div>
   );
 }
 

@@ -1,28 +1,23 @@
-import { useState, useEffect, useRef } from "react";
-import { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import React, { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ROIDashboard } from "@/components/roi-dashboard";
-import { CSVUploader } from "@/components/csv-uploader";
-import { GitHubButton, GitHubAvatar } from "@/components/primer";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Switch } from "@/components/ui/switch";
+import { TrashSimple, FileCsv, Plus, ChartBar, FilterX, DownloadSimple, UploadSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { 
-  PlusCircle, 
-  Trash, 
-  Download,
-  UploadSimple,
-  Check,
-  ChartLineUp,
-  InfoCircle,
-  FloppyDisk
-} from "@phosphor-icons/react";
+import Papa from "papaparse";
+import { CsvTemplateButton } from "@/components/csv-template-button";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
-// Type definitions
+// Campaign type interface
 export interface Campaign {
   id: string;
   campaignType: string;
@@ -34,36 +29,47 @@ export interface Campaign {
   country: string;
   owner: string;
   description: string;
-  forecastedCost: number | "";
-  expectedLeads: number | "";
-  impactedRegions?: string[]; // Optional field for Digital region campaigns
-  // Calculated fields (not editable)
-  mql?: number;
-  sql?: number;
-  opportunities?: number;
-  pipelineForecast?: number;
-  // Execution tracking fields
-  status?: string;
-  poRaised?: boolean;
-  campaignCode?: string;
-  issueLink?: string;
-  actualCost: number | "";
-  actualLeads?: number | "";
-  actualMQLs?: number | "";
-}
-
-interface CampaignTableProps {
-  campaigns: Campaign[];
-  setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>>;
-}
-
-export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) => {
-  // Filter state
-  const [selectedOwner, setSelectedOwner] = useState<string>("_all");
-  const [selectedRegion, setSelectedRegion] = useState<string>("_all");
-  const [selectedQuarter, setSelectedQuarter] = useState<string>("_all");
+  forecastedCost: number | string;
+  expectedLeads: number | string;
+  impactedRegions?: string[];
   
-  // Constants for dropdown options
+  // Execution tracking fields
+  status: string;
+  poRaised: boolean;
+  campaignCode: string;
+  issueLink: string;
+  actualCost: number | string;
+  actualLeads: number | string;
+  actualMQLs: number | string;
+  
+  // Calculated fields
+  mql: number;
+  sql: number;
+  opportunities: number;
+  pipelineForecast: number;
+}
+
+export function CampaignTable({ 
+  campaigns, 
+  setCampaigns 
+}: { 
+  campaigns: Campaign[], 
+  setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>> 
+}) {
+  // Mobile responsive state
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  
+  // Filter states
+  const [selectedRegion, setSelectedRegion] = useState("_all");
+  const [selectedQuarter, setSelectedQuarter] = useState("_all");
+  const [selectedOwner, setOwnerFilter] = useState("_all");
+  
+  // Derive unique values for filters
+  const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
+  const quarters = ["_all", ...new Set(campaigns.map(c => c.quarterMonth))].filter(Boolean);
+  const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
+  
+  // Default data options
   const campaignTypes = [
     "In-Account Events (1:1)",
     "Exec Engagement Programs",
@@ -80,51 +86,74 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     "User Groups",
     "Contractor/Infrastructure"
   ];
-
+  
   const pillars = [
     "Account Growth and Product Adoption",
     "Pipeline Acceleration & Executive Engagement",
     "Brand Awareness & Top of Funnel Demand Generation",
     "New Logo Acquisition"
   ];
-
+  
   const revenuePlays = [
     "Accelerate developer productivity with Copilot in VS Code and GitHub",
     "Secure all developer workloads with the power of AI",
     "All"
   ];
-
-  const fiscalYears = ["FY24", "FY25", "FY26"];
+  
+  const fiscalYears = ["FY25", "FY26"];
   
   const quarters = [
-    "Q1 - July", "Q1 - August", "Q1 - September",
-    "Q2 - October", "Q2 - November", "Q2 - December", 
-    "Q3 - January", "Q3 - February", "Q3 - March",
-    "Q4 - April", "Q4 - May", "Q4 - June"
+    "Q1 - July",
+    "Q1 - August",
+    "Q1 - September",
+    "Q2 - October",
+    "Q2 - November",
+    "Q2 - December",
+    "Q3 - January",
+    "Q3 - February",
+    "Q3 - March",
+    "Q4 - April",
+    "Q4 - May",
+    "Q4 - June"
   ];
   
   const regions = ["North APAC", "South APAC", "SAARC", "Digital"];
   
   const countries = [
-    "Afghanistan", "Australia", "Bangladesh", "Bhutan", "Brunei", 
-    "Cambodia", "China", "Hong Kong", "India", "Indonesia", "Japan", 
-    "Laos", "Malaysia", "Maldives", "Myanmar", "Nepal", "New Zealand", 
-    "Pakistan", "Philippines", "Singapore", "South Korea", "Sri Lanka", 
-    "Taiwan", "Thailand", "Vietnam", "X Apac"
+    "Afghanistan",
+    "Australia",
+    "Bangladesh",
+    "Bhutan",
+    "Brunei",
+    "Cambodia",
+    "China",
+    "Hong Kong",
+    "India",
+    "Indonesia",
+    "Japan",
+    "Laos",
+    "Malaysia",
+    "Maldives",
+    "Myanmar",
+    "Nepal",
+    "New Zealand",
+    "Pakistan",
+    "Philippines",
+    "Singapore",
+    "South Korea",
+    "Sri Lanka",
+    "Taiwan",
+    "Thailand",
+    "Vietnam",
+    "X Apac"
   ];
-
-  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
   
-  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
-
-  // Format currency
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(value);
-  };
+  const owners = [
+    "Giorgia Parham",
+    "Tomoko Tanaka",
+    "Beverly Leung",
+    "Shruti Narang"
+  ];
 
   // Add a new row (campaign)
   const addCampaign = () => {
@@ -178,13 +207,13 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
             const sqlValue = Math.round(value * 0.06); // 6% of leads
             const oppsValue = Math.round(sqlValue * 0.8); // 80% of SQLs
             const pipelineValue = oppsValue * 50000; // $50K per opportunity
-
+            
             updatedCampaign.mql = mqlValue;
             updatedCampaign.sql = sqlValue;
             updatedCampaign.opportunities = oppsValue;
             updatedCampaign.pipelineForecast = pipelineValue;
           } else {
-            // Reset calculated values if expectedLeads is empty or invalid
+            // Reset calculated values if input is invalid
             updatedCampaign.mql = 0;
             updatedCampaign.sql = 0;
             updatedCampaign.opportunities = 0;
@@ -198,235 +227,95 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     }));
   };
 
-  // Handle strategic pillar selection
+  // Toggle strategic pillar selection
   const togglePillar = (id: string, pillar: string) => {
     setCampaigns(campaigns.map(campaign => {
       if (campaign.id === id) {
-        const pillars = [...campaign.strategicPillars];
-        const index = pillars.indexOf(pillar);
+        const currentPillars = [...campaign.strategicPillars];
+        const pillarIndex = currentPillars.indexOf(pillar);
         
-        if (index > -1) {
-          pillars.splice(index, 1);
+        if (pillarIndex >= 0) {
+          // Remove if already selected
+          currentPillars.splice(pillarIndex, 1);
         } else {
-          pillars.push(pillar);
+          // Add if not selected
+          currentPillars.push(pillar);
         }
         
-        return { ...campaign, strategicPillars: pillars };
+        return {
+          ...campaign,
+          strategicPillars: currentPillars
+        };
       }
       return campaign;
     }));
   };
 
-  // Handle impacted regions selection
-  const toggleImpactedRegion = (id: string, region: string) => {
-    setCampaigns(campaigns.map(campaign => {
-      if (campaign.id === id) {
-        const impactedRegions = [...(campaign.impactedRegions || [])];
-        const index = impactedRegions.indexOf(region);
-        
-        if (index > -1) {
-          impactedRegions.splice(index, 1);
-        } else {
-          impactedRegions.push(region);
-        }
-        
-        return { ...campaign, impactedRegions };
-      }
-      return campaign;
+  // Format currency
+  const formatCurrency = (value: number | string) => {
+    if (value === "" || typeof value !== 'number') return "";
+    
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  // Export campaigns to CSV
+  const exportToCsv = () => {
+    if (campaigns.length === 0) {
+      toast.error('No campaigns to export');
+      return;
+    }
+    
+    // Flatten the campaigns for CSV export
+    const flattenedCampaigns = campaigns.map(c => ({
+      ...c,
+      strategicPillars: c.strategicPillars.join(", "),
+      impactedRegions: c.impactedRegions ? c.impactedRegions.join(", ") : ""
     }));
-  };
-
-  // Function to export campaigns as JSON
-  const exportCampaignsAsJSON = () => {
-    try {
-      // Create a JSON blob
-      const campaignsJson = JSON.stringify(campaigns, null, 2);
-      const blob = new Blob([campaignsJson], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      
-      // Create download link
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `marketing-campaigns-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      
-      // Clean up
-      URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Error exporting campaigns:', error);
-      toast.error("Failed to export campaigns");
-    }
-  };
-  
-  // Function to export campaigns as CSV
-  const exportCampaignsAsCSV = () => {
-    try {
-      // Convert campaigns to CSV format
-      const headers = [
-        'Campaign Type', 'Strategic Pillars', 'Revenue Play', 'Fiscal Year',
-        'Quarter/Month', 'Region', 'Country', 'Owner', 'Description',
-        'Forecasted Cost', 'Expected Leads', 'MQLs', 'SQLs',
-        'Opportunities', 'Pipeline Forecast', 'Status', 'PO Raised',
-        'Campaign Code', 'Issue Link', 'Actual Cost', 'Actual Leads', 'Actual MQLs'
-      ].join(',');
-      
-      const rows = campaigns.map(c => [
-        `"${c.campaignType || ''}"`,
-        `"${c.strategicPillars?.join('; ') || ''}"`,
-        `"${c.revenuePlay || ''}"`,
-        `"${c.fiscalYear || ''}"`,
-        `"${c.quarterMonth || ''}"`,
-        `"${c.region || ''}"`,
-        `"${c.country || ''}"`,
-        `"${c.owner || ''}"`,
-        `"${c.description?.replace(/"/g, '""') || ''}"`,
-        c.forecastedCost !== '' ? c.forecastedCost : '',
-        c.expectedLeads !== '' ? c.expectedLeads : '',
-        c.mql || '',
-        c.sql || '',
-        c.opportunities || '',
-        c.pipelineForecast || '',
-        `"${c.status || ''}"`,
-        c.poRaised ? 'Yes' : 'No',
-        `"${c.campaignCode || ''}"`,
-        `"${c.issueLink || ''}"`,
-        c.actualCost !== '' ? c.actualCost : '',
-        c.actualLeads !== '' ? c.actualLeads : '',
-        c.actualMQLs !== '' ? c.actualMQLs : ''
-      ].join(','));
-      
-      const csv = [headers, ...rows].join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const url = URL.createObjectURL(blob);
-      
-      // Create download link
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `marketing-campaigns-${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      
-      // Clean up
-      URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      console.error('Error exporting campaigns as CSV:', error);
-      toast.error("Failed to export campaigns as CSV");
-    }
-  };
-
-  // Handle numeric input changes
-  const handleNumericChange = (
-    id: string,
-    field: 'forecastedCost' | 'expectedLeads' | 'actualCost' | 'actualLeads' | 'actualMQLs',
-    value: string
-  ) => {
-    if (value === "") {
-      updateCampaign(id, field, "");
-    } else {
-      const numValue = parseFloat(value);
-      if (!isNaN(numValue) && numValue >= 0) {
-        updateCampaign(id, field, numValue);
-      }
-    }
-  };
-
-  // Export table data to CSV
-  const exportToCSV = () => {
-    // Headers including calculated fields
-    const headers = [
-      "Campaign Type", "Strategic Pillars", "Revenue Play", 
-      "Fiscal Year", "Quarter/Month", "Region", "Country", "Impacted Regions", "Owner", 
-      "Description", "Forecasted Cost", "Expected Leads",
-      "MQLs (10%)", "SQLs (6%)", "Opportunities (80% of SQL)", "Pipeline Forecast",
-      "Status", "PO Raised", "Campaign Code", "Issue Link", "Actual Cost", "Actual Leads", "Actual MQLs"
-    ];
     
-    // Convert campaign data to CSV rows
-    const rows = campaigns.map(campaign => [
-      campaign.campaignType,
-      campaign.strategicPillars.join(', '),
-      campaign.revenuePlay,
-      campaign.fiscalYear,
-      campaign.quarterMonth,
-      campaign.region,
-      campaign.country,
-      campaign.impactedRegions ? campaign.impactedRegions.join(', ') : '',
-      campaign.owner,
-      campaign.description,
-      typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0,
-      typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0,
-      campaign.mql || 0,
-      campaign.sql || 0,
-      campaign.opportunities || 0,
-      campaign.pipelineForecast || 0,
-      campaign.status || 'Planning',
-      campaign.poRaised ? 'Yes' : 'No',
-      campaign.campaignCode || '',
-      campaign.issueLink || '',
-      typeof campaign.actualCost === 'number' ? campaign.actualCost : '',
-      typeof campaign.actualLeads === 'number' ? campaign.actualLeads : '',
-      typeof campaign.actualMQLs === 'number' ? campaign.actualMQLs : ''
-    ]);
-    
-    // Create CSV content
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => {
-        // Wrap text fields in quotes and handle commas
-        if (typeof cell === 'string') {
-          return `"${cell.replace(/"/g, '""')}"`;
-        }
-        return cell;
-      }).join(','))
-    ].join('\n');
-    
-    // Create and trigger download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // Generate CSV content
+    const csv = Papa.unparse(flattenedCampaigns);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
+    
+    // Create a download link and click it
     const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'campaign_data.csv');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'marketing_campaigns.csv');
+    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    toast.success('Campaigns exported successfully');
   };
 
-  // Calculate total forecasted cost
-  const totalForecastedCost = campaigns.reduce((total, campaign) => {
-    return total + (typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0);
-  }, 0);
-
-  // Calculate total actual cost
-  const totalActualCost = campaigns.reduce((total, campaign) => {
-    return total + (typeof campaign.actualCost === 'number' ? campaign.actualCost : 0);
-  }, 0);
-
-  // Import JSON data
-  const importFromJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Import campaigns from JSON file
+  const importFromJson = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
     const reader = new FileReader();
+    
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string;
         const importedCampaigns = JSON.parse(content) as Campaign[];
         
-        // Validate campaigns
-        const validCampaigns = importedCampaigns.filter(c => 
-          c.id && typeof c.id === 'string'
+        // Validate the imported campaigns
+        const validCampaigns = importedCampaigns.filter(
+          campaign => campaign.id && campaign.campaignType
         );
         
-        // Ask for confirmation if replacing existing data
-        if (campaigns.length > 0) {
-          if (confirm(`You currently have ${campaigns.length} campaigns. Do you want to replace them with ${validCampaigns.length} imported campaigns?`)) {
-            setCampaigns(validCampaigns);
-            toast.success(`Imported ${validCampaigns.length} campaigns successfully`);
-          }
+        if (validCampaigns.length !== importedCampaigns.length) {
+          // Some campaigns were invalid
+          toast.warning(`Imported ${validCampaigns.length} of ${importedCampaigns.length} campaigns. Some were invalid.`);
+          setCampaigns(validCampaigns);
         } else {
+          // All campaigns were valid
           setCampaigns(validCampaigns);
           toast.success(`Imported ${validCampaigns.length} campaigns successfully`);
         }
@@ -435,19 +324,19 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
         toast.error('Failed to import campaigns. Invalid file format.');
       }
       
-      // Reset file input
+      // Reset the file input
       event.target.value = '';
     };
     
     reader.readAsText(file);
   };
-  
-  // Check if campaign is locked (cancelled or shipped)
-  const isCampaignLocked = (campaign: Campaign) => {
+
+  // Check if a campaign is complete (shipped or cancelled)
+  const isCampaignComplete = (campaign: Campaign) => {
     return campaign.status === "Cancelled" || campaign.status === "Shipped";
   };
-
-  // Filter campaigns by owner, region, and quarter
+  
+  // Filter campaigns based on the selected filters
   const filteredCampaigns = campaigns.filter(campaign => {
     const ownerMatch = selectedOwner === "_all" || campaign.owner === selectedOwner;
     const regionMatch = selectedRegion === "_all" || campaign.region === selectedRegion;
@@ -455,557 +344,560 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     
     return ownerMatch && regionMatch && quarterMatch;
   });
-    
-  // Reference for file input
+  
+  // Reference to file input for JSON import
   const jsonFileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">Campaign Planning</h2>
-      <div className="flex flex-col gap-4 mb-4">
-        {/* Filter controls */}
-        <div className="border rounded-md p-3 bg-card">
-          <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-sm font-semibold">Filter Campaigns</h3>
-            {(selectedOwner !== "_all" || selectedRegion !== "_all" || selectedQuarter !== "_all") && (
-              <Badge variant="outline" className="text-xs ml-2">
-                {[
-                  selectedOwner !== "_all" ? 1 : 0,
-                  selectedRegion !== "_all" ? 1 : 0,
-                  selectedQuarter !== "_all" ? 1 : 0
-                ].reduce((a, b) => a + b, 0)} active
-              </Badge>
-            )}
-            {(selectedOwner !== "_all" || selectedRegion !== "_all" || selectedQuarter !== "_all") && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => {
-                  setSelectedOwner("_all");
-                  setSelectedRegion("_all");
-                  setSelectedQuarter("_all");
-                }}
-                className="text-xs ml-auto"
-              >
-                Clear All Filters
-              </Button>
-            )}
+    <div className="space-y-6">
+      {/* Filters and Actions */}
+      <div className="flex flex-col md:flex-row justify-between gap-4 mb-4 p-4">
+        <div className="flex flex-col md:flex-row gap-4 md:items-end">
+          <div>
+            <Label htmlFor="region-filter">Region</Label>
+            <Select
+              value={selectedRegion}
+              onValueChange={setSelectedRegion}
+            >
+              <SelectTrigger id="region-filter" className="w-full md:w-40">
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Regions</SelectItem>
+                {regions.map(region => (
+                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Owner Filter */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="owner-filter" className="text-sm font-medium">Owner</label>
-              <Select
-                value={selectedOwner}
-                onValueChange={setSelectedOwner}
-              >
-                <SelectTrigger id="owner-filter" className="w-full">
-                  <SelectValue placeholder="All Owners" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">All Owners</SelectItem>
-                  {owners.map((owner) => (
-                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Region Filter */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="region-filter" className="text-sm font-medium">Region</label>
-              <Select
-                value={selectedRegion}
-                onValueChange={setSelectedRegion}
-              >
-                <SelectTrigger id="region-filter" className="w-full">
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">All Regions</SelectItem>
-                  {regions.map((region) => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Quarter Filter */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="quarter-filter" className="text-sm font-medium">Quarter/Month</label>
-              <Select
-                value={selectedQuarter}
-                onValueChange={setSelectedQuarter}
-              >
-                <SelectTrigger id="quarter-filter" className="w-full">
-                  <SelectValue placeholder="All Quarters" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">All Quarters</SelectItem>
-                  {quarters.map((quarter) => (
-                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="quarter-filter">Quarter</Label>
+            <Select
+              value={selectedQuarter}
+              onValueChange={setSelectedQuarter}
+            >
+              <SelectTrigger id="quarter-filter" className="w-full md:w-40">
+                <SelectValue placeholder="All Quarters" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Quarters</SelectItem>
+                {quarters.map(quarter => (
+                  <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          
+          <div>
+            <Label htmlFor="owner-filter">Owner</Label>
+            <Select
+              value={selectedOwner}
+              onValueChange={setOwnerFilter}
+            >
+              <SelectTrigger id="owner-filter" className="w-full md:w-40">
+                <SelectValue placeholder="All Owners" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Owners</SelectItem>
+                {owners.map(owner => (
+                  <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={() => {
+              setSelectedOwner("_all");
+              setSelectedRegion("_all");
+              setSelectedQuarter("_all");
+            }}
+          >
+            <FilterX className="h-4 w-4" />
+            Clear Filters
+          </Button>
         </div>
         
-        {/* Display campaign count and add/export buttons */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-3">
-          {/* Campaign count and status info */}
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
-            <div className="text-sm font-medium flex items-center gap-2">
-              {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} 
-              {selectedOwner !== "_all" ? (
-                <div className="flex items-center gap-2">
-                  <span>for</span>
-                  <GitHubAvatar name={selectedOwner} size="small" />
-                  <span>{selectedOwner}</span>
-                </div>
-              ) : ''}
-              {selectedRegion !== "_all" ? ` in ${selectedRegion}` : ''}
-              {selectedQuarter !== "_all" ? ` during ${selectedQuarter}` : ''}
-            </div>
-            
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <InfoCircle className="h-3.5 w-3.5" />
-              <span>Shipped or Cancelled campaigns are locked for editing</span>
-            </div>
-          </div>
+        <div className="flex flex-wrap gap-2 justify-start md:justify-end">
+          <Button 
+            variant="default" 
+            className="flex items-center gap-2"
+            onClick={addCampaign}
+          >
+            <Plus className="h-4 w-4" />
+            Add Campaign
+          </Button>
           
-          {/* Action buttons */}
-          <div className="flex space-x-2">
-            {/* Export Buttons */}
-            <GitHubButton 
-              variant="secondary" 
-              size="small" 
-              onClick={exportCampaignsAsJSON}
-              icon={<FloppyDisk className="h-4 w-4" />}
-            >
-              Export JSON
-            </GitHubButton>
-            <GitHubButton 
-              variant="secondary" 
-              size="small" 
-              onClick={exportToCSV}
-              icon={<Download className="h-4 w-4" />}
-            >
-              Export CSV
-            </GitHubButton>
-            
-            {/* Import JSON Button */}
-            <GitHubButton 
-              variant="secondary" 
-              size="small" 
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={exportToCsv}
+          >
+            <DownloadSimple className="h-4 w-4" />
+            Export CSV
+          </Button>
+          
+          <CsvTemplateButton />
+          
+          <div className="relative">
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
               onClick={() => jsonFileInputRef.current?.click()}
-              icon={<UploadSimple className="h-4 w-4" />}
             >
-              Import JSON
-            </GitHubButton>
+              <UploadSimple className="h-4 w-4" />
+              Upload JSON
+            </Button>
             <input
               type="file"
               ref={jsonFileInputRef}
-              onChange={importFromJSON}
               accept=".json"
               className="hidden"
+              onChange={importFromJson}
             />
-            
-            {/* Add Campaign Button */}
-            <GitHubButton 
-              onClick={addCampaign} 
-              size="small"
-              icon={<PlusCircle className="h-4 w-4" />}
-            >
-              Add Campaign
-            </GitHubButton>
           </div>
         </div>
       </div>
-
-      {/* CSV Uploader */}
-      <CSVUploader 
-        onCampaignsImported={(importedCampaigns) => {
-          setCampaigns((prevCampaigns) => [...prevCampaigns, ...importedCampaigns]);
-        }} 
-      />
-
-      <div className="space-y-6">
-        <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Campaign Type</TableHead>
-                  <TableHead>Strategic Pillars</TableHead>
-                  <TableHead>Revenue Play</TableHead>
-                  <TableHead>FY</TableHead>
-                  <TableHead>Quarter/Month</TableHead>
-                  <TableHead>Region</TableHead>
-                  <TableHead>Country</TableHead>
-                  <TableHead>Owner</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Forecasted Cost</TableHead>
-                  <TableHead>Expected Leads</TableHead>
-                  <TableHead>MQLs (10%)</TableHead>
-                  <TableHead>SQLs (6%)</TableHead>
-                  <TableHead>Opportunities</TableHead>
-                  <TableHead>Pipeline Forecast</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCampaigns.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={16} className="text-center py-6 text-muted-foreground">
-                      No campaigns added. Click "Add Campaign" to create one.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredCampaigns.map((campaign) => (
-                    <TableRow 
-                      key={campaign.id}
-                      className={isCampaignLocked(campaign) ? "opacity-70" : ""}
-                    >
-                      {/* Campaign Type */}
-                      <TableCell>
-                        <Select
-                          value={campaign.campaignType}
-                          onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}
-                          disabled={isCampaignLocked(campaign)}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Select type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {campaignTypes.map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {type}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* Strategic Pillars - Multi-select */}
-                      <TableCell>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              className="w-[180px] justify-start text-left font-normal"
-                              size="sm"
-                              disabled={isCampaignLocked(campaign)}
+      
+      {/* Display error if no campaigns match filters */}
+      {filteredCampaigns.length === 0 && (
+        <Alert variant="default" className="my-4">
+          <AlertDescription>
+            No campaigns match the selected filters. Try clearing filters or add a new campaign.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Campaign table */}
+      <div className="border rounded-md overflow-auto">
+        <Table>
+          <TableHeader className="bg-muted/30">
+            <TableRow>
+              <TableHead className="w-[180px]">Campaign Type</TableHead>
+              <TableHead className="w-[140px]">Strategic Pillar</TableHead>
+              <TableHead className="w-[140px]">Revenue Play</TableHead>
+              <TableHead className="w-[80px]">FY</TableHead>
+              <TableHead className="w-[110px]">Quarter</TableHead>
+              <TableHead className="w-[100px]">Region</TableHead>
+              <TableHead className="w-[120px]">Country</TableHead>
+              <TableHead className="w-[120px]">Owner</TableHead>
+              <TableHead className="w-[120px]">Forecasted Cost</TableHead>
+              <TableHead className="w-[110px]">Expected Leads</TableHead>
+              <TableHead className="w-[80px]">MQLs</TableHead>
+              <TableHead className="w-[80px]">SQLs</TableHead>
+              <TableHead className="w-[110px]">Opportunities</TableHead>
+              <TableHead className="w-[130px]">Pipeline Forecast</TableHead>
+              <TableHead className="w-[80px]">Status</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredCampaigns.map(campaign => (
+              <TableRow 
+                key={campaign.id}
+                className={isCampaignComplete(campaign) ? "bg-muted/20" : ""}
+              >
+                {/* Campaign Type */}
+                <TableCell>
+                  <Select
+                    value={campaign.campaignType}
+                    onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}
+                    disabled={isCampaignComplete(campaign)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {campaignTypes.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                
+                {/* Strategic Pillars (Multi-select) */}
+                <TableCell>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start truncate"
+                        disabled={isCampaignComplete(campaign)}
+                      >
+                        {campaign.strategicPillars.length > 0 
+                          ? (campaign.strategicPillars.length === 1 
+                            ? campaign.strategicPillars[0].substring(0, 18) + (campaign.strategicPillars[0].length > 18 ? "..." : "") 
+                            : `${campaign.strategicPillars.length} selected`)
+                          : "Select pillars"}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Select Strategic Pillars</DialogTitle>
+                        <DialogDescription>
+                          Choose one or more strategic pillars for this campaign.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        {pillars.map(pillar => (
+                          <div key={pillar} className="flex items-start space-x-2">
+                            <Checkbox 
+                              id={`pillar-${campaign.id}-${pillar}`}
+                              checked={campaign.strategicPillars.includes(pillar)}
+                              onCheckedChange={() => togglePillar(campaign.id, pillar)}
+                            />
+                            <Label 
+                              htmlFor={`pillar-${campaign.id}-${pillar}`}
+                              className="font-normal"
                             >
-                              {campaign.strategicPillars.length > 0 
-                                ? `${campaign.strategicPillars.length} selected`
-                                : "Select pillars"}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[220px] p-0" align="start">
-                            <Command>
-                              <CommandInput placeholder="Search pillars..." />
-                              <CommandEmpty>No results found.</CommandEmpty>
-                              <CommandGroup>
-                                {pillars.map((pillar) => (
-                                  <CommandItem
-                                    key={pillar}
-                                    onSelect={() => togglePillar(campaign.id, pillar)}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Checkbox 
-                                      checked={campaign.strategicPillars.includes(pillar)}
-                                      className="mr-2"
-                                    />
-                                    <span>{pillar}</span>
-                                    {campaign.strategicPillars.includes(pillar) && (
-                                      <Check className="h-4 w-4 ml-auto" />
-                                    )}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
-                        {campaign.strategicPillars.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {campaign.strategicPillars.map((pillar) => (
-                              <Badge key={pillar} variant="outline" className="text-xs px-1 py-0">
-                                {pillar.substring(0, 15)}...
-                              </Badge>
-                            ))}
+                              {pillar}
+                            </Label>
                           </div>
-                        )}
-                      </TableCell>
-
-                      {/* Revenue Play */}
-                      <TableCell>
-                        <Select
-                          value={campaign.revenuePlay}
-                          onValueChange={(value) => updateCampaign(campaign.id, 'revenuePlay', value)}
-                          disabled={isCampaignLocked(campaign)}
-                        >
-                          <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Select play" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {revenuePlays.map((play) => (
-                              <SelectItem key={play} value={play} className="whitespace-normal py-2">
-                                {play}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* Fiscal Year */}
-                      <TableCell>
-                        <Select
-                          value={campaign.fiscalYear}
-                          onValueChange={(value) => updateCampaign(campaign.id, 'fiscalYear', value)}
-                          disabled={isCampaignLocked(campaign)}
-                        >
-                          <SelectTrigger className="w-[100px]">
-                            <SelectValue placeholder="FY" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {fiscalYears.map((year) => (
-                              <SelectItem key={year} value={year}>
-                                {year}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* Quarter/Month */}
-                      <TableCell>
-                        <Select
-                          value={campaign.quarterMonth}
-                          onValueChange={(value) => updateCampaign(campaign.id, 'quarterMonth', value)}
-                          disabled={isCampaignLocked(campaign)}
-                        >
-                          <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Select" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {quarters.map((quarter) => (
-                              <SelectItem key={quarter} value={quarter}>
-                                {quarter}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* Region */}
-                      <TableCell>
-                        <Select
-                          value={campaign.region}
-                          onValueChange={(value) => updateCampaign(campaign.id, 'region', value)}
-                          disabled={isCampaignLocked(campaign)}
-                        >
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Region" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {regions.map((region) => (
-                              <SelectItem key={region} value={region}>
-                                {region}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* Country */}
-                      <TableCell>
-                        <Select
-                          value={campaign.country}
-                          onValueChange={(value) => updateCampaign(campaign.id, 'country', value)}
-                          disabled={isCampaignLocked(campaign)}
-                        >
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Country" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {countries.map((country) => (
-                              <SelectItem key={country} value={country}>
-                                {country}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        
-                        {/* Impacted Regions (only show for Digital region) */}
-                        {campaign.region === "Digital" && (
-                          <div className="mt-2">
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button 
-                                  variant="outline" 
-                                  className="w-[180px] justify-start text-left font-normal"
-                                  size="sm"
-                                  disabled={isCampaignLocked(campaign)}
-                                >
-                                  {campaign.impactedRegions && campaign.impactedRegions.length > 0 
-                                    ? `${campaign.impactedRegions.length} region(s) impacted`
-                                    : "Select impacted regions"}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-[220px] p-0" align="start">
-                                <Command>
-                                  <CommandInput placeholder="Search regions..." />
-                                  <CommandEmpty>No results found.</CommandEmpty>
-                                  <CommandGroup>
-                                    {regions.filter(r => r !== "Digital").map((region) => (
-                                      <CommandItem
-                                        key={region}
-                                        onSelect={() => toggleImpactedRegion(campaign.id, region)}
-                                        className="flex items-center gap-2"
-                                      >
-                                        <Checkbox 
-                                          checked={campaign.impactedRegions?.includes(region)}
-                                          className="mr-2"
-                                        />
-                                        <span>{region}</span>
-                                        {campaign.impactedRegions?.includes(region) && (
-                                          <Check className="h-4 w-4 ml-auto" />
-                                        )}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                </Command>
-                              </PopoverContent>
-                            </Popover>
-                            {campaign.impactedRegions && campaign.impactedRegions.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {campaign.impactedRegions.map((region) => (
-                                  <Badge key={region} variant="outline" className="text-xs px-1 py-0">
-                                    {region}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-
-                      {/* Owner */}
-                      <TableCell>
-                        <Select
-                          value={campaign.owner}
-                          onValueChange={(value) => updateCampaign(campaign.id, 'owner', value)}
-                          disabled={isCampaignLocked(campaign)}
-                        >
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Owner" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {owners.map((owner) => (
-                              <SelectItem key={owner} value={owner}>
-                                {owner}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-
-                      {/* Description */}
-                      <TableCell>
-                        <Input
-                          value={campaign.description}
-                          onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
-                          placeholder="Brief description"
-                          className="w-[180px]"
-                          disabled={isCampaignLocked(campaign)}
-                        />
-                      </TableCell>
-
-                      {/* Forecasted Cost */}
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={campaign.forecastedCost === "" ? "" : campaign.forecastedCost}
-                          onChange={(e) => handleNumericChange(campaign.id, 'forecastedCost', e.target.value)}
-                          placeholder="USD"
-                          className="w-[100px]"
-                          disabled={isCampaignLocked(campaign)}
-                        />
-                      </TableCell>
-
-                      {/* Expected Leads */}
-                      <TableCell>
-                        <Input
-                          type="number"
-                          value={campaign.expectedLeads === "" ? "" : campaign.expectedLeads}
-                          onChange={(e) => handleNumericChange(campaign.id, 'expectedLeads', e.target.value)}
-                          placeholder="#"
-                          className="w-[80px]"
-                          disabled={isCampaignLocked(campaign)}
-                        />
-                      </TableCell>
-
-                      {/* Calculated fields (read-only) */}
-                      <TableCell className="text-muted-foreground">
-                        {campaign.mql || 0}
-                      </TableCell>
-                      
-                      <TableCell className="text-muted-foreground">
-                        {campaign.sql || 0}
-                      </TableCell>
-                      
-                      <TableCell className="text-muted-foreground">
-                        {campaign.opportunities || 0}
-                      </TableCell>
-                      
-                      <TableCell className="font-medium">
-                        {campaign.pipelineForecast ? formatCurrency(campaign.pipelineForecast) : "$0"}
-                      </TableCell>
-
-                      {/* Actions */}
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeCampaign(campaign.id)}
-                          disabled={isCampaignLocked(campaign)}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-              {filteredCampaigns.length > 0 && (
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={9} className="text-right font-medium">
-                      Total Forecasted Cost:
-                    </TableCell>
-                    <TableCell className="font-bold">
-                      {formatCurrency(totalForecastedCost)}
-                    </TableCell>
-                    <TableCell colSpan={6}></TableCell>
-                  </TableRow>
-                </TableFooter>
-              )}
-            </Table>
-          </div>
-
-        {/* ROI Dashboard */}
-        {campaigns.length > 0 && (
-          <div>
-            <div className="flex items-center gap-2 mb-4 text-lg font-semibold">
-              <ChartLineUp className="h-5 w-5" />
-              ROI & Performance Dashboard
-            </div>
-            {/* Pass filtered campaigns to ROI dashboard */}
-            <ROIDashboard campaigns={filteredCampaigns} />
-          </div>
-        )}
+                        ))}
+                      </div>
+                      <DialogFooter>
+                        <Button type="button">Save</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </TableCell>
+                
+                {/* Revenue Play */}
+                <TableCell>
+                  <Select
+                    value={campaign.revenuePlay}
+                    onValueChange={(value) => updateCampaign(campaign.id, 'revenuePlay', value)}
+                    disabled={isCampaignComplete(campaign)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select play" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {revenuePlays.map(play => (
+                        <SelectItem key={play} value={play}>{play}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                
+                {/* Fiscal Year */}
+                <TableCell>
+                  <Select
+                    value={campaign.fiscalYear}
+                    onValueChange={(value) => updateCampaign(campaign.id, 'fiscalYear', value)}
+                    disabled={isCampaignComplete(campaign)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="FY" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {fiscalYears.map(fy => (
+                        <SelectItem key={fy} value={fy}>{fy}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                
+                {/* Quarter/Month */}
+                <TableCell>
+                  <Select
+                    value={campaign.quarterMonth}
+                    onValueChange={(value) => updateCampaign(campaign.id, 'quarterMonth', value)}
+                    disabled={isCampaignComplete(campaign)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Quarter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {quarters.map(q => (
+                        <SelectItem key={q} value={q}>{q}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                
+                {/* Region */}
+                <TableCell>
+                  <Select
+                    value={campaign.region}
+                    onValueChange={(value) => updateCampaign(campaign.id, 'region', value)}
+                    disabled={isCampaignComplete(campaign)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Region" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {regions.map(region => (
+                        <SelectItem key={region} value={region}>{region}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                
+                {/* Country */}
+                <TableCell>
+                  <Select
+                    value={campaign.country}
+                    onValueChange={(value) => updateCampaign(campaign.id, 'country', value)}
+                    disabled={isCampaignComplete(campaign)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countries.map(country => (
+                        <SelectItem key={country} value={country}>{country}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                
+                {/* Owner */}
+                <TableCell>
+                  <Select
+                    value={campaign.owner}
+                    onValueChange={(value) => updateCampaign(campaign.id, 'owner', value)}
+                    disabled={isCampaignComplete(campaign)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Owner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {owners.map(owner => (
+                        <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                
+                {/* Forecasted Cost */}
+                <TableCell>
+                  <Input
+                    type="number"
+                    value={campaign.forecastedCost === "" ? "" : Number(campaign.forecastedCost)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateCampaign(campaign.id, 'forecastedCost', value === "" ? "" : Number(value));
+                    }}
+                    placeholder="USD"
+                    className="w-full"
+                    disabled={isCampaignComplete(campaign)}
+                  />
+                </TableCell>
+                
+                {/* Expected Leads */}
+                <TableCell>
+                  <Input
+                    type="number"
+                    value={campaign.expectedLeads === "" ? "" : Number(campaign.expectedLeads)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateCampaign(campaign.id, 'expectedLeads', value === "" ? "" : Number(value));
+                    }}
+                    placeholder="# Leads"
+                    className="w-full"
+                    disabled={isCampaignComplete(campaign)}
+                  />
+                </TableCell>
+                
+                {/* MQLs (Calculated) */}
+                <TableCell className="text-muted-foreground">
+                  {campaign.mql}
+                </TableCell>
+                
+                {/* SQLs (Calculated) */}
+                <TableCell className="text-muted-foreground">
+                  {campaign.sql}
+                </TableCell>
+                
+                {/* Opportunities (Calculated) */}
+                <TableCell className="text-muted-foreground">
+                  {campaign.opportunities}
+                </TableCell>
+                
+                {/* Pipeline Forecast (Calculated) */}
+                <TableCell className="text-muted-foreground">
+                  {formatCurrency(campaign.pipelineForecast)}
+                </TableCell>
+                
+                {/* Status */}
+                <TableCell>
+                  <Badge 
+                    variant={
+                      campaign.status === "On Track" ? "default" : 
+                      campaign.status === "Shipped" ? "success" : 
+                      campaign.status === "Cancelled" ? "destructive" : "outline"
+                    }
+                    className="whitespace-nowrap"
+                  >
+                    {campaign.status}
+                  </Badge>
+                </TableCell>
+                
+                {/* Actions */}
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeCampaign(campaign.id)}
+                  >
+                    <TrashSimple className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
+      
+      {/* Campaign Summary - Mobile View */}
+      {isMobile && filteredCampaigns.length > 0 && (
+        <div className="mt-8 p-4 bg-muted/20 rounded-lg">
+          <h3 className="text-lg font-medium flex items-center gap-2 mb-4">
+            <ChartBar className="h-5 w-5" />
+            Campaign Summary
+          </h3>
+          <dl className="grid grid-cols-2 gap-4">
+            <div>
+              <dt className="text-sm text-muted-foreground">Total Campaigns</dt>
+              <dd className="text-2xl font-semibold">{filteredCampaigns.length}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">Total Forecasted Cost</dt>
+              <dd className="text-2xl font-semibold">
+                {formatCurrency(filteredCampaigns.reduce((sum, c) => 
+                  sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0))}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">Total Expected Leads</dt>
+              <dd className="text-2xl font-semibold">
+                {filteredCampaigns.reduce((sum, c) => 
+                  sum + (typeof c.expectedLeads === 'number' ? c.expectedLeads : 0), 0)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">Total Pipeline Forecast</dt>
+              <dd className="text-2xl font-semibold">
+                {formatCurrency(filteredCampaigns.reduce((sum, c) => sum + c.pipelineForecast, 0))}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      )}
+      
+      {/* Add JSON importing functionality */}
+      <input
+        type="file"
+        accept=".csv"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          
+          Papa.parse<any>(file, {
+            header: true,
+            complete: (results) => {
+              if (results.data && results.data.length > 0) {
+                // Process CSV data
+                const importedCampaigns: Campaign[] = [];
+                const errors: string[] = [];
+                
+                results.data.forEach((row, index) => {
+                  // Skip empty rows
+                  if (Object.keys(row).length <= 1 && !row.id) return;
+                  
+                  try {
+                    // Validate and convert row data
+                    const campaign: Partial<Campaign> = {
+                      id: row.id || Math.random().toString(36).substring(2, 9),
+                      campaignType: row.campaignType || campaignTypes[0],
+                      strategicPillars: row.strategicPillars?.split(",").map((p: string) => p.trim()) || [pillars[0]],
+                      revenuePlay: row.revenuePlay || revenuePlays[0],
+                      fiscalYear: row.fiscalYear || fiscalYears[0],
+                      quarterMonth: row.quarterMonth || quarters[0],
+                      region: row.region || regions[0],
+                      country: row.country || countries[0],
+                      owner: row.owner || owners[0],
+                      description: row.description || "",
+                      forecastedCost: row.forecastedCost !== undefined ? Number(row.forecastedCost) : "",
+                      expectedLeads: row.expectedLeads !== undefined ? Number(row.expectedLeads) : "",
+                      impactedRegions: row.impactedRegions?.split(",").map((r: string) => r.trim()) || [],
+                      status: row.status || "Planning",
+                      poRaised: row.poRaised === "true" || row.poRaised === true,
+                      campaignCode: row.campaignCode || "",
+                      issueLink: row.issueLink || "",
+                      actualCost: row.actualCost !== undefined ? Number(row.actualCost) : "",
+                      actualLeads: row.actualLeads !== undefined ? Number(row.actualLeads) : "",
+                      actualMQLs: row.actualMQLs !== undefined ? Number(row.actualMQLs) : "",
+                      mql: Number(row.mql) || 0,
+                      sql: Number(row.sql) || 0,
+                      opportunities: Number(row.opportunities) || 0,
+                      pipelineForecast: Number(row.pipelineForecast) || 0
+                    };
+                    
+                    // Validate required fields
+                    const validRegions = ["North APAC", "South APAC", "SAARC", "Digital"];
+                    if (!validRegions.includes(campaign.region as string)) {
+                      errors.push(`Row ${index + 2}: Invalid region "${campaign.region}".`);
+                    }
+                    
+                    // Calculate derived fields if expectedLeads is provided
+                    if (campaign.expectedLeads !== undefined && campaign.expectedLeads !== "" && !isNaN(Number(campaign.expectedLeads))) {
+                      const leads = Number(campaign.expectedLeads);
+                      campaign.mql = Math.round(leads * 0.1);
+                      campaign.sql = Math.round(leads * 0.06);
+                      campaign.opportunities = Math.round(campaign.sql * 0.8);
+                      campaign.pipelineForecast = campaign.opportunities * 50000;
+                    }
+                    
+                    importedCampaigns.push(campaign as Campaign);
+                  } catch (error) {
+                    console.error('Error processing row:', error);
+                    errors.push(`Row ${index + 2}: ${(error as Error).message}`);
+                  }
+                });
+                
+                if (errors.length > 0) {
+                  // Show validation errors
+                  toast.error(
+                    <div>
+                      <p>Import had validation errors:</p>
+                      <ul className="text-sm mt-2 max-h-40 overflow-auto list-disc pl-4">
+                        {errors.slice(0, 5).map((err, i) => (
+                          <li key={i}>{err}</li>
+                        ))}
+                        {errors.length > 5 && <li>...and {errors.length - 5} more errors</li>}
+                      </ul>
+                    </div>
+                  );
+                }
+                
+                if (importedCampaigns.length > 0) {
+                  // Add imported campaigns to existing ones
+                  setCampaigns((prevCampaigns) => [...prevCampaigns, ...importedCampaigns]);
+                  toast.success(`Imported ${importedCampaigns.length} campaigns successfully`);
+                } else {
+                  toast.error('No valid campaigns found in the CSV file');
+                }
+              }
+              
+              // Reset the file input
+              event.target.value = '';
+            },
+            error: (error) => {
+              console.error('CSV parsing error:', error);
+              toast.error('Failed to parse CSV file');
+              
+              // Reset the file input
+              event.target.value = '';
+            }
+          });
+        }}
+      />
     </div>
   );
-};
+}
