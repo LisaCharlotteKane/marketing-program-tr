@@ -28,7 +28,6 @@ import { runDataMigrations } from "@/services/migration-service"
 import { initAutoGitHubSync } from "@/services/auto-github-sync"
 import { Button } from "@/components/ui/button"
 import { calculateRegionalMetrics } from "@/services/budget-service"
-import { PrimerFooter } from "@/components/primer/footer"
 
 // Simple Header component
 function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) {
@@ -602,9 +601,6 @@ function App() {
             <GitHubSync campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
         </Tabs>
-      </div>
-      <div className="mt-8">
-        <PrimerFooter />
       </div>
     </div>
   )
