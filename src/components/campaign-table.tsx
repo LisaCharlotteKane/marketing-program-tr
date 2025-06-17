@@ -147,9 +147,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
       actualCost: "", // Ensure this is always initialized
       actualLeads: "",
       actualMQLs: "",
-    };
-    setCampaigns([...campaigns, newCampaign]);
-  };
+      // Initialize calculated fields
       mql: 0,
       sql: 0,
       opportunities: 0,
@@ -157,11 +155,6 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     };
     setCampaigns([...campaigns, newCampaign]);
     toast.success('New campaign added successfully');
-  };
-      actualLeads: "",
-      actualMQLs: ""
-    };
-    setCampaigns([...campaigns, newCampaign]);
   };
 
   // Remove a row (campaign)
@@ -194,7 +187,6 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
             updatedCampaign.opportunities = 0;
             updatedCampaign.pipelineForecast = 0;
           }
-        }
         }
         
         return updatedCampaign;
@@ -450,7 +442,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
   // Check if campaign is locked (cancelled or shipped)
   const isCampaignLocked = (campaign: Campaign) => {
     return campaign.status === "Cancelled" || campaign.status === "Shipped";
-  };
+  };;
 
   // Filter campaigns by owner
   const filteredCampaigns = selectedOwner === "_all"
