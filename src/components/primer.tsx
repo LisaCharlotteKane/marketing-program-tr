@@ -1,5 +1,6 @@
 import React from "react";
 import { X } from "@phosphor-icons/react";
+import { HeaderPrimitive, FooterPrimitive } from "@primer/react-brand";
 
 export function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
@@ -27,6 +28,7 @@ export function PrimerFooter() {
       </div>
     </div>
   );
+}
 }
 
 export function PromoBanner({ 
