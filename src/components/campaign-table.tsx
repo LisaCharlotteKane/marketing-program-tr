@@ -442,7 +442,7 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
   // Check if campaign is locked (cancelled or shipped)
   const isCampaignLocked = (campaign: Campaign) => {
     return campaign.status === "Cancelled" || campaign.status === "Shipped";
-  };;
+  };
 
   // Filter campaigns by owner
   const filteredCampaigns = selectedOwner === "_all"
