@@ -12,7 +12,13 @@ export function StorageErrorHandler({ onRetry }: { onRetry: () => void }) {
     const handleStorageError = (event: any) => {
       if (event.detail?.type === "storage" && event.detail?.message) {
         setHasError(true);
-        setErrorMessage(event.detail.message);
+        
+        // Simplify error message to avoid showing GitHub API errors
+        if (event.detail.message.includes("GitHub API")) {
+          setErrorMessage("There was an error with the GitHub integration. The application will use local storage only.");
+        } else {
+          setErrorMessage(event.detail.message);
+        }
       }
     };
     
