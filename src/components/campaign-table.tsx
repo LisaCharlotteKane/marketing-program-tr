@@ -362,6 +362,51 @@ export function CampaignTable({
   // Reference to file input for JSON import
   const jsonFileInputRef = useRef<HTMLInputElement>(null);
 
+  // Download CSV template
+  const downloadTemplate = () => {
+    // Define the CSV template structure
+    const templateData = [
+      {
+        id: "",
+        campaignType: "Webinars",
+        strategicPillars: "Account Growth and Product Adoption, New Logo Acquisition",
+        revenuePlay: "All",
+        fiscalYear: "FY25",
+        quarterMonth: "Q1 - July",
+        region: "North APAC",
+        country: "Japan",
+        owner: "Tomoko Tanaka",
+        description: "Example campaign - replace with real data",
+        forecastedCost: "15000",
+        expectedLeads: "100",
+        impactedRegions: "",
+        status: "Planning",
+        poRaised: "false",
+        campaignCode: "",
+        issueLink: "",
+        actualCost: "",
+        actualLeads: "",
+        actualMQLs: ""
+      }
+    ];
+
+    // Generate CSV content
+    const csv = Papa.unparse(templateData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    
+    // Create a download link and click it
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'campaign_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('Template downloaded successfully');
+  };
+
   return (
     <div className="space-y-6">
       {/* Filters and Actions */}
@@ -379,7 +424,7 @@ export function CampaignTable({
               <SelectContent>
                 <SelectItem value="_all">All Regions</SelectItem>
                 {regions.map(region => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                  region && <SelectItem key={region} value={region}>{region}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -397,7 +442,7 @@ export function CampaignTable({
               <SelectContent>
                 <SelectItem value="_all">All Quarters</SelectItem>
                 {availableQuarters.map(quarter => (
-                  <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                  quarter && <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -415,7 +460,7 @@ export function CampaignTable({
               <SelectContent>
                 <SelectItem value="_all">All Owners</SelectItem>
                 {owners.map(owner => (
-                  <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                  owner && <SelectItem key={owner} value={owner}>{owner}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -457,49 +502,7 @@ export function CampaignTable({
           <Button 
             variant="outline" 
             className="flex items-center gap-2"
-            onClick={() => {
-              // Define the CSV template structure
-              const templateData = [
-                {
-                  id: "",
-                  campaignType: "Webinars",
-                  strategicPillars: "Account Growth and Product Adoption, New Logo Acquisition",
-                  revenuePlay: "All",
-                  fiscalYear: "FY25",
-                  quarterMonth: "Q1 - July",
-                  region: "North APAC",
-                  country: "Japan",
-                  owner: "Tomoko Tanaka",
-                  description: "Example campaign - replace with real data",
-                  forecastedCost: "15000",
-                  expectedLeads: "100",
-                  impactedRegions: "",
-                  status: "Planning",
-                  poRaised: "false",
-                  campaignCode: "",
-                  issueLink: "",
-                  actualCost: "",
-                  actualLeads: "",
-                  actualMQLs: ""
-                }
-              ];
-
-              // Generate CSV content
-              const csv = Papa.unparse(templateData);
-              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-              const url = URL.createObjectURL(blob);
-              
-              // Create a download link and click it
-              const link = document.createElement('a');
-              link.setAttribute('href', url);
-              link.setAttribute('download', 'campaign_template.csv');
-              link.style.visibility = 'hidden';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-              
-              toast.success('Template downloaded successfully');
-            }}
+            onClick={downloadTemplate}
           >
             <DownloadSimple className="h-4 w-4" />
             Download Template
