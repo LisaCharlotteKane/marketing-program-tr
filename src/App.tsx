@@ -143,13 +143,13 @@ function App() {
     "Pipeline Acceleration & Executive Engagement",
     "Brand Awareness & Top of Funnel Demand Generation",
     "New Logo Acquisition"
-  ]
+  ];
   const revenuePlays = [
     "Accelerate developer productivity with Copilot in VS Code and GitHub",
     "Secure all developer workloads with the power of AI",
     "All"
-  ]
-  const regions = ["North APAC", "South APAC", "SAARC", "Digital"]
+  ];
+  const regions = ["North APAC", "South APAC", "SAARC", "Digital"];
   
   // Campaign types
   const campaignTypes = [

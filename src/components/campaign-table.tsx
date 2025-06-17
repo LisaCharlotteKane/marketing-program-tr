@@ -55,7 +55,23 @@ export function CampaignTable({
   setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>> 
 }) {
   // Mobile responsive state
-  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Check for mobile on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
+    };
+    
+    // Set initial value
+    checkMobile();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkMobile);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Filter states
   const [selectedRegion, setSelectedRegion] = useState("_all");
