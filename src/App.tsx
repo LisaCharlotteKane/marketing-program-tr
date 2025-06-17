@@ -39,9 +39,7 @@ function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4">
         <div className="flex items-center gap-4">
           <Logo size="md" />
-          <div className="h-8 w-px bg-border mx-1" />
           <div>
-            <h1 className="text-2xl font-bold">{title}</h1>
             {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
           </div>
         </div>
