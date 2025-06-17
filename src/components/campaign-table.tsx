@@ -59,6 +59,8 @@ interface CampaignTableProps {
 export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) => {
   // Filter state
   const [selectedOwner, setSelectedOwner] = useState<string>("_all");
+  const [selectedRegion, setSelectedRegion] = useState<string>("_all");
+  const [selectedQuarter, setSelectedQuarter] = useState<string>("_all");
   
   // Constants for dropdown options
   const campaignTypes = [
@@ -444,104 +446,181 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
     return campaign.status === "Cancelled" || campaign.status === "Shipped";
   };
 
-  // Filter campaigns by owner
-  const filteredCampaigns = selectedOwner === "_all"
-    ? campaigns
-    : campaigns.filter(campaign => campaign.owner === selectedOwner);
+  // Filter campaigns by owner, region, and quarter
+  const filteredCampaigns = campaigns.filter(campaign => {
+    const ownerMatch = selectedOwner === "_all" || campaign.owner === selectedOwner;
+    const regionMatch = selectedRegion === "_all" || campaign.region === selectedRegion;
+    const quarterMatch = selectedQuarter === "_all" || campaign.quarterMonth === selectedQuarter;
+    
+    return ownerMatch && regionMatch && quarterMatch;
+  });
     
   // Reference for file input
   const jsonFileInputRef = useRef<HTMLInputElement>(null);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Campaign Planning</h2>
-        <div className="flex space-x-2">
-          {/* Export Buttons */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={exportCampaignsAsJSON}
-            className="flex items-center gap-2"
-            title="Export data to JSON file (for backup)"
-          >
-            <FloppyDisk className="h-4 w-4" />
-            Export JSON
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={exportToCSV}
-            className="flex items-center gap-2"
-            title="Export data to CSV"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
+      <h2 className="text-lg font-semibold">Campaign Planning</h2>
+      <div className="flex flex-col gap-4 mb-4">
+        {/* Filter controls */}
+        <div className="border rounded-md p-3 bg-card">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-sm font-semibold">Filter Campaigns</h3>
+            {(selectedOwner !== "_all" || selectedRegion !== "_all" || selectedQuarter !== "_all") && (
+              <Badge variant="outline" className="text-xs ml-2">
+                {[
+                  selectedOwner !== "_all" ? 1 : 0,
+                  selectedRegion !== "_all" ? 1 : 0,
+                  selectedQuarter !== "_all" ? 1 : 0
+                ].reduce((a, b) => a + b, 0)} active
+              </Badge>
+            )}
+            {(selectedOwner !== "_all" || selectedRegion !== "_all" || selectedQuarter !== "_all") && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => {
+                  setSelectedOwner("_all");
+                  setSelectedRegion("_all");
+                  setSelectedQuarter("_all");
+                }}
+                className="text-xs ml-auto"
+              >
+                Clear All Filters
+              </Button>
+            )}
+          </div>
           
-          {/* Import JSON Button */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => jsonFileInputRef.current?.click()}
-            className="flex items-center gap-2"
-            title="Import from JSON backup file"
-          >
-            <UploadSimple className="h-4 w-4" />
-            Import JSON
-          </Button>
-          <input
-            type="file"
-            ref={jsonFileInputRef}
-            onChange={importFromJSON}
-            accept=".json"
-            className="hidden"
-          />
-          
-          {/* Add Campaign Button */}
-          <Button 
-            onClick={addCampaign} 
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <PlusCircle className="h-4 w-4" />
-            Add Campaign
-          </Button>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Owner Filter */}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="owner-filter" className="text-sm font-medium">Owner</label>
+              <Select
+                value={selectedOwner}
+                onValueChange={setSelectedOwner}
+              >
+                <SelectTrigger id="owner-filter" className="w-full">
+                  <SelectValue placeholder="All Owners" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Owners</SelectItem>
+                  {owners.map((owner) => (
+                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Region Filter */}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="region-filter" className="text-sm font-medium">Region</label>
+              <Select
+                value={selectedRegion}
+                onValueChange={setSelectedRegion}
+              >
+                <SelectTrigger id="region-filter" className="w-full">
+                  <SelectValue placeholder="All Regions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Regions</SelectItem>
+                  {regions.map((region) => (
+                    <SelectItem key={region} value={region}>{region}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Quarter Filter */}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="quarter-filter" className="text-sm font-medium">Quarter/Month</label>
+              <Select
+                value={selectedQuarter}
+                onValueChange={setSelectedQuarter}
+              >
+                <SelectTrigger id="quarter-filter" className="w-full">
+                  <SelectValue placeholder="All Quarters" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Quarters</SelectItem>
+                  {quarters.map((quarter) => (
+                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3">
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          {/* Owner Filter */}
-          <div className="flex items-center gap-2">
-            <label htmlFor="owner-filter" className="text-sm font-medium">Filter by Owner:</label>
-            <Select
-              value={selectedOwner}
-              onValueChange={setSelectedOwner}
+        
+        {/* Display campaign count and add/export buttons */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+          {/* Campaign count and status info */}
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+            <div className="text-sm font-medium">
+              {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} 
+              {selectedOwner !== "_all" ? ` for ${selectedOwner}` : ''}
+              {selectedRegion !== "_all" ? ` in ${selectedRegion}` : ''}
+              {selectedQuarter !== "_all" ? ` during ${selectedQuarter}` : ''}
+            </div>
+            
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <InfoCircle className="h-3.5 w-3.5" />
+              <span>Shipped or Cancelled campaigns are locked for editing</span>
+            </div>
+          </div>
+          
+          {/* Action buttons */}
+          <div className="flex space-x-2">
+            {/* Export Buttons */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={exportCampaignsAsJSON}
+              className="flex items-center gap-2"
+              title="Export data to JSON file (for backup)"
             >
-              <SelectTrigger id="owner-filter" className="w-[180px]">
-                <SelectValue placeholder="Select owner" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Owners</SelectItem>
-                {owners.map((owner) => (
-                  <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <FloppyDisk className="h-4 w-4" />
+              Export JSON
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={exportToCSV}
+              className="flex items-center gap-2"
+              title="Export data to CSV"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+            
+            {/* Import JSON Button */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => jsonFileInputRef.current?.click()}
+              className="flex items-center gap-2"
+              title="Import from JSON backup file"
+            >
+              <UploadSimple className="h-4 w-4" />
+              Import JSON
+            </Button>
+            <input
+              type="file"
+              ref={jsonFileInputRef}
+              onChange={importFromJSON}
+              accept=".json"
+              className="hidden"
+            />
+            
+            {/* Add Campaign Button */}
+            <Button 
+              onClick={addCampaign} 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Campaign
+            </Button>
           </div>
-          
-          {/* Status info */}
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <InfoCircle className="h-3.5 w-3.5" />
-            <span>Shipped or Cancelled campaigns are locked for editing</span>
-          </div>
-        </div>
-
-        {/* Display campaign count */}
-        <div className="text-sm text-muted-foreground">
-          {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} 
-          {selectedOwner !== "_all" ? ` for ${selectedOwner}` : ''}
         </div>
       </div>
 
@@ -922,7 +1001,8 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
               <ChartLineUp className="h-5 w-5" />
               ROI & Performance Dashboard
             </div>
-            <ROIDashboard campaigns={campaigns} />
+            {/* Pass filtered campaigns to ROI dashboard */}
+            <ROIDashboard campaigns={filteredCampaigns} />
           </div>
         )}
       </div>

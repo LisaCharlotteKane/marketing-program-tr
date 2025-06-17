@@ -18,15 +18,18 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
   // Filters
   const [regionFilter, setRegionFilter] = useState("_all");
   const [ownerFilter, setOwnerFilter] = useState("_all");
+  const [quarterFilter, setQuarterFilter] = useState("_all");
 
-  // Extract unique regions and owners for filter options
+  // Extract unique regions, owners, and quarters for filter options
   const regions = Array.from(new Set(campaigns.map(c => c.region))).filter(Boolean);
   const owners = Array.from(new Set(campaigns.map(c => c.owner))).filter(Boolean);
+  const quarters = Array.from(new Set(campaigns.map(c => c.quarterMonth))).filter(Boolean);
 
   // Filter campaigns based on selected filters
   const filteredCampaigns = campaigns.filter(campaign => 
     (regionFilter === "_all" || campaign.region === regionFilter) &&
-    (ownerFilter === "_all" || campaign.owner === ownerFilter)
+    (ownerFilter === "_all" || campaign.owner === ownerFilter) &&
+    (quarterFilter === "_all" || campaign.quarterMonth === quarterFilter)
   ).map(campaign => {
     // Ensure actualCost exists to prevent "actualCost is not defined" errors
     if (campaign.actualCost === undefined) {
@@ -109,35 +112,75 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
       <CardContent>
         <div className="space-y-4">
           {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-4">
-            <div className="w-full max-w-xs">
-              <Label htmlFor="region-filter">Filter by Region</Label>
-              <Select value={regionFilter} onValueChange={setRegionFilter}>
-                <SelectTrigger id="region-filter" className="w-full">
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">All Regions</SelectItem>
-                  {regions.map(region => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="flex flex-col gap-3 mb-4 border rounded-md p-3 bg-card">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold">Filter Campaigns</h3>
+              {(regionFilter !== "_all" || ownerFilter !== "_all" || quarterFilter !== "_all") && (
+                <button 
+                  onClick={() => {
+                    setRegionFilter("_all");
+                    setOwnerFilter("_all");
+                    setQuarterFilter("_all");
+                  }}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Clear All Filters
+                </button>
+              )}
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="w-full">
+                <Label htmlFor="region-filter">Region</Label>
+                <Select value={regionFilter} onValueChange={setRegionFilter}>
+                  <SelectTrigger id="region-filter" className="w-full">
+                    <SelectValue placeholder="All Regions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Regions</SelectItem>
+                    {regions.map(region => (
+                      <SelectItem key={region} value={region}>{region}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="w-full max-w-xs">
-              <Label htmlFor="owner-filter">Filter by Owner</Label>
-              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-                <SelectTrigger id="owner-filter" className="w-full">
-                  <SelectValue placeholder="All Owners" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_all">All Owners</SelectItem>
-                  {owners.map(owner => (
-                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="w-full">
+                <Label htmlFor="owner-filter">Owner</Label>
+                <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+                  <SelectTrigger id="owner-filter" className="w-full">
+                    <SelectValue placeholder="All Owners" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Owners</SelectItem>
+                    {owners.map(owner => (
+                      <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="w-full">
+                <Label htmlFor="quarter-filter">Quarter/Month</Label>
+                <Select value={quarterFilter} onValueChange={setQuarterFilter}>
+                  <SelectTrigger id="quarter-filter" className="w-full">
+                    <SelectValue placeholder="All Quarters" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Quarters</SelectItem>
+                    {quarters.map(quarter => (
+                      <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="text-sm mt-2">
+              Showing {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''}
+              {regionFilter !== "_all" ? ` in ${regionFilter}` : ''}
+              {ownerFilter !== "_all" ? ` for ${ownerFilter}` : ''}
+              {quarterFilter !== "_all" ? ` during ${quarterFilter}` : ''}
             </div>
           </div>
 
