@@ -21,6 +21,9 @@ import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator"
 import { BudgetLockInfo } from "@/components/budget-lock-info"
 import { StorageErrorHandler } from "@/components/storage-error-handler"
+import { Logo } from "@/components/logo"
+import { Avatar } from "@/components/avatar"
+import { ThemeSwitch } from "@/components/theme-switch"
 import { Toaster, toast } from "sonner"
 import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
 import { useRegionalBudgets, RegionalBudget, RegionalBudgets } from "@/hooks/useRegionalBudgets"
@@ -29,12 +32,36 @@ import { initAutoGitHubSync } from "@/services/auto-github-sync"
 import { Button } from "@/components/ui/button"
 import { calculateRegionalMetrics } from "@/services/budget-service"
 
-// Simple Header component
+// Header component with GitHub branding
 function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <header className="py-4 border-b mb-6">
-      <h1 className="text-2xl font-bold">{title}</h1>
-      {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
+    <header className="py-4 border-b mb-6 bg-card rounded-lg shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4">
+        <div className="flex items-center gap-4">
+          <Logo size="md" />
+          <div className="h-8 w-px bg-border mx-1" />
+          <div>
+            <h1 className="text-2xl font-bold">{title}</h1>
+            {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
+            <span className="bg-accent px-2 py-1 rounded-full text-xs font-medium text-primary">
+              GitHub Enterprise
+            </span>
+            <span className="px-2 py-1 rounded-full border text-xs text-muted-foreground">
+              APAC Marketing
+            </span>
+          </div>
+          <ThemeSwitch className="hidden md:block" />
+          <div className="h-8 w-px bg-border mx-1 hidden md:block" />
+          <div className="flex items-center gap-2">
+            <Avatar username="gh" size="sm" />
+            <span className="text-sm text-muted-foreground hidden md:inline-block">github-marketing</span>
+          </div>
+        </div>
+      </div>
     </header>
   );
 }
@@ -51,22 +78,27 @@ function PromoBanner({
   onDismiss: () => void 
 }) {
   return (
-    <div className="bg-accent text-accent-foreground py-2 px-4 mb-6 rounded-md flex items-center justify-between">
-      <div className="flex-1">
-        <p className="text-sm">{message}</p>
+    <div className="bg-primary/10 border border-primary/20 text-primary-foreground py-2 px-4 mb-6 rounded-md flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <svg className="h-5 w-5 text-primary" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11 7H13V9H11V7Z" fill="currentColor" />
+          <path d="M11 11H13V17H11V11Z" fill="currentColor" />
+          <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM4 12C4 16.418 7.582 20 12 20C16.418 20 20 16.418 20 12C20 7.582 16.418 4 12 4C7.582 4 4 7.582 4 12Z" fill="currentColor" />
+        </svg>
+        <p className="text-sm font-medium text-primary">{message}</p>
       </div>
       <div className="flex items-center gap-4">
         <a 
           href={actionUrl} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-sm font-medium hover:underline"
+          className="text-sm font-medium text-primary hover:underline"
         >
           {actionText}
         </a>
         <button 
           onClick={onDismiss} 
-          className="p-1 rounded-full hover:bg-muted/40 text-muted-foreground transition-colors"
+          className="p-1 rounded-full hover:bg-primary/20 text-primary transition-colors"
           aria-label="Dismiss"
         >
           <X className="h-4 w-4" />
