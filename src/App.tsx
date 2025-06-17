@@ -9,9 +9,10 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise, LockKey } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise, LockKey, TrendUp } from "@phosphor-icons/react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
+import { ROIDashboard } from "@/components/roi-dashboard"
 import { CampaignTable, Campaign } from "@/components/campaign-table"
 import { ExecutionTracking } from "@/components/execution-tracking"
 import { GitHubSync } from "@/components/github-sync"
@@ -27,7 +28,7 @@ import { runDataMigrations } from "@/services/migration-service"
 import { initAutoGitHubSync } from "@/services/auto-github-sync"
 import { Button } from "@/components/ui/button"
 import { calculateRegionalMetrics } from "@/services/budget-service"
-import { PrimerFooter } from "@/components/primer"
+import { PrimerFooter } from "@/components/primer/footer"
 
 // Simple Header component
 function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) {
@@ -363,7 +364,7 @@ function App() {
 
 
         <Tabs defaultValue="planning" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-4">
+          <TabsList className="grid w-full grid-cols-6 mb-4">
             <TabsTrigger value="planning" className="flex items-center gap-2">
               <Calculator className="h-4 w-4" /> Planning
             </TabsTrigger>
@@ -372,6 +373,9 @@ function App() {
             </TabsTrigger>
             <TabsTrigger value="budget" className="flex items-center gap-2">
               <Buildings className="h-4 w-4" /> Budget Management
+            </TabsTrigger>
+            <TabsTrigger value="roi" className="flex items-center gap-2">
+              <TrendUp className="h-4 w-4" /> ROI Performance
             </TabsTrigger>
             <TabsTrigger value="github" className="flex items-center gap-2">
               <Database className="h-4 w-4" /> GitHub Sync
@@ -587,6 +591,10 @@ function App() {
 
           <TabsContent value="reporting" className="space-y-6">
             <ReportingDashboard campaigns={campaigns} />
+          </TabsContent>
+
+          <TabsContent value="roi" className="space-y-6">
+            <ROIDashboard campaigns={campaigns} />
           </TabsContent>
 
           <TabsContent value="github" className="space-y-6">

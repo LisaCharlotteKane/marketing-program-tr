@@ -18,7 +18,7 @@ import {
   Pie,
   Cell
 } from "recharts";
-import { ChartBar, ChartLine, ChartPie } from "@phosphor-icons/react";
+import { ChartBar, ChartLine, ChartPie, Table, TrendUp } from "@phosphor-icons/react";
 import { Campaign } from "./campaign-table";
 
 interface ROIDashboardProps {
@@ -57,11 +57,15 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
     }
 
     if (selectedQuarter !== "all") {
-      // Extract quarter from quarterMonth field (e.g., "Q1 - July" => "Q1")
+      // Check both quarter and quarterMonth fields for compatibility
       filtered = filtered.filter(campaign => {
-        if (!campaign.quarterMonth) return false;
-        const quarter = campaign.quarterMonth.split(" ")[0]; // "Q1 - July" => "Q1"
-        return quarter === selectedQuarter;
+        if (campaign.quarter) {
+          return campaign.quarter === selectedQuarter;
+        } else if (campaign.quarterMonth) {
+          const quarter = campaign.quarterMonth.split(" ")[0]; // "Q1 - July" => "Q1"
+          return quarter === selectedQuarter;
+        }
+        return false;
       });
     }
 
@@ -147,8 +151,28 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
   // Unique regions for filter
   const regions = ["all", ...new Set(campaigns.map(c => c.region).filter(Boolean))];
 
-  // Quarters for filter
-  const quarters = ["all", "Q1", "Q2", "Q3", "Q4"];
+  // Get unique quarters from campaign data
+  const availableQuarters = new Set<string>();
+  campaigns.forEach(campaign => {
+    if (campaign.quarter) {
+      // If it's already in Q1, Q2, etc. format
+      if (campaign.quarter.startsWith('Q')) {
+        availableQuarters.add(campaign.quarter.split(' ')[0]); // Get just the Q part
+      }
+    } else if (campaign.quarterMonth) {
+      // Extract from quarterMonth format (e.g., "Q1 - July")
+      const quarter = campaign.quarterMonth.split(' ')[0];
+      if (quarter.startsWith('Q')) {
+        availableQuarters.add(quarter);
+      }
+    }
+  });
+  
+  // Add standard quarters if not already present
+  ["Q1", "Q2", "Q3", "Q4"].forEach(q => availableQuarters.add(q));
+  
+  // Sort and prepare for dropdown
+  const quarters = ["all", ...Array.from(availableQuarters).sort()];
 
   // Data for the funnel chart
   const funnelData = [
@@ -201,7 +225,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
-          ROI Dashboard
+          <TrendUp className="h-5 w-5" /> ROI Performance Dashboard
         </CardTitle>
         <CardDescription>Visualize campaign performance and return on investment</CardDescription>
       </CardHeader>
@@ -242,7 +266,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
 
         {/* Key Metrics Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-card rounded-lg p-4 border">
+          <div className="bg-card rounded-lg p-4 border shadow-sm">
             <div className="text-sm font-medium text-muted-foreground mb-1">Total Spend</div>
             <div className="text-2xl font-bold">{formatCurrency(metrics.totalActualSpend > 0 ? metrics.totalActualSpend : metrics.totalForecastedSpend)}</div>
             {metrics.totalActualSpend > 0 && (
@@ -251,7 +275,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
               </div>
             )}
           </div>
-          <div className="bg-card rounded-lg p-4 border">
+          <div className="bg-card rounded-lg p-4 border shadow-sm">
             <div className="text-sm font-medium text-muted-foreground mb-1">Total Pipeline</div>
             <div className="text-2xl font-bold">{formatCurrency(metrics.actualPipeline > 0 ? metrics.actualPipeline : metrics.totalPipelineForecast)}</div>
             {metrics.actualPipeline > 0 && (
@@ -260,64 +284,85 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
               </div>
             )}
           </div>
-          <div className="bg-card rounded-lg p-4 border">
+          <div className="bg-card rounded-lg p-4 border shadow-sm">
             <div className="text-sm font-medium text-muted-foreground mb-1">Return on Investment</div>
-            <div className="text-2xl font-bold text-primary">{metrics.roi}%</div>
+            <div className="text-2xl font-bold" style={{ color: metrics.roi < 100 ? '#f87171' : metrics.roi < 300 ? '#facc15' : '#4ade80' }}>
+              {metrics.roi}%
+            </div>
             <div className="text-sm text-muted-foreground mt-1">
               {metrics.roi < 100 ? 'Low' : metrics.roi < 300 ? 'Moderate' : 'High'} ROI
             </div>
           </div>
         </div>
 
+        {/* ROI Explanation */}
+        <div className="bg-muted/20 p-4 rounded-md mb-6">
+          <h3 className="text-sm font-medium mb-2">Understanding ROI Metrics</h3>
+          <p className="text-sm text-muted-foreground">
+            ROI is calculated as (Pipeline Value ÷ Total Spend) × 100%. An ROI of 300% or higher indicates high-performing campaigns, 
+            while below 100% suggests campaigns that may need optimization.
+          </p>
+        </div>
+
         {/* Additional Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-muted rounded-lg p-3">
+          <div className="bg-card/80 rounded-lg p-3 border shadow-sm">
             <div className="text-xs font-medium text-muted-foreground mb-1">Leads</div>
             <div className="text-lg font-semibold">
               {metrics.totalActualLeads > 0 
                 ? metrics.totalActualLeads.toLocaleString() 
                 : metrics.totalExpectedLeads.toLocaleString()}
             </div>
-            {metrics.totalActualLeads > 0 && (
+            {metrics.totalActualLeads > 0 && metrics.totalExpectedLeads > 0 && (
               <div className="text-xs text-muted-foreground">
                 {Math.round((metrics.totalActualLeads / metrics.totalExpectedLeads) * 100)}% of target
               </div>
             )}
           </div>
-          <div className="bg-muted rounded-lg p-3">
+          <div className="bg-card/80 rounded-lg p-3 border shadow-sm">
             <div className="text-xs font-medium text-muted-foreground mb-1">MQLs</div>
             <div className="text-lg font-semibold">
               {metrics.totalActualMQLs > 0 
                 ? metrics.totalActualMQLs.toLocaleString() 
                 : metrics.totalMQLs.toLocaleString()}
             </div>
-            {metrics.totalActualMQLs > 0 && (
+            {metrics.totalActualMQLs > 0 && metrics.totalMQLs > 0 && (
               <div className="text-xs text-muted-foreground">
                 {Math.round((metrics.totalActualMQLs / metrics.totalMQLs) * 100)}% of target
               </div>
             )}
           </div>
-          <div className="bg-muted rounded-lg p-3">
+          <div className="bg-card/80 rounded-lg p-3 border shadow-sm">
             <div className="text-xs font-medium text-muted-foreground mb-1">SQLs</div>
             <div className="text-lg font-semibold">
               {metrics.actualSQLs > 0 
                 ? metrics.actualSQLs.toLocaleString() 
                 : metrics.totalSQLs.toLocaleString()}
             </div>
+            {metrics.actualSQLs > 0 && metrics.totalSQLs > 0 && (
+              <div className="text-xs text-muted-foreground">
+                {Math.round((metrics.actualSQLs / metrics.totalSQLs) * 100)}% of target
+              </div>
+            )}
           </div>
-          <div className="bg-muted rounded-lg p-3">
+          <div className="bg-card/80 rounded-lg p-3 border shadow-sm">
             <div className="text-xs font-medium text-muted-foreground mb-1">Opportunities</div>
             <div className="text-lg font-semibold">
               {metrics.actualOpportunities > 0 
                 ? metrics.actualOpportunities.toLocaleString() 
                 : metrics.totalOpportunities.toLocaleString()}
             </div>
+            {metrics.actualOpportunities > 0 && metrics.totalOpportunities > 0 && (
+              <div className="text-xs text-muted-foreground">
+                {Math.round((metrics.actualOpportunities / metrics.totalOpportunities) * 100)}% of target
+              </div>
+            )}
           </div>
         </div>
 
         {/* Charts Tabs */}
         <Tabs defaultValue="funnel" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-4 mb-4">
             <TabsTrigger value="funnel" className="flex items-center gap-2">
               <ChartBar className="h-4 w-4" /> Lead Funnel
             </TabsTrigger>
@@ -326,6 +371,9 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
             </TabsTrigger>
             <TabsTrigger value="roi" className="flex items-center gap-2">
               <ChartPie className="h-4 w-4" /> ROI Gauge
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center gap-2">
+              <Table className="h-4 w-4" /> Campaign Performance
             </TabsTrigger>
           </TabsList>
 
@@ -434,17 +482,93 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
                   >
                     ROI
                   </text>
+                  {/* Add gauge markers */}
+                  <text x="15%" y="85%" textAnchor="middle" fill="var(--muted-foreground)" fontSize="12">0%</text>
+                  <text x="50%" y="10%" textAnchor="middle" fill="var(--muted-foreground)" fontSize="12">500%</text>
+                  <text x="85%" y="85%" textAnchor="middle" fill="var(--muted-foreground)" fontSize="12">1000%</text>
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="text-center text-sm text-muted-foreground mt-4">
+            <div className="text-center p-4 mt-4 bg-card/50 rounded-lg border">
+              <h4 className="font-semibold mb-2">ROI Analysis</h4>
               {metrics.roi < 100 ? (
-                <span className="text-red-500">Low ROI: Consider optimizing campaign strategy</span>
+                <div className="text-red-500 flex items-center justify-center gap-2">
+                  <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+                  <span>Low ROI: Consider optimizing campaign strategy and budget allocation</span>
+                </div>
               ) : metrics.roi < 300 ? (
-                <span className="text-yellow-500">Moderate ROI: On track for positive returns</span>
+                <div className="text-yellow-500 flex items-center justify-center gap-2">
+                  <span className="inline-block w-3 h-3 rounded-full bg-yellow-500"></span>
+                  <span>Moderate ROI: On track but potential for improved returns with targeted adjustments</span>
+                </div>
               ) : (
-                <span className="text-green-500">High ROI: Excellent campaign performance</span>
+                <div className="text-green-500 flex items-center justify-center gap-2">
+                  <span className="inline-block w-3 h-3 rounded-full bg-green-500"></span>
+                  <span>High ROI: Excellent campaign performance - consider scaling successful approaches</span>
+                </div>
               )}
+            </div>
+          </TabsContent>
+          
+          {/* Campaign Performance Table */}
+          <TabsContent value="performance">
+            <div className="overflow-auto max-h-96 border rounded-md">
+              <table className="w-full min-w-full divide-y divide-border">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground tracking-wider">Campaign</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Forecasted Cost</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Actual Cost</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Expected Leads</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Actual Leads</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Pipeline Value</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">ROI</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-background divide-y divide-border">
+                  {filteredCampaigns.map((campaign, idx) => {
+                    // Calculate campaign-specific metrics
+                    const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
+                    const actualCost = typeof campaign.actualCost === 'number' ? campaign.actualCost : 0;
+                    const expectedLeads = typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0;
+                    const actualLeads = typeof campaign.actualLeads === 'number' ? campaign.actualLeads : 0;
+                    
+                    // Calculate pipeline value (using the same formula as elsewhere)
+                    const expectedMQLs = Math.round(expectedLeads * 0.1);
+                    const expectedSQLs = Math.round(expectedLeads * 0.06);
+                    const expectedOpps = Math.round(expectedSQLs * 0.8);
+                    const pipelineValue = expectedOpps * 50000;
+                    
+                    // Calculate ROI
+                    const roi = forecastedCost > 0 ? Math.round((pipelineValue / forecastedCost) * 100) : 0;
+                    
+                    // Determine ROI color
+                    const roiColor = roi < 100 ? 'text-red-500' : roi < 300 ? 'text-yellow-500' : 'text-green-500';
+                    
+                    return (
+                      <tr key={campaign.id || idx} className={idx % 2 === 0 ? 'bg-card/50' : 'bg-background'}>
+                        <td className="px-3 py-2 text-sm font-medium">
+                          {campaign.description || 'Untitled Campaign'}
+                          <div className="text-xs text-muted-foreground">{campaign.campaignType || 'No type'}</div>
+                        </td>
+                        <td className="px-3 py-2 text-sm text-right">{formatCurrency(forecastedCost)}</td>
+                        <td className="px-3 py-2 text-sm text-right">{actualCost > 0 ? formatCurrency(actualCost) : '-'}</td>
+                        <td className="px-3 py-2 text-sm text-right">{expectedLeads.toLocaleString()}</td>
+                        <td className="px-3 py-2 text-sm text-right">{actualLeads > 0 ? actualLeads.toLocaleString() : '-'}</td>
+                        <td className="px-3 py-2 text-sm text-right">{formatCurrency(pipelineValue)}</td>
+                        <td className={`px-3 py-2 text-sm text-right font-semibold ${roiColor}`}>{roi}%</td>
+                      </tr>
+                    );
+                  })}
+                  {filteredCampaigns.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="px-3 py-4 text-sm text-center text-muted-foreground">
+                        No campaigns match the selected filters
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </TabsContent>
         </Tabs>
