@@ -9,6 +9,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Checkbox } from "@/components/ui/checkbox";
 import { ROIDashboard } from "@/components/roi-dashboard";
 import { CSVUploader } from "@/components/csv-uploader";
+import { AICampaignSuggestions } from "@/components/ai-campaign-suggestions";
 import { toast } from "sonner";
 import { 
   PlusCircle, 
@@ -925,6 +926,14 @@ export const CampaignTable = ({ campaigns, setCampaigns }: CampaignTableProps) =
             <ROIDashboard campaigns={campaigns} />
           </div>
         )}
+        
+        {/* AI Campaign Suggestions */}
+        <AICampaignSuggestions 
+          campaigns={campaigns} 
+          onAddCampaign={(newCampaign) => {
+            setCampaigns([...campaigns, newCampaign as Campaign]);
+          }} 
+        />
       </div>
     </div>
   );

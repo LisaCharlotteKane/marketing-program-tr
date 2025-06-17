@@ -1,116 +1,105 @@
-# Marketing Campaign Calculator PRD
+# Marketing Campaign Calculator - Product Requirements Document
 
 ## Core Purpose & Success
-- **Mission Statement**: A comprehensive tool for marketing teams to plan, budget, track, and analyze marketing campaigns and their ROI.
-- **Success Indicators**: Accurate budget tracking, campaign performance metrics, and forecasting capabilities.
-- **Experience Qualities**: Professional, Intuitive, Comprehensive
+- **Mission Statement**: Empower marketing teams to plan, track, and optimize campaigns with intelligent AI-powered recommendations.
+- **Success Indicators**: Increased campaign planning efficiency, improved ROI, and enhanced collaboration between regional marketing teams.
+- **Experience Qualities**: Intelligent, Efficient, Collaborative
 
 ## Project Classification & Approach
-- **Complexity Level**: Complex Application (multiple features with advanced state management)
-- **Primary User Activity**: Creating and Interacting (planning campaigns and analyzing performance)
+- **Complexity Level**: Light Application (multiple features with basic state)
+- **Primary User Activity**: Creating and Planning
 
 ## Thought Process for Feature Selection
-- **Core Problem Analysis**: Marketing teams need a centralized tool to plan campaigns, allocate budgets, and track ROI across regions.
-- **User Context**: Marketing managers will use this tool during planning sessions, budget reviews, and performance analysis meetings.
-- **Critical Path**: Campaign creation → budget allocation → execution tracking → performance reporting
-- **Key Moments**: Budget allocation decisions, campaign performance analysis, reporting dashboard visualization
+- **Core Problem Analysis**: Marketing teams need assistance generating innovative campaign ideas that align with existing strategies and meet regional requirements.
+- **User Context**: Marketing planners will use this tool during quarterly planning sessions and ongoing campaign management.
+- **Critical Path**: View existing campaigns → Request AI suggestions → Review suggestions → Add selected campaigns to plan → Track execution
+- **Key Moments**: 
+  1. Receiving personalized campaign suggestions based on existing portfolio
+  2. Adding AI-suggested campaigns to the planning table with a single click
+  3. Seeing projected ROI calculations instantly
 
 ## Essential Features
-1. **Campaign Planning Table**
-   - Functionality: Create, edit, and manage marketing campaigns with details like type, region, cost, etc.
-   - Purpose: Central repository for all campaign information
-   - Success Criteria: Smooth editing experience, proper data validation
+1. **AI-Powered Campaign Suggestions**
+   - **Functionality**: Generates contextually relevant campaign ideas based on existing campaign patterns and user prompts
+   - **Purpose**: Reduces planning time, sparks creative ideas, and ensures alignment with strategic objectives
+   - **Success Criteria**: Users can generate, customize, and implement campaign suggestions with minimal friction
 
-2. **Budget Management**
-   - Functionality: Allocate and track budgets across regions
-   - Purpose: Ensure campaigns stay within budget constraints
-   - Success Criteria: Visual indicators of budget usage, warnings for overages
+2. **Campaign Analysis & Insights**
+   - **Functionality**: Analyzes existing campaigns to identify patterns in types, regions, and strategic pillars
+   - **Purpose**: Provides context for AI suggestions and helps users understand their current marketing mix
+   - **Success Criteria**: AI suggestions reference and complement existing campaigns rather than duplicating them
 
-3. **Execution Tracking**
-   - Functionality: Track campaign progress and actual costs vs. forecasts
-   - Purpose: Monitor real-time campaign performance
-   - Success Criteria: Clear status indicators, easy update process
-
-4. **Reporting Dashboard**
-   - Functionality: Visual representation of campaign performance metrics
-   - Purpose: Aid decision-making with data visualization
-   - Success Criteria: Clear charts, filterable data views
-
-5. **Data Persistence**
-   - Functionality: Save campaign data locally and sync with GitHub
-   - Purpose: Ensure data safety and sharing capabilities
-   - Success Criteria: Reliable saving, successful GitHub integration
+3. **One-Click Campaign Addition**
+   - **Functionality**: Allows users to add AI-suggested campaigns directly to planning table
+   - **Purpose**: Streamlines workflow from ideation to implementation
+   - **Success Criteria**: Added campaigns are properly formatted with all required fields and calculated metrics
 
 ## Design Direction
 
 ### Visual Tone & Identity
-- **Emotional Response**: Confidence, clarity, and professionalism
-- **Design Personality**: Professional and efficient with a modern edge
-- **Visual Metaphors**: Dashboard gauges, budget meters, and performance charts
-- **Simplicity Spectrum**: Clean interface with rich data visualizations where needed
+- **Emotional Response**: Confidence, efficiency, intelligence
+- **Design Personality**: Professional with moments of delight
+- **Visual Metaphors**: Brain icon represents AI-powered features
+- **Simplicity Spectrum**: Clean, focused interface that prioritizes clear information hierarchy
 
 ### Color Strategy
-- **Color Scheme Type**: Monochromatic with accent colors for emphasis
-- **Primary Color**: Twitter blue (#1e9df1) - communicates trust and professionalism
-- **Secondary Colors**: Dark gray (#0f1419) for structure and organization
-- **Accent Color**: Light blue (#E3ECF6) for highlighting and emphasis
-- **Color Psychology**: Blue promotes trust and efficiency; grays provide stability
-- **Color Accessibility**: All color combinations meet WCAG AA contrast ratios
-- **Foreground/Background Pairings**: 
-  - Background (#ffffff) / Foreground (#0f1419) - Main content
-  - Card (#f7f8f8) / Card-foreground (#0f1419) - Content containers
-  - Primary (#1e9df1) / Primary-foreground (#ffffff) - Actions
+- **Color Scheme Type**: Analogous with accent colors
+- **Primary Color**: Blue (#1e9df1) - representing technology and intelligence
+- **Secondary Colors**: Dark gray (#0f1419) for UI elements and text
+- **Accent Color**: Light blue (#E3ECF6) for highlighting areas of focus
+- **Color Psychology**: Blue conveys trust and reliability while maintaining professional appearance
+- **Foreground/Background Pairings**: High contrast between text and background elements to ensure readability
 
 ### Typography System
-- **Font Pairing Strategy**: Single sans-serif font family (Inter) for consistency
-- **Typographic Hierarchy**: Clear size distinction between headers, subheaders, and body text
-- **Font Personality**: Clean, professional, highly readable
-- **Readability Focus**: Generous line-height and optimal line length
-- **Typography Consistency**: Consistent font weights (400, 500, 600, 700) across the application
-- **Which fonts**: Inter (Google font)
-- **Legibility Check**: High legibility for both data-dense tables and headings
+- **Font Pairing Strategy**: Inter for both headings and body text, maintaining visual consistency
+- **Typographic Hierarchy**: Clear size differentiation between headings, subheadings, and body text
+- **Font Personality**: Professional, clean, highly readable
+- **Readability Focus**: Appropriate line height and spacing to ensure comfortable reading
+- **Typography Consistency**: Consistent font usage across the application
+- **Which Fonts**: Inter (Google Font)
+- **Legibility Check**: High legibility across all device sizes
 
 ### Visual Hierarchy & Layout
-- **Attention Direction**: Card-based layout draws attention to key areas
-- **White Space Philosophy**: Generous spacing to separate logical sections
-- **Grid System**: Responsive 12-column grid with appropriate gutters
-- **Responsive Approach**: Mobile-first with appropriate breakpoints
-- **Content Density**: Balanced density, with data-dense tables offset by clean surrounding areas
+- **Attention Direction**: AI suggestions section uses cards to draw visual focus
+- **White Space Philosophy**: Generous spacing between elements to create visual breathing room
+- **Grid System**: Responsive grid that adapts from single column on mobile to multi-column on desktop
+- **Responsive Approach**: Column layout adapts based on screen size
+- **Content Density**: Balanced approach that prioritizes readability while maximizing information display
 
 ### Animations
-- **Purposeful Meaning**: Subtle animations for state changes and loading
-- **Hierarchy of Movement**: Priority to user feedback animations
-- **Contextual Appropriateness**: Professional environment requires restraint
+- **Purposeful Meaning**: Loading spinner during AI generation to indicate processing
+- **Hierarchy of Movement**: Subtle transitions for card hovers
+- **Contextual Appropriateness**: Animations limited to functional feedback
 
 ### UI Elements & Component Selection
-- **Component Usage**: Cards for content grouping, tabs for section organization, tables for data
-- **Component Customization**: Rounded corners and subtle shadows for cards
-- **Component States**: Distinct hover and active states for interactive elements
-- **Icon Selection**: Phosphor icons for consistent visual language
-- **Component Hierarchy**: Primary actions use solid buttons, secondary actions use outline variants
-- **Spacing System**: Consistent padding and margin using Tailwind scale
-- **Mobile Adaptation**: Stack horizontal layouts vertically, adjust table views
+- **Component Usage**: Cards for suggestion display, input field with button for prompt entry
+- **Component Customization**: Consistent with existing application styling
+- **Component States**: Clear hover and active states for interactive elements
+- **Icon Selection**: Brain icon for AI features, plus icon for adding campaigns
+- **Component Hierarchy**: Primary generate button, secondary add buttons
+- **Spacing System**: Consistent padding using Tailwind's spacing scale
+- **Mobile Adaptation**: Stacked cards on mobile versus side-by-side on desktop
 
 ### Visual Consistency Framework
-- **Design System Approach**: Component-based with consistent styling
-- **Style Guide Elements**: Color palette, typography, spacing, component usage
-- **Visual Rhythm**: Consistent card styling and section spacing
-- **Brand Alignment**: Professional appearance aligns with business application
+- **Design System Approach**: Component-based design consistent with existing application
+- **Style Guide Elements**: Colors, typography, spacing, and component styles aligned with application
+- **Visual Rhythm**: Consistent card layouts create predictable patterns
+- **Brand Alignment**: Professional appearance aligned with enterprise marketing tool
 
 ### Accessibility & Readability
 - **Contrast Goal**: WCAG AA compliance for all text elements
 
 ## Edge Cases & Problem Scenarios
-- **Potential Obstacles**: Data loss during session changes
-- **Edge Case Handling**: Autosave functionality, local storage backup
-- **Technical Constraints**: Browser storage limitations
+- **Potential Obstacles**: LLM may generate improperly formatted responses
+- **Edge Case Handling**: Error handling for LLM response parsing failures
+- **Technical Constraints**: LLM response time might create user waiting period
 
 ## Implementation Considerations
-- **Scalability Needs**: Support for increasing number of campaigns
-- **Testing Focus**: Data persistence, calculation accuracy
-- **Critical Questions**: How to handle large datasets in browser?
+- **Scalability Needs**: May expand to include more detailed campaign suggestions or additional AI features
+- **Testing Focus**: Response parsing reliability, suggestion quality
+- **Critical Questions**: How can we ensure suggestions are relevant to the user's specific marketing context?
 
 ## Reflection
-- This approach uniquely combines comprehensive planning features with rigorous budget tracking
-- The assumption that users need region-specific budgeting could be challenged
-- Exceptional solution would include AI-powered insights for campaign optimization
+- This solution uniquely combines AI capabilities with domain-specific marketing knowledge to create a powerful planning assistant.
+- We've assumed users want specific types of campaign suggestions rather than completely novel ideas.
+- Truly exceptional implementation would incorporate feedback on which suggestions were implemented successfully to improve future recommendations.
