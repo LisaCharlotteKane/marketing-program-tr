@@ -527,7 +527,6 @@ export function CampaignTable({
           </div>
         </div>
       </div>
-      
       {/* Display error if no campaigns match filters */}
       {filteredCampaigns.length === 0 && (
         <Alert variant="default" className="my-4">
@@ -536,7 +535,6 @@ export function CampaignTable({
           </AlertDescription>
         </Alert>
       )}
-      
       {/* Auto-calculation Info Alert */}
       <div className="bg-accent/30 border border-accent rounded-md p-3 mb-4">
         <h4 className="text-sm font-semibold flex items-center gap-2 mb-1">
@@ -553,7 +551,6 @@ export function CampaignTable({
           <li>Pipeline Forecast = Opportunities × $50,000</li>
         </ul>
       </div>
-      
       {/* Campaign table */}
       <div className="border rounded-md overflow-auto">
         <Table>
@@ -855,7 +852,6 @@ export function CampaignTable({
           </TableBody>
         </Table>
       </div>
-      
       {/* Campaign Summary - Mobile View */}
       {isMobile && filteredCampaigns.length > 0 && (
         <div className="mt-8 p-4 bg-muted/20 rounded-lg">
@@ -891,7 +887,6 @@ export function CampaignTable({
           </dl>
         </div>
       )}
-      
       {/* Add JSON importing functionality */}
       <input
         type="file"

@@ -40,23 +40,19 @@ function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) 
         <div className="flex items-center gap-4">
           <Logo size="md" />
           <div>
-            {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
+            {subtitle && <p className="text-muted-foreground mt-1 ">{subtitle}</p>}
           </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2">
-            <span className="bg-accent px-2 py-1 rounded-full text-xs font-medium text-primary">
-              GitHub Enterprise
-            </span>
-            <span className="px-2 py-1 rounded-full border text-xs text-muted-foreground">
-              APAC Marketing
-            </span>
+            <span className="bg-accent px-2 py-1 rounded-full text-xs font-medium text-primary">Regional Marketing</span>
+            <span className="px-2 py-1 rounded-full border text-xs text-muted-foreground"></span>
           </div>
           <ThemeSwitch className="hidden md:block" />
           <div className="h-8 w-px bg-border mx-1 hidden md:block" />
           <div className="flex items-center gap-2">
             <Avatar username="gh" size="sm" />
-            <span className="text-sm text-muted-foreground hidden md:inline-block">github-marketing</span>
+            <span className="text-sm text-muted-foreground hidden md:inline-block"></span>
           </div>
         </div>
       </div>

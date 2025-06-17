@@ -31,9 +31,7 @@ export function Logo({ size = "md", variant = "default" }: LogoProps) {
           fill="currentColor"
         />
       </svg>
-      <span className={`font-bold ${size === "lg" ? "text-xl" : size === "md" ? "text-lg" : "text-base"}`}>
-        MarketPlanner
-      </span>
+      <span className={`font-bold ${size === "lg" ? "text-xl" : size === "md" ? "text-lg" : "text-base"}`}></span>
     </div>
   );
 }
