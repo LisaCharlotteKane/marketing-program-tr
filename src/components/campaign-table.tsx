@@ -496,139 +496,155 @@ export function CampaignTable({
   return (
     <div className="space-y-6">
       {/* Filters and Actions */}
-      <div className="flex flex-col mb-4 p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
-          <div>
-            <Label htmlFor="region-filter">Region</Label>
-            <Select
-              value={selectedRegion}
-              onValueChange={setSelectedRegion}
-            >
-              <SelectTrigger id="region-filter" className="w-full">
-                <SelectValue placeholder="All Regions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Regions</SelectItem>
-                {regions.map(region => (
-                  region && <SelectItem key={region} value={region}>{region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="quarter-filter">Quarter</Label>
-            <Select
-              value={selectedQuarter}
-              onValueChange={setSelectedQuarter}
-            >
-              <SelectTrigger id="quarter-filter" className="w-full">
-                <SelectValue placeholder="All Quarters" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Quarters</SelectItem>
-                {availableQuarters.map(quarter => (
-                  quarter && <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="owner-filter">Owner</Label>
-            <Select
-              value={selectedOwner}
-              onValueChange={setOwnerFilter}
-            >
-              <SelectTrigger id="owner-filter" className="w-full">
-                <SelectValue placeholder="All Owners" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Owners</SelectItem>
-                {owners.map(owner => (
-                  owner && <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="pillar-filter">Strategic Pillar</Label>
-            <Select
-              value={selectedPillar}
-              onValueChange={setSelectedPillar}
-            >
-              <SelectTrigger id="pillar-filter" className="w-full">
-                <SelectValue placeholder="All Pillars" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Pillars</SelectItem>
-                {availablePillars.filter(p => p !== "_all").map(pillar => (
-                  pillar && <SelectItem key={pillar} value={pillar}>{pillar}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="campaign-type-filter">Campaign Type</Label>
-            <Select
-              value={selectedCampaignType}
-              onValueChange={setSelectedCampaignType}
-            >
-              <SelectTrigger id="campaign-type-filter" className="w-full">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Types</SelectItem>
-                {availableCampaignTypes.filter(t => t !== "_all").map(type => (
-                  type && <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="revenue-play-filter">Revenue Play</Label>
-            <Select
-              value={selectedRevenuePlay}
-              onValueChange={setSelectedRevenuePlay}
-            >
-              <SelectTrigger id="revenue-play-filter" className="w-full">
-                <SelectValue placeholder="All Plays" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Plays</SelectItem>
-                {availableRevenuePlays.filter(p => p !== "_all").map(play => (
-                  play && <SelectItem key={play} value={play}>{play}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div className="flex items-end">
+      <div className="flex flex-col mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium">Campaign Planning</h3>
+          <div className="flex gap-2">
             <Button 
-              variant="outline" 
-              className="flex items-center gap-2 w-full"
-              onClick={() => {
-                setSelectedOwner("_all");
-                setSelectedRegion("_all");
-                setSelectedQuarter("_all");
-                setSelectedPillar("_all");
-                setSelectedCampaignType("_all");
-                setSelectedRevenuePlay("_all");
-              }}
+              variant="default" 
+              className="flex items-center gap-2 shadow-sm"
+              onClick={addCampaign}
             >
-              <FilterX className="h-4 w-4" />
-              <span>Reset Filters</span>
+              <Plus className="h-4 w-4" />
+              Add Campaign
             </Button>
+            
+            {selectedCampaigns.length > 0 && (
+              <Button 
+                variant="destructive" 
+                className="flex items-center gap-2"
+                onClick={removeSelectedCampaigns}
+              >
+                <TrashSimple className="h-4 w-4" />
+                Delete Selected ({selectedCampaigns.length})
+              </Button>
+            )}
           </div>
         </div>
         
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="bg-card/50 rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <FilterX className="h-4 w-4 text-muted-foreground" />
+            <h4 className="text-sm font-medium">Filter Campaigns</h4>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            <div>
+              <Select
+                value={selectedRegion}
+                onValueChange={setSelectedRegion}
+              >
+                <SelectTrigger id="region-filter" className="w-full bg-background">
+                  <SelectValue placeholder="Region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Regions</SelectItem>
+                  {regions.map(region => (
+                    region && <SelectItem key={region} value={region}>{region}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select
+                value={selectedQuarter}
+                onValueChange={setSelectedQuarter}
+              >
+                <SelectTrigger id="quarter-filter" className="w-full bg-background">
+                  <SelectValue placeholder="Quarter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Quarters</SelectItem>
+                  {availableQuarters.map(quarter => (
+                    quarter && <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select
+                value={selectedOwner}
+                onValueChange={setOwnerFilter}
+              >
+                <SelectTrigger id="owner-filter" className="w-full bg-background">
+                  <SelectValue placeholder="Owner" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Owners</SelectItem>
+                  {owners.map(owner => (
+                    owner && <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select
+                value={selectedPillar}
+                onValueChange={setSelectedPillar}
+              >
+                <SelectTrigger id="pillar-filter" className="w-full bg-background">
+                  <SelectValue placeholder="Strategic Pillar" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Pillars</SelectItem>
+                  {availablePillars.filter(p => p !== "_all").map(pillar => (
+                    pillar && <SelectItem key={pillar} value={pillar}>{pillar}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Select
+                value={selectedCampaignType}
+                onValueChange={setSelectedCampaignType}
+              >
+                <SelectTrigger id="campaign-type-filter" className="w-full bg-background">
+                  <SelectValue placeholder="Campaign Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Types</SelectItem>
+                  {availableCampaignTypes.filter(t => t !== "_all").map(type => (
+                    type && <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Button 
+                variant="outline" 
+                className="flex items-center gap-2 w-full h-10 bg-background"
+                onClick={() => {
+                  setSelectedOwner("_all");
+                  setSelectedRegion("_all");
+                  setSelectedQuarter("_all");
+                  setSelectedPillar("_all");
+                  setSelectedCampaignType("_all");
+                  setSelectedRevenuePlay("_all");
+                }}
+              >
+                <FilterX className="h-4 w-4" />
+                <span>Clear All</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Display error if no campaigns match filters */}
+      {filteredCampaigns.length === 0 && (
+        <div className="flex flex-col items-center justify-center p-8 bg-card/50 border rounded-lg text-center">
+          <FilterX className="h-10 w-10 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">No campaigns match the filters</h3>
+          <p className="text-muted-foreground mb-4 max-w-md">
+            Try clearing some filters or add a new campaign to get started.
+          </p>
           <Button 
             variant="outline" 
-            className="flex items-center gap-2 w-full"
+            className="flex items-center gap-2"
             onClick={() => {
               setSelectedOwner("_all");
               setSelectedRegion("_all");
@@ -639,89 +655,58 @@ export function CampaignTable({
             }}
           >
             <FilterX className="h-4 w-4" />
-            <span>Clear Filters</span>
+            <span>Clear All Filters</span>
           </Button>
         </div>
-        
-        <div className="flex flex-wrap gap-2 justify-start md:justify-end">
-          <Button 
-            variant="default" 
-            className="flex items-center gap-2"
-            onClick={addCampaign}
-          >
-            <Plus className="h-4 w-4" />
-            Add Campaign
-          </Button>
-          
-          {selectedCampaigns.length > 0 && (
-            <Button 
-              variant="destructive" 
-              className="flex items-center gap-2"
-              onClick={removeSelectedCampaigns}
-            >
-              <TrashSimple className="h-4 w-4" />
-              Delete Selected ({selectedCampaigns.length})
-            </Button>
-          )}
-          
-          {/* Export CSV and Upload JSON buttons removed */}
-        </div>
-      </div>
-      {/* Display error if no campaigns match filters */}
-      {filteredCampaigns.length === 0 && (
-        <Alert variant="default" className="my-4">
-          <AlertDescription>
-            No campaigns match the selected filters. Try clearing filters or add a new campaign.
-          </AlertDescription>
-        </Alert>
       )}
 
       {/* Campaign table */}
-      <div className="border rounded-md overflow-auto">
-        <Table>
-          <TableHeader className="bg-muted/30">
-            <TableRow>
-              <TableHead className="w-[50px]">
-                <Checkbox 
-                  checked={filteredCampaigns.length > 0 && selectedCampaigns.length === filteredCampaigns.length}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all campaigns"
-                />
-              </TableHead>
-              <TableHead className="w-[180px]">Campaign Name</TableHead>
-              <TableHead className="w-[180px]">Campaign Type</TableHead>
-              <TableHead className="w-[140px]">Strategic Pillar</TableHead>
-              <TableHead className="w-[140px]">Revenue Play</TableHead>
-              <TableHead className="w-[80px]">FY</TableHead>
-              <TableHead className="w-[110px]">Quarter</TableHead>
-              <TableHead className="w-[100px]">Region</TableHead>
-              <TableHead className="w-[120px]">Country</TableHead>
-              <TableHead className="w-[120px]">Owner</TableHead>
-              <TableHead className="w-[200px]">Description</TableHead>
-              <TableHead className="w-[120px]">Forecasted Cost</TableHead>
-              <TableHead className="w-[110px]">Expected Leads</TableHead>
-              <TableHead className="w-[80px]">MQLs (10%)</TableHead>
-              <TableHead className="w-[80px]">SQLs (6%)</TableHead>
-              <TableHead className="w-[110px]">Opps (80% of SQL)</TableHead>
-              <TableHead className="w-[130px]">Pipeline ($50K × Opps)</TableHead>
-              <TableHead className="w-[80px]">Status</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCampaigns.map(campaign => (
-              <TableRow 
-                key={campaign.id}
-                className={`${isCampaignComplete(campaign) ? "bg-muted/20" : ""} ${selectedCampaigns.includes(campaign.id) ? "bg-accent/30" : ""}`}
-              >
-                {/* Selection Checkbox */}
-                <TableCell>
+      <div className="rounded-lg border shadow-sm overflow-hidden">
+        <div className="overflow-auto">
+          <Table>
+            <TableHeader className="bg-muted/40">
+              <TableRow>
+                <TableHead className="w-[50px]">
                   <Checkbox 
-                    checked={selectedCampaigns.includes(campaign.id)}
-                    onCheckedChange={() => toggleCampaignSelection(campaign.id)}
-                    aria-label={`Select campaign ${campaign.campaignName}`}
+                    checked={filteredCampaigns.length > 0 && selectedCampaigns.length === filteredCampaigns.length}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all campaigns"
                   />
-                </TableCell>
+                </TableHead>
+                <TableHead className="w-[180px] font-medium">Campaign Name</TableHead>
+                <TableHead className="w-[180px] font-medium">Campaign Type</TableHead>
+                <TableHead className="w-[140px] font-medium">Strategic Pillar</TableHead>
+                <TableHead className="w-[140px] font-medium">Revenue Play</TableHead>
+                <TableHead className="w-[80px] font-medium">FY</TableHead>
+                <TableHead className="w-[110px] font-medium">Quarter</TableHead>
+                <TableHead className="w-[100px] font-medium">Region</TableHead>
+                <TableHead className="w-[120px] font-medium">Country</TableHead>
+                <TableHead className="w-[120px] font-medium">Owner</TableHead>
+                <TableHead className="w-[200px] font-medium">Description</TableHead>
+                <TableHead className="w-[120px] font-medium">Forecasted Cost</TableHead>
+                <TableHead className="w-[110px] font-medium">Expected Leads</TableHead>
+                <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">MQLs</TableHead>
+                <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">SQLs</TableHead>
+                <TableHead className="w-[110px] font-medium text-muted-foreground bg-muted/5">Opps</TableHead>
+                <TableHead className="w-[130px] font-medium text-primary bg-muted/5">Pipeline</TableHead>
+                <TableHead className="w-[80px] font-medium">Status</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCampaigns.map(campaign => (
+                <TableRow 
+                  key={campaign.id}
+                  className={`${isCampaignComplete(campaign) ? "bg-muted/10" : ""} ${selectedCampaigns.includes(campaign.id) ? "bg-accent/20" : ""} hover:bg-muted/5`}
+                >
+                  {/* Selection Checkbox */}
+                  <TableCell>
+                    <Checkbox 
+                      checked={selectedCampaigns.includes(campaign.id)}
+                      onCheckedChange={() => toggleCampaignSelection(campaign.id)}
+                      aria-label={`Select campaign ${campaign.campaignName}`}
+                    />
+                  </TableCell>
                 
                 {/* Campaign Name */}
                 <TableCell>
@@ -729,8 +714,8 @@ export function CampaignTable({
                     type="text"
                     value={campaign.campaignName || ""}
                     onChange={(e) => updateCampaign(campaign.id, 'campaignName', e.target.value)}
-                    placeholder="Enter campaign name"
-                    className="w-full"
+                    placeholder="Enter name"
+                    className="w-full border-0 focus-visible:ring-1"
                     disabled={isCampaignComplete(campaign)}
                   />
                 </TableCell>
@@ -742,7 +727,7 @@ export function CampaignTable({
                     onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}
                     disabled={isCampaignComplete(campaign)}
                   >
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full border-0 focus-visible:ring-1">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -759,17 +744,17 @@ export function CampaignTable({
                     <DialogTrigger asChild>
                       <Button 
                         variant="outline" 
-                        className="w-full justify-start truncate"
+                        className="w-full justify-start truncate border-0 shadow-none focus-visible:ring-1 h-8 px-2"
                         disabled={isCampaignComplete(campaign)}
                       >
                         {campaign.strategicPillars.length > 0 
                           ? (campaign.strategicPillars.length === 1 
-                            ? campaign.strategicPillars[0].substring(0, 18) + (campaign.strategicPillars[0].length > 18 ? "..." : "") 
+                            ? campaign.strategicPillars[0].substring(0, 15) + (campaign.strategicPillars[0].length > 15 ? "..." : "") 
                             : `${campaign.strategicPillars.length} selected`)
                           : "Select pillars"}
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle>Select Strategic Pillars</DialogTitle>
                         <DialogDescription>
@@ -794,7 +779,7 @@ export function CampaignTable({
                         ))}
                       </div>
                       <DialogFooter>
-                        <Button type="button">Save</Button>
+                        <Button type="button">Done</Button>
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
@@ -951,9 +936,9 @@ export function CampaignTable({
                 </TableCell>
                 
                 {/* MQLs (Calculated) */}
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-muted-foreground bg-muted/5">
                   <div className="relative group">
-                    <span>{campaign.mql}</span>
+                    <span className="font-mono text-xs">{campaign.mql}</span>
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-popover text-popover-foreground text-xs p-2 rounded shadow-md whitespace-nowrap z-50">
                       Auto-calculated: 10% of {typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0} leads
                     </div>
@@ -961,9 +946,9 @@ export function CampaignTable({
                 </TableCell>
                 
                 {/* SQLs (Calculated) */}
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-muted-foreground bg-muted/5">
                   <div className="relative group">
-                    <span>{campaign.sql}</span>
+                    <span className="font-mono text-xs">{campaign.sql}</span>
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-popover text-popover-foreground text-xs p-2 rounded shadow-md whitespace-nowrap z-50">
                       Auto-calculated: 6% of {typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0} leads
                     </div>
@@ -971,9 +956,9 @@ export function CampaignTable({
                 </TableCell>
                 
                 {/* Opportunities (Calculated) */}
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-muted-foreground bg-muted/5">
                   <div className="relative group">
-                    <span>{campaign.opportunities}</span>
+                    <span className="font-mono text-xs">{campaign.opportunities}</span>
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-popover text-popover-foreground text-xs p-2 rounded shadow-md whitespace-nowrap z-50">
                       Auto-calculated: 80% of {campaign.sql} SQLs
                     </div>
@@ -981,9 +966,9 @@ export function CampaignTable({
                 </TableCell>
                 
                 {/* Pipeline Forecast (Calculated) */}
-                <TableCell className="text-muted-foreground">
+                <TableCell className="text-primary font-medium bg-muted/5">
                   <div className="relative group">
-                    <span>{formatCurrency(campaign.pipelineForecast)}</span>
+                    <span className="font-mono text-xs">{formatCurrency(campaign.pipelineForecast)}</span>
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-popover text-popover-foreground text-xs p-2 rounded shadow-md whitespace-nowrap z-50">
                       {campaign.campaignType === "In-Account Events (1:1)" && 
                        (typeof campaign.expectedLeads !== 'number' || campaign.expectedLeads <= 0) && 
@@ -1000,10 +985,14 @@ export function CampaignTable({
                   <Badge 
                     variant={
                       campaign.status === "On Track" ? "default" : 
-                      campaign.status === "Shipped" ? "success" : 
-                      campaign.status === "Cancelled" ? "destructive" : "outline"
+                      campaign.status === "Shipped" ? "outline" : 
+                      campaign.status === "Cancelled" ? "destructive" : "secondary"
                     }
-                    className="whitespace-nowrap"
+                    className={`whitespace-nowrap px-2 py-0.5 ${
+                      campaign.status === "Shipped" ? "bg-green-50 text-green-700 hover:bg-green-50 border-green-200" :
+                      campaign.status === "Planning" ? "bg-muted text-muted-foreground" :
+                      ""
+                    }`}
                   >
                     {campaign.status}
                   </Badge>
@@ -1026,60 +1015,82 @@ export function CampaignTable({
       </div>
       {/* Mobile Summary - Above for mobile, Below for desktop */}
       {isMobile && filteredCampaigns.length > 0 && (
-        <div className="mt-8 p-4 bg-muted/20 rounded-lg">
+        <div className="mt-8 rounded-lg bg-card border shadow-sm p-5">
           <h3 className="text-lg font-medium flex items-center gap-2 mb-4">
-            <ChartBar className="h-5 w-5" />
+            <ChartBar className="h-5 w-5 text-primary" />
             Campaign Summary
           </h3>
-          <dl className="grid grid-cols-2 gap-4">
-            <div>
-              <dt className="text-sm text-muted-foreground">Total Campaigns</dt>
+          <div className="grid grid-cols-2 gap-5">
+            <div className="p-3 rounded-md bg-background border">
+              <dt className="text-xs text-muted-foreground mb-1">Total Campaigns</dt>
               <dd className="text-2xl font-semibold">{filteredCampaigns.length}</dd>
             </div>
-            <div>
-              <dt className="text-sm text-muted-foreground">Total Forecasted Cost</dt>
+            <div className="p-3 rounded-md bg-background border">
+              <dt className="text-xs text-muted-foreground mb-1">Forecasted Cost</dt>
               <dd className="text-2xl font-semibold">
                 {formatCurrency(filteredCampaigns.reduce((sum, c) => 
                   sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0))}
               </dd>
             </div>
-            <div>
-              <dt className="text-sm text-muted-foreground">Total Expected Leads</dt>
+            <div className="p-3 rounded-md bg-background border">
+              <dt className="text-xs text-muted-foreground mb-1">Expected Leads</dt>
               <dd className="text-2xl font-semibold">
                 {filteredCampaigns.reduce((sum, c) => 
                   sum + (typeof c.expectedLeads === 'number' ? c.expectedLeads : 0), 0)}
               </dd>
             </div>
-            <div>
-              <dt className="text-sm text-muted-foreground">Total Pipeline Forecast</dt>
+            <div className="p-3 rounded-md bg-background border">
+              <dt className="text-xs text-muted-foreground mb-1">Pipeline Forecast</dt>
               <dd className="text-2xl font-semibold">
                 {formatCurrency(filteredCampaigns.reduce((sum, c) => sum + c.pipelineForecast, 0))}
               </dd>
             </div>
-          </dl>
+          </div>
         </div>
       )}
       
-      {/* Auto-calculation Info Alert - Moved to bottom */}
-      <div className="bg-accent/30 border border-accent rounded-md p-3 mt-8">
-        <h4 className="text-sm font-semibold flex items-center gap-2 mb-1">
-          <Calculator className="h-4 w-4" />
+      {/* Auto-calculation Info Alert - Styled more cleanly */}
+      <div className="bg-card rounded-lg shadow-sm border p-5 mt-8">
+        <h4 className="text-sm font-semibold flex items-center gap-2 mb-3">
+          <Calculator className="h-4 w-4 text-primary" />
           Auto-Calculated Metrics
         </h4>
-        <p className="text-sm text-muted-foreground">
-          When you enter <strong>Expected Leads</strong>, the following metrics are automatically calculated:
-        </p>
-        <ul className="text-sm text-muted-foreground mt-1 space-y-1 list-disc pl-5">
-          <li>MQL Forecast = 10% of Expected Leads</li>
-          <li>SQL Forecast = 6% of Expected Leads</li>
-          <li>Opportunities = 80% of SQLs</li>
-          <li>Pipeline Forecast = Opportunities × $50,000</li>
-        </ul>
-        <div className="mt-3 pt-3 border-t border-accent">
-          <p className="text-sm font-medium">Special Logic for "In-Account Events (1:1)":</p>
-          <p className="text-sm text-muted-foreground">
-            If no leads are provided, pipeline is calculated as 20× the forecasted cost (20:1 ROI).
-          </p>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <p className="text-sm text-muted-foreground mb-2">
+              Standard calculations based on <span className="font-medium text-foreground">Expected Leads</span>:
+            </p>
+            <ul className="text-sm space-y-2 ml-1">
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-mono">MQLs</Badge>
+                <span>10% of Expected Leads</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-mono">SQLs</Badge>
+                <span>6% of Expected Leads</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-mono">Opps</Badge>
+                <span>80% of SQLs</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <Badge variant="outline" className="font-mono">Pipeline</Badge>
+                <span>Opportunities × $50,000</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="border-t sm:border-t-0 sm:border-l pt-4 sm:pt-0 sm:pl-6 mt-4 sm:mt-0">
+            <p className="text-sm font-medium mb-2">Special Logic for "In-Account Events (1:1)":</p>
+            <p className="text-sm text-muted-foreground">
+              If no leads are provided, pipeline is calculated as 20× the forecasted cost (20:1 ROI).
+            </p>
+            <div className="mt-3 pt-3 border-t flex items-center gap-2">
+              <span className="text-sm font-medium text-primary">Tip:</span>
+              <span className="text-sm text-muted-foreground">Hover over calculated values to see formula details.</span>
+            </div>
+          </div>
         </div>
       </div>
       {/* Add JSON importing functionality */}

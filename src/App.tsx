@@ -368,16 +368,16 @@ function App() {
             </TabsList>
           </div>
 
-          <TabsContent value="planning" className="space-y-8 pt-2">
+          <TabsContent value="planning" className="space-y-6 pt-2">
             <Card className="border shadow-sm overflow-hidden">
-              <CardHeader className="pb-4 pt-5 px-6">
+              <CardHeader className="bg-card/50 pb-4 pt-5 px-6 border-b">
                 <CardTitle className="flex items-center gap-2 text-xl">
-                  <Table className="h-5 w-5" /> Campaign Planning Table
+                  <Table className="h-5 w-5" /> Campaign Planning
                 </CardTitle>
-                <CardDescription className="text-sm mt-1">Plan and track multiple marketing campaigns</CardDescription>
+                <CardDescription className="text-sm mt-1">Plan and forecast marketing initiatives</CardDescription>
               </CardHeader>
 
-              <CardContent className="p-0 overflow-auto">
+              <CardContent className="p-0">
                 <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
               </CardContent>
             </Card>
