@@ -55,7 +55,7 @@ export function CampaignTable({
 }: { 
   campaigns: Campaign[], 
   setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>> 
-}) 
+}) {
   // Mobile responsive state
   const isMobile = useMediaQuery("(max-width: 768px)");
   
