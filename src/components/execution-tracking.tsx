@@ -20,16 +20,15 @@ export function ExecutionTracking({
   campaigns: Campaign[], 
   setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>> 
 }) {
-  try {
-    // Filters
-    const [regionFilter, setRegionFilter] = useState("_all");
-    const [ownerFilter, setOwnerFilter] = useState("_all");
-    const [pillarFilter, setPillarFilter] = useState("_all");
-    const [campaignTypeFilter, setCampaignTypeFilter] = useState("_all");
-    const [revenuePlayFilter, setRevenuePlayFilter] = useState("_all");
-    
-    // Selected campaigns for bulk operations
-    const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
+  // Filters
+  const [regionFilter, setRegionFilter] = useState("_all");
+  const [ownerFilter, setOwnerFilter] = useState("_all");
+  const [pillarFilter, setPillarFilter] = useState("_all");
+  const [campaignTypeFilter, setCampaignTypeFilter] = useState("_all");
+  const [revenuePlayFilter, setRevenuePlayFilter] = useState("_all");
+  
+  // Selected campaigns for bulk operations
+  const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
   
   // Get unique regions and owners from campaigns with fallbacks for missing data
   const regions = ["_all", ...new Set(campaigns.filter(c => c && c.region).map(c => c.region))];
@@ -520,36 +519,4 @@ export function ExecutionTracking({
       </CardContent>
     </Card>
   );
-} catch (error) {
-  console.error("Error in ExecutionTracking component:", error);
-  return (
-    <Card className="border shadow-sm">
-      <CardHeader className="pb-2 bg-card/50">
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <ClipboardText className="h-5 w-5" /> Execution Tracking
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-5">
-        <Alert variant="destructive" className="my-4">
-          <AlertTitle>Error loading execution tracking</AlertTitle>
-          <AlertDescription>
-            <div className="mt-2">
-              <p className="text-sm text-destructive/80 mb-4">
-                {error instanceof Error ? error.message : "An unexpected error occurred"}
-              </p>
-              <Button 
-                variant="outline" 
-                onClick={() => window.location.reload()}
-                className="flex items-center gap-2"
-              >
-                <ArrowClockwise className="h-4 w-4" />
-                Reload Page
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
-      </CardContent>
-    </Card>
-  );
-}
 }
