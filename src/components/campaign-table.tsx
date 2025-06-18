@@ -254,10 +254,42 @@ export function CampaignTable({
         const updatedCampaign = { ...campaign, [field]: value };
         
         // Recalculate derived metrics if needed
-        if (field === 'expectedLeads') {
-          if (typeof value === 'number' && !isNaN(value)) {
-            const mqlValue = Math.round(value * 0.1); // 10% of leads
-            const sqlValue = Math.round(value * 0.06); // 6% of leads
+        if (field === 'expectedLeads' || field === 'forecastedCost' || field === 'campaignType') {
+          // Special logic for "In-Account Events (1:1)" campaigns
+          if (updatedCampaign.campaignType === "In-Account Events (1:1)") {
+            // If leads are specified, use standard calculation
+            if (typeof updatedCampaign.expectedLeads === 'number' && !isNaN(updatedCampaign.expectedLeads) && updatedCampaign.expectedLeads > 0) {
+              const mqlValue = Math.round(updatedCampaign.expectedLeads * 0.1); // 10% of leads
+              const sqlValue = Math.round(updatedCampaign.expectedLeads * 0.06); // 6% of leads
+              const oppsValue = Math.round(sqlValue * 0.8); // 80% of SQLs
+              const pipelineValue = oppsValue * 50000; // $50K per opportunity
+              
+              updatedCampaign.mql = mqlValue;
+              updatedCampaign.sql = sqlValue;
+              updatedCampaign.opportunities = oppsValue;
+              updatedCampaign.pipelineForecast = pipelineValue;
+            } 
+            // If no leads but cost exists, use 20:1 ROI calculation
+            else if (typeof updatedCampaign.forecastedCost === 'number' && !isNaN(updatedCampaign.forecastedCost) && updatedCampaign.forecastedCost > 0) {
+              const pipelineValue = updatedCampaign.forecastedCost * 20; // 20:1 ROI based on cost
+              
+              // Set zeroes for other metrics since we're only deriving pipeline
+              updatedCampaign.mql = 0;
+              updatedCampaign.sql = 0;
+              updatedCampaign.opportunities = 0;
+              updatedCampaign.pipelineForecast = pipelineValue;
+            } else {
+              // Reset all values if neither leads nor costs are provided
+              updatedCampaign.mql = 0;
+              updatedCampaign.sql = 0;
+              updatedCampaign.opportunities = 0;
+              updatedCampaign.pipelineForecast = 0;
+            }
+          } 
+          // Standard calculation for all other campaign types
+          else if (typeof updatedCampaign.expectedLeads === 'number' && !isNaN(updatedCampaign.expectedLeads)) {
+            const mqlValue = Math.round(updatedCampaign.expectedLeads * 0.1); // 10% of leads
+            const sqlValue = Math.round(updatedCampaign.expectedLeads * 0.06); // 6% of leads
             const oppsValue = Math.round(sqlValue * 0.8); // 80% of SQLs
             const pipelineValue = oppsValue * 50000; // $50K per opportunity
             
@@ -567,6 +599,12 @@ export function CampaignTable({
           <li>Opportunities = 80% of SQLs</li>
           <li>Pipeline Forecast = Opportunities × $50,000</li>
         </ul>
+        <div className="mt-3 pt-3 border-t border-accent">
+          <p className="text-sm font-medium">Special Logic for "In-Account Events (1:1)":</p>
+          <p className="text-sm text-muted-foreground">
+            If no leads are provided, pipeline is calculated as 20× the forecasted cost (20:1 ROI).
+          </p>
+        </div>
       </div>
       {/* Campaign table */}
       <div className="border rounded-md overflow-auto">
@@ -877,7 +915,12 @@ export function CampaignTable({
                   <div className="relative group">
                     <span>{formatCurrency(campaign.pipelineForecast)}</span>
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-popover text-popover-foreground text-xs p-2 rounded shadow-md whitespace-nowrap z-50">
-                      Auto-calculated: ${campaign.opportunities} × $50,000
+                      {campaign.campaignType === "In-Account Events (1:1)" && 
+                       (typeof campaign.expectedLeads !== 'number' || campaign.expectedLeads <= 0) && 
+                       typeof campaign.forecastedCost === 'number' && campaign.forecastedCost > 0 ? 
+                        `Special calculation: ${formatCurrency(campaign.forecastedCost)} × 20 (20:1 ROI)` : 
+                        `Auto-calculated: ${campaign.opportunities} × $50,000`
+                      }
                     </div>
                   </div>
                 </TableCell>
@@ -1003,8 +1046,28 @@ export function CampaignTable({
                       errors.push(`Row ${index + 2}: Invalid region "${campaign.region}".`);
                     }
                     
-                    // Calculate derived fields if expectedLeads is provided
-                    if (campaign.expectedLeads !== undefined && campaign.expectedLeads !== "" && !isNaN(Number(campaign.expectedLeads))) {
+                    // Calculate derived fields
+                    if (campaign.campaignType === "In-Account Events (1:1)") {
+                      // Special logic for "In-Account Events (1:1)" campaigns
+                      if (campaign.expectedLeads !== undefined && campaign.expectedLeads !== "" && !isNaN(Number(campaign.expectedLeads)) && Number(campaign.expectedLeads) > 0) {
+                        // Standard calculation if leads are provided
+                        const leads = Number(campaign.expectedLeads);
+                        campaign.mql = Math.round(leads * 0.1);
+                        campaign.sql = Math.round(leads * 0.06);
+                        campaign.opportunities = Math.round(campaign.sql * 0.8);
+                        campaign.pipelineForecast = campaign.opportunities * 50000;
+                      } 
+                      // If no leads but cost exists, use 20:1 ROI calculation
+                      else if (campaign.forecastedCost !== undefined && campaign.forecastedCost !== "" && !isNaN(Number(campaign.forecastedCost)) && Number(campaign.forecastedCost) > 0) {
+                        const cost = Number(campaign.forecastedCost);
+                        campaign.pipelineForecast = cost * 20; // 20:1 ROI based on cost
+                        campaign.mql = 0;
+                        campaign.sql = 0;
+                        campaign.opportunities = 0;
+                      }
+                    } 
+                    // Standard calculation for all other campaign types
+                    else if (campaign.expectedLeads !== undefined && campaign.expectedLeads !== "" && !isNaN(Number(campaign.expectedLeads))) {
                       const leads = Number(campaign.expectedLeads);
                       campaign.mql = Math.round(leads * 0.1);
                       campaign.sql = Math.round(leads * 0.06);

@@ -34,6 +34,11 @@
    - **Purpose**: Streamlines workflow from ideation to implementation
    - **Success Criteria**: Added campaigns are properly formatted with all required fields and calculated metrics
 
+4. **Specialized ROI Calculations**
+   - **Functionality**: Different campaign types use specialized ROI calculation methods
+   - **Purpose**: Account for unique value of different marketing approaches, especially strategic account events
+   - **Success Criteria**: "In-Account Events (1:1)" use 20:1 ROI calculation (Pipeline = Cost × 20) when no leads provided
+
 ## Design Direction
 
 ### Visual Tone & Identity

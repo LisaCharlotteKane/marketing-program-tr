@@ -104,7 +104,28 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
     const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of leads
     const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of leads
     const totalOpportunities = Math.round(totalSQLs * 0.8); // 80% of SQLs
-    const totalPipelineForecast = totalOpportunities * 50000; // $50K per opportunity
+    
+    // Calculate pipeline with special logic for In-Account Events
+    let totalPipelineForecast = 0;
+    
+    filteredCampaigns.forEach(campaign => {
+      const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
+      const expectedLeads = typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0;
+      
+      if (campaign.campaignType === "In-Account Events (1:1)" && 
+          (!expectedLeads || expectedLeads <= 0) && 
+          forecastedCost > 0) {
+        // Special 20:1 ROI calculation for In-Account Events without leads
+        totalPipelineForecast += forecastedCost * 20;
+      } else if (expectedLeads > 0) {
+        // Standard calculation based on leads
+        const mqlValue = Math.round(expectedLeads * 0.1);
+        const sqlValue = Math.round(expectedLeads * 0.06);
+        const oppsValue = Math.round(sqlValue * 0.8);
+        totalPipelineForecast += oppsValue * 50000;
+      }
+      // If neither condition is met, no pipeline is added
+    });
 
     // Calculate actual SQLs and Opportunities (if we have actual MQLs)
     const actualSQLs = totalActualMQLs > 0 ? Math.round(totalActualMQLs * 0.6) : 0; // 60% of actual MQLs
@@ -301,6 +322,10 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
           <p className="text-sm text-muted-foreground">
             ROI is calculated as (Pipeline Value ÷ Total Spend) × 100%. An ROI of 300% or higher indicates high-performing campaigns, 
             while below 100% suggests campaigns that may need optimization.
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">
+            <span className="font-medium">Special Logic for In-Account Events (1:1):</span> These campaigns use a default 20:1 ROI 
+            calculation (Pipeline = Cost × 20) when no leads are provided, reflecting their strategic account value.
           </p>
         </div>
 
@@ -533,11 +558,21 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
                     const expectedLeads = typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0;
                     const actualLeads = typeof campaign.actualLeads === 'number' ? campaign.actualLeads : 0;
                     
-                    // Calculate pipeline value (using the same formula as elsewhere)
-                    const expectedMQLs = Math.round(expectedLeads * 0.1);
-                    const expectedSQLs = Math.round(expectedLeads * 0.06);
-                    const expectedOpps = Math.round(expectedSQLs * 0.8);
-                    const pipelineValue = expectedOpps * 50000;
+                    // Calculate pipeline value with special logic for In-Account Events
+                    let pipelineValue = 0;
+                    
+                    if (campaign.campaignType === "In-Account Events (1:1)" && 
+                        (!expectedLeads || expectedLeads <= 0) && 
+                        forecastedCost > 0) {
+                      // Special 20:1 ROI calculation for In-Account Events without leads
+                      pipelineValue = forecastedCost * 20;
+                    } else {
+                      // Standard calculation
+                      const expectedMQLs = Math.round(expectedLeads * 0.1);
+                      const expectedSQLs = Math.round(expectedLeads * 0.06);
+                      const expectedOpps = Math.round(expectedSQLs * 0.8);
+                      pipelineValue = expectedOpps * 50000;
+                    }
                     
                     // Calculate ROI
                     const roi = forecastedCost > 0 ? Math.round((pipelineValue / forecastedCost) * 100) : 0;

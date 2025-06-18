@@ -56,7 +56,28 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
   const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of Expected Leads
   const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of Expected Leads
   const totalOpportunities = Math.round(totalSQLs * 0.8); // 80% of SQLs
-  const totalPipelineForecast = totalOpportunities * 50000; // $50K per opportunity
+  
+  // Calculate pipeline with special logic for In-Account Events
+  let totalPipelineForecast = 0;
+  
+  filteredCampaigns.forEach(campaign => {
+    const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
+    const expectedLeads = typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0;
+    
+    if (campaign.campaignType === "In-Account Events (1:1)" && 
+        (!expectedLeads || expectedLeads <= 0) && 
+        forecastedCost > 0) {
+      // Special 20:1 ROI calculation for In-Account Events without leads
+      totalPipelineForecast += forecastedCost * 20;
+    } else if (expectedLeads > 0) {
+      // Standard calculation based on leads
+      const mqlValue = Math.round(expectedLeads * 0.1);
+      const sqlValue = Math.round(expectedLeads * 0.06);
+      const oppsValue = Math.round(sqlValue * 0.8);
+      totalPipelineForecast += oppsValue * 50000;
+    }
+    // If neither condition is met, no pipeline is added
+  });
   
   // Data for charts
   const costComparisonData = filteredCampaigns.map(campaign => ({
