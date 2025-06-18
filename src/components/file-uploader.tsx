@@ -91,7 +91,6 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
     
     reader.readAsText(file);
   };
-  };
 
   // Export current campaigns to CSV template
   const downloadTemplate = () => {
@@ -113,7 +112,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
 # 
 # Special calculation for "In-Account Events (1:1)":
 # If expectedLeads is empty but forecastedCost is provided, pipeline will be calculated as 20× the cost.
-`;
+#`;
 
     // Define the CSV template structure with example data
     const templateData = [
@@ -227,16 +226,6 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
     document.body.removeChild(link);
     
     toast.success('Template downloaded successfully');
-  };
-export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    // ... your file handling logic ...
-  };
-
-  const downloadTemplate = () => {
-    // ... your download template logic ...
   };
 
   const exportToCsv = () => {

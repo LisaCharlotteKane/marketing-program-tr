@@ -42,7 +42,7 @@ const templateData = [
     owner: "Shruti Narang",
     description: "Executive roundtable for enterprise accounts",
     forecastedCost: "25000",
-    expectedLeads: "20",
+    expectedLeads: "",
     impactedRegions: "",
     status: "Planning",
     poRaised: "false",
