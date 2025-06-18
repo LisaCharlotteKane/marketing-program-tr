@@ -31,6 +31,7 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
 
   // Map CSV headers to campaign object properties
   const headerMap: Record<string, keyof Campaign> = {
+    "Campaign Name": "campaignName",
     "Campaign Type": "campaignType",
     "Strategic Pillars": "strategicPillars",
     "Revenue Play": "revenuePlay",
@@ -49,10 +50,10 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
   const generateTemplateCSV = () => {
     try {
       // Create template CSV content
-      const csvContent = `Campaign Type,Strategic Pillars,Revenue Play,Fiscal Year,Quarter/Month,Region,Country,Owner,Description,Forecasted Cost,Expected Leads,Impacted Regions
-In-Account Events (1:1),"Account Growth and Product Adoption,Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY24,Q2 - November,North APAC,Japan,Tomoko Tanaka,Enterprise customer workshop,15000,50,"South APAC,SAARC"
-Localized Events,Brand Awareness & Top of Funnel Demand Generation,Secure all developer workloads with the power of AI,FY24,Q3 - January,SAARC,India,Shruti Narang,Developer community meetup,8000,100,
-Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,Cross-regional webinar series,5000,150,"North APAC,South APAC,SAARC"`;
+      const csvContent = `Campaign Name,Campaign Type,Strategic Pillars,Revenue Play,Fiscal Year,Quarter/Month,Region,Country,Owner,Description,Forecasted Cost,Expected Leads,Impacted Regions
+Q1 Enterprise Workshop,In-Account Events (1:1),"Account Growth and Product Adoption,Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY24,Q2 - November,North APAC,Japan,Tomoko Tanaka,Enterprise customer workshop,15000,50,"South APAC,SAARC"
+Developer Meetup,Localized Events,Brand Awareness & Top of Funnel Demand Generation,Secure all developer workloads with the power of AI,FY24,Q3 - January,SAARC,India,Shruti Narang,Developer community meetup,8000,100,
+Cross-region Webinar,Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,Cross-regional webinar series,5000,150,"North APAC,South APAC,SAARC"`;
 
       // Create blob and download link
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -136,6 +137,7 @@ Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,
               // Create a new campaign with default values
               const campaign: Campaign = {
                 id: Math.random().toString(36).substring(2, 9),
+                campaignName: "",
                 campaignType: "",
                 strategicPillars: [],
                 revenuePlay: "",
@@ -155,7 +157,12 @@ Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X Apac,Giorgia Parham,
                 issueLink: "",
                 actualCost: "",
                 actualLeads: "",
-                actualMQLs: ""
+                actualMQLs: "",
+                // Initialize calculated fields
+                mql: 0,
+                sql: 0,
+                opportunities: 0,
+                pipelineForecast: 0
               };
               
               // Map CSV data to campaign object
