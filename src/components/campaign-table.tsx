@@ -49,6 +49,7 @@ export interface Campaign {
   opportunities: number;
   pipelineForecast: number;
 }
+}
 
 export function CampaignTable({ 
   campaigns, 

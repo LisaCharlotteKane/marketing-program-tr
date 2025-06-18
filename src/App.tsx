@@ -32,6 +32,7 @@ import { initAutoGitHubSync } from "@/services/auto-github-sync"
 import { Button } from "@/components/ui/button"
 import { calculateRegionalMetrics } from "@/services/budget-service"
 import { PrimerHeader } from "@/components/primer"
+import { ErrorBoundary } from "@/components/error-boundary"
 
 
 
@@ -350,7 +351,9 @@ function App() {
           </TabsContent>
 
           <TabsContent value="execution" className="space-y-8 pt-2">
-            <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
+            <ErrorBoundary>
+              <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
+            </ErrorBoundary>
           </TabsContent>
 
           <TabsContent value="budget" className="space-y-8 pt-2">
