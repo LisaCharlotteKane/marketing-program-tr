@@ -13,7 +13,7 @@ export const PrimerHeader = ({ title, subtitle }: HeaderProps) => {
   return (
     <header className="bg-card border-b sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto py-3">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-slate-300">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="bg-primary/10 p-1.5 rounded">
               <Logo size="sm" />

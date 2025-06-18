@@ -17,7 +17,7 @@ import Papa from "papaparse";
 import { ClearFiltersButton } from "@/components/clear-filters-button";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { FileUploader } from "@/components/file-uploader";
-import { CsvTemplateButton } from "./csv-template-button";
+import { CsvTemplateButton } from "@/components/csv-template-button";
 
 // Campaign type interface
 export interface Campaign {
@@ -126,7 +126,7 @@ export function CampaignTable({
   
   const fiscalYears = ["FY25", "FY26"];
   
-  const quarters = [
+  const quartersMonths = [
     "Q1 - July",
     "Q1 - August",
     "Q1 - September",
@@ -191,7 +191,7 @@ export function CampaignTable({
       strategicPillars: [pillars[0]], // Add at least one pillar by default
       revenuePlay: revenuePlays[0] || "All",
       fiscalYear: fiscalYears[0] || "FY25",
-      quarterMonth: quarters[0] || "Q1 - July",
+      quarterMonth: quartersMonths[0] || "Q1 - July",
       region: regionOptions[0] || "North APAC",
       country: countries[0] || "Afghanistan",
       owner: selectedOwner !== "_all" ? selectedOwner : ownerOptions[0] || "Giorgia Parham", // Pre-select current filter owner or default
@@ -764,7 +764,7 @@ export function CampaignTable({
                       <SelectValue placeholder="Quarter" />
                     </SelectTrigger>
                     <SelectContent>
-                      {quarters.map(q => (
+                      {quartersMonths.map(q => (
                         <SelectItem key={q} value={q}>{q}</SelectItem>
                       ))}
                     </SelectContent>
