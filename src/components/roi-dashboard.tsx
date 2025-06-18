@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { 
   BarChart, 
   Bar, 
@@ -18,7 +19,7 @@ import {
   Pie,
   Cell
 } from "recharts";
-import { ChartBar, ChartLine, ChartPie, Table, TrendUp } from "@phosphor-icons/react";
+import { ChartBar, ChartLine, ChartPie, Table, TrendUp, FilterX } from "@phosphor-icons/react";
 import { Campaign } from "./campaign-table";
 
 interface ROIDashboardProps {
