@@ -501,7 +501,7 @@ export function CampaignTable({
     <div className="space-y-6">
       {/* Filters and Actions */}
       <div className="bg-card rounded-lg border p-5 shadow-sm">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5 bg-slate-300">
           <h3 className="text-lg font-semibold">Campaign Planning</h3>
           <div className="flex gap-2">
             <Button 
@@ -526,7 +526,7 @@ export function CampaignTable({
           </div>
         </div>
         
-        <div className="bg-muted/30 rounded-lg p-4 mb-4">
+        <div className="rounded-lg p-4 mb-4 bg-slate-200">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <FilterX className="h-4 w-4 text-muted-foreground" />
@@ -654,9 +654,7 @@ export function CampaignTable({
         <div className="flex flex-col items-center justify-center p-8 bg-card border rounded-lg text-center">
           <FilterX className="h-10 w-10 text-muted-foreground mb-4 opacity-50" />
           <h3 className="text-lg font-semibold mb-2">No campaigns match the filters</h3>
-          <p className="text-muted-foreground mb-4 max-w-md">
-            Try clearing some filters or add a new campaign to get started.
-          </p>
+          <p className="text-muted-foreground mb-4 max-w-md">Try clearing some filters or add a new campaign to get started.</p>
           <Button 
             variant="outline" 
             className="flex items-center gap-2"
@@ -674,7 +672,6 @@ export function CampaignTable({
           </Button>
         </div>
       )}
-
       {/* Campaign table */}
       {filteredCampaigns.length > 0 && (
         <div className="rounded-lg border shadow-sm overflow-hidden bg-card">
@@ -1031,7 +1028,6 @@ export function CampaignTable({
           </div>
         </div>
       )}
-      
       {/* Mobile Summary - Above for mobile, Below for desktop */}
       {isMobile && filteredCampaigns.length > 0 && (
         <div className="mt-8 rounded-lg bg-card border shadow-sm p-5">
@@ -1067,7 +1063,6 @@ export function CampaignTable({
           </div>
         </div>
       )}
-      
       {/* Auto-calculation Info Alert - Styled more cleanly */}
       <div className="bg-card rounded-lg shadow-sm border p-5 mt-8">
         <h4 className="text-sm font-semibold flex items-center gap-2 mb-4">

@@ -319,27 +319,27 @@ function App() {
           <Tabs defaultValue="planning" className="w-full">
             <div className="sticky top-0 z-10 bg-background pt-2 pb-4 mb-4 border-b">
               <TabsList className="w-full flex-nowrap md:grid md:grid-cols-6 shadow-sm">
-                <TabsTrigger value="planning" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <TabsTrigger value="planning" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4 bg-slate-300">
                   <Calculator className="h-4 w-4 flex-shrink-0" /> 
                   <span>Planning</span>
                 </TabsTrigger>
-                <TabsTrigger value="execution" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <TabsTrigger value="execution" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4 bg-slate-300">
                   <ClipboardText className="h-4 w-4 flex-shrink-0" /> 
                   <span>Execution</span>
                 </TabsTrigger>
-                <TabsTrigger value="budget" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <TabsTrigger value="budget" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4 bg-slate-300">
                   <Buildings className="h-4 w-4 flex-shrink-0" /> 
                   <span>Budget</span>
                 </TabsTrigger>
-                <TabsTrigger value="roi" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <TabsTrigger value="roi" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4 bg-slate-300">
                   <TrendUp className="h-4 w-4 flex-shrink-0" /> 
                   <span>ROI</span>
                 </TabsTrigger>
-                <TabsTrigger value="github" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <TabsTrigger value="github" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4 bg-slate-300">
                   <Database className="h-4 w-4 flex-shrink-0" /> 
                   <span>GitHub</span>
                 </TabsTrigger>
-                <TabsTrigger value="reporting" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                <TabsTrigger value="reporting" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4 bg-slate-300">
                   <PresentationChart className="h-4 w-4 flex-shrink-0" /> 
                   <span>Reporting</span>
                 </TabsTrigger>
@@ -557,7 +557,7 @@ function App() {
         </main>
       </div>
     </div>
-  )
+  );
 }
 
 export default App

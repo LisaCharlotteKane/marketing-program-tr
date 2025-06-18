@@ -37,10 +37,10 @@ function Badge({
   return (
     <Comp
       data-slot="badge"
-      className={cn(badgeVariants({ variant }), className)}
+      className={cn(badgeVariants({ variant }), className, "text-slate-700")}
       {...props}
     />
-  )
+  );
 }
 
 export { Badge, badgeVariants }
