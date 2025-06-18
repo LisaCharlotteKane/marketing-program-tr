@@ -252,12 +252,12 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
       link.click();
       document.body.removeChild(link);
       
-      toast.success(`Exported ${currentCampaigns.length} campaigns successfully`);
-    } catch (error) {
-      console.error('Export error:', error);
-      toast.error(`Failed to export campaigns: ${(error as Error).message}`);
-    }
-  };
+toast.success(`Exported ${currentCampaigns.length} campaigns successfully`);
+} catch (error) {
+  console.error('Export error:', error);
+  toast.error(`Failed to export campaigns: ${(error as Error).message}`);
+}
+};
 
   return (
     <div className="space-y-4">
@@ -315,4 +315,4 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
       />
     </div>
   );
-}
+  }
