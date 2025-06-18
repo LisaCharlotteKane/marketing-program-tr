@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import { ChartBar, ChartLine, ChartPie, Table, TrendUp, FilterX } from "@phosphor-icons/react";
 import { Campaign } from "./campaign-table";
+import { ClearFiltersButton } from "@/components/clear-filters-button";
 
 interface ROIDashboardProps {
   campaigns: Campaign[];
@@ -286,17 +287,12 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
           </div>
           
           <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <Button 
+            <ClearFiltersButton 
               onClick={() => {
                 setSelectedRegion("all");
                 setSelectedQuarter("all");
               }}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-1 text-xs"
-            >
-              <FilterX className="h-3 w-3" /> Clear Filters
-            </Button>
+            />
           </div>
         </div>
 

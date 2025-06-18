@@ -10,6 +10,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { FilterX, ClipboardText, Search, TrashSimple } from "@phosphor-icons/react";
 import { type Campaign } from "@/components/campaign-table";
 import { toast } from "sonner";
+import { ClearFiltersButton } from "@/components/clear-filters-button";
 
 export function ExecutionTracking({ 
   campaigns, 
