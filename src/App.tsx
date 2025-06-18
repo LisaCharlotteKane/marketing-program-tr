@@ -91,7 +91,7 @@ function App() {
     "Secure all developer workloads with the power of AI",
     "All"
   ];
-  const regions = ["North APAC", "South APAC", "SAARC", "Digital"];
+  const regions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English"];
   
   // Campaign types
   const campaignTypes = [

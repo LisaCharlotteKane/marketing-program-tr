@@ -117,7 +117,7 @@ export const quarters = [
 ];
 
 // Define regions
-export const regions = ["North APAC", "South APAC", "SAARC", "Digital"];
+export const regions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English"];
 
 // Define countries by region
 const countriesByRegion = {

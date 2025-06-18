@@ -141,7 +141,7 @@ export function CampaignTable({
     "Q4 - June"
   ];
   
-  const regionOptions = ["North APAC", "South APAC", "SAARC", "Digital"];
+  const regionOptions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English"];
   
   const countries = [
     "Afghanistan",

@@ -216,7 +216,7 @@ Cross-region Webinar,Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital,X
                 errors.push(`Row ${index + 2}: Missing values for ${missingFields.join(", ")}`);
               } else {
                 // Validate region
-                const validRegions = ["North APAC", "South APAC", "SAARC", "Digital"];
+                const validRegions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English"];
                 if (!validRegions.includes(campaign.region)) {
                   errors.push(`Row ${index + 2}: Invalid region "${campaign.region}".`);
                 } else {

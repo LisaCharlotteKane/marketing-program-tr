@@ -13,7 +13,7 @@ import { Campaign } from "@/components/campaign-table";
  */
 export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number): string[] {
   const errors: string[] = [];
-  const validRegions = ["North APAC", "South APAC", "SAARC", "Digital"];
+  const validRegions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English"];
   const validStatus = ["Planning", "On Track", "Shipped", "Cancelled"];
   
   // Check required fields
