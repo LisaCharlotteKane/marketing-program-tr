@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { PresentationChart, Download, ChartLine, ChartPie, ChartBar } from "@phosphor-icons/react";
+import { PresentationChart, Download, ChartLine, ChartPie, ChartBar, FunnelSimple, Sliders, FilterX } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { type Campaign } from "@/components/campaign-table";
@@ -12,11 +12,49 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
   const [regionFilter, setRegionFilter] = useState("_all");
   const [countryFilter, setCountryFilter] = useState("_all");
   const [quarterFilter, setQuarterFilter] = useState("_all");
+  const [monthFilter, setMonthFilter] = useState("_all");
+  const [pillarFilter, setPillarFilter] = useState("_all");
+  const [campaignTypeFilter, setCampaignTypeFilter] = useState("_all");
+  const [revenuePlayFilter, setRevenuePlayFilter] = useState("_all");
+  const [ownerFilter, setOwnerFilter] = useState("_all");
   
   // Get unique filter options from campaigns
   const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
   const countries = ["_all", ...new Set(campaigns.map(c => c.country))].filter(Boolean);
-  const quarters = ["_all", ...new Set(campaigns.map(c => c.quarter))].filter(Boolean);
+  
+  // Extract quarter and month from quarterMonth field
+  const quarterMonths = [...new Set(campaigns.map(c => c.quarterMonth))].filter(Boolean);
+  const quarters = ["_all", ...new Set(quarterMonths.map(qm => qm?.split(' - ')[0]))].filter(Boolean);
+  const months = ["_all", ...new Set(quarterMonths.map(qm => {
+    const parts = qm?.split(' - ');
+    return parts && parts.length > 1 ? parts[1] : null;
+  }))].filter(Boolean);
+  
+  // Extract strategic pillars (flattened from arrays)
+  const allPillars = campaigns.reduce((acc, campaign) => {
+    if (Array.isArray(campaign.strategicPillars)) {
+      acc.push(...campaign.strategicPillars);
+    }
+    return acc;
+  }, [] as string[]);
+  const pillars = ["_all", ...new Set(allPillars)].filter(Boolean);
+  
+  // Campaign types, revenue plays, and owners
+  const campaignTypes = ["_all", ...new Set(campaigns.map(c => c.campaignType))].filter(Boolean);
+  const revenuePlays = ["_all", ...new Set(campaigns.map(c => c.revenuePlay))].filter(Boolean);
+  const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
+  
+  // Reset all filters
+  const resetFilters = () => {
+    setRegionFilter("_all");
+    setCountryFilter("_all");
+    setQuarterFilter("_all");
+    setMonthFilter("_all");
+    setPillarFilter("_all");
+    setCampaignTypeFilter("_all");
+    setRevenuePlayFilter("_all");
+    setOwnerFilter("_all");
+  };
   
   // Filter campaigns based on selected filters
   const filteredCampaigns = campaigns.filter(campaign => {
@@ -27,7 +65,33 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
     if (countryFilter !== "_all" && campaign.country !== countryFilter) return false;
     
     // Apply quarter filter
-    if (quarterFilter !== "_all" && campaign.quarter !== quarterFilter) return false;
+    if (quarterFilter !== "_all") {
+      const campaignQuarter = campaign.quarterMonth?.split(' - ')[0];
+      if (campaignQuarter !== quarterFilter) return false;
+    }
+    
+    // Apply month filter
+    if (monthFilter !== "_all") {
+      const campaignMonth = campaign.quarterMonth?.split(' - ')[1];
+      if (campaignMonth !== monthFilter) return false;
+    }
+    
+    // Apply strategic pillar filter (check if any pillar matches)
+    if (pillarFilter !== "_all") {
+      if (!Array.isArray(campaign.strategicPillars) || 
+          !campaign.strategicPillars.includes(pillarFilter)) {
+        return false;
+      }
+    }
+    
+    // Apply campaign type filter
+    if (campaignTypeFilter !== "_all" && campaign.campaignType !== campaignTypeFilter) return false;
+    
+    // Apply revenue play filter
+    if (revenuePlayFilter !== "_all" && campaign.revenuePlay !== revenuePlayFilter) return false;
+    
+    // Apply owner filter
+    if (ownerFilter !== "_all" && campaign.owner !== ownerFilter) return false;
     
     return true;
   });
@@ -81,7 +145,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
   
   // Data for charts
   const costComparisonData = filteredCampaigns.map(campaign => ({
-    name: campaign.description?.substring(0, 20) || "Untitled",
+    name: campaign.campaignName || campaign.description?.substring(0, 20) || "Untitled",
     forecastedCost: typeof campaign.forecastedCost === "number" ? campaign.forecastedCost : 0,
     actualCost: typeof campaign.actualCost === "number" ? campaign.actualCost : 0
   }));
@@ -117,11 +181,12 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
     
     // Create CSV header
     const headers = [
+      "Campaign Name",
       "Campaign Type",
       "Strategic Pillar",
       "Revenue Play",
       "FY",
-      "Quarter",
+      "Quarter/Month",
       "Region",
       "Country",
       "Owner",
@@ -144,16 +209,17 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
     // Create CSV rows
     const rows = filteredCampaigns.map(campaign => {
       // Format multi-select fields (like strategic pillars)
-      const pillars = Array.isArray(campaign.strategicPillar) 
-        ? `"${campaign.strategicPillar.join("; ")}"` 
-        : campaign.strategicPillar || "";
+      const pillars = Array.isArray(campaign.strategicPillars) 
+        ? `"${campaign.strategicPillars.join("; ")}"` 
+        : "";
       
       return [
+        `"${(campaign.campaignName || "").replace(/"/g, '""')}"`,
         campaign.campaignType || "",
         pillars,
         campaign.revenuePlay || "",
-        campaign.fy || "",
-        campaign.quarter || "",
+        campaign.fiscalYear || "",
+        campaign.quarterMonth || "",
         campaign.region || "",
         campaign.country || "",
         campaign.owner || "",
@@ -205,71 +271,179 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           <div className="flex items-center gap-2">
             <PresentationChart className="h-5 w-5" /> Campaign Reporting Dashboard
           </div>
-          {/* Export to CSV button removed */}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={resetFilters} 
+              className="text-xs flex items-center gap-1"
+            >
+              <FilterX className="h-3 w-3" /> Reset Filters
+            </Button>
+          </div>
         </CardTitle>
         <CardDescription>Analyze campaign performance metrics</CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-6">
         {/* Filters */}
-        <div className="grid grid-cols-3 gap-4 p-4 bg-muted/20 rounded-md">
-          <div>
-            <Label htmlFor="region-filter">Region</Label>
-            <Select 
-              value={regionFilter}
-              onValueChange={setRegionFilter}
-            >
-              <SelectTrigger id="region-filter" className="mt-1">
-                <SelectValue placeholder="All Regions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Regions</SelectItem>
-                {regions.filter(r => r !== "_all").map((region) => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="country-filter">Country</Label>
-            <Select 
-              value={countryFilter}
-              onValueChange={setCountryFilter}
-            >
-              <SelectTrigger id="country-filter" className="mt-1">
-                <SelectValue placeholder="All Countries" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Countries</SelectItem>
-                {countries.filter(c => c !== "_all").map((country) => (
-                  <SelectItem key={country} value={country}>{country}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="quarter-filter">Quarter</Label>
-            <Select 
-              value={quarterFilter}
-              onValueChange={setQuarterFilter}
-            >
-              <SelectTrigger id="quarter-filter" className="mt-1">
-                <SelectValue placeholder="All Quarters" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Quarters</SelectItem>
-                {quarters.filter(q => q !== "_all").map((quarter) => (
-                  <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-2 pt-4">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Sliders className="h-4 w-4" /> Filter Controls
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="region-filter">Region</Label>
+                <Select 
+                  value={regionFilter}
+                  onValueChange={setRegionFilter}
+                >
+                  <SelectTrigger id="region-filter" className="mt-1">
+                    <SelectValue placeholder="All Regions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Regions</SelectItem>
+                    {regions.filter(r => r !== "_all").map((region) => (
+                      <SelectItem key={region} value={region}>{region}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="country-filter">Country</Label>
+                <Select 
+                  value={countryFilter}
+                  onValueChange={setCountryFilter}
+                >
+                  <SelectTrigger id="country-filter" className="mt-1">
+                    <SelectValue placeholder="All Countries" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Countries</SelectItem>
+                    {countries.filter(c => c !== "_all").map((country) => (
+                      <SelectItem key={country} value={country}>{country}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="quarter-filter">Quarter</Label>
+                <Select 
+                  value={quarterFilter}
+                  onValueChange={setQuarterFilter}
+                >
+                  <SelectTrigger id="quarter-filter" className="mt-1">
+                    <SelectValue placeholder="All Quarters" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Quarters</SelectItem>
+                    {quarters.filter(q => q !== "_all").map((quarter) => (
+                      <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="month-filter">Month</Label>
+                <Select 
+                  value={monthFilter}
+                  onValueChange={setMonthFilter}
+                >
+                  <SelectTrigger id="month-filter" className="mt-1">
+                    <SelectValue placeholder="All Months" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Months</SelectItem>
+                    {months.filter(m => m !== "_all").map((month) => (
+                      <SelectItem key={month} value={month}>{month}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="pillar-filter">Strategic Pillar</Label>
+                <Select 
+                  value={pillarFilter}
+                  onValueChange={setPillarFilter}
+                >
+                  <SelectTrigger id="pillar-filter" className="mt-1">
+                    <SelectValue placeholder="All Pillars" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Pillars</SelectItem>
+                    {pillars.filter(p => p !== "_all").map((pillar) => (
+                      <SelectItem key={pillar} value={pillar}>{pillar}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="campaign-type-filter">Campaign Type</Label>
+                <Select 
+                  value={campaignTypeFilter}
+                  onValueChange={setCampaignTypeFilter}
+                >
+                  <SelectTrigger id="campaign-type-filter" className="mt-1">
+                    <SelectValue placeholder="All Campaign Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Campaign Types</SelectItem>
+                    {campaignTypes.filter(t => t !== "_all").map((type) => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="revenue-play-filter">Revenue Play</Label>
+                <Select 
+                  value={revenuePlayFilter}
+                  onValueChange={setRevenuePlayFilter}
+                >
+                  <SelectTrigger id="revenue-play-filter" className="mt-1">
+                    <SelectValue placeholder="All Revenue Plays" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Revenue Plays</SelectItem>
+                    {revenuePlays.filter(p => p !== "_all").map((play) => (
+                      <SelectItem key={play} value={play}>{play}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="owner-filter">Owner</Label>
+                <Select 
+                  value={ownerFilter}
+                  onValueChange={setOwnerFilter}
+                >
+                  <SelectTrigger id="owner-filter" className="mt-1">
+                    <SelectValue placeholder="All Owners" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all">All Owners</SelectItem>
+                    {owners.filter(o => o !== "_all").map((owner) => (
+                      <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         
         {/* Summary Metrics */}
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
               <div className="text-sm font-medium text-muted-foreground">Total Forecasted Spend</div>
@@ -307,7 +481,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
         </div>
         
         {/* Charts */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Region Cost Comparison Chart */}
           <Card className="border shadow-sm">
             <CardHeader className="pb-2">
@@ -352,7 +526,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           <Card className="border shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <ChartLine className="h-4 w-4" /> Lead Generation Pipeline
+                <FunnelSimple className="h-4 w-4" /> Lead Generation Pipeline
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
