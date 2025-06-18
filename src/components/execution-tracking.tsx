@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { FilterX, ClipboardText, Search, TrashSimple, ArrowClockwise } from "@phosphor-icons/react";
 import { type Campaign } from "@/components/campaign-table";
 import { toast } from "sonner";
