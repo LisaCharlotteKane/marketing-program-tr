@@ -258,7 +258,6 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
       toast.error(`Failed to export campaigns: ${(error as Error).message}`);
     }
   };
-  };
 
   return (
     <div className="space-y-4">
