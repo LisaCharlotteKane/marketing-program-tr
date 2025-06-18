@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import Papa from "papaparse";
 import { ClearFiltersButton } from "@/components/clear-filters-button";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { FileUploader } from "@/components/file-uploader";
 
 // Campaign type interface
 export interface Campaign {
@@ -69,6 +70,9 @@ export function CampaignTable({
   const [selectedPillar, setSelectedPillar] = useState("_all");
   const [selectedCampaignType, setSelectedCampaignType] = useState("_all");
   const [selectedRevenuePlay, setSelectedRevenuePlay] = useState("_all");
+  
+  // Import dialog state
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   
   // Derive unique values for filters
   const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
@@ -352,73 +356,10 @@ export function CampaignTable({
     }).format(value);
   };
 
-  // Export campaigns to CSV
-  const exportToCsv = () => {
-    if (campaigns.length === 0) {
-      toast.error('No campaigns to export');
-      return;
-    }
-    
-    // Flatten the campaigns for CSV export
-    const flattenedCampaigns = campaigns.map(c => ({
-      ...c,
-      strategicPillars: c.strategicPillars.join(", "),
-      impactedRegions: c.impactedRegions ? c.impactedRegions.join(", ") : ""
-    }));
-    
-    // Generate CSV content
-    const csv = Papa.unparse(flattenedCampaigns);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    // Create a download link and click it
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'marketing_campaigns.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('Campaigns exported successfully');
-  };
-
-  // Import campaigns from JSON file
-  const importFromJson = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-      try {
-        const content = e.target?.result as string;
-        const importedCampaigns = JSON.parse(content) as Campaign[];
-        
-        // Validate the imported campaigns
-        const validCampaigns = importedCampaigns.filter(
-          campaign => campaign.id && campaign.campaignType
-        );
-        
-        if (validCampaigns.length !== importedCampaigns.length) {
-          // Some campaigns were invalid
-          toast.warning(`Imported ${validCampaigns.length} of ${importedCampaigns.length} campaigns. Some were invalid.`);
-          setCampaigns(validCampaigns);
-        } else {
-          // All campaigns were valid
-          setCampaigns(validCampaigns);
-          toast.success(`Imported ${validCampaigns.length} campaigns successfully`);
-        }
-      } catch (error) {
-        console.error('Error importing campaigns:', error);
-        toast.error('Failed to import campaigns. Invalid file format.');
-      }
-      
-      // Reset the file input
-      event.target.value = '';
-    };
-    
-    reader.readAsText(file);
+  // Handle file upload with campaigns
+  const handleFileUpload = (importedCampaigns: Campaign[]) => {
+    setCampaigns((prevCampaigns) => [...prevCampaigns, ...importedCampaigns]);
+    setIsImportDialogOpen(false);
   };
 
   // Check if a campaign is complete (shipped or cancelled)
@@ -451,57 +392,11 @@ export function CampaignTable({
   // Reference to file input for JSON import
   const jsonFileInputRef = useRef<HTMLInputElement>(null);
 
-  // Download CSV template
-  const downloadTemplate = () => {
-    // Define the CSV template structure
-    const templateData = [
-      {
-        id: "",
-        campaignName: "Example Webinar Campaign",
-        campaignType: "Webinars",
-        strategicPillars: "Account Growth and Product Adoption, New Logo Acquisition",
-        revenuePlay: "All",
-        fiscalYear: "FY25",
-        quarterMonth: "Q1 - July",
-        region: "North APAC",
-        country: "Japan",
-        owner: "Tomoko Tanaka",
-        description: "Example campaign - replace with real data",
-        forecastedCost: "15000",
-        expectedLeads: "100",
-        impactedRegions: "",
-        status: "Planning",
-        poRaised: "false",
-        campaignCode: "",
-        issueLink: "",
-        actualCost: "",
-        actualLeads: "",
-        actualMQLs: ""
-      }
-    ];
-
-    // Generate CSV content
-    const csv = Papa.unparse(templateData);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    
-    // Create a download link and click it
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'campaign_template.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success('Template downloaded successfully');
-  };
-
   return (
     <div className="space-y-6">
       {/* Filters and Actions */}
       <div className="bg-card rounded-lg border p-5 shadow-sm">
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5 bg-slate-300">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
           <h3 className="text-lg font-semibold">Campaign Planning</h3>
           <div className="flex gap-2">
             <Button 
@@ -512,6 +407,29 @@ export function CampaignTable({
               <Plus className="h-4 w-4" />
               Add Campaign
             </Button>
+            
+            <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <UploadSimple className="h-4 w-4" />
+                  Import Campaigns
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Import Campaign Data</DialogTitle>
+                  <DialogDescription>
+                    Upload a CSV file with campaign data or download a template to get started.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-6">
+                  <FileUploader 
+                    onFileUpload={handleFileUpload}
+                    currentCampaigns={campaigns}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
             
             {selectedCampaigns.length > 0 && (
               <Button 
@@ -526,7 +444,7 @@ export function CampaignTable({
           </div>
         </div>
         
-        <div className="rounded-lg p-4 mb-4 bg-slate-200">
+        <div className="rounded-lg p-4 mb-4 bg-slate-50">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <FilterX className="h-4 w-4 text-muted-foreground" />
@@ -1110,133 +1028,14 @@ export function CampaignTable({
         </div>
       </div>
       {/* Add JSON importing functionality */}
+      {/* This input was retained but is now unused since we have the FileUploader component */}
       <input
         type="file"
         accept=".csv"
         className="hidden"
         onChange={(event) => {
-          const file = event.target.files?.[0];
-          if (!file) return;
-          
-          Papa.parse<any>(file, {
-            header: true,
-            complete: (results) => {
-              if (results.data && results.data.length > 0) {
-                // Process CSV data
-                const importedCampaigns: Campaign[] = [];
-                const errors: string[] = [];
-                
-                results.data.forEach((row, index) => {
-                  // Skip empty rows
-                  if (Object.keys(row).length <= 1 && !row.id) return;
-                  
-                  try {
-                    // Validate and convert row data
-                    const campaign: Partial<Campaign> = {
-                      id: row.id || Math.random().toString(36).substring(2, 9),
-                      campaignName: row.campaignName || "",
-                      campaignType: row.campaignType || campaignTypes[0],
-                      strategicPillars: row.strategicPillars?.split(",").map((p: string) => p.trim()) || [pillars[0]],
-                      revenuePlay: row.revenuePlay || revenuePlays[0],
-                      fiscalYear: row.fiscalYear || fiscalYears[0],
-                      quarterMonth: row.quarterMonth || quarters[0],
-                      region: row.region || regionOptions[0],
-                      country: row.country || countries[0],
-                      owner: row.owner || ownerOptions[0],
-                      description: row.description || "",
-                      forecastedCost: row.forecastedCost !== undefined ? Number(row.forecastedCost) : "",
-                      expectedLeads: row.expectedLeads !== undefined ? Number(row.expectedLeads) : "",
-                      impactedRegions: row.impactedRegions?.split(",").map((r: string) => r.trim()) || [],
-                      status: row.status || "Planning",
-                      poRaised: row.poRaised === "true" || row.poRaised === true,
-                      campaignCode: row.campaignCode || "",
-                      issueLink: row.issueLink || "",
-                      actualCost: row.actualCost !== undefined ? Number(row.actualCost) : "",
-                      actualLeads: row.actualLeads !== undefined ? Number(row.actualLeads) : "",
-                      actualMQLs: row.actualMQLs !== undefined ? Number(row.actualMQLs) : "",
-                      mql: Number(row.mql) || 0,
-                      sql: Number(row.sql) || 0,
-                      opportunities: Number(row.opportunities) || 0,
-                      pipelineForecast: Number(row.pipelineForecast) || 0
-                    };
-                    
-                    // Validate required fields
-                    const validRegions = regionOptions;
-                    if (!validRegions.includes(campaign.region as string)) {
-                      errors.push(`Row ${index + 2}: Invalid region "${campaign.region}".`);
-                    }
-                    
-                    // Calculate derived fields
-                    if (campaign.campaignType === "In-Account Events (1:1)") {
-                      // Special logic for "In-Account Events (1:1)" campaigns
-                      if (campaign.expectedLeads !== undefined && campaign.expectedLeads !== "" && !isNaN(Number(campaign.expectedLeads)) && Number(campaign.expectedLeads) > 0) {
-                        // Standard calculation if leads are provided
-                        const leads = Number(campaign.expectedLeads);
-                        campaign.mql = Math.round(leads * 0.1);
-                        campaign.sql = Math.round(leads * 0.06);
-                        campaign.opportunities = Math.round(campaign.sql * 0.8);
-                        campaign.pipelineForecast = campaign.opportunities * 50000;
-                      } 
-                      // If no leads but cost exists, use 20:1 ROI calculation
-                      else if (campaign.forecastedCost !== undefined && campaign.forecastedCost !== "" && !isNaN(Number(campaign.forecastedCost)) && Number(campaign.forecastedCost) > 0) {
-                        const cost = Number(campaign.forecastedCost);
-                        campaign.pipelineForecast = cost * 20; // 20:1 ROI based on cost
-                        campaign.mql = 0;
-                        campaign.sql = 0;
-                        campaign.opportunities = 0;
-                      }
-                    } 
-                    // Standard calculation for all other campaign types
-                    else if (campaign.expectedLeads !== undefined && campaign.expectedLeads !== "" && !isNaN(Number(campaign.expectedLeads))) {
-                      const leads = Number(campaign.expectedLeads);
-                      campaign.mql = Math.round(leads * 0.1);
-                      campaign.sql = Math.round(leads * 0.06);
-                      campaign.opportunities = Math.round(campaign.sql * 0.8);
-                      campaign.pipelineForecast = campaign.opportunities * 50000;
-                    }
-                    
-                    importedCampaigns.push(campaign as Campaign);
-                  } catch (error) {
-                    console.error('Error processing row:', error);
-                    errors.push(`Row ${index + 2}: ${(error as Error).message}`);
-                  }
-                });
-                
-                if (errors.length > 0) {
-                  // Show validation errors
-                  toast.error(
-                    <div>
-                      <p>Import had validation errors:</p>
-                      <ul className="text-sm mt-2 max-h-40 overflow-auto list-disc pl-4">
-                        {errors.slice(0, 5).map((err, i) => (
-                          <li key={i}>{err}</li>
-                        ))}
-                        {errors.length > 5 && <li>...and {errors.length - 5} more errors</li>}
-                      </ul>
-                    </div>
-                  );
-                }
-                
-                if (importedCampaigns.length > 0) {
-                  // Add imported campaigns to existing ones
-                  setCampaigns((prevCampaigns) => [...prevCampaigns, ...importedCampaigns]);
-                  toast.success(`Imported ${importedCampaigns.length} campaigns successfully`);
-                } else {
-                  toast.error('No valid campaigns found in the CSV file');
-                }
-              }
-              
-              // Reset the file input
-              event.target.value = '';
-            },
-            error: (error) => {
-              console.error('CSV parsing error:', error);
-              toast.error('Failed to parse CSV file');
-              
-              // Reset the file input
-              event.target.value = '';
-            }
-          });
+          // Functionality now handled by FileUploader component
+          event.target.value = '';
         }}
       />
     </div>
