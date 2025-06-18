@@ -114,12 +114,14 @@ function App() {
   // Countries (sorted alphabetically)
   const countries = [
     "Afghanistan",
+    "ASEAN",
     "Australia",
     "Bangladesh",
     "Bhutan",
     "Brunei",
     "Cambodia",
     "China",
+    "GCR",
     "Hong Kong",
     "India",
     "Indonesia",

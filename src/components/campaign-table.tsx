@@ -145,12 +145,14 @@ export function CampaignTable({
   
   const countries = [
     "Afghanistan",
+    "ASEAN",
     "Australia",
     "Bangladesh",
     "Bhutan",
     "Brunei",
     "Cambodia",
     "China",
+    "GCR",
     "Hong Kong",
     "India",
     "Indonesia",
@@ -169,6 +171,7 @@ export function CampaignTable({
     "Taiwan",
     "Thailand",
     "Vietnam",
+    "X Apac",
     "X APAC English",
     "X APAC Non English",
     "X South APAC",

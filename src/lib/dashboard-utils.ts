@@ -121,10 +121,10 @@ export const regions = ["North APAC", "South APAC", "SAARC", "Digital"];
 
 // Define countries by region
 const countriesByRegion = {
-  "SAARC": ["India", "Pakistan", "Bangladesh", "Sri Lanka", "Nepal"],
-  "North APAC": ["Japan", "China", "South Korea", "Taiwan"],
-  "South APAC": ["Singapore", "Malaysia", "Indonesia", "Thailand", "Philippines", "Vietnam"],
-  "Digital": ["Multiple Regions"] // Digital is cross-regional
+  "SAARC": ["India", "Pakistan", "Bangladesh", "Sri Lanka", "Nepal", "Afghanistan", "Bhutan", "Maldives", "X SAARC"],
+  "North APAC": ["Japan", "China", "South Korea", "Taiwan", "Hong Kong", "GCR"],
+  "South APAC": ["Singapore", "Malaysia", "Indonesia", "Thailand", "Philippines", "Vietnam", "Australia", "New Zealand", "Brunei", "Cambodia", "Laos", "Myanmar", "ASEAN", "X South APAC"],
+  "Digital": ["Multiple Regions", "X Apac", "X APAC English", "X APAC Non English"] // Digital is cross-regional
 };
 
 // Get countries by region
