@@ -35,27 +35,31 @@ import { calculateRegionalMetrics } from "@/services/budget-service"
 // Header component with GitHub branding
 function PrimerHeader({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <header className="py-5 border-b mb-8 bg-card rounded-lg shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6">
-        <div className="flex items-center gap-4">
-          <Logo size="md" />
-          <div>
-            {subtitle && <p className="text-muted-foreground text-sm">{subtitle}</p>}
+    <header className="bg-card border-b sticky top-0 z-50 shadow-sm">
+      <div className="container mx-auto py-3">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="bg-primary/10 p-1.5 rounded">
+              <Logo size="sm" />
+            </div>
+            <div className="flex flex-col">
+              <h1 className="text-lg font-semibold">Marketing Planner</h1>
+              {subtitle && <p className="text-muted-foreground text-xs">{subtitle}</p>}
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2">
-            <span className="bg-accent px-3 py-1 rounded-full text-xs font-medium text-primary">Regional Marketing</span>
-          </div>
-          <ThemeSwitch className="hidden md:block" />
-          <div className="h-8 w-px bg-border mx-2 hidden md:block" />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <Badge className="bg-accent/80 hover:bg-accent text-primary border-accent/20">
+              APAC Regional Marketing
+            </Badge>
+            <ThemeSwitch className="hidden md:block" />
+            <div className="h-6 w-px bg-border mx-1 hidden md:block" />
             <Avatar username="gh" size="sm" />
           </div>
         </div>
       </div>
     </header>
   );
+}
 }
 
 
@@ -325,62 +329,53 @@ function App() {
   }, [campaigns]);
 
   return (
-    <div className="min-h-screen bg-background font-sans text-foreground p-3 sm:p-5 md:p-8">
+    <div className="min-h-screen bg-background font-sans text-foreground">
       <Toaster position="top-right" richColors closeButton />
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="flex flex-col min-h-screen">
         <StorageErrorHandler onRetry={handleRetryDataLoad} />
         
         <PrimerHeader 
           title="Marketing Campaign Calculator" 
           subtitle="Forecast campaign performance and track execution" 
         />
-        <div className="flex items-center justify-end mb-2">
-          <AutoSaveIndicator forceSave={saveStatus.forceSave} />
-        </div>
-
-        <Tabs defaultValue="planning" className="w-full">
-          <div className="overflow-x-auto pb-2">
-            <TabsList className="w-full mb-6 flex-nowrap md:grid md:grid-cols-6">
-              <TabsTrigger value="planning" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
-                <Calculator className="h-4 w-4 flex-shrink-0" /> 
-                <span>Planning</span>
-              </TabsTrigger>
-              <TabsTrigger value="execution" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
-                <ClipboardText className="h-4 w-4 flex-shrink-0" /> 
-                <span>Execution</span>
-              </TabsTrigger>
-              <TabsTrigger value="budget" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
-                <Buildings className="h-4 w-4 flex-shrink-0" /> 
-                <span>Budget</span>
-              </TabsTrigger>
-              <TabsTrigger value="roi" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
-                <TrendUp className="h-4 w-4 flex-shrink-0" /> 
-                <span>ROI</span>
-              </TabsTrigger>
-              <TabsTrigger value="github" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
-                <Database className="h-4 w-4 flex-shrink-0" /> 
-                <span>GitHub</span>
-              </TabsTrigger>
-              <TabsTrigger value="reporting" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
-                <PresentationChart className="h-4 w-4 flex-shrink-0" /> 
-                <span>Reporting</span>
-              </TabsTrigger>
-            </TabsList>
+        
+        <main className="flex-1 container mx-auto px-4 py-6">
+          <div className="flex items-center justify-end mb-4">
+            <AutoSaveIndicator forceSave={saveStatus.forceSave} />
           </div>
+          
+          <Tabs defaultValue="planning" className="w-full">
+            <div className="sticky top-0 z-10 bg-background pt-2 pb-4 mb-4 border-b">
+              <TabsList className="w-full flex-nowrap md:grid md:grid-cols-6 shadow-sm">
+                <TabsTrigger value="planning" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                  <Calculator className="h-4 w-4 flex-shrink-0" /> 
+                  <span>Planning</span>
+                </TabsTrigger>
+                <TabsTrigger value="execution" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                  <ClipboardText className="h-4 w-4 flex-shrink-0" /> 
+                  <span>Execution</span>
+                </TabsTrigger>
+                <TabsTrigger value="budget" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                  <Buildings className="h-4 w-4 flex-shrink-0" /> 
+                  <span>Budget</span>
+                </TabsTrigger>
+                <TabsTrigger value="roi" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                  <TrendUp className="h-4 w-4 flex-shrink-0" /> 
+                  <span>ROI</span>
+                </TabsTrigger>
+                <TabsTrigger value="github" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                  <Database className="h-4 w-4 flex-shrink-0" /> 
+                  <span>GitHub</span>
+                </TabsTrigger>
+                <TabsTrigger value="reporting" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                  <PresentationChart className="h-4 w-4 flex-shrink-0" /> 
+                  <span>Reporting</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
           <TabsContent value="planning" className="space-y-6 pt-2">
-            <Card className="border shadow-sm overflow-hidden">
-              <CardHeader className="bg-card/50 pb-4 pt-5 px-6 border-b">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Table className="h-5 w-5" /> Campaign Planning
-                </CardTitle>
-                <CardDescription className="text-sm mt-1">Plan and forecast marketing initiatives</CardDescription>
-              </CardHeader>
-
-              <CardContent className="p-0">
-                <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
-              </CardContent>
-            </Card>
+            <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
 
           <TabsContent value="execution" className="space-y-8 pt-2">
@@ -389,18 +384,18 @@ function App() {
 
           <TabsContent value="budget" className="space-y-8 pt-2">
             <Card className="border shadow-sm">
-              <CardHeader className="pb-4 pt-5 px-6">
+              <CardHeader className="pb-4 pt-5 px-6 bg-card/50">
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <Buildings className="h-5 w-5" /> Regional Budget Management
                 </CardTitle>
-                <CardDescription className="flex items-center justify-between">
+                <CardDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex flex-col">
                     <span>Assigned and locked budgets across different regions</span>
                     <span className="text-xs mt-1 text-muted-foreground flex items-center gap-1">
                       <LockKey className="h-3 w-3" /> Admin-locked budgets cannot be modified
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-2 sm:mt-0">
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -584,7 +579,8 @@ function App() {
             <PersistentStorageInfo />
             <GitHubSync campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </main>
       </div>
     </div>
   )

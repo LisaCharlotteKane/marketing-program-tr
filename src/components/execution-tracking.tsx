@@ -116,8 +116,8 @@ export function ExecutionTracking({
   
   return (
     <Card className="border shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="pb-2 bg-card/50">
+        <CardTitle className="flex items-center gap-2 text-xl">
           <ClipboardText className="h-5 w-5" /> Execution Tracking
         </CardTitle>
         <CardDescription className="flex justify-between items-center">
@@ -152,107 +152,138 @@ export function ExecutionTracking({
         </CardDescription>
       </CardHeader>
       
-      <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
-          <div>
-            <Label htmlFor="region-filter">Filter by Region</Label>
-            <Select 
-              value={regionFilter}
-              onValueChange={setRegionFilter}
-            >
-              <SelectTrigger id="region-filter" className="mt-1">
-                <SelectValue placeholder="All Regions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Regions</SelectItem>
-                {regions.filter(r => r !== "_all").map((region) => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <CardContent className="p-5">
+        <div className="bg-muted/30 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium flex items-center gap-2">
+              <FilterX className="h-4 w-4 text-muted-foreground" />
+              Filter Campaigns
+            </h4>
+            <ClearFiltersButton 
+              onClick={() => {
+                setRegionFilter("_all");
+                setOwnerFilter("_all");
+                setPillarFilter("_all");
+                setCampaignTypeFilter("_all");
+                setRevenuePlayFilter("_all");
+              }}
+            />
           </div>
-          
-          <div>
-            <Label htmlFor="owner-filter">Filter by Owner</Label>
-            <Select 
-              value={ownerFilter}
-              onValueChange={setOwnerFilter}
-            >
-              <SelectTrigger id="owner-filter" className="mt-1">
-                <SelectValue placeholder="All Owners" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Owners</SelectItem>
-                {owners.filter(o => o !== "_all").map((owner) => (
-                  <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="pillar-filter">Strategic Pillar</Label>
-            <Select 
-              value={pillarFilter}
-              onValueChange={setPillarFilter}
-            >
-              <SelectTrigger id="pillar-filter" className="mt-1">
-                <SelectValue placeholder="All Pillars" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Pillars</SelectItem>
-                {pillars.filter(p => p !== "_all").map((pillar) => (
-                  <SelectItem key={pillar} value={pillar}>{pillar}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="campaign-type-filter">Campaign Type</Label>
-            <Select 
-              value={campaignTypeFilter}
-              onValueChange={setCampaignTypeFilter}
-            >
-              <SelectTrigger id="campaign-type-filter" className="mt-1">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Types</SelectItem>
-                {campaignTypes.filter(t => t !== "_all").map((type) => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="revenue-play-filter">Revenue Play</Label>
-            <Select 
-              value={revenuePlayFilter}
-              onValueChange={setRevenuePlayFilter}
-            >
-              <SelectTrigger id="revenue-play-filter" className="mt-1">
-                <SelectValue placeholder="All Plays" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all">All Plays</SelectItem>
-                {revenuePlays.filter(p => p !== "_all").map((play) => (
-                  <SelectItem key={play} value={play}>{play}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div>
+              <Label htmlFor="region-filter" className="text-xs mb-1.5 block">Region</Label>
+              <Select 
+                value={regionFilter}
+                onValueChange={setRegionFilter}
+              >
+                <SelectTrigger id="region-filter">
+                  <SelectValue placeholder="All Regions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Regions</SelectItem>
+                  {regions.filter(r => r !== "_all").map((region) => (
+                    <SelectItem key={region} value={region}>{region}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="owner-filter" className="text-xs mb-1.5 block">Owner</Label>
+              <Select 
+                value={ownerFilter}
+                onValueChange={setOwnerFilter}
+              >
+                <SelectTrigger id="owner-filter">
+                  <SelectValue placeholder="All Owners" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Owners</SelectItem>
+                  {owners.filter(o => o !== "_all").map((owner) => (
+                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="pillar-filter" className="text-xs mb-1.5 block">Strategic Pillar</Label>
+              <Select 
+                value={pillarFilter}
+                onValueChange={setPillarFilter}
+              >
+                <SelectTrigger id="pillar-filter">
+                  <SelectValue placeholder="All Pillars" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Pillars</SelectItem>
+                  {pillars.filter(p => p !== "_all").map((pillar) => (
+                    <SelectItem key={pillar} value={pillar}>{pillar}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="campaign-type-filter" className="text-xs mb-1.5 block">Campaign Type</Label>
+              <Select 
+                value={campaignTypeFilter}
+                onValueChange={setCampaignTypeFilter}
+              >
+                <SelectTrigger id="campaign-type-filter">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Types</SelectItem>
+                  {campaignTypes.filter(t => t !== "_all").map((type) => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="revenue-play-filter" className="text-xs mb-1.5 block">Revenue Play</Label>
+              <Select 
+                value={revenuePlayFilter}
+                onValueChange={setRevenuePlayFilter}
+              >
+                <SelectTrigger id="revenue-play-filter">
+                  <SelectValue placeholder="All Plays" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Plays</SelectItem>
+                  {revenuePlays.filter(p => p !== "_all").map((play) => (
+                    <SelectItem key={play} value={play}>{play}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         
         {filteredCampaigns.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Search className="h-12 w-12 mx-auto mb-3 opacity-20" />
-            <p>No campaigns match your current filters</p>
-            <p className="text-sm mt-1">Try changing your filter criteria</p>
+          <div className="text-center py-12 px-4 bg-card/50 border rounded-lg">
+            <Search className="h-12 w-12 mx-auto mb-4 opacity-20" />
+            <h4 className="text-lg font-semibold mb-2">No campaigns match your filters</h4>
+            <p className="text-sm text-muted-foreground mb-4">Try changing your filter criteria or add new campaigns</p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                setRegionFilter("_all");
+                setOwnerFilter("_all");
+                setPillarFilter("_all");
+                setCampaignTypeFilter("_all");
+                setRevenuePlayFilter("_all");
+              }}
+              className="mx-auto"
+            >
+              <FilterX className="h-3.5 w-3.5 mr-1" /> Clear Filters
+            </Button>
           </div>
         ) : (
-          <div className="rounded-md border overflow-auto max-h-[calc(100vh-24rem)]">
+          <div className="rounded-md border overflow-auto max-h-[calc(100vh-24rem)] bg-card">
             <Table>
               <TableHeader className="bg-muted/50 sticky top-0">
                 <TableRow>
@@ -263,14 +294,14 @@ export function ExecutionTracking({
                       aria-label="Select all campaigns"
                     />
                   </TableHead>
-                  <TableHead className="w-[200px]">Campaign Name</TableHead>
-                  <TableHead className="w-[300px]">Details</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>PO Raised?</TableHead>
-                  <TableHead>Issue Link</TableHead>
-                  <TableHead>Actual Cost</TableHead>
-                  <TableHead>Actual Leads</TableHead>
-                  <TableHead>Actual MQLs</TableHead>
+                  <TableHead className="w-[200px] font-medium">Campaign Name</TableHead>
+                  <TableHead className="w-[300px] font-medium">Details</TableHead>
+                  <TableHead className="font-medium">Status</TableHead>
+                  <TableHead className="font-medium">PO Raised?</TableHead>
+                  <TableHead className="font-medium">Issue Link</TableHead>
+                  <TableHead className="font-medium">Actual Cost</TableHead>
+                  <TableHead className="font-medium">Actual Leads</TableHead>
+                  <TableHead className="font-medium">Actual MQLs</TableHead>
                 </TableRow>
               </TableHeader>
               
@@ -278,7 +309,12 @@ export function ExecutionTracking({
                 {filteredCampaigns.map((campaign) => (
                   <TableRow 
                     key={campaign.id} 
-                    className={`${campaign.status === "Cancelled" ? "opacity-60" : ""} ${selectedCampaigns.includes(campaign.id) ? "bg-accent/30" : ""}`}
+                    className={`
+                      ${campaign.status === "Cancelled" ? "bg-muted/20 opacity-70" : ""} 
+                      ${campaign.status === "Shipped" ? "bg-green-50/50" : ""}
+                      ${selectedCampaigns.includes(campaign.id) ? "bg-accent/30" : ""}
+                      hover:bg-muted/10
+                    `}
                   >
                     <TableCell>
                       <Checkbox 
@@ -299,8 +335,11 @@ export function ExecutionTracking({
                     </TableCell>
                     
                     <TableCell>
-                      <div className="text-xs text-muted-foreground">
-                        {campaign.owner} • {campaign.region} • {campaign.country}
+                      <div className="text-xs">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className="bg-muted/30">{campaign.owner}</Badge>
+                          <Badge variant="outline" className="bg-muted/30">{campaign.region}</Badge>
+                        </div>
                         {campaign.description && (
                           <div className="mt-1 text-foreground">
                             {campaign.description}
@@ -315,14 +354,34 @@ export function ExecutionTracking({
                         disabled={campaign.status === "Cancelled"}
                         onValueChange={(value) => updateCampaign(campaign.id, "status", value)}
                       >
-                        <SelectTrigger className="w-28">
+                        <SelectTrigger className="w-32">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Planning">Planning</SelectItem>
-                          <SelectItem value="On Track">On Track</SelectItem>
-                          <SelectItem value="Shipped">Shipped</SelectItem>
-                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                          <SelectItem value="Planning">
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-muted-foreground"></span>
+                              Planning
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="On Track">
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-primary"></span>
+                              On Track
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Shipped">
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                              Shipped
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="Cancelled">
+                            <div className="flex items-center gap-2">
+                              <span className="h-2 w-2 rounded-full bg-destructive"></span>
+                              Cancelled
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>

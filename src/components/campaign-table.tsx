@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { TrashSimple, FileCsv, Plus, ChartBar, FilterX, DownloadSimple, UploadSimple, Calculator } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import Papa from "papaparse";
+import { ClearFiltersButton } from "@/components/clear-filters-button";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 // Campaign type interface
@@ -496,9 +497,9 @@ export function CampaignTable({
   return (
     <div className="space-y-6">
       {/* Filters and Actions */}
-      <div className="flex flex-col mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium">Campaign Planning</h3>
+      <div className="bg-card rounded-lg border p-5 shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-5">
+          <h3 className="text-lg font-semibold">Campaign Planning</h3>
           <div className="flex gap-2">
             <Button 
               variant="default" 
@@ -522,13 +523,25 @@ export function CampaignTable({
           </div>
         </div>
         
-        <div className="bg-card/50 rounded-lg p-4 mb-4">
-          <div className="flex items-center gap-2 mb-3">
-            <FilterX className="h-4 w-4 text-muted-foreground" />
-            <h4 className="text-sm font-medium">Filter Campaigns</h4>
+        <div className="bg-muted/30 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <FilterX className="h-4 w-4 text-muted-foreground" />
+              <h4 className="text-sm font-medium">Filter Campaigns</h4>
+            </div>
+            <ClearFiltersButton 
+              onClick={() => {
+                setSelectedOwner("_all");
+                setSelectedRegion("_all");
+                setSelectedQuarter("_all");
+                setSelectedPillar("_all");
+                setSelectedCampaignType("_all");
+                setSelectedRevenuePlay("_all");
+              }}
+            />
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
             <div>
               <Select
                 value={selectedRegion}
@@ -615,30 +628,29 @@ export function CampaignTable({
             </div>
             
             <div>
-              <Button 
-                variant="outline" 
-                className="flex items-center gap-2 w-full h-10 bg-background"
-                onClick={() => {
-                  setSelectedOwner("_all");
-                  setSelectedRegion("_all");
-                  setSelectedQuarter("_all");
-                  setSelectedPillar("_all");
-                  setSelectedCampaignType("_all");
-                  setSelectedRevenuePlay("_all");
-                }}
+              <Select
+                value={selectedRevenuePlay}
+                onValueChange={setSelectedRevenuePlay}
               >
-                <FilterX className="h-4 w-4" />
-                <span>Clear All</span>
-              </Button>
+                <SelectTrigger id="revenue-play-filter" className="w-full bg-background">
+                  <SelectValue placeholder="Revenue Play" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Plays</SelectItem>
+                  {availableRevenuePlays.filter(p => p !== "_all").map(play => (
+                    play && <SelectItem key={play} value={play}>{play}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
       </div>
       {/* Display error if no campaigns match filters */}
       {filteredCampaigns.length === 0 && (
-        <div className="flex flex-col items-center justify-center p-8 bg-card/50 border rounded-lg text-center">
-          <FilterX className="h-10 w-10 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No campaigns match the filters</h3>
+        <div className="flex flex-col items-center justify-center p-8 bg-card border rounded-lg text-center">
+          <FilterX className="h-10 w-10 text-muted-foreground mb-4 opacity-50" />
+          <h3 className="text-lg font-semibold mb-2">No campaigns match the filters</h3>
           <p className="text-muted-foreground mb-4 max-w-md">
             Try clearing some filters or add a new campaign to get started.
           </p>
@@ -661,39 +673,40 @@ export function CampaignTable({
       )}
 
       {/* Campaign table */}
-      <div className="rounded-lg border shadow-sm overflow-hidden">
-        <div className="overflow-auto">
-          <Table>
-            <TableHeader className="bg-muted/40">
-              <TableRow>
-                <TableHead className="w-[50px]">
-                  <Checkbox 
-                    checked={filteredCampaigns.length > 0 && selectedCampaigns.length === filteredCampaigns.length}
-                    onCheckedChange={toggleSelectAll}
-                    aria-label="Select all campaigns"
-                  />
-                </TableHead>
-                <TableHead className="w-[180px] font-medium">Campaign Name</TableHead>
-                <TableHead className="w-[180px] font-medium">Campaign Type</TableHead>
-                <TableHead className="w-[140px] font-medium">Strategic Pillar</TableHead>
-                <TableHead className="w-[140px] font-medium">Revenue Play</TableHead>
-                <TableHead className="w-[80px] font-medium">FY</TableHead>
-                <TableHead className="w-[110px] font-medium">Quarter</TableHead>
-                <TableHead className="w-[100px] font-medium">Region</TableHead>
-                <TableHead className="w-[120px] font-medium">Country</TableHead>
-                <TableHead className="w-[120px] font-medium">Owner</TableHead>
-                <TableHead className="w-[200px] font-medium">Description</TableHead>
-                <TableHead className="w-[120px] font-medium">Forecasted Cost</TableHead>
-                <TableHead className="w-[110px] font-medium">Expected Leads</TableHead>
-                <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">MQLs</TableHead>
-                <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">SQLs</TableHead>
-                <TableHead className="w-[110px] font-medium text-muted-foreground bg-muted/5">Opps</TableHead>
-                <TableHead className="w-[130px] font-medium text-primary bg-muted/5">Pipeline</TableHead>
-                <TableHead className="w-[80px] font-medium">Status</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+      {filteredCampaigns.length > 0 && (
+        <div className="rounded-lg border shadow-sm overflow-hidden bg-card">
+          <div className="overflow-auto">
+            <Table>
+              <TableHeader className="bg-muted/40 sticky top-0">
+                <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox 
+                      checked={filteredCampaigns.length > 0 && selectedCampaigns.length === filteredCampaigns.length}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all campaigns"
+                    />
+                  </TableHead>
+                  <TableHead className="w-[180px] font-medium">Campaign Name</TableHead>
+                  <TableHead className="w-[180px] font-medium">Campaign Type</TableHead>
+                  <TableHead className="w-[140px] font-medium">Strategic Pillar</TableHead>
+                  <TableHead className="w-[140px] font-medium">Revenue Play</TableHead>
+                  <TableHead className="w-[80px] font-medium">FY</TableHead>
+                  <TableHead className="w-[110px] font-medium">Quarter</TableHead>
+                  <TableHead className="w-[100px] font-medium">Region</TableHead>
+                  <TableHead className="w-[120px] font-medium">Country</TableHead>
+                  <TableHead className="w-[120px] font-medium">Owner</TableHead>
+                  <TableHead className="w-[200px] font-medium">Description</TableHead>
+                  <TableHead className="w-[120px] font-medium">Forecasted Cost</TableHead>
+                  <TableHead className="w-[110px] font-medium">Expected Leads</TableHead>
+                  <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">MQLs</TableHead>
+                  <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">SQLs</TableHead>
+                  <TableHead className="w-[110px] font-medium text-muted-foreground bg-muted/5">Opps</TableHead>
+                  <TableHead className="w-[130px] font-medium text-primary bg-muted/5">Pipeline</TableHead>
+                  <TableHead className="w-[80px] font-medium">Status</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
               {filteredCampaigns.map(campaign => (
                 <TableRow 
                   key={campaign.id}
@@ -1010,13 +1023,16 @@ export function CampaignTable({
                 </TableCell>
               </TableRow>
             ))}
-          </TableBody>
-        </Table>
-      </div>
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
+      
       {/* Mobile Summary - Above for mobile, Below for desktop */}
       {isMobile && filteredCampaigns.length > 0 && (
         <div className="mt-8 rounded-lg bg-card border shadow-sm p-5">
-          <h3 className="text-lg font-medium flex items-center gap-2 mb-4">
+          <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
             <ChartBar className="h-5 w-5 text-primary" />
             Campaign Summary
           </h3>
@@ -1051,43 +1067,45 @@ export function CampaignTable({
       
       {/* Auto-calculation Info Alert - Styled more cleanly */}
       <div className="bg-card rounded-lg shadow-sm border p-5 mt-8">
-        <h4 className="text-sm font-semibold flex items-center gap-2 mb-3">
+        <h4 className="text-sm font-semibold flex items-center gap-2 mb-4">
           <Calculator className="h-4 w-4 text-primary" />
           Auto-Calculated Metrics
         </h4>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <p className="text-sm text-muted-foreground mb-2">
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
               Standard calculations based on <span className="font-medium text-foreground">Expected Leads</span>:
             </p>
-            <ul className="text-sm space-y-2 ml-1">
-              <li className="flex items-center gap-2">
-                <Badge variant="outline" className="font-mono">MQLs</Badge>
-                <span>10% of Expected Leads</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Badge variant="outline" className="font-mono">SQLs</Badge>
-                <span>6% of Expected Leads</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Badge variant="outline" className="font-mono">Opps</Badge>
-                <span>80% of SQLs</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Badge variant="outline" className="font-mono">Pipeline</Badge>
-                <span>Opportunities × $50,000</span>
-              </li>
-            </ul>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-muted/20 p-3 rounded-md">
+                <Badge variant="outline" className="font-mono mb-1">MQLs</Badge>
+                <p className="text-sm text-muted-foreground">10% of Expected Leads</p>
+              </div>
+              <div className="bg-muted/20 p-3 rounded-md">
+                <Badge variant="outline" className="font-mono mb-1">SQLs</Badge>
+                <p className="text-sm text-muted-foreground">6% of Expected Leads</p>
+              </div>
+              <div className="bg-muted/20 p-3 rounded-md">
+                <Badge variant="outline" className="font-mono mb-1">Opps</Badge>
+                <p className="text-sm text-muted-foreground">80% of SQLs</p>
+              </div>
+              <div className="bg-muted/20 p-3 rounded-md">
+                <Badge variant="outline" className="font-mono mb-1">Pipeline</Badge>
+                <p className="text-sm text-muted-foreground">Opps × $50,000</p>
+              </div>
+            </div>
           </div>
           
           <div className="border-t sm:border-t-0 sm:border-l pt-4 sm:pt-0 sm:pl-6 mt-4 sm:mt-0">
-            <p className="text-sm font-medium mb-2">Special Logic for "In-Account Events (1:1)":</p>
-            <p className="text-sm text-muted-foreground">
-              If no leads are provided, pipeline is calculated as 20× the forecasted cost (20:1 ROI).
-            </p>
-            <div className="mt-3 pt-3 border-t flex items-center gap-2">
-              <span className="text-sm font-medium text-primary">Tip:</span>
+            <div className="bg-muted/20 p-4 rounded-md">
+              <h5 className="text-sm font-medium mb-2">Special Logic for "In-Account Events (1:1)":</h5>
+              <p className="text-sm text-muted-foreground">
+                If no leads are provided, pipeline is calculated as 20× the forecasted cost (20:1 ROI).
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t flex items-center gap-2">
+              <div className="bg-accent/30 px-2 py-1 rounded text-xs text-primary font-medium">TIP</div>
               <span className="text-sm text-muted-foreground">Hover over calculated values to see formula details.</span>
             </div>
           </div>

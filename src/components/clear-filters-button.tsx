@@ -12,9 +12,10 @@ export function ClearFiltersButton({ onClick, className = "" }: ClearFiltersButt
       onClick={onClick}
       variant="outline"
       size="sm"
-      className={`flex items-center gap-1 text-xs ${className}`}
+      className={`flex items-center gap-1.5 text-xs font-medium bg-muted/20 border-muted hover:bg-muted hover:text-foreground ${className}`}
     >
-      <FilterX className="h-3 w-3" /> Clear Filters
+      <FilterX className="h-3.5 w-3.5" /> 
+      <span>Clear Filters</span>
     </Button>
   );
 }
