@@ -21,6 +21,9 @@ export function ExecutionTracking({
   // Filters
   const [regionFilter, setRegionFilter] = useState("_all");
   const [ownerFilter, setOwnerFilter] = useState("_all");
+  const [pillarFilter, setPillarFilter] = useState("_all");
+  const [campaignTypeFilter, setCampaignTypeFilter] = useState("_all");
+  const [revenuePlayFilter, setRevenuePlayFilter] = useState("_all");
   
   // Selected campaigns for bulk operations
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
@@ -28,6 +31,19 @@ export function ExecutionTracking({
   // Get unique regions and owners from campaigns
   const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
   const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
+  
+  // Extract strategic pillars (flattened from arrays)
+  const allPillars = campaigns.reduce((acc, campaign) => {
+    if (Array.isArray(campaign.strategicPillars)) {
+      acc.push(...campaign.strategicPillars);
+    }
+    return acc;
+  }, [] as string[]);
+  const pillars = ["_all", ...new Set(allPillars)].filter(Boolean);
+  
+  // Campaign types and revenue plays
+  const campaignTypes = ["_all", ...new Set(campaigns.map(c => c.campaignType))].filter(Boolean);
+  const revenuePlays = ["_all", ...new Set(campaigns.map(c => c.revenuePlay))].filter(Boolean);
   
   // Update a campaign with new execution data
   const updateCampaign = (id: string, key: keyof Campaign, value: any) => {
@@ -80,6 +96,20 @@ export function ExecutionTracking({
     // Apply owner filter
     if (ownerFilter !== "_all" && campaign.owner !== ownerFilter) return false;
     
+    // Apply strategic pillar filter (check if any pillar matches)
+    if (pillarFilter !== "_all") {
+      if (!Array.isArray(campaign.strategicPillars) || 
+          !campaign.strategicPillars.includes(pillarFilter)) {
+        return false;
+      }
+    }
+    
+    // Apply campaign type filter
+    if (campaignTypeFilter !== "_all" && campaign.campaignType !== campaignTypeFilter) return false;
+    
+    // Apply revenue play filter
+    if (revenuePlayFilter !== "_all" && campaign.revenuePlay !== revenuePlayFilter) return false;
+    
     return true;
   });
   
@@ -109,6 +139,9 @@ export function ExecutionTracking({
               onClick={() => {
                 setRegionFilter("_all");
                 setOwnerFilter("_all");
+                setPillarFilter("_all");
+                setCampaignTypeFilter("_all");
+                setRevenuePlayFilter("_all");
                 setSelectedCampaigns([]);
               }}
             >
@@ -119,7 +152,7 @@ export function ExecutionTracking({
       </CardHeader>
       
       <CardContent>
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
           <div>
             <Label htmlFor="region-filter">Filter by Region</Label>
             <Select 
@@ -151,6 +184,60 @@ export function ExecutionTracking({
                 <SelectItem value="_all">All Owners</SelectItem>
                 {owners.filter(o => o !== "_all").map((owner) => (
                   <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="pillar-filter">Strategic Pillar</Label>
+            <Select 
+              value={pillarFilter}
+              onValueChange={setPillarFilter}
+            >
+              <SelectTrigger id="pillar-filter" className="mt-1">
+                <SelectValue placeholder="All Pillars" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Pillars</SelectItem>
+                {pillars.filter(p => p !== "_all").map((pillar) => (
+                  <SelectItem key={pillar} value={pillar}>{pillar}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="campaign-type-filter">Campaign Type</Label>
+            <Select 
+              value={campaignTypeFilter}
+              onValueChange={setCampaignTypeFilter}
+            >
+              <SelectTrigger id="campaign-type-filter" className="mt-1">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Types</SelectItem>
+                {campaignTypes.filter(t => t !== "_all").map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="revenue-play-filter">Revenue Play</Label>
+            <Select 
+              value={revenuePlayFilter}
+              onValueChange={setRevenuePlayFilter}
+            >
+              <SelectTrigger id="revenue-play-filter" className="mt-1">
+                <SelectValue placeholder="All Plays" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Plays</SelectItem>
+                {revenuePlays.filter(p => p !== "_all").map((play) => (
+                  <SelectItem key={play} value={play}>{play}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

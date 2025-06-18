@@ -81,11 +81,27 @@ export function CampaignTable({
   const [selectedRegion, setSelectedRegion] = useState("_all");
   const [selectedQuarter, setSelectedQuarter] = useState("_all");
   const [selectedOwner, setOwnerFilter] = useState("_all");
+  const [selectedPillar, setSelectedPillar] = useState("_all");
+  const [selectedCampaignType, setSelectedCampaignType] = useState("_all");
+  const [selectedRevenuePlay, setSelectedRevenuePlay] = useState("_all");
   
   // Derive unique values for filters
   const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
   const availableQuarters = ["_all", ...new Set(campaigns.map(c => c.quarterMonth))].filter(Boolean);
   const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
+  
+  // Extract strategic pillars (flattened from arrays)
+  const allPillars = campaigns.reduce((acc, campaign) => {
+    if (Array.isArray(campaign.strategicPillars)) {
+      acc.push(...campaign.strategicPillars);
+    }
+    return acc;
+  }, [] as string[]);
+  const availablePillars = ["_all", ...new Set(allPillars)].filter(Boolean);
+  
+  // Campaign types and revenue plays from the actual data
+  const availableCampaignTypes = ["_all", ...new Set(campaigns.map(c => c.campaignType))].filter(Boolean);
+  const availableRevenuePlays = ["_all", ...new Set(campaigns.map(c => c.revenuePlay))].filter(Boolean);
   
   // Default data options
   const campaignTypes = [
@@ -427,7 +443,20 @@ export function CampaignTable({
     const regionMatch = selectedRegion === "_all" || campaign.region === selectedRegion;
     const quarterMatch = selectedQuarter === "_all" || campaign.quarterMonth === selectedQuarter;
     
-    return ownerMatch && regionMatch && quarterMatch;
+    // Check strategic pillar (if any pillar matches for multi-select field)
+    const pillarMatch = selectedPillar === "_all" || 
+      (Array.isArray(campaign.strategicPillars) && 
+       campaign.strategicPillars.includes(selectedPillar));
+    
+    // Check campaign type and revenue play
+    const campaignTypeMatch = selectedCampaignType === "_all" || 
+      campaign.campaignType === selectedCampaignType;
+      
+    const revenuePlayMatch = selectedRevenuePlay === "_all" || 
+      campaign.revenuePlay === selectedRevenuePlay;
+    
+    return ownerMatch && regionMatch && quarterMatch && 
+           pillarMatch && campaignTypeMatch && revenuePlayMatch;
   });
   
   // Reference to file input for JSON import
@@ -482,15 +511,15 @@ export function CampaignTable({
   return (
     <div className="space-y-6">
       {/* Filters and Actions */}
-      <div className="flex flex-col md:flex-row justify-between gap-4 mb-4 p-4">
-        <div className="flex flex-col md:flex-row gap-4 md:items-end">
+      <div className="flex flex-col mb-4 p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
           <div>
             <Label htmlFor="region-filter">Region</Label>
             <Select
               value={selectedRegion}
               onValueChange={setSelectedRegion}
             >
-              <SelectTrigger id="region-filter" className="w-full md:w-40">
+              <SelectTrigger id="region-filter" className="w-full">
                 <SelectValue placeholder="All Regions" />
               </SelectTrigger>
               <SelectContent>
@@ -508,7 +537,7 @@ export function CampaignTable({
               value={selectedQuarter}
               onValueChange={setSelectedQuarter}
             >
-              <SelectTrigger id="quarter-filter" className="w-full md:w-40">
+              <SelectTrigger id="quarter-filter" className="w-full">
                 <SelectValue placeholder="All Quarters" />
               </SelectTrigger>
               <SelectContent>
@@ -526,7 +555,7 @@ export function CampaignTable({
               value={selectedOwner}
               onValueChange={setOwnerFilter}
             >
-              <SelectTrigger id="owner-filter" className="w-full md:w-40">
+              <SelectTrigger id="owner-filter" className="w-full">
                 <SelectValue placeholder="All Owners" />
               </SelectTrigger>
               <SelectContent>
@@ -538,16 +567,80 @@ export function CampaignTable({
             </Select>
           </div>
           
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={() => {
-              setSelectedOwner("_all");
-              setSelectedRegion("_all");
-              setSelectedQuarter("_all");
-            }}
-          >
-            <FilterX className="h-4 w-4" />
+          <div>
+            <Label htmlFor="pillar-filter">Strategic Pillar</Label>
+            <Select
+              value={selectedPillar}
+              onValueChange={setSelectedPillar}
+            >
+              <SelectTrigger id="pillar-filter" className="w-full">
+                <SelectValue placeholder="All Pillars" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Pillars</SelectItem>
+                {availablePillars.filter(p => p !== "_all").map(pillar => (
+                  pillar && <SelectItem key={pillar} value={pillar}>{pillar}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="campaign-type-filter">Campaign Type</Label>
+            <Select
+              value={selectedCampaignType}
+              onValueChange={setSelectedCampaignType}
+            >
+              <SelectTrigger id="campaign-type-filter" className="w-full">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Types</SelectItem>
+                {availableCampaignTypes.filter(t => t !== "_all").map(type => (
+                  type && <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="revenue-play-filter">Revenue Play</Label>
+            <Select
+              value={selectedRevenuePlay}
+              onValueChange={setSelectedRevenuePlay}
+            >
+              <SelectTrigger id="revenue-play-filter" className="w-full">
+                <SelectValue placeholder="All Plays" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All Plays</SelectItem>
+                {availableRevenuePlays.filter(p => p !== "_all").map(play => (
+                  play && <SelectItem key={play} value={play}>{play}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-end">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2 w-full"
+              onClick={() => {
+                setSelectedOwner("_all");
+                setSelectedRegion("_all");
+                setSelectedQuarter("_all");
+                setSelectedPillar("_all");
+                setSelectedCampaignType("_all");
+                setSelectedRevenuePlay("_all");
+              }}
+            >
+              <FilterX className="h-4 w-4" />
+              <span>Reset Filters</span>
+            </Button>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
             Clear Filters
           </Button>
         </div>
