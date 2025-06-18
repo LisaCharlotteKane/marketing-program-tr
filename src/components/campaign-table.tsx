@@ -163,7 +163,6 @@ export function CampaignTable({
     "Taiwan",
     "Thailand",
     "Vietnam",
-    "X Apac",
     "X APAC English",
     "X APAC Non English",
     "X South APAC",
