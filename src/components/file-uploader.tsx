@@ -315,4 +315,4 @@ toast.success(`Exported ${currentCampaigns.length} campaigns successfully`);
       />
     </div>
   );
-  }
+}
