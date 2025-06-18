@@ -675,28 +675,7 @@ export function CampaignTable({
           </AlertDescription>
         </Alert>
       )}
-      {/* Auto-calculation Info Alert */}
-      <div className="bg-accent/30 border border-accent rounded-md p-3 mb-4">
-        <h4 className="text-sm font-semibold flex items-center gap-2 mb-1">
-          <Calculator className="h-4 w-4" />
-          Auto-Calculated Metrics
-        </h4>
-        <p className="text-sm text-muted-foreground">
-          When you enter <strong>Expected Leads</strong>, the following metrics are automatically calculated:
-        </p>
-        <ul className="text-sm text-muted-foreground mt-1 space-y-1 list-disc pl-5">
-          <li>MQL Forecast = 10% of Expected Leads</li>
-          <li>SQL Forecast = 6% of Expected Leads</li>
-          <li>Opportunities = 80% of SQLs</li>
-          <li>Pipeline Forecast = Opportunities × $50,000</li>
-        </ul>
-        <div className="mt-3 pt-3 border-t border-accent">
-          <p className="text-sm font-medium">Special Logic for "In-Account Events (1:1)":</p>
-          <p className="text-sm text-muted-foreground">
-            If no leads are provided, pipeline is calculated as 20× the forecasted cost (20:1 ROI).
-          </p>
-        </div>
-      </div>
+
       {/* Campaign table */}
       <div className="border rounded-md overflow-auto">
         <Table>
@@ -1045,7 +1024,7 @@ export function CampaignTable({
           </TableBody>
         </Table>
       </div>
-      {/* Campaign Summary - Mobile View */}
+      {/* Mobile Summary - Above for mobile, Below for desktop */}
       {isMobile && filteredCampaigns.length > 0 && (
         <div className="mt-8 p-4 bg-muted/20 rounded-lg">
           <h3 className="text-lg font-medium flex items-center gap-2 mb-4">
@@ -1080,6 +1059,29 @@ export function CampaignTable({
           </dl>
         </div>
       )}
+      
+      {/* Auto-calculation Info Alert - Moved to bottom */}
+      <div className="bg-accent/30 border border-accent rounded-md p-3 mt-8">
+        <h4 className="text-sm font-semibold flex items-center gap-2 mb-1">
+          <Calculator className="h-4 w-4" />
+          Auto-Calculated Metrics
+        </h4>
+        <p className="text-sm text-muted-foreground">
+          When you enter <strong>Expected Leads</strong>, the following metrics are automatically calculated:
+        </p>
+        <ul className="text-sm text-muted-foreground mt-1 space-y-1 list-disc pl-5">
+          <li>MQL Forecast = 10% of Expected Leads</li>
+          <li>SQL Forecast = 6% of Expected Leads</li>
+          <li>Opportunities = 80% of SQLs</li>
+          <li>Pipeline Forecast = Opportunities × $50,000</li>
+        </ul>
+        <div className="mt-3 pt-3 border-t border-accent">
+          <p className="text-sm font-medium">Special Logic for "In-Account Events (1:1)":</p>
+          <p className="text-sm text-muted-foreground">
+            If no leads are provided, pipeline is calculated as 20× the forecasted cost (20:1 ROI).
+          </p>
+        </div>
+      </div>
       {/* Add JSON importing functionality */}
       <input
         type="file"
