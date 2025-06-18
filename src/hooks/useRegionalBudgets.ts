@@ -47,6 +47,18 @@ const DEFAULT_BUDGETS: RegionalBudgets = {
     programs: [],
     lockedByOwner: true,
     lockedTimestamp: Date.now()
+  },
+  "X APAC English": {
+    assignedBudget: 0,
+    programs: [],
+    lockedByOwner: true,
+    lockedTimestamp: Date.now()
+  },
+  "X APAC Non English": {
+    assignedBudget: 0,
+    programs: [],
+    lockedByOwner: true,
+    lockedTimestamp: Date.now()
   }
 };
 
