@@ -49,15 +49,13 @@ export interface Campaign {
   opportunities: number;
   pipelineForecast: number;
 }
-}
-
 export function CampaignTable({ 
   campaigns, 
   setCampaigns 
 }: { 
   campaigns: Campaign[], 
   setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>> 
-}) {
+}) 
   // Mobile responsive state
   const isMobile = useMediaQuery("(max-width: 768px)");
   
