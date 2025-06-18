@@ -418,6 +418,9 @@ function App() {
                           </h3>
                           <p className="text-sm text-muted-foreground">
                             {regionalBudgets[region]?.programs.length || 0} program(s) assigned
+                            {(region === "X APAC English" || region === "X APAC Non English") && (
+                              <span className="ml-2 text-muted-foreground italic">(No budget assignment needed)</span>
+                            )}
                           </p>
                         </div>
                         <div className="flex-1 max-w-48">
@@ -447,7 +450,7 @@ function App() {
                         </div>
                       </div>
 
-                      {hasAssignedBudget && (
+                      {hasAssignedBudget && !(region === "X APAC English" || region === "X APAC Non English") && (
                         <div className="space-y-3">
                           <div className="space-y-1">
                             <div className="flex justify-between text-sm">
@@ -489,7 +492,7 @@ function App() {
                       )}
 
                       {/* Budget vs. Cost Comparison Chart */}
-                      {hasAssignedBudget && (
+                      {hasAssignedBudget && !(region === "X APAC English" || region === "X APAC Non English") && (
                         <div className="h-64 w-full mt-4">
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart

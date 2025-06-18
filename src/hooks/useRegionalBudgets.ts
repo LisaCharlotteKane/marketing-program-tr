@@ -49,13 +49,13 @@ const DEFAULT_BUDGETS: RegionalBudgets = {
     lockedTimestamp: Date.now()
   },
   "X APAC English": {
-    assignedBudget: 0,
+    assignedBudget: 0,  // No budget assignment needed
     programs: [],
     lockedByOwner: true,
     lockedTimestamp: Date.now()
   },
   "X APAC Non English": {
-    assignedBudget: 0,
+    assignedBudget: 0,  // No budget assignment needed
     programs: [],
     lockedByOwner: true,
     lockedTimestamp: Date.now()

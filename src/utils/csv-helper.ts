@@ -21,10 +21,16 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
     errors.push(`Row ${rowIndex}: Campaign Type is required.`);
   }
   
-  if (!campaign.region) {
+  // Validate regions that don't require budget allocation
+  if (campaign.region && (campaign.region === "X APAC Non English" || campaign.region === "X APAC English")) {
+    // These regions don't need budget allocation - keep for reporting purposes
+  } else if (campaign.region) {
+    // Validate other regions against the valid list
+    if (!validRegions.includes(campaign.region as string)) {
+      errors.push(`Row ${rowIndex}: Invalid region "${campaign.region}". Must be one of: ${validRegions.join(", ")}`);
+    }
+  } else {
     errors.push(`Row ${rowIndex}: Region is required.`);
-  } else if (!validRegions.includes(campaign.region as string)) {
-    errors.push(`Row ${rowIndex}: Invalid region "${campaign.region}". Must be one of: ${validRegions.join(", ")}`);
   }
   
   if (!campaign.country) {
@@ -118,12 +124,20 @@ export function processCsvData(csvData: string): {
   const errors: string[] = [];
   const warnings: string[] = [];
   
-  // Budget pool tracking for each owner
-  const budgetPoolByOwner = {
-    "Tomoko Tanaka": 358000,
-    "Beverly Leung": 385500,
-    "Shruti Narang": 265000,
-    "Giorgia Parham": 68000,
+  // Owner to region mapping for budget purposes
+  const ownerToRegionMap = {
+    "Tomoko Tanaka": "North APAC",
+    "Beverly Leung": "South APAC",
+    "Shruti Narang": "SAARC",
+    "Giorgia Parham": "Digital",
+  };
+
+  // Budget pool tracking by region owner
+  const budgetPoolByRegionOwner = {
+    "North APAC": { owner: "Tomoko Tanaka", budget: 358000 },
+    "South APAC": { owner: "Beverly Leung", budget: 385500 },
+    "SAARC": { owner: "Shruti Narang", budget: 265000 },
+    "Digital": { owner: "Giorgia Parham", budget: 68000 },
   };
   
   if (result.errors && result.errors.length > 0) {
@@ -220,15 +234,19 @@ export function processCsvData(csvData: string): {
       const cost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : parseFloat(campaign.forecastedCost as string || "0");
       
       if (owner && cost > 0) {
-        if (budgetPoolByOwner[owner] !== undefined) {
-          budgetPoolByOwner[owner] -= cost;
+        // Get the appropriate region for budget tracking based on owner
+        const budgetRegion = ownerToRegionMap[owner];
+        
+        // Only check budget allocation for owners with a region mapping
+        if (budgetRegion && budgetPoolByRegionOwner[budgetRegion]) {
+          budgetPoolByRegionOwner[budgetRegion].budget -= cost;
           
           // Add warning if budget pool is exceeded
-          if (budgetPoolByOwner[owner] < 0) {
-            warnings.push(`Row ${index + 2}: Owner ${owner} has exceeded their budget pool by ${formatCurrency(-budgetPoolByOwner[owner])}`);
+          if (budgetPoolByRegionOwner[budgetRegion].budget < 0) {
+            warnings.push(`Row ${index + 2}: ${owner} has exceeded their ${budgetRegion} budget pool by ${formatCurrency(-budgetPoolByRegionOwner[budgetRegion].budget)}`);
           }
-        } else {
-          errors.push(`Row ${index + 2}: Unknown owner: ${owner}`);
+        } else if (!budgetRegion) {
+          errors.push(`Row ${index + 2}: Unknown owner or no region mapping for: ${owner}`);
         }
       }
       

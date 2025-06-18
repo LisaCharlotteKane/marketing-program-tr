@@ -299,27 +299,40 @@ export function CampaignTable({
             updatedCampaign.forecastedCost > 0 &&
             updatedCampaign.owner) {
           
-          const budgetPoolByOwner = {
-            "Tomoko Tanaka": 358000,
-            "Beverly Leung": 385500,
-            "Shruti Narang": 265000,
-            "Giorgia Parham": 68000,
+          // Owner to region mapping for budget purposes
+          const ownerToRegionMap = {
+            "Tomoko Tanaka": "North APAC",
+            "Beverly Leung": "South APAC", 
+            "Shruti Narang": "SAARC",
+            "Giorgia Parham": "Digital",
           };
           
-          // Check if this owner has a budget pool
-          if (budgetPoolByOwner[updatedCampaign.owner] !== undefined) {
+          // Budget pool tracking by region owner
+          const budgetPoolByRegionOwner = {
+            "North APAC": { owner: "Tomoko Tanaka", budget: 358000 },
+            "South APAC": { owner: "Beverly Leung", budget: 385500 },
+            "SAARC": { owner: "Shruti Narang", budget: 265000 },
+            "Digital": { owner: "Giorgia Parham", budget: 68000 },
+          };
+          
+          // Get budget region from owner
+          const budgetRegion = ownerToRegionMap[updatedCampaign.owner];
+          
+          // Check if this owner has a budget region assigned
+          if (budgetRegion && budgetPoolByRegionOwner[budgetRegion]) {
             // Calculate remaining budget for this owner (excluding this campaign)
             const otherCampaignsCost = campaigns
-              .filter(c => c.id !== id && c.owner === updatedCampaign.owner)
+              .filter(c => c.id !== id && ownerToRegionMap[c.owner] === budgetRegion)
               .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
             
             const totalCost = otherCampaignsCost + updatedCampaign.forecastedCost;
-            const remainingBudget = budgetPoolByOwner[updatedCampaign.owner] - totalCost;
+            const totalBudget = budgetPoolByRegionOwner[budgetRegion].budget;
+            const remainingBudget = totalBudget - totalCost;
             
             // Show warning if budget pool is exceeded
             if (remainingBudget < 0) {
               toast.warning(
-                `${updatedCampaign.owner} has exceeded their budget pool by ${formatCurrency(-remainingBudget)}`,
+                `${updatedCampaign.owner} has exceeded the ${budgetRegion} budget by ${formatCurrency(-remainingBudget)}`,
                 { duration: 5000 }
               );
             }
