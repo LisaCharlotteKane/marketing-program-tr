@@ -13,7 +13,7 @@ import { Campaign } from "@/components/campaign-table";
  */
 export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number): string[] {
   const errors: string[] = [];
-  const validRegions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English", "X APAC English"];
+  const validRegions = ["North APAC", "South APAC", "SAARC", "Digital", "Digital Motions", "X APAC Non English", "X APAC English"];
   const validStatus = ["Planning", "On Track", "Shipped", "Cancelled"];
   
   // Check required fields
@@ -129,15 +129,15 @@ export function processCsvData(csvData: string): {
     "Tomoko Tanaka": "North APAC",
     "Beverly Leung": "South APAC",
     "Shruti Narang": "SAARC",
-    "Giorgia Parham": "Digital",
+    "Giorgia Parham": "Digital Motions",
   };
 
-  // Budget pool tracking by region owner
+  // Budget pool tracking by region owner with used budget and overage tracking
   const budgetPoolByRegionOwner = {
-    "North APAC": { owner: "Tomoko Tanaka", budget: 358000 },
-    "South APAC": { owner: "Beverly Leung", budget: 385500 },
-    "SAARC": { owner: "Shruti Narang", budget: 265000 },
-    "Digital": { owner: "Giorgia Parham", budget: 68000 },
+    "North APAC": { owner: "Tomoko Tanaka", budget: 358000, used: 0, overage: 0 },
+    "South APAC": { owner: "Beverly Leung", budget: 385500, used: 0, overage: 0 },
+    "SAARC": { owner: "Shruti Narang", budget: 265000, used: 0, overage: 0 },
+    "Digital Motions": { owner: "Giorgia Parham", budget: 68000, used: 0, overage: 0 },
   };
   
   if (result.errors && result.errors.length > 0) {
@@ -239,14 +239,19 @@ export function processCsvData(csvData: string): {
         
         // Only check budget allocation for owners with a region mapping
         if (budgetRegion && budgetPoolByRegionOwner[budgetRegion]) {
-          budgetPoolByRegionOwner[budgetRegion].budget -= cost;
+          budgetPoolByRegionOwner[budgetRegion].used += cost;
+          const remaining = budgetPoolByRegionOwner[budgetRegion].budget - budgetPoolByRegionOwner[budgetRegion].used;
           
-          // Add warning if budget pool is exceeded
-          if (budgetPoolByRegionOwner[budgetRegion].budget < 0) {
-            warnings.push(`Row ${index + 2}: ${owner} has exceeded their ${budgetRegion} budget pool by ${formatCurrency(-budgetPoolByRegionOwner[budgetRegion].budget)}`);
+          if (remaining < 0) {
+            budgetPoolByRegionOwner[budgetRegion].overage = Math.abs(remaining);
+            
+            // Only add a warning if overage is greater than $500
+            if (budgetPoolByRegionOwner[budgetRegion].overage > 500) {
+              warnings.push(`Row ${index + 2}: ${owner} has exceeded their ${budgetRegion} budget pool by ${formatCurrency(budgetPoolByRegionOwner[budgetRegion].overage)}`);
+            }
           }
         } else if (!budgetRegion) {
-          errors.push(`Row ${index + 2}: Unknown owner or no region mapping for: ${owner}`);
+          warnings.push(`Row ${index + 2}: Owner "${owner}" doesn't have a primary budget region assigned.`);
         }
       }
       

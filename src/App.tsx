@@ -91,7 +91,7 @@ function App() {
     "Secure all developer workloads with the power of AI",
     "All"
   ];
-  const regions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English", "X APAC English"];
+  const regions = ["North APAC", "South APAC", "SAARC", "Digital Motions", "X APAC Non English", "X APAC English"];
   
   // Campaign types
   const campaignTypes = [
@@ -398,7 +398,9 @@ function App() {
                     forecastedPercent,
                     actualPercent,
                     forecastedExceedsBudget,
-                    actualExceedsBudget 
+                    actualExceedsBudget,
+                    forecastedOverage,
+                    actualOverage
                   } = calculateRegionalMetrics(regionalBudgets, region);
                   
                   const hasAssignedBudget = typeof assignedBudget === "number";
@@ -474,7 +476,8 @@ function App() {
                               <Warning className="h-4 w-4 text-yellow-600" />
                               <AlertTitle className="text-yellow-800">Warning</AlertTitle>
                               <AlertDescription className="text-yellow-700">
-                                Forecasted cost ({formatCurrency(totalForecasted)}) exceeds assigned budget ({formatCurrency(assignedBudget as number)})
+                                Forecasted cost ({formatCurrency(totalForecasted)}) exceeds assigned budget ({formatCurrency(assignedBudget as number)}) 
+                                by {formatCurrency(forecastedOverage)}
                               </AlertDescription>
                             </Alert>
                           )}
@@ -485,6 +488,7 @@ function App() {
                               <AlertTitle className="text-red-800">Critical Alert</AlertTitle>
                               <AlertDescription className="text-red-700">
                                 Actual cost ({formatCurrency(totalActual)}) exceeds assigned budget ({formatCurrency(assignedBudget as number)})
+                                by {formatCurrency(actualOverage)}
                               </AlertDescription>
                             </Alert>
                           )}

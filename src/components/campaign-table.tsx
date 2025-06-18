@@ -141,7 +141,7 @@ export function CampaignTable({
     "Q4 - June"
   ];
   
-  const regionOptions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English", "X APAC English"];
+  const regionOptions = ["North APAC", "South APAC", "SAARC", "Digital Motions", "X APAC Non English", "X APAC English"];
   
   const countries = [
     "Afghanistan",
@@ -304,15 +304,15 @@ export function CampaignTable({
             "Tomoko Tanaka": "North APAC",
             "Beverly Leung": "South APAC", 
             "Shruti Narang": "SAARC",
-            "Giorgia Parham": "Digital",
+            "Giorgia Parham": "Digital Motions",
           };
           
-          // Budget pool tracking by region owner
+          // Budget pool tracking by region owner with used budget and overage tracking
           const budgetPoolByRegionOwner = {
-            "North APAC": { owner: "Tomoko Tanaka", budget: 358000 },
-            "South APAC": { owner: "Beverly Leung", budget: 385500 },
-            "SAARC": { owner: "Shruti Narang", budget: 265000 },
-            "Digital": { owner: "Giorgia Parham", budget: 68000 },
+            "North APAC": { owner: "Tomoko Tanaka", budget: 358000, used: 0, overage: 0 },
+            "South APAC": { owner: "Beverly Leung", budget: 385500, used: 0, overage: 0 },
+            "SAARC": { owner: "Shruti Narang", budget: 265000, used: 0, overage: 0 },
+            "Digital Motions": { owner: "Giorgia Parham", budget: 68000, used: 0, overage: 0 },
           };
           
           // Get budget region from owner
@@ -320,21 +320,31 @@ export function CampaignTable({
           
           // Check if this owner has a budget region assigned
           if (budgetRegion && budgetPoolByRegionOwner[budgetRegion]) {
-            // Calculate remaining budget for this owner (excluding this campaign)
+            // Calculate all campaigns for this budget region (excluding this campaign)
             const otherCampaignsCost = campaigns
               .filter(c => c.id !== id && ownerToRegionMap[c.owner] === budgetRegion)
               .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
             
+            // Calculate total cost with current campaign
             const totalCost = otherCampaignsCost + updatedCampaign.forecastedCost;
             const totalBudget = budgetPoolByRegionOwner[budgetRegion].budget;
+            
+            // Update used and calculate overage
+            budgetPoolByRegionOwner[budgetRegion].used = totalCost;
             const remainingBudget = totalBudget - totalCost;
             
-            // Show warning if budget pool is exceeded
             if (remainingBudget < 0) {
-              toast.warning(
-                `${updatedCampaign.owner} has exceeded the ${budgetRegion} budget by ${formatCurrency(-remainingBudget)}`,
-                { duration: 5000 }
-              );
+              budgetPoolByRegionOwner[budgetRegion].overage = Math.abs(remainingBudget);
+              
+              // Only show warning if overage exceeds $500
+              if (budgetPoolByRegionOwner[budgetRegion].overage > 500) {
+                toast.warning(
+                  `${updatedCampaign.owner} has exceeded the ${budgetRegion} budget by ${formatCurrency(budgetPoolByRegionOwner[budgetRegion].overage)}`,
+                  { duration: 5000 }
+                );
+              }
+            } else {
+              budgetPoolByRegionOwner[budgetRegion].overage = 0;
             }
           }
         }
