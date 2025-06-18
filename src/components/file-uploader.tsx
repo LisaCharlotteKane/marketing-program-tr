@@ -228,21 +228,28 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
     
     toast.success('Template downloaded successfully');
   };
+export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Export current campaigns to CSV
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // ... your file handling logic ...
+  };
+
+  const downloadTemplate = () => {
+    // ... your download template logic ...
+  };
+
   const exportToCsv = () => {
     if (currentCampaigns.length === 0) {
       toast.error('No campaigns to export');
       return;
     }
-    
+
     try {
-      // Generate CSV content using our utility function
       const csv = exportCampaignsToCsv(currentCampaigns);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-      
-      // Create a download link and click it
+
       const link = document.createElement('a');
       link.setAttribute('href', url);
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
@@ -251,18 +258,17 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-toast.success(`Exported ${currentCampaigns.length} campaigns successfully`);
-} catch (error) {
-  console.error('Export error:', error);
-  toast.error(`Failed to export campaigns: ${(error as Error).message}`);
-}
-};
+
+      toast.success(`Exported ${currentCampaigns.length} campaigns successfully`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error(`Failed to export campaigns: ${(error as Error).message}`);
+    }
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-center gap-2">
-        {/* Template Button */}
         <Button
           variant="outline"
           className="flex items-center gap-2 w-full sm:w-auto"
@@ -271,8 +277,7 @@ toast.success(`Exported ${currentCampaigns.length} campaigns successfully`);
           <DownloadSimple className="h-4 w-4" />
           <span>Download Template</span>
         </Button>
-        
-        {/* Export Button */}
+
         <Button
           variant="outline"
           className="flex items-center gap-2 w-full sm:w-auto"
@@ -282,8 +287,7 @@ toast.success(`Exported ${currentCampaigns.length} campaigns successfully`);
           <DownloadSimple className="h-4 w-4" />
           <span>Export {currentCampaigns.length} Campaigns</span>
         </Button>
-        
-        {/* Upload Button */}
+
         <Button
           variant="default"
           className="flex items-center gap-2 w-full sm:w-auto"
@@ -293,7 +297,7 @@ toast.success(`Exported ${currentCampaigns.length} campaigns successfully`);
           <span>Upload CSV</span>
         </Button>
       </div>
-      
+
       <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
         <p className="mb-2 font-medium text-foreground text-xs">CSV Import Instructions:</p>
         <ul className="list-disc pl-5 space-y-1 text-xs">
@@ -304,8 +308,7 @@ toast.success(`Exported ${currentCampaigns.length} campaigns successfully`);
           <li>Date fields should follow the format in the template</li>
         </ul>
       </div>
-      
-      {/* Hidden file input */}
+
       <input
         type="file"
         ref={fileInputRef}
