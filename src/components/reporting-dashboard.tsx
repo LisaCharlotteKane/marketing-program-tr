@@ -271,16 +271,6 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           <div className="flex items-center gap-2">
             <PresentationChart className="h-5 w-5" /> Campaign Reporting Dashboard
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={resetFilters} 
-              className="text-xs flex items-center gap-1"
-            >
-              <FilterX className="h-3 w-3" /> Reset Filters
-            </Button>
-          </div>
         </CardTitle>
         <CardDescription>Analyze campaign performance metrics</CardDescription>
       </CardHeader>
@@ -289,8 +279,20 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
         {/* Filters */}
         <Card className="border shadow-sm">
           <CardHeader className="pb-2 pt-4">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Sliders className="h-4 w-4" /> Filter Controls
+            <CardTitle className="text-base flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sliders className="h-4 w-4" /> Filter Controls
+              </div>
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
+                <Button 
+                  onClick={resetFilters}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1 text-xs"
+                >
+                  <FilterX className="h-3 w-3" /> Clear Filters
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4">

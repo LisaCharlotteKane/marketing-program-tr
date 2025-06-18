@@ -641,7 +641,20 @@ export function CampaignTable({
         </div>
         
         <div className="flex flex-col sm:flex-row justify-between gap-4">
-            Clear Filters
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2 w-full"
+            onClick={() => {
+              setSelectedOwner("_all");
+              setSelectedRegion("_all");
+              setSelectedQuarter("_all");
+              setSelectedPillar("_all");
+              setSelectedCampaignType("_all");
+              setSelectedRevenuePlay("_all");
+            }}
+          >
+            <FilterX className="h-4 w-4" />
+            <span>Clear Filters</span>
           </Button>
         </div>
         

@@ -253,7 +253,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
 
       <CardContent className="space-y-6">
         {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex flex-wrap items-end gap-4 mb-6">
           <div className="space-y-2">
             <Label htmlFor="region-filter">Region</Label>
             <Select value={selectedRegion} onValueChange={setSelectedRegion}>
@@ -282,6 +282,20 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <Button 
+              onClick={() => {
+                setSelectedRegion("all");
+                setSelectedQuarter("all");
+              }}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 text-xs"
+            >
+              <FilterX className="h-3 w-3" /> Clear Filters
+            </Button>
           </div>
         </div>
 
