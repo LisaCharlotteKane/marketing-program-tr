@@ -204,7 +204,7 @@ export function CampaignTable({
       actualMQLs: "",
       // Initialize calculated fields
       mql: 0,
-      sql: 0,,
+      sql: 0,
       opportunities: 0,
       pipelineForecast: 0
     };
