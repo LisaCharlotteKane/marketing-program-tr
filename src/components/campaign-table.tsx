@@ -318,7 +318,11 @@ export function CampaignTable({
   const togglePillar = (id: string, pillar: string) => {
     setCampaigns(campaigns.map(campaign => {
       if (campaign.id === id) {
-        const currentPillars = [...campaign.strategicPillars];
+        // Ensure currentPillars is always an array, even if undefined in stored data
+        const currentPillars = Array.isArray(campaign.strategicPillars) 
+          ? [...campaign.strategicPillars] 
+          : [];
+        
         const pillarIndex = currentPillars.indexOf(pillar);
         
         if (pillarIndex >= 0) {

@@ -29,22 +29,22 @@ export function ExecutionTracking({
   // Selected campaigns for bulk operations
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
   
-  // Get unique regions and owners from campaigns
-  const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
-  const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
+  // Get unique regions and owners from campaigns with fallbacks for missing data
+  const regions = ["_all", ...new Set(campaigns.filter(c => c && c.region).map(c => c.region))];
+  const owners = ["_all", ...new Set(campaigns.filter(c => c && c.owner).map(c => c.owner))];
   
-  // Extract strategic pillars (flattened from arrays)
+  // Extract strategic pillars (flattened from arrays) with safety checks
   const allPillars = campaigns.reduce((acc, campaign) => {
-    if (Array.isArray(campaign.strategicPillars)) {
+    if (campaign && Array.isArray(campaign.strategicPillars)) {
       acc.push(...campaign.strategicPillars);
     }
     return acc;
   }, [] as string[]);
-  const pillars = ["_all", ...new Set(allPillars)].filter(Boolean);
+  const pillars = ["_all", ...new Set(allPillars)];
   
-  // Campaign types and revenue plays
-  const campaignTypes = ["_all", ...new Set(campaigns.map(c => c.campaignType))].filter(Boolean);
-  const revenuePlays = ["_all", ...new Set(campaigns.map(c => c.revenuePlay))].filter(Boolean);
+  // Campaign types and revenue plays with safety checks
+  const campaignTypes = ["_all", ...new Set(campaigns.filter(c => c && c.campaignType).map(c => c.campaignType))];
+  const revenuePlays = ["_all", ...new Set(campaigns.filter(c => c && c.revenuePlay).map(c => c.revenuePlay))];
   
   // Update a campaign with new execution data
   const updateCampaign = (id: string, key: keyof Campaign, value: any) => {
@@ -88,8 +88,8 @@ export function ExecutionTracking({
   
   // Filter campaigns based on selected filters
   const filteredCampaigns = campaigns.filter(campaign => {
-    // Skip campaigns with no region or owner
-    if (!campaign.region || !campaign.owner) return false;
+    // Skip campaigns with missing required properties
+    if (!campaign || !campaign.id) return false;
     
     // Apply region filter
     if (regionFilter !== "_all" && campaign.region !== regionFilter) return false;
@@ -355,7 +355,7 @@ export function ExecutionTracking({
                         onValueChange={(value) => updateCampaign(campaign.id, "status", value)}
                       >
                         <SelectTrigger className="w-32">
-                          <SelectValue />
+                          <SelectValue placeholder="Planning" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Planning">
@@ -390,7 +390,7 @@ export function ExecutionTracking({
                       <div className="flex items-center space-x-2">
                         <Switch
                           id={`po-${campaign.id}`}
-                          checked={campaign.poRaised}
+                          checked={Boolean(campaign.poRaised)}
                           disabled={campaign.status === "Cancelled"}
                           onCheckedChange={(checked) => updateCampaign(campaign.id, "poRaised", checked)}
                         />
@@ -415,7 +415,7 @@ export function ExecutionTracking({
                       <Input
                         type="number"
                         placeholder="$"
-                        value={campaign.actualCost === "" ? "" : campaign.actualCost}
+                        value={typeof campaign.actualCost === 'number' ? campaign.actualCost : ""}
                         disabled={campaign.status === "Cancelled"}
                         onChange={(e) => {
                           const value = e.target.value === "" ? "" : Number(e.target.value);
@@ -429,7 +429,7 @@ export function ExecutionTracking({
                       <Input
                         type="number"
                         placeholder="#"
-                        value={campaign.actualLeads === "" ? "" : campaign.actualLeads}
+                        value={typeof campaign.actualLeads === 'number' ? campaign.actualLeads : ""}
                         disabled={campaign.status === "Cancelled"}
                         onChange={(e) => {
                           const value = e.target.value === "" ? "" : Number(e.target.value);
@@ -443,7 +443,7 @@ export function ExecutionTracking({
                       <Input
                         type="number"
                         placeholder="#"
-                        value={campaign.actualMQLs === "" ? "" : campaign.actualMQLs}
+                        value={typeof campaign.actualMQLs === 'number' ? campaign.actualMQLs : ""}
                         disabled={campaign.status === "Cancelled"}
                         onChange={(e) => {
                           const value = e.target.value === "" ? "" : Number(e.target.value);
