@@ -1242,6 +1242,5 @@ export function CampaignTable({
         }}
       />
     </div>
-  </div>
   );
 }
