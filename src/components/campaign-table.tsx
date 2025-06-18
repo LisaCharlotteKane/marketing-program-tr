@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { TrashSimple, FileCsv, Plus, ChartBar, FilterX, DownloadSimple, UploadSimple, Calculator } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import Papa from "papaparse";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 // Campaign type interface
 export interface Campaign {
@@ -56,26 +57,10 @@ export function CampaignTable({
   setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>> 
 }) {
   // Mobile responsive state
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   // Selected campaigns for bulk operations
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
-  
-  // Check for mobile on mount
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.matchMedia("(max-width: 768px)").matches);
-    };
-    
-    // Set initial value
-    checkMobile();
-    
-    // Add resize listener
-    window.addEventListener('resize', checkMobile);
-    
-    // Clean up
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
   
   // Filter states
   const [selectedRegion, setSelectedRegion] = useState("_all");
