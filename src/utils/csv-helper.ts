@@ -13,7 +13,7 @@ import { Campaign } from "@/components/campaign-table";
  */
 export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number): string[] {
   const errors: string[] = [];
-  const validRegions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English"];
+  const validRegions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English", "X APAC English"];
   const validStatus = ["Planning", "On Track", "Shipped", "Cancelled"];
   
   // Check required fields
@@ -118,6 +118,14 @@ export function processCsvData(csvData: string): {
   const errors: string[] = [];
   const warnings: string[] = [];
   
+  // Budget pool tracking for each owner
+  const budgetPoolByOwner = {
+    "Tomoko Tanaka": 358000,
+    "Beverly Leung": 385500,
+    "Shruti Narang": 265000,
+    "Giorgia Parham": 68000,
+  };
+  
   if (result.errors && result.errors.length > 0) {
     result.errors.forEach(error => {
       errors.push(`CSV parsing error: ${error.message} at row ${error.row}`);
@@ -207,6 +215,23 @@ export function processCsvData(csvData: string): {
       // Validate the campaign
       const validationErrors = validateCampaign(campaign, index + 2);
       
+      // Check budget pool for owner
+      const owner = campaign.owner;
+      const cost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : parseFloat(campaign.forecastedCost as string || "0");
+      
+      if (owner && cost > 0) {
+        if (budgetPoolByOwner[owner] !== undefined) {
+          budgetPoolByOwner[owner] -= cost;
+          
+          // Add warning if budget pool is exceeded
+          if (budgetPoolByOwner[owner] < 0) {
+            warnings.push(`Row ${index + 2}: Owner ${owner} has exceeded their budget pool by ${formatCurrency(-budgetPoolByOwner[owner])}`);
+          }
+        } else {
+          errors.push(`Row ${index + 2}: Unknown owner: ${owner}`);
+        }
+      }
+      
       if (validationErrors.length === 0) {
         // Calculate derived fields
         campaign = calculateDerivedFields(campaign);
@@ -219,6 +244,15 @@ export function processCsvData(csvData: string): {
       errors.push(`Row ${index + 2}: ${(error as Error).message}`);
     }
   });
+  
+  // Format currency for user-friendly messages
+  function formatCurrency(value: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0
+    }).format(value);
+  }
   
   return {
     campaigns: importedCampaigns,

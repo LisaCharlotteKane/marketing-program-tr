@@ -141,7 +141,7 @@ export function CampaignTable({
     "Q4 - June"
   ];
   
-  const regionOptions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English"];
+  const regionOptions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English", "X APAC English"];
   
   const countries = [
     "Afghanistan",
@@ -187,6 +187,9 @@ export function CampaignTable({
 
   // Add a new row (campaign)
   const addCampaign = () => {
+    // Use selected owner from filter or default to first owner in list
+    const preselectedOwner = selectedOwner !== "_all" ? selectedOwner : ownerOptions[0] || "Giorgia Parham";
+    
     const newCampaign: Campaign = {
       id: Math.random().toString(36).substring(2, 9),
       campaignName: "", // Initialize campaign name
@@ -197,7 +200,7 @@ export function CampaignTable({
       quarterMonth: quartersMonths[0] || "Q1 - July",
       region: regionOptions[0] || "North APAC",
       country: countries[0] || "Afghanistan",
-      owner: selectedOwner !== "_all" ? selectedOwner : ownerOptions[0] || "Giorgia Parham", // Pre-select current filter owner or default
+      owner: preselectedOwner,
       description: "",
       forecastedCost: "",
       expectedLeads: "",
@@ -216,6 +219,34 @@ export function CampaignTable({
       opportunities: 0,
       pipelineForecast: 0
     };
+    
+    // Check budget pool for selected owner
+    const budgetPoolByOwner = {
+      "Tomoko Tanaka": 358000,
+      "Beverly Leung": 385500,
+      "Shruti Narang": 265000,
+      "Giorgia Parham": 68000,
+    };
+    
+    // Calculate total cost for this owner's existing campaigns
+    const ownerExistingCost = campaigns
+      .filter(c => c.owner === preselectedOwner)
+      .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
+    
+    // Check if owner is approaching budget limit
+    if (budgetPoolByOwner[preselectedOwner] !== undefined) {
+      const remainingBudget = budgetPoolByOwner[preselectedOwner] - ownerExistingCost;
+      const percentRemaining = (remainingBudget / budgetPoolByOwner[preselectedOwner]) * 100;
+      
+      if (percentRemaining < 10 && remainingBudget > 0) {
+        toast.warning(`${preselectedOwner} has only ${formatCurrency(remainingBudget)} budget remaining (${percentRemaining.toFixed(1)}%)`,
+          { duration: 5000 });
+      } else if (remainingBudget <= 0) {
+        toast.error(`${preselectedOwner} has exceeded their budget pool by ${formatCurrency(-remainingBudget)}`, 
+          { duration: 5000 });
+      }
+    }
+    
     setCampaigns([...campaigns, newCampaign]);
     toast.success('New campaign added successfully');
   };
@@ -256,11 +287,44 @@ export function CampaignTable({
     }
   };
 
-  // Handle cell value changes
+  // Update campaign cell value changes
   const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
     setCampaigns(campaigns.map(campaign => {
       if (campaign.id === id) {
         const updatedCampaign = { ...campaign, [field]: value };
+        
+        // Budget pool validation for owner + cost changes
+        if ((field === 'forecastedCost' || field === 'owner') && 
+            typeof updatedCampaign.forecastedCost === 'number' && 
+            updatedCampaign.forecastedCost > 0 &&
+            updatedCampaign.owner) {
+          
+          const budgetPoolByOwner = {
+            "Tomoko Tanaka": 358000,
+            "Beverly Leung": 385500,
+            "Shruti Narang": 265000,
+            "Giorgia Parham": 68000,
+          };
+          
+          // Check if this owner has a budget pool
+          if (budgetPoolByOwner[updatedCampaign.owner] !== undefined) {
+            // Calculate remaining budget for this owner (excluding this campaign)
+            const otherCampaignsCost = campaigns
+              .filter(c => c.id !== id && c.owner === updatedCampaign.owner)
+              .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
+            
+            const totalCost = otherCampaignsCost + updatedCampaign.forecastedCost;
+            const remainingBudget = budgetPoolByOwner[updatedCampaign.owner] - totalCost;
+            
+            // Show warning if budget pool is exceeded
+            if (remainingBudget < 0) {
+              toast.warning(
+                `${updatedCampaign.owner} has exceeded their budget pool by ${formatCurrency(-remainingBudget)}`,
+                { duration: 5000 }
+              );
+            }
+          }
+        }
         
         // Recalculate derived metrics if needed
         if (field === 'expectedLeads' || field === 'forecastedCost' || field === 'campaignType') {
