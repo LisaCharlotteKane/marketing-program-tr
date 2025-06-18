@@ -15,8 +15,9 @@ import { TrashSimple, FileCsv, Plus, ChartBar, FilterX, DownloadSimple, UploadSi
 import { toast } from "sonner";
 import Papa from "papaparse";
 import { ClearFiltersButton } from "@/components/clear-filters-button";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import { FileUploader } from "@/components/file-uploader";
+import { CsvTemplateButton } from "./csv-template-button";
 
 // Campaign type interface
 export interface Campaign {
