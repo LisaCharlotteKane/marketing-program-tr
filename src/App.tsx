@@ -31,7 +31,7 @@ import { runDataMigrations } from "@/services/migration-service"
 import { initAutoGitHubSync } from "@/services/auto-github-sync"
 import { Button } from "@/components/ui/button"
 import { calculateRegionalMetrics } from "@/services/budget-service"
-import { PrimerHeader } from "@/components/primer"
+import { PrimerHeader } from "@/components/primer/header"
 import { ErrorBoundary } from "@/components/error-boundary"
 
 
