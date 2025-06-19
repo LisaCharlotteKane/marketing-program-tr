@@ -105,7 +105,10 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         }
       };
       
-      saveData();
+      saveData().then(() => {
+        // Dispatch custom event to trigger GitHub sync
+        window.dispatchEvent(new CustomEvent("campaign:updated"));
+      });
     }, 500); // 500ms debounce
     
     return () => {
@@ -116,7 +119,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
   }, [data, key, isLoaded]);
   
   // Force save function
-  const forceSave = useCallback(() => {
+  const forceSave = useCallback(async () => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -125,6 +128,10 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
     try {
       localStorage.setItem(key, JSON.stringify(data));
       setLastSaved(new Date());
+      
+      // Trigger GitHub sync
+      window.dispatchEvent(new CustomEvent("campaign:updated"));
+      
       toast.success("Data saved successfully");
     } catch (error) {
       console.error(`Error force saving ${key} data:`, error);

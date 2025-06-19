@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GitBranch, CloudCheck, FloppyDisk, WarningCircle } from "@phosphor-icons/react";
+import { GitBranch, CloudCheck, FloppyDisk, WarningCircle, Check } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { type Campaign } from "@/components/campaign-table";
 
@@ -16,6 +17,57 @@ export function GitHubSync({ campaigns, setCampaigns }: {
   const [filePath, setFilePath] = useState("campaign-data/campaigns.json");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [enableAutoSync, setEnableAutoSync] = useState(false);
+  const [credentialsSaved, setCredentialsSaved] = useState(false);
+  
+  // Load saved credentials on mount
+  useEffect(() => {
+    const savedToken = localStorage.getItem("github_token");
+    const savedRepo = localStorage.getItem("github_repo");
+    const savedPath = localStorage.getItem("github_path");
+    const savedAutoSync = localStorage.getItem("github_auto_sync");
+    
+    if (savedToken) {
+      setGithubToken(savedToken);
+      setCredentialsSaved(true);
+    }
+    
+    if (savedRepo) {
+      setRepoPath(savedRepo);
+    }
+    
+    if (savedPath) {
+      setFilePath(savedPath);
+    }
+    
+    if (savedAutoSync === "true") {
+      setEnableAutoSync(true);
+    }
+  }, []);
+  
+  const handleSaveCredentials = () => {
+    if (!githubToken) {
+      toast.error("Please enter a GitHub token");
+      return;
+    }
+    
+    if (!repoPath || !repoPath.includes('/')) {
+      toast.error("Please enter a valid repository in format username/repo");
+      return;
+    }
+    
+    // Save credentials to localStorage
+    localStorage.setItem("github_token", githubToken);
+    localStorage.setItem("github_repo", repoPath);
+    localStorage.setItem("github_path", filePath);
+    localStorage.setItem("github_auto_sync", enableAutoSync.toString());
+    
+    setCredentialsSaved(true);
+    toast.success("GitHub credentials saved for auto-sync");
+    
+    // Dispatch event to trigger auto-sync configuration
+    window.dispatchEvent(new CustomEvent("github:credentials_updated"));
+  };
   
   const handleSaveToGitHub = async () => {
     if (!githubToken) {
@@ -77,6 +129,9 @@ export function GitHubSync({ campaigns, setCampaigns }: {
       
       if (response.ok) {
         toast.success("Campaign data saved to GitHub");
+        
+        // Update timestamp of last successful GitHub sync
+        localStorage.setItem("github_last_sync", new Date().toISOString());
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to save to GitHub");
@@ -136,6 +191,12 @@ export function GitHubSync({ campaigns, setCampaigns }: {
     }
   };
   
+  // Last sync timestamp
+  const lastSync = localStorage.getItem("github_last_sync");
+  const formattedLastSync = lastSync 
+    ? new Date(lastSync).toLocaleString() 
+    : "Never";
+  
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
@@ -182,39 +243,72 @@ export function GitHubSync({ campaigns, setCampaigns }: {
           </div>
         </div>
         
-        <div className="flex justify-end space-x-2 mt-4">
-          <Button 
-            variant="outline" 
-            onClick={handleLoadFromGitHub}
-            disabled={isLoading || isSaving}
+        <div className="flex items-center space-x-2 mt-2">
+          <Switch 
+            id="auto-sync" 
+            checked={enableAutoSync}
+            onCheckedChange={setEnableAutoSync}
+          />
+          <Label htmlFor="auto-sync">Enable automatic GitHub sync</Label>
+        </div>
+        
+        {credentialsSaved && (
+          <div className="bg-green-50 border border-green-200 rounded-md p-3">
+            <div className="flex items-start">
+              <Check className="h-5 w-5 text-green-500 mt-0.5" />
+              <div className="ml-2">
+                <h4 className="text-sm font-medium text-green-800">Credentials Saved</h4>
+                <p className="text-xs text-green-700 mt-1">
+                  GitHub credentials saved for auto-sync. Last sync: {formattedLastSync}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="flex justify-between space-x-2 mt-4">
+          <Button
+            variant="outline"
+            onClick={handleSaveCredentials}
             className="flex items-center gap-2"
           >
-            {isLoading ? (
-              <>
-                <CloudCheck className="h-4 w-4 animate-spin" /> Loading...
-              </>
-            ) : (
-              <>
-                <CloudCheck className="h-4 w-4" /> Load from GitHub
-              </>
-            )}
+            <Check className="h-4 w-4" /> Save Credentials
           </Button>
           
-          <Button 
-            onClick={handleSaveToGitHub}
-            disabled={isLoading || isSaving}
-            className="flex items-center gap-2"
-          >
-            {isSaving ? (
-              <>
-                <FloppyDisk className="h-4 w-4 animate-spin" /> Saving...
-              </>
-            ) : (
-              <>
-                <FloppyDisk className="h-4 w-4" /> Save to GitHub
-              </>
-            )}
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={handleLoadFromGitHub}
+              disabled={isLoading || isSaving}
+              className="flex items-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <CloudCheck className="h-4 w-4 animate-spin" /> Loading...
+                </>
+              ) : (
+                <>
+                  <CloudCheck className="h-4 w-4" /> Load from GitHub
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              onClick={handleSaveToGitHub}
+              disabled={isLoading || isSaving}
+              className="flex items-center gap-2"
+            >
+              {isSaving ? (
+                <>
+                  <FloppyDisk className="h-4 w-4 animate-spin" /> Saving...
+                </>
+              ) : (
+                <>
+                  <FloppyDisk className="h-4 w-4" /> Save to GitHub
+                </>
+              )}
+            </Button>
+          </div>
         </div>
         
         <div className="rounded-md bg-yellow-50 border border-yellow-200 p-3 mt-4">
@@ -223,8 +317,8 @@ export function GitHubSync({ campaigns, setCampaigns }: {
             <div className="ml-2">
               <h4 className="text-sm font-medium text-yellow-800">Security Notice</h4>
               <p className="text-xs text-yellow-700 mt-1">
-                Your GitHub token is stored only in this browser session and is not saved 
-                between page reloads. For production use, consider implementing OAuth or
+                Your GitHub token is stored in localStorage on this browser. Clear your browser 
+                data if using a shared computer. For production use, consider implementing OAuth or
                 a more secure token management system.
               </p>
             </div>
