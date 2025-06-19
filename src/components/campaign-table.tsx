@@ -186,7 +186,7 @@ export function CampaignTable({
   ];
 
   // Add a new row (campaign)
-  const addCampaign = () => {
+  const addCampaign = async () => {
     // Use selected owner from filter or default to first owner in list
     const preselectedOwner = selectedOwner !== "_all" ? selectedOwner : ownerOptions[0] || "Giorgia Parham";
     
@@ -220,27 +220,32 @@ export function CampaignTable({
       pipelineForecast: 0
     };
     
-    // Check budget pool for selected owner
-    const { getOwnerInfo } = await import('@/services/budget-service');
-    const ownerInfo = getOwnerInfo(preselectedOwner);
-    
-    // Calculate total cost for this owner's existing campaigns
-    const ownerExistingCost = campaigns
-      .filter(c => c.owner === preselectedOwner)
-      .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
-    
-    // Check if owner is approaching budget limit
-    if (ownerInfo.budget > 0) {
-      const remainingBudget = ownerInfo.budget - ownerExistingCost;
-      const percentRemaining = (remainingBudget / ownerInfo.budget) * 100;
+    try {
+      // Check budget pool for selected owner
+      const { getOwnerInfo } = await import('@/services/budget-service');
+      const ownerInfo = getOwnerInfo(preselectedOwner);
       
-      if (percentRemaining < 10 && remainingBudget > 0) {
-        toast.warning(`${preselectedOwner} has only ${formatCurrency(remainingBudget)} budget remaining (${percentRemaining.toFixed(1)}%)`,
-          { duration: 5000 });
-      } else if (remainingBudget <= 0) {
-        toast.error(`${preselectedOwner} has exceeded their budget pool by ${formatCurrency(-remainingBudget)}`, 
-          { duration: 5000 });
+      // Calculate total cost for this owner's existing campaigns
+      const ownerExistingCost = campaigns
+        .filter(c => c.owner === preselectedOwner)
+        .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
+      
+      // Check if owner is approaching budget limit
+      if (ownerInfo.budget > 0) {
+        const remainingBudget = ownerInfo.budget - ownerExistingCost;
+        const percentRemaining = (remainingBudget / ownerInfo.budget) * 100;
+        
+        if (percentRemaining < 10 && remainingBudget > 0) {
+          toast.warning(`${preselectedOwner} has only ${formatCurrency(remainingBudget)} budget remaining (${percentRemaining.toFixed(1)}%)`,
+            { duration: 5000 });
+        } else if (remainingBudget <= 0) {
+          toast.error(`${preselectedOwner} has exceeded their budget pool by ${formatCurrency(-remainingBudget)}`, 
+            { duration: 5000 });
+        }
       }
+    } catch (error) {
+      console.error("Error checking budget info:", error);
+      // Continue with campaign creation even if budget check fails
     }
     
     setCampaigns([...campaigns, newCampaign]);
@@ -489,7 +494,7 @@ export function CampaignTable({
             <Button 
               variant="default" 
               className="flex items-center gap-2 shadow-sm"
-              onClick={addCampaign}
+              onClick={() => addCampaign()}
             >
               <Plus className="h-4 w-4" />
               Add Campaign
