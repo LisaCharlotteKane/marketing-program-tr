@@ -267,34 +267,62 @@ function App() {
   
   // Update regional budgets based on campaign table data
   useEffect(() => {
-    const campaignsByRegion: { [key: string]: any[] } = {};
+    // Step 1: Create a mapping of campaigns by owner
+    const campaignsByOwner: { [key: string]: any[] } = {};
     
-    // Group campaigns by region
+    // Group campaigns by owner
     campaigns.forEach(campaign => {
-      if (campaign.region && typeof campaign.forecastedCost === 'number') {
-        if (!campaignsByRegion[campaign.region]) {
-          campaignsByRegion[campaign.region] = [];
+      const owner = campaign.owner;
+      if (owner && typeof campaign.forecastedCost === 'number') {
+        if (!campaignsByOwner[owner]) {
+          campaignsByOwner[owner] = [];
         }
         
-        campaignsByRegion[campaign.region].push({
+        campaignsByOwner[owner].push({
           id: campaign.id,
           forecastedCost: typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0,
-          actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 0
+          actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 0,
+          owner: owner
         });
       }
     });
     
-    // Update regional budgets
+    // Step 2: Update regional budgets based on owner's budget pool
     setRegionalBudgets(prev => {
       const updated = { ...prev };
       
-      // Update programs for each region
-      Object.keys(campaignsByRegion).forEach(region => {
+      // Clear all programs first
+      Object.keys(updated).forEach(region => {
         if (updated[region]) {
-          updated[region] = {
-            ...updated[region],
-            programs: campaignsByRegion[region]
-          };
+          updated[region].programs = [];
+        }
+      });
+      
+      // Assign campaigns to the owner's region budget
+      Object.entries(campaignsByOwner).forEach(([owner, ownerCampaigns]) => {
+        // Find which region this owner is associated with
+        const ownerRegions = Object.entries(updated)
+          .filter(([_, budget]) => budget.ownerName === owner)
+          .map(([region]) => region);
+        
+        if (ownerRegions.length > 0) {
+          const ownerRegion = ownerRegions[0];
+          // Add all this owner's campaigns to their budget region
+          updated[ownerRegion].programs.push(...ownerCampaigns);
+        } else {
+          // For owners without a specific budget region
+          // This ensures campaigns still show up in reporting even if they don't count against a budget
+          ownerCampaigns.forEach(campaign => {
+            const campaignObj = campaigns.find(c => c.id === campaign.id);
+            if (campaignObj && campaignObj.region && updated[campaignObj.region]) {
+              // Add to the campaign's specified region for reporting purposes only
+              // These won't count against budget since they're not from the region's owner
+              updated[campaignObj.region].programs.push({
+                ...campaign,
+                nonBudgetImpacting: true // Flag as non-budget impacting
+              });
+            }
+          });
         }
       });
       
@@ -404,6 +432,8 @@ function App() {
                   } = calculateRegionalMetrics(regionalBudgets, region);
                   
                   const hasAssignedBudget = typeof assignedBudget === "number";
+                  // Get budget-impacting programs (ones owned by this region's owner)
+                  const budgetPrograms = regionalBudgets[region]?.programs.filter(p => !p.nonBudgetImpacting) || [];
 
                   return (
                     <div key={region} className="space-y-4 border rounded-md p-4">
@@ -418,8 +448,14 @@ function App() {
                               />
                             )}
                           </h3>
+                          {regionalBudgets[region]?.ownerName && (
+                            <p className="text-sm font-medium text-primary">
+                              Owner: {regionalBudgets[region]?.ownerName}
+                            </p>
+                          )}
                           <p className="text-sm text-muted-foreground">
-                            {regionalBudgets[region]?.programs.length || 0} program(s) assigned
+                            {/* Filter budget-impacting programs for display */}
+                            {regionalBudgets[region]?.programs.filter(p => !p.nonBudgetImpacting).length || 0} program(s) assigned to budget
                             {(region === "X APAC English" || region === "X APAC Non English") && (
                               <span className="ml-2 text-muted-foreground italic">(No budget assignment needed)</span>
                             )}

@@ -1,16 +1,42 @@
 import { RegionalBudgets } from "@/hooks/useRegionalBudgets";
+import { OWNER_TO_REGION_MAP } from "@/hooks/useRegionalBudgets";
+
+export function getOwnerInfo(owner: string) {
+  // Find the region associated with this owner
+  const ownerRegion = Object.entries(OWNER_TO_REGION_MAP)
+    .find(([ownerName]) => ownerName === owner)?.[1];
+    
+  return {
+    region: ownerRegion,
+    budget: ownerRegion ? getBudgetByRegion(ownerRegion) : 0,
+  };
+}
+
+export function getBudgetByRegion(region: string): number {
+  const budgetMap: Record<string, number> = {
+    "North APAC": 358000,
+    "South APAC": 385500,
+    "SAARC": 265000,
+    "Digital Motions": 68000
+  };
+  
+  return budgetMap[region] || 0;
+}
 
 export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, region: string) {
   const regionData = regionalBudgets[region] || { programs: [], assignedBudget: "" };
   
-  // Calculate total forecasted cost
-  const totalForecasted = regionData.programs.reduce(
+  // Filter out non-budget impacting programs (only count programs by the region owner)
+  const budgetPrograms = regionData.programs.filter(program => !program.nonBudgetImpacting);
+  
+  // Calculate total forecasted cost for budget-impacting programs
+  const totalForecasted = budgetPrograms.reduce(
     (total, program) => total + (program.forecastedCost || 0),
     0
   );
   
-  // Calculate total actual cost
-  const totalActual = regionData.programs.reduce(
+  // Calculate total actual cost for budget-impacting programs
+  const totalActual = budgetPrograms.reduce(
     (total, program) => total + (program.actualCost || 0),
     0
   );

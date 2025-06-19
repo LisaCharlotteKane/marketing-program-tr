@@ -100,9 +100,9 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
 # REQUIRED FIELDS:
 # - campaignName: Name of your campaign
 # - campaignType: Must be one of: "In-Account Events (1:1)", "Exec Engagement Programs", "CxO Events (1:Few)", etc.
-# - region: Must be one of: "North APAC", "South APAC", "SAARC", "Digital"
+# - region: Must be one of: "North APAC", "South APAC", "SAARC", "Digital Motions", etc.
 # - country: Country where campaign is running
-# - owner: Campaign owner name
+# - owner: Campaign owner name (determines budget pool allocation)
 #
 # MULTI-SELECT FIELDS (comma-separated):
 # - strategicPillars: e.g. "Account Growth and Product Adoption, New Logo Acquisition"
@@ -170,9 +170,9 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
         revenuePlay: "Accelerate developer productivity with Copilot in VS Code and GitHub",
         fiscalYear: "FY25",
         quarterMonth: "Q3 - January",
-        region: "Digital", // Example using Digital region
+        region: "Digital Motions", // Example using Digital Motions region
         country: "X APAC English", // Regional marker
-        owner: "Beverly Leung",
+        owner: "Giorgia Parham", // Owner tied to Digital Motions budget
         description: "Multi-region digital campaign",
         forecastedCost: "50000",
         expectedLeads: "200",

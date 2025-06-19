@@ -7,9 +7,11 @@ export interface RegionalBudget {
     id: string;
     forecastedCost: number;
     actualCost: number;
+    owner?: string; // Track owner at the program level
   }[];
   lockedByOwner?: boolean;
   lockedTimestamp?: number;
+  ownerName?: string; // Added owner name to track region ownership
 }
 
 export interface RegionalBudgets {
@@ -22,31 +24,43 @@ interface BudgetStatus {
   resetToDefaults: () => void;
 }
 
+// Owner to region mapping
+export const OWNER_TO_REGION_MAP: Record<string, string> = {
+  "Tomoko Tanaka": "North APAC",
+  "Beverly Leung": "South APAC",
+  "Shruti Narang": "SAARC",
+  "Giorgia Parham": "Digital Motions"
+};
+
 // Default regional budgets - set as per management directive
 const DEFAULT_BUDGETS: RegionalBudgets = {
   "North APAC": {
     assignedBudget: 358000,
     programs: [],
     lockedByOwner: true,
-    lockedTimestamp: Date.now()
+    lockedTimestamp: Date.now(),
+    ownerName: "Tomoko Tanaka"
   },
   "South APAC": {
     assignedBudget: 385500,
     programs: [],
     lockedByOwner: true,
-    lockedTimestamp: Date.now()
+    lockedTimestamp: Date.now(),
+    ownerName: "Beverly Leung"
   },
   "SAARC": {
     assignedBudget: 265000,
     programs: [],
     lockedByOwner: true,
-    lockedTimestamp: Date.now()
+    lockedTimestamp: Date.now(),
+    ownerName: "Shruti Narang"
   },
-  "Digital": {
+  "Digital Motions": {
     assignedBudget: 68000,
     programs: [],
     lockedByOwner: true,
-    lockedTimestamp: Date.now()
+    lockedTimestamp: Date.now(),
+    ownerName: "Giorgia Parham"
   },
   "X APAC English": {
     assignedBudget: 0,  // No budget assignment needed

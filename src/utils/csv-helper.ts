@@ -1,9 +1,7 @@
-/**
- * Utility functions for CSV processing and campaign data handling
- */
-
 import Papa from "papaparse";
 import { Campaign } from "@/components/campaign-table";
+import { OWNER_TO_REGION_MAP } from "@/hooks/useRegionalBudgets";
+import { getOwnerInfo, getBudgetByRegion } from "@/services/budget-service";
 
 /**
  * Validates a campaign object against required fields and constraints
@@ -13,7 +11,7 @@ import { Campaign } from "@/components/campaign-table";
  */
 export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number): string[] {
   const errors: string[] = [];
-  const validRegions = ["North APAC", "South APAC", "SAARC", "Digital", "Digital Motions", "X APAC Non English", "X APAC English"];
+  const validRegions = ["North APAC", "South APAC", "SAARC", "Digital Motions", "X APAC Non English", "X APAC English"];
   const validStatus = ["Planning", "On Track", "Shipped", "Cancelled"];
   
   // Check required fields
@@ -124,20 +122,14 @@ export function processCsvData(csvData: string): {
   const errors: string[] = [];
   const warnings: string[] = [];
   
-  // Owner to region mapping for budget purposes
-  const ownerToRegionMap = {
-    "Tomoko Tanaka": "North APAC",
-    "Beverly Leung": "South APAC",
-    "Shruti Narang": "SAARC",
-    "Giorgia Parham": "Digital Motions",
-  };
+  // Owner to region mapping for budget purposes is now imported from hooks/useRegionalBudgets
 
   // Budget pool tracking by region owner with used budget and overage tracking
   const budgetPoolByRegionOwner = {
-    "North APAC": { owner: "Tomoko Tanaka", budget: 358000, used: 0, overage: 0 },
-    "South APAC": { owner: "Beverly Leung", budget: 385500, used: 0, overage: 0 },
-    "SAARC": { owner: "Shruti Narang", budget: 265000, used: 0, overage: 0 },
-    "Digital Motions": { owner: "Giorgia Parham", budget: 68000, used: 0, overage: 0 },
+    "North APAC": { owner: "Tomoko Tanaka", budget: getBudgetByRegion("North APAC"), used: 0, overage: 0 },
+    "South APAC": { owner: "Beverly Leung", budget: getBudgetByRegion("South APAC"), used: 0, overage: 0 },
+    "SAARC": { owner: "Shruti Narang", budget: getBudgetByRegion("SAARC"), used: 0, overage: 0 },
+    "Digital Motions": { owner: "Giorgia Parham", budget: getBudgetByRegion("Digital Motions"), used: 0, overage: 0 },
   };
   
   if (result.errors && result.errors.length > 0) {
@@ -235,7 +227,7 @@ export function processCsvData(csvData: string): {
       
       if (owner && cost > 0) {
         // Get the appropriate region for budget tracking based on owner
-        const budgetRegion = ownerToRegionMap[owner];
+        const budgetRegion = OWNER_TO_REGION_MAP[owner];
         
         // Only check budget allocation for owners with a region mapping
         if (budgetRegion && budgetPoolByRegionOwner[budgetRegion]) {

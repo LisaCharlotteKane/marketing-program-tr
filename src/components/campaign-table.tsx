@@ -221,12 +221,8 @@ export function CampaignTable({
     };
     
     // Check budget pool for selected owner
-    const budgetPoolByOwner = {
-      "Tomoko Tanaka": 358000,
-      "Beverly Leung": 385500,
-      "Shruti Narang": 265000,
-      "Giorgia Parham": 68000,
-    };
+    const { getOwnerInfo } = await import('@/services/budget-service');
+    const ownerInfo = getOwnerInfo(preselectedOwner);
     
     // Calculate total cost for this owner's existing campaigns
     const ownerExistingCost = campaigns
@@ -234,9 +230,9 @@ export function CampaignTable({
       .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
     
     // Check if owner is approaching budget limit
-    if (budgetPoolByOwner[preselectedOwner] !== undefined) {
-      const remainingBudget = budgetPoolByOwner[preselectedOwner] - ownerExistingCost;
-      const percentRemaining = (remainingBudget / budgetPoolByOwner[preselectedOwner]) * 100;
+    if (ownerInfo.budget > 0) {
+      const remainingBudget = ownerInfo.budget - ownerExistingCost;
+      const percentRemaining = (remainingBudget / ownerInfo.budget) * 100;
       
       if (percentRemaining < 10 && remainingBudget > 0) {
         toast.warning(`${preselectedOwner} has only ${formatCurrency(remainingBudget)} budget remaining (${percentRemaining.toFixed(1)}%)`,
