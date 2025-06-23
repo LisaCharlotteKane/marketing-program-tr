@@ -11,14 +11,15 @@ export function StorageErrorHandler({ onRetry }: { onRetry: () => void }) {
   React.useEffect(() => {
     const handleStorageError = (event: any) => {
       if (event.detail?.type === "storage" && event.detail?.message) {
-        setHasError(true);
-        
-        // Simplify error message to avoid showing GitHub API errors
+        // Don't show GitHub API errors as they're usually just connectivity issues
         if (event.detail.message.includes("GitHub API")) {
-          setErrorMessage("There was an error with the GitHub integration. The application will use local storage only.");
-        } else {
-          setErrorMessage(event.detail.message);
+          console.warn("GitHub API error suppressed from UI:", event.detail.message);
+          return;
         }
+        
+        // For other storage errors, show the message
+        setHasError(true);
+        setErrorMessage(event.detail.message);
       }
     };
     

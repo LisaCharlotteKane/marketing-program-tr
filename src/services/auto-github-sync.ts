@@ -116,8 +116,11 @@ async function syncCampaignsToGitHub() {
       localStorage.setItem("github_last_sync", new Date().toISOString());
     } else {
       console.error("Failed to auto-sync campaigns:", result.message);
+      // Don't show UI errors for auto-sync failures - just log them
+      // This prevents persistent error messages for background sync issues
     }
   } catch (error) {
     console.error("Error during GitHub auto-sync:", error);
+    // Don't propagate error to UI
   }
 }

@@ -19,29 +19,35 @@ export function GitHubSync({ campaigns, setCampaigns }: {
   const [isLoading, setIsLoading] = useState(false);
   const [enableAutoSync, setEnableAutoSync] = useState(false);
   const [credentialsSaved, setCredentialsSaved] = useState(false);
+  const [tokenError, setTokenError] = useState(false);
   
   // Load saved credentials on mount
   useEffect(() => {
-    const savedToken = localStorage.getItem("github_token");
-    const savedRepo = localStorage.getItem("github_repo");
-    const savedPath = localStorage.getItem("github_path");
-    const savedAutoSync = localStorage.getItem("github_auto_sync");
-    
-    if (savedToken) {
-      setGithubToken(savedToken);
-      setCredentialsSaved(true);
-    }
-    
-    if (savedRepo) {
-      setRepoPath(savedRepo);
-    }
-    
-    if (savedPath) {
-      setFilePath(savedPath);
-    }
-    
-    if (savedAutoSync === "true") {
-      setEnableAutoSync(true);
+    try {
+      const savedToken = localStorage.getItem("github_token");
+      const savedRepo = localStorage.getItem("github_repo");
+      const savedPath = localStorage.getItem("github_path");
+      const savedAutoSync = localStorage.getItem("github_auto_sync");
+      
+      if (savedToken) {
+        setGithubToken(savedToken);
+        setCredentialsSaved(true);
+      }
+      
+      if (savedRepo) {
+        setRepoPath(savedRepo);
+      }
+      
+      if (savedPath) {
+        setFilePath(savedPath);
+      }
+      
+      if (savedAutoSync === "true") {
+        setEnableAutoSync(true);
+      }
+    } catch (error) {
+      console.error("Error loading GitHub credentials:", error);
+      // Continue with default values
     }
   }, []);
   
@@ -56,17 +62,25 @@ export function GitHubSync({ campaigns, setCampaigns }: {
       return;
     }
     
-    // Save credentials to localStorage
-    localStorage.setItem("github_token", githubToken);
-    localStorage.setItem("github_repo", repoPath);
-    localStorage.setItem("github_path", filePath);
-    localStorage.setItem("github_auto_sync", enableAutoSync.toString());
-    
-    setCredentialsSaved(true);
-    toast.success("GitHub credentials saved for auto-sync");
-    
-    // Dispatch event to trigger auto-sync configuration
-    window.dispatchEvent(new CustomEvent("github:credentials_updated"));
+    try {
+      // Reset any previous token errors
+      setTokenError(false);
+      
+      // Save credentials to localStorage
+      localStorage.setItem("github_token", githubToken);
+      localStorage.setItem("github_repo", repoPath);
+      localStorage.setItem("github_path", filePath);
+      localStorage.setItem("github_auto_sync", enableAutoSync.toString());
+      
+      setCredentialsSaved(true);
+      toast.success("GitHub credentials saved for auto-sync");
+      
+      // Dispatch event to trigger auto-sync configuration
+      window.dispatchEvent(new CustomEvent("github:credentials_updated"));
+    } catch (error) {
+      console.error("Error saving GitHub credentials:", error);
+      toast.error("Failed to save credentials. Please try again.");
+    }
   };
   
   const handleSaveToGitHub = async () => {
@@ -168,6 +182,10 @@ export function GitHubSync({ campaigns, setCampaigns }: {
       );
       
       if (!response.ok) {
+        if (response.status === 404) {
+          toast.warning("No campaign data found in this repository. Try saving some data first.");
+          return;
+        }
         throw new Error(`GitHub API returned ${response.status}`);
       }
       
@@ -176,16 +194,26 @@ export function GitHubSync({ campaigns, setCampaigns }: {
       // Decode content from base64
       const decodedContent = atob(data.content);
       
-      // Parse the JSON content
-      const loadedCampaigns = JSON.parse(decodedContent);
-      
-      // Update campaigns state
-      setCampaigns(loadedCampaigns);
-      
-      toast.success("Campaign data loaded from GitHub");
+      try {
+        // Parse the JSON content
+        const loadedCampaigns = JSON.parse(decodedContent);
+        
+        // Update campaigns state
+        setCampaigns(loadedCampaigns);
+        
+        toast.success("Campaign data loaded from GitHub");
+      } catch (parseError) {
+        toast.error("Invalid campaign data format in GitHub repository");
+        console.error("JSON parse error:", parseError);
+      }
     } catch (error) {
       console.error("GitHub API error:", error);
-      toast.error(`GitHub API error: ${error.message || "Unknown error"}`);
+      // Show a more user-friendly error message
+      if (error instanceof Error && error.message.includes("404")) {
+        toast.error("Repository or file not found. Check your credentials and paths.");
+      } else {
+        toast.error("Failed to load data from GitHub. Check your connection and credentials.");
+      }
     } finally {
       setIsLoading(false);
     }

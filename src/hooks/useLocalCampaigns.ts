@@ -18,7 +18,21 @@ export function useLocalCampaigns(
       // Get from localStorage by key
       const item = localStorage.getItem(key);
       // Parse stored json or return initialValue
-      return item ? JSON.parse(item) : initialValue;
+      if (item) {
+        try {
+          const parsed = JSON.parse(item);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          } else {
+            console.warn('Invalid campaign data format in localStorage, using defaults');
+            return initialValue;
+          }
+        } catch (parseError) {
+          console.error('Error parsing campaigns from localStorage', parseError);
+          return initialValue;
+        }
+      }
+      return initialValue;
     } catch (error) {
       console.error('Error loading campaigns from localStorage', error);
       return initialValue;

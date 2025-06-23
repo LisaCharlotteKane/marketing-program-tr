@@ -69,15 +69,19 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       setIsLoaded(true);
     } catch (error) {
       console.error(`Error loading ${key} data:`, error);
-      // Dispatch a custom error event that can be handled by the StorageErrorHandler
-      window.dispatchEvent(
-        new CustomEvent("app:error", {
-          detail: {
-            type: "storage",
-            message: `Error loading saved ${key} data. Using defaults.`
-          }
-        })
-      );
+      // Instead of showing error, just use default data and log the error
+      console.warn(`Using default ${key} data due to loading error`);
+      // Only show error if it's not a GitHub API error
+      if (!(error instanceof Error) || !error.message.includes("GitHub API")) {
+        window.dispatchEvent(
+          new CustomEvent("app:error", {
+            detail: {
+              type: "storage",
+              message: `Error loading saved ${key} data. Using defaults.`
+            }
+          })
+        );
+      }
       setIsLoaded(true);
     }
   }, [key]);

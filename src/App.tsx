@@ -53,10 +53,16 @@ function App() {
   useEffect(() => {
     runDataMigrations().catch(error => {
       console.error("Failed to run data migrations:", error);
+      // Continue anyway - don't let this block the app
     });
     
-    // Initialize auto GitHub sync
-    initAutoGitHubSync();
+    try {
+      // Initialize auto GitHub sync
+      initAutoGitHubSync();
+    } catch (error) {
+      console.error("Failed to initialize GitHub sync:", error);
+      // Don't let GitHub issues block the app
+    }
   }, []);
 
   // Calculated metrics
