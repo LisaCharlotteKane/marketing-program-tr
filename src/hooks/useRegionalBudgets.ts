@@ -171,7 +171,16 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
   }, [setKvBudgets]);
   
   // Save budgets to localStorage whenever they change (backward compatibility)
+  // Use a ref to track if this is the initial render
+  const isInitialRender = React.useRef(true);
+  
   useEffect(() => {
+    // Skip saving on initial render to prevent loop
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
+    }
+    
     const saveData = async () => {
       setIsSaving(true);
       try {

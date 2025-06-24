@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -175,7 +175,7 @@ function App() {
   }
 
   // Update regional budget program data
-  const updateRegionalProgramData = () => {
+  const updateRegionalProgramData = useCallback(() => {
     if (!selectedRegion || typeof forecastedCost !== 'number') return;
 
     setRegionalBudgets(prev => {
@@ -208,7 +208,7 @@ function App() {
         }
       };
     });
-  }
+  }, [programId, selectedRegion, forecastedCost, setRegionalBudgets]);
 
   // Calculate derived metrics whenever inputs change
   useEffect(() => {
@@ -235,8 +235,22 @@ function App() {
   }, [expectedLeads])
 
   // Update regional program data when forecasted cost changes
+  const previousForecastedCostRef = useRef(forecastedCost);
+  const previousSelectedRegionRef = useRef(selectedRegion);
+  
   useEffect(() => {
-    if (selectedRegion) {
+    // Skip if nothing has changed to prevent infinite loop
+    if (previousForecastedCostRef.current === forecastedCost && 
+        previousSelectedRegionRef.current === selectedRegion) {
+      return;
+    }
+    
+    // Update refs
+    previousForecastedCostRef.current = forecastedCost;
+    previousSelectedRegionRef.current = selectedRegion;
+    
+    // Now proceed with the update
+    if (selectedRegion && selectedRegion !== "_all") {
       updateRegionalProgramData();
     }
   }, [forecastedCost, selectedRegion])
@@ -272,7 +286,20 @@ function App() {
   }
   
   // Update regional budgets based on campaign table data
+  const previousCampaignsRef = useRef([]);
+  
   useEffect(() => {
+    // Simple check if campaigns have actually changed to prevent unnecessary updates
+    const campaignsString = JSON.stringify(campaigns);
+    const previousCampaignsString = JSON.stringify(previousCampaignsRef.current);
+    
+    if (campaignsString === previousCampaignsString) {
+      return; // Skip update if campaigns haven't changed
+    }
+    
+    // Update reference for next comparison
+    previousCampaignsRef.current = JSON.parse(campaignsString);
+    
     // Step 1: Create a mapping of campaigns by owner
     const campaignsByOwner: { [key: string]: any[] } = {};
     
@@ -334,7 +361,7 @@ function App() {
       
       return updated;
     });
-  }, [campaigns]);
+  }, [campaigns, setRegionalBudgets]);
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">

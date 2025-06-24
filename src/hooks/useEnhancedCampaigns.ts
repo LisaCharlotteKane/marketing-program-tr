@@ -75,14 +75,20 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
           const validatedData = ensureCampaignIntegrity(parsedData) as T;
           setData(validatedData);
           
-          // Migrate data to KV store
-          setKvData(validatedData);
-          
-          // Inform user about the migration
-          toast.success("Campaign data migrated to shared storage");
+          // Migrate data to KV store - but don't do this on every render
+          const shouldMigrate = !localStorage.getItem(`${key}_migrated`);
+          if (shouldMigrate) {
+            setKvData(validatedData);
+            localStorage.setItem(`${key}_migrated`, 'true');
+            
+            // Inform user about the migration
+            toast.success("Campaign data migrated to shared storage");
+          }
         } else {
-          // Ensure KV has initial data if nothing is found
-          setKvData(initialValue);
+          // Only set KV data if it's not already set
+          if (!kvData) {
+            setKvData(initialValue);
+          }
         }
       }
       setIsLoaded(true);
@@ -102,7 +108,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       }
       setIsLoaded(true);
     }
-  }, [key, kvData, setKvData, initialValue]);
+  }, [key, initialValue]);
   
   // Custom setter that updates both local state and KV store
   const setDataAndKV = useCallback((newData: React.SetStateAction<T>) => {
@@ -132,7 +138,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         try {
           // Keep localStorage in sync for backward compatibility
           localStorage.setItem(key, JSON.stringify(data));
-          // KV store is updated directly in setDataAndKV
+          // KV store is already updated directly in setDataAndKV
           setLastSaved(new Date());
         } catch (error) {
           console.error(`Error saving ${key} data:`, error);
@@ -153,7 +159,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [data, key, isLoaded, setKvData]);
+  }, [data, key, isLoaded]);
   
   // Force save function
   const forceSave = useCallback(async () => {
