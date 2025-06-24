@@ -320,9 +320,9 @@ export function ExecutionTracking({
               <ClearFiltersButton 
               onClick={clearAllFilters}
               className="mx-auto" 
-            />
+            >
               <FilterX className="h-3.5 w-3.5 mr-1" /> Clear Filters
-            </Button>
+            </ClearFiltersButton>
           </div>
         ) : (
           <div className="rounded-md border overflow-auto max-h-[calc(100vh-24rem)] bg-card">
