@@ -459,6 +459,16 @@ export function CampaignTable({
     return campaign.status === "Cancelled" || campaign.status === "Shipped";
   };
   
+  // Function to clear all filters
+  const clearAllFilters = () => {
+    setSelectedOwner("_all");
+    setSelectedRegion("_all");
+    setSelectedQuarter("_all");
+    setSelectedPillar("_all");
+    setSelectedCampaignType("_all");
+    setSelectedRevenuePlay("_all");
+  };
+
   // Filter campaigns based on the selected filters
   const filteredCampaigns = campaigns.filter(campaign => {
     const ownerMatch = selectedOwner === "_all" || campaign.owner === selectedOwner;
@@ -542,16 +552,7 @@ export function CampaignTable({
               <FilterX className="h-4 w-4 text-muted-foreground" />
               <h4 className="text-sm font-medium">Filter Campaigns</h4>
             </div>
-            <ClearFiltersButton 
-              onClick={() => {
-                setSelectedOwner("_all");
-                setSelectedRegion("_all");
-                setSelectedQuarter("_all");
-                setSelectedPillar("_all");
-                setSelectedCampaignType("_all");
-                setSelectedRevenuePlay("_all");
-              }}
-            />
+            <ClearFiltersButton onClick={clearAllFilters} />
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
@@ -665,21 +666,10 @@ export function CampaignTable({
           <FilterX className="h-10 w-10 text-muted-foreground mb-4 opacity-50" />
           <h3 className="text-lg font-semibold mb-2">No campaigns match the filters</h3>
           <p className="text-muted-foreground mb-4 max-w-md">Try clearing some filters or add a new campaign to get started.</p>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={() => {
-              setSelectedOwner("_all");
-              setSelectedRegion("_all");
-              setSelectedQuarter("_all");
-              setSelectedPillar("_all");
-              setSelectedCampaignType("_all");
-              setSelectedRevenuePlay("_all");
-            }}
-          >
-            <FilterX className="h-4 w-4" />
-            <span>Clear All Filters</span>
-          </Button>
+          <ClearFiltersButton 
+            onClick={clearAllFilters}
+            className="mx-auto" 
+          />
         </div>
       )}
       {/* Campaign table */}

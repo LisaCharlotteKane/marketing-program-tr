@@ -145,6 +145,16 @@ export function ExecutionTracking({
     }
   });
   
+  // Function to clear all filters
+  const clearAllFilters = () => {
+    setRegionFilter("_all");
+    setOwnerFilter("_all");
+    setPillarFilter("_all");
+    setCampaignTypeFilter("_all");
+    setRevenuePlayFilter("_all");
+    setSelectedCampaigns([]);
+  };
+  
   // Use safeFilteredCampaigns instead of filteredCampaigns
   const filteredCampaigns = campaigns.filter(campaign => {
     // Skip campaigns with missing required properties
@@ -192,21 +202,10 @@ export function ExecutionTracking({
                 <TrashSimple className="h-3.5 w-3.5" /> Delete ({selectedCampaigns.length})
               </Button>
             )}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-8 gap-1"
-              onClick={() => {
-                setRegionFilter("_all");
-                setOwnerFilter("_all");
-                setPillarFilter("_all");
-                setCampaignTypeFilter("_all");
-                setRevenuePlayFilter("_all");
-                setSelectedCampaigns([]);
-              }}
-            >
-              <FilterX className="h-3.5 w-3.5" /> Clear Filters
-            </Button>
+            <ClearFiltersButton 
+              onClick={clearAllFilters}
+              className="h-8" 
+            />
           </div>
         </CardDescription>
       </CardHeader>
@@ -218,15 +217,7 @@ export function ExecutionTracking({
               <FilterX className="h-4 w-4 text-muted-foreground" />
               Filter Campaigns
             </h4>
-            <ClearFiltersButton 
-              onClick={() => {
-                setRegionFilter("_all");
-                setOwnerFilter("_all");
-                setPillarFilter("_all");
-                setCampaignTypeFilter("_all");
-                setRevenuePlayFilter("_all");
-              }}
-            />
+            <ClearFiltersButton onClick={clearAllFilters} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
@@ -326,18 +317,10 @@ export function ExecutionTracking({
             <Search className="h-12 w-12 mx-auto mb-4 opacity-20" />
             <h4 className="text-lg font-semibold mb-2">No campaigns match your filters</h4>
             <p className="text-sm text-muted-foreground mb-4">Try changing your filter criteria or add new campaigns</p>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => {
-                setRegionFilter("_all");
-                setOwnerFilter("_all");
-                setPillarFilter("_all");
-                setCampaignTypeFilter("_all");
-                setRevenuePlayFilter("_all");
-              }}
-              className="mx-auto"
-            >
+              <ClearFiltersButton 
+              onClick={clearAllFilters}
+              className="mx-auto" 
+            />
               <FilterX className="h-3.5 w-3.5 mr-1" /> Clear Filters
             </Button>
           </div>

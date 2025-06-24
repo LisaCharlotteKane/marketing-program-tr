@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { type Campaign } from "@/components/campaign-table";
 import { toast } from "sonner";
+import { ClearFiltersButton } from "@/components/clear-filters-button";
 
 export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
   // Filters
@@ -56,9 +57,6 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
     setCampaignTypeFilter("_all");
     setRevenuePlayFilter("_all");
     setOwnerFilter("_all");
-    
-    // Show confirmation message
-    toast.success("Filters cleared successfully");
   };
   
   // Filter campaigns based on selected filters
@@ -289,15 +287,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                 <Sliders className="h-4 w-4" /> Filter Controls
               </div>
               <div className="flex flex-col sm:flex-row justify-between gap-4">
-                <Button 
-                  onClick={resetFilters}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1.5 text-xs font-medium bg-muted/20 border-muted hover:bg-muted hover:text-foreground"
-                >
-                  <FilterX className="h-3.5 w-3.5" /> 
-                  <span>Clear Filters</span>
-                </Button>
+                <ClearFiltersButton onClick={resetFilters} />
               </div>
             </CardTitle>
           </CardHeader>
