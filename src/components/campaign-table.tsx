@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
-import { TrashSimple, FileCsv, Plus, ChartBar, FilterX, DownloadSimple, UploadSimple, Calculator } from "@phosphor-icons/react";
+import { TrashSimple, FileCsv, Plus, ChartBar, FilterX, DownloadSimple, UploadSimple, Calculator, MagnifyingGlass } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 import { ClearFiltersButton } from "@/components/clear-filters-button";
@@ -695,7 +697,21 @@ export function CampaignTable({
                   <TableHead className="w-[100px] font-medium">Region</TableHead>
                   <TableHead className="w-[120px] font-medium">Country</TableHead>
                   <TableHead className="w-[120px] font-medium">Owner</TableHead>
-                  <TableHead className="w-[200px] font-medium">Description</TableHead>
+                  <TableHead className="w-[200px] font-medium">
+                    <div className="flex items-center gap-1">
+                      <span>Description</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <MagnifyingGlass className="h-3.5 w-3.5 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">
+                            <p className="text-xs">Click the magnifying glass to view long descriptions</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableHead>
                   <TableHead className="w-[120px] font-medium">Forecasted Cost</TableHead>
                   <TableHead className="w-[110px] font-medium">Expected Leads</TableHead>
                   <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">MQLs</TableHead>
@@ -908,14 +924,61 @@ export function CampaignTable({
                 
                 {/* Description */}
                 <TableCell>
-                  <Input
-                    type="text"
-                    value={campaign.description || ""}
-                    onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
-                    placeholder="Enter description"
-                    className="w-full"
-                    disabled={isCampaignComplete(campaign)}
-                  />
+                  <div className="relative w-full max-w-[200px]">
+                    <div className="relative">
+                      {/* Text input for description */}
+                      <Input
+                        type="text"
+                        value={campaign.description || ""}
+                        onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
+                        placeholder="Enter description"
+                        className="w-full truncate pr-8"
+                        disabled={isCampaignComplete(campaign)}
+                        title={campaign.description} // Show full text on hover
+                      />
+                    </div>
+                    
+                    {/* View dialog for long descriptions */}
+                    {campaign.description && campaign.description.length > 30 && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-primary hover:bg-accent/30"
+                            aria-label="View full description"
+                          >
+                            <MagnifyingGlass className="h-3.5 w-3.5" />
+                          </Button>
+                        </DialogTrigger>
+                        
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>
+                              {campaign.campaignName || 'Campaign Description'}
+                            </DialogTitle>
+                            <DialogDescription>
+                              {campaign.campaignType} • {campaign.region} • {campaign.owner}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <Textarea 
+                              value={campaign.description}
+                              readOnly
+                              className="min-h-[200px] resize-none focus-visible:ring-0 border-0 bg-muted/30"
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                    
+                    {/* Character count indicator */}
+                    {campaign.description && campaign.description.length > 30 && (
+                      <div className="absolute right-8 bottom-1 text-[10px] text-muted-foreground">
+                        {campaign.description.length}
+                      </div>
+                    )}
+                  </div>
                 </TableCell>
                 
                 {/* Forecasted Cost */}
