@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { Campaign } from "@/components/campaign-table";
+import { useKV } from "@github/spark/hooks";
 
 interface SaveStatus {
   isSaving: boolean;
@@ -50,6 +51,8 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
   key: string,
   initialValue: T
 ): [T, React.Dispatch<React.SetStateAction<T>>, SaveStatus] {
+  // Use Spark's KV store for shared persistence across users
+  const [kvData, setKvData, deleteKvData] = useKV<T | undefined>(key, undefined);
   const [data, setData] = useState<T>(initialValue);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | undefined>(undefined);
@@ -59,19 +62,30 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
   // Load data on mount
   useEffect(() => {
     try {
-      const savedData = localStorage.getItem(key);
-      if (savedData) {
-        // Parse saved data and ensure campaign integrity
-        const parsedData = JSON.parse(savedData);
-        const validatedData = ensureCampaignIntegrity(parsedData) as T;
+      if (kvData) {
+        // Data found in KV store
+        const validatedData = ensureCampaignIntegrity(kvData) as T;
         setData(validatedData);
+      } else {
+        // Fall back to localStorage for backward compatibility
+        const savedData = localStorage.getItem(key);
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
+          const validatedData = ensureCampaignIntegrity(parsedData) as T;
+          setData(validatedData);
+          
+          // Migrate data to KV store
+          setKvData(validatedData);
+          
+          // Inform user about the migration
+          toast.success("Campaign data migrated to shared storage");
+        }
       }
       setIsLoaded(true);
     } catch (error) {
       console.error(`Error loading ${key} data:`, error);
-      // Instead of showing error, just use default data and log the error
       console.warn(`Using default ${key} data due to loading error`);
-      // Only show error if it's not a GitHub API error
+      
       if (!(error instanceof Error) || !error.message.includes("GitHub API")) {
         window.dispatchEvent(
           new CustomEvent("app:error", {
@@ -84,9 +98,22 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       }
       setIsLoaded(true);
     }
-  }, [key]);
+  }, [key, kvData, setKvData]);
   
-  // Save data when it changes, with debounce
+  // Custom setter that updates both local state and KV store
+  const setDataAndKV = useCallback((newData: React.SetStateAction<T>) => {
+    setData(prev => {
+      const nextData = typeof newData === 'function' 
+        ? (newData as Function)(prev) 
+        : newData;
+      
+      // Update KV store when data changes
+      setKvData(nextData);
+      return nextData;
+    });
+  }, [setKvData]);
+  
+  // Save data when it changes, with debounce (maintains backward compatibility)
   useEffect(() => {
     // Skip initial render
     if (!isLoaded) return;
@@ -99,7 +126,9 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       const saveData = async () => {
         setIsSaving(true);
         try {
+          // Keep localStorage in sync for backward compatibility
           localStorage.setItem(key, JSON.stringify(data));
+          // KV store is updated directly in setDataAndKV
           setLastSaved(new Date());
         } catch (error) {
           console.error(`Error saving ${key} data:`, error);
@@ -120,7 +149,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [data, key, isLoaded]);
+  }, [data, key, isLoaded, setKvData]);
   
   // Force save function
   const forceSave = useCallback(async () => {
@@ -130,7 +159,9 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
     
     setIsSaving(true);
     try {
+      // Save to both localStorage and KV store
       localStorage.setItem(key, JSON.stringify(data));
+      setKvData(data);
       setLastSaved(new Date());
       
       // Trigger GitHub sync
@@ -143,7 +174,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
     } finally {
       setIsSaving(false);
     }
-  }, [data, key]);
+  }, [data, key, setKvData]);
   
-  return [data, setData, { isSaving, lastSaved, forceSave }];
+  return [data, setDataAndKV, { isSaving, lastSaved, forceSave }];
 }

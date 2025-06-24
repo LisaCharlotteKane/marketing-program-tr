@@ -91,7 +91,8 @@ async function syncCampaignsToGitHub() {
       return;
     }
     
-    // Get campaigns from localStorage
+    // Get campaigns from localStorage - we maintain localStorage as a backup
+    // but primarily for backward compatibility with the GitHub sync feature
     const campaignsJson = localStorage.getItem("campaignData");
     if (!campaignsJson) {
       console.log("No campaign data to sync");
