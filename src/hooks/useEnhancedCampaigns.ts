@@ -85,8 +85,8 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
             toast.success("Campaign data migrated to shared storage");
           }
         } else {
-          // Only set KV data if it's not already set
-          if (!kvData) {
+          // Only set KV data if it's not already set - this is key to preventing update loops
+          if (JSON.stringify(kvData) !== JSON.stringify(initialValue)) {
             setKvData(initialValue);
           }
         }
@@ -108,7 +108,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       }
       setIsLoaded(true);
     }
-  }, [key, initialValue]);
+  }, [key, initialValue, kvData]);
   
   // Custom setter that updates both local state and KV store
   const setDataAndKV = useCallback((newData: React.SetStateAction<T>) => {
@@ -117,11 +117,17 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         ? (newData as Function)(prev) 
         : newData;
       
-      // Update KV store when data changes
-      setKvData(nextData);
+      // Update KV store when data changes, but only if different
+      const currentKvDataString = JSON.stringify(kvData || []);
+      const nextDataString = JSON.stringify(nextData);
+      
+      if (currentKvDataString !== nextDataString) {
+        setKvData(nextData);
+      }
+      
       return nextData;
     });
-  }, [setKvData]);
+  }, [setKvData, kvData]);
   
   // Save data when it changes, with debounce (maintains backward compatibility)
   useEffect(() => {
@@ -138,7 +144,11 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         try {
           // Keep localStorage in sync for backward compatibility
           localStorage.setItem(key, JSON.stringify(data));
-          // KV store is already updated directly in setDataAndKV
+          // Only update KV store if data has actually changed
+          const currentKvData = await JSON.parse(JSON.stringify(kvData || []));
+          if (JSON.stringify(currentKvData) !== JSON.stringify(data)) {
+            setKvData(data);
+          }
           setLastSaved(new Date());
         } catch (error) {
           console.error(`Error saving ${key} data:`, error);
@@ -159,7 +169,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [data, key, isLoaded]);
+  }, [data, key, isLoaded, kvData]);
   
   // Force save function
   const forceSave = useCallback(async () => {

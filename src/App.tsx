@@ -249,11 +249,11 @@ function App() {
     previousForecastedCostRef.current = forecastedCost;
     previousSelectedRegionRef.current = selectedRegion;
     
-    // Now proceed with the update
-    if (selectedRegion && selectedRegion !== "_all") {
+    // Now proceed with the update only if both values are meaningful
+    if (selectedRegion && selectedRegion !== "_all" && typeof forecastedCost === 'number') {
       updateRegionalProgramData();
     }
-  }, [forecastedCost, selectedRegion])
+  }, [forecastedCost, selectedRegion, updateRegionalProgramData])
 
   // Handle regional budget change
   const handleRegionalBudgetChange = (region: string, value: string) => {

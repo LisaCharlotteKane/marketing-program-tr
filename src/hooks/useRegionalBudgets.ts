@@ -139,20 +139,25 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
           
           setBudgets(mergedBudgets);
           
-          // Migrate data to KV store
-          setKvBudgets(mergedBudgets);
-          
-          // Inform user about the migration
-          toast.success("Budget data migrated to shared storage");
+          // Migrate data to KV store, only if different from current KV data
+          if (JSON.stringify(kvBudgets) !== JSON.stringify(mergedBudgets)) {
+            setKvBudgets(mergedBudgets);
+            // Inform user about the migration
+            toast.success("Budget data migrated to shared storage");
+          }
         } else {
-          // Ensure KV has initial data if nothing is found
-          setKvBudgets(DEFAULT_BUDGETS);
+          // Ensure KV has initial data if nothing is found, but only if different
+          if (JSON.stringify(kvBudgets) !== JSON.stringify(DEFAULT_BUDGETS)) {
+            setKvBudgets(DEFAULT_BUDGETS);
+          }
         }
       }
     } catch (error) {
       console.error("Error loading regional budgets:", error);
-      // Ensure KV store has the default budgets
-      setKvBudgets(DEFAULT_BUDGETS);
+      // Ensure KV store has the default budgets, but only if different
+      if (JSON.stringify(kvBudgets) !== JSON.stringify(DEFAULT_BUDGETS)) {
+        setKvBudgets(DEFAULT_BUDGETS);
+      }
       // Silently fall back to defaults
     }
   }, [kvBudgets, setKvBudgets]);
@@ -164,22 +169,39 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
         ? (newBudgets as Function)(prev)
         : newBudgets;
       
-      // Update KV store when budgets change
-      setKvBudgets(nextBudgets);
+      // Update KV store when budgets change, but only if they're different
+      const currentKvBudgetsString = JSON.stringify(kvBudgets || {});
+      const nextBudgetsString = JSON.stringify(nextBudgets);
+      
+      if (currentKvBudgetsString !== nextBudgetsString) {
+        setKvBudgets(nextBudgets);
+      }
+      
       return nextBudgets;
     });
-  }, [setKvBudgets]);
+  }, [setKvBudgets, kvBudgets]);
   
   // Save budgets to localStorage whenever they change (backward compatibility)
   // Use a ref to track if this is the initial render
   const isInitialRender = React.useRef(true);
+  const previousBudgetsRef = React.useRef<RegionalBudgets | null>(null);
   
   useEffect(() => {
     // Skip saving on initial render to prevent loop
     if (isInitialRender.current) {
       isInitialRender.current = false;
+      previousBudgetsRef.current = budgets;
       return;
     }
+    
+    // Skip if nothing has changed to prevent update loops
+    if (previousBudgetsRef.current && 
+        JSON.stringify(previousBudgetsRef.current) === JSON.stringify(budgets)) {
+      return;
+    }
+    
+    // Update reference for next comparison
+    previousBudgetsRef.current = JSON.parse(JSON.stringify(budgets));
     
     const saveData = async () => {
       setIsSaving(true);
