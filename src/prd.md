@@ -31,7 +31,12 @@
    - Track ROI and marketing KPIs
    - Success: Data-driven marketing decisions
 
-4. **Shared Storage**
+4. **Calendar View**
+   - View campaigns across a 12-month calendar
+   - Color-coded by region for better visualization
+   - Success: Improved timeline planning and coordination
+
+5. **Shared Storage**
    - All users see the same campaign and budget data
    - Collaborative editing of marketing plans
    - Success: Real-time campaign visibility across teams

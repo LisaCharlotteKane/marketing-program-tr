@@ -9,12 +9,13 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise, LockKey, TrendUp } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise, LockKey, TrendUp, Calendar } from "@phosphor-icons/react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { ROIDashboard } from "@/components/roi-dashboard"
 import { CampaignTable, Campaign } from "@/components/campaign-table"
 import { ExecutionTracking } from "@/components/execution-tracking"
+import { CampaignCalendarView } from "@/components/campaign-calendar-view"
 import { GitHubSync } from "@/components/github-sync"
 import { PersistentStorageInfo } from "@/components/persistent-storage-info"
 import { AutoSaveIndicator } from "@/components/auto-save-indicator"
@@ -381,7 +382,7 @@ function App() {
           
           <Tabs defaultValue="planning" className="w-full">
             <div className="sticky top-0 z-10 bg-background pt-2 pb-4 mb-4 border-b">
-              <TabsList className="w-full flex-nowrap md:grid md:grid-cols-6 shadow-sm">
+              <TabsList className="w-full flex-nowrap md:grid md:grid-cols-7 shadow-sm">
                 <TabsTrigger value="planning" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
                   <Calculator className="h-4 w-4 flex-shrink-0" /> 
                   <span>Planning</span>
@@ -389,6 +390,10 @@ function App() {
                 <TabsTrigger value="execution" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
                   <ClipboardText className="h-4 w-4 flex-shrink-0" /> 
                   <span>Execution</span>
+                </TabsTrigger>
+                <TabsTrigger value="calendar" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                  <Calendar className="h-4 w-4 flex-shrink-0" /> 
+                  <span>Calendar</span>
                 </TabsTrigger>
                 <TabsTrigger value="budget" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
                   <Buildings className="h-4 w-4 flex-shrink-0" /> 
@@ -416,6 +421,12 @@ function App() {
           <TabsContent value="execution" className="space-y-8 pt-2">
             <ErrorBoundary>
               <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
+            </ErrorBoundary>
+          </TabsContent>
+          
+          <TabsContent value="calendar" className="space-y-8 pt-2">
+            <ErrorBoundary>
+              <CampaignCalendarView campaigns={campaigns} />
             </ErrorBoundary>
           </TabsContent>
 
