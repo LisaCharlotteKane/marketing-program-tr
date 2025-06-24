@@ -51,8 +51,9 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
   key: string,
   initialValue: T
 ): [T, React.Dispatch<React.SetStateAction<T>>, SaveStatus] {
-  // Use Spark's KV store for shared persistence across users
-  const [kvData, setKvData, deleteKvData] = useKV<T | undefined>(key, undefined);
+  // Use Spark's KV store for shared persistence across users with direct initialization
+  // Set the default value directly to ensure data is shared immediately
+  const [kvData, setKvData, deleteKvData] = useKV<T>(key, initialValue);
   const [data, setData] = useState<T>(initialValue);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | undefined>(undefined);
@@ -79,6 +80,9 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
           
           // Inform user about the migration
           toast.success("Campaign data migrated to shared storage");
+        } else {
+          // Ensure KV has initial data if nothing is found
+          setKvData(initialValue);
         }
       }
       setIsLoaded(true);
@@ -98,7 +102,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       }
       setIsLoaded(true);
     }
-  }, [key, kvData, setKvData]);
+  }, [key, kvData, setKvData, initialValue]);
   
   // Custom setter that updates both local state and KV store
   const setDataAndKV = useCallback((newData: React.SetStateAction<T>) => {

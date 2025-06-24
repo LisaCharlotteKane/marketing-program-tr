@@ -78,8 +78,8 @@ const DEFAULT_BUDGETS: RegionalBudgets = {
 };
 
 export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.SetStateAction<RegionalBudgets>>, BudgetStatus] {
-  // Use Spark's KV store for shared persistence across users
-  const [kvBudgets, setKvBudgets, deleteKvBudgets] = useKV<RegionalBudgets | undefined>("regionalBudgets", undefined);
+  // Use Spark's KV store for shared persistence across users with direct initialization
+  const [kvBudgets, setKvBudgets, deleteKvBudgets] = useKV<RegionalBudgets>("regionalBudgets", DEFAULT_BUDGETS);
   
   // Initialize with default budgets
   const [budgets, setBudgets] = useState<RegionalBudgets>(DEFAULT_BUDGETS);
@@ -144,10 +144,15 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
           
           // Inform user about the migration
           toast.success("Budget data migrated to shared storage");
+        } else {
+          // Ensure KV has initial data if nothing is found
+          setKvBudgets(DEFAULT_BUDGETS);
         }
       }
     } catch (error) {
       console.error("Error loading regional budgets:", error);
+      // Ensure KV store has the default budgets
+      setKvBudgets(DEFAULT_BUDGETS);
       // Silently fall back to defaults
     }
   }, [kvBudgets, setKvBudgets]);
