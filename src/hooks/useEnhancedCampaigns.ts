@@ -66,14 +66,22 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       if (kvData) {
         // Data found in KV store
         const validatedData = ensureCampaignIntegrity(kvData) as T;
-        setData(validatedData);
+        
+        // Only update if different to avoid loops
+        if (JSON.stringify(data) !== JSON.stringify(validatedData)) {
+          setData(validatedData);
+        }
       } else {
         // Fall back to localStorage for backward compatibility
         const savedData = localStorage.getItem(key);
         if (savedData) {
           const parsedData = JSON.parse(savedData);
           const validatedData = ensureCampaignIntegrity(parsedData) as T;
-          setData(validatedData);
+          
+          // Only update if different to avoid loops
+          if (JSON.stringify(data) !== JSON.stringify(validatedData)) {
+            setData(validatedData);
+          }
           
           // Migrate data to KV store - but don't do this on every render
           const shouldMigrate = !localStorage.getItem(`${key}_migrated`);
@@ -130,9 +138,19 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
   }, [setKvData, kvData]);
   
   // Save data when it changes, with debounce (maintains backward compatibility)
+  const previousDataRef = useRef<T | null>(null);
+  
   useEffect(() => {
     // Skip initial render
     if (!isLoaded) return;
+    
+    // Skip if data hasn't changed to prevent infinite loops
+    if (previousDataRef.current && JSON.stringify(previousDataRef.current) === JSON.stringify(data)) {
+      return;
+    }
+    
+    // Update reference for next comparison
+    previousDataRef.current = JSON.parse(JSON.stringify(data));
     
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -169,7 +187,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [data, key, isLoaded, kvData]);
+  }, [data, key, isLoaded]);
   
   // Force save function
   const forceSave = useCallback(async () => {

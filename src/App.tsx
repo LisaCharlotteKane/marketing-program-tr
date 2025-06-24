@@ -253,7 +253,7 @@ function App() {
     if (selectedRegion && selectedRegion !== "_all" && typeof forecastedCost === 'number') {
       updateRegionalProgramData();
     }
-  }, [forecastedCost, selectedRegion, updateRegionalProgramData])
+  }, [forecastedCost, selectedRegion]) // Removed updateRegionalProgramData from dependencies
 
   // Handle regional budget change
   const handleRegionalBudgetChange = (region: string, value: string) => {
@@ -361,7 +361,7 @@ function App() {
       
       return updated;
     });
-  }, [campaigns, setRegionalBudgets]);
+  }, [campaigns]); // Removed setRegionalBudgets from dependencies
 
   return (
     <div className="min-h-screen bg-background font-sans text-foreground">

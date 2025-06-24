@@ -110,7 +110,10 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
           }
         });
         
-        setBudgets(mergedBudgets);
+        // Only update state if the data is different to prevent loops
+        if (JSON.stringify(budgets) !== JSON.stringify(mergedBudgets)) {
+          setBudgets(mergedBudgets);
+        }
       } else {
         // Fall back to localStorage for backward compatibility
         const savedBudgets = localStorage.getItem("regionalBudgets");
@@ -137,7 +140,10 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
             }
           });
           
-          setBudgets(mergedBudgets);
+          // Only update state if different to prevent loops
+          if (JSON.stringify(budgets) !== JSON.stringify(mergedBudgets)) {
+            setBudgets(mergedBudgets);
+          }
           
           // Migrate data to KV store, only if different from current KV data
           if (JSON.stringify(kvBudgets) !== JSON.stringify(mergedBudgets)) {
@@ -160,7 +166,7 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
       }
       // Silently fall back to defaults
     }
-  }, [kvBudgets, setKvBudgets]);
+  }, [kvBudgets]);
   
   // Custom setter that updates both local state and KV store
   const setBudgetsAndKV = useCallback((newBudgets: React.SetStateAction<RegionalBudgets>) => {
