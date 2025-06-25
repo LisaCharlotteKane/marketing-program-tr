@@ -66,12 +66,34 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
   }
   
   // Validate numeric fields
-  if (campaign.forecastedCost !== "" && typeof campaign.forecastedCost === 'string' && isNaN(Number(campaign.forecastedCost))) {
-    errors.push(`Row ${rowIndex}: Forecasted Cost must be a number.`);
+  if (campaign.forecastedCost !== undefined && campaign.forecastedCost !== "") {
+    // Check if it's already a number type
+    if (typeof campaign.forecastedCost === 'number') {
+      if (isNaN(campaign.forecastedCost)) {
+        errors.push(`Row ${rowIndex}: Forecasted Cost is not a valid number.`);
+      }
+    } 
+    // If it's a string, try to parse it
+    else if (typeof campaign.forecastedCost === 'string') {
+      if (isNaN(Number(campaign.forecastedCost))) {
+        errors.push(`Row ${rowIndex}: Forecasted Cost must be a number.`);
+      }
+    }
   }
   
-  if (campaign.expectedLeads !== "" && typeof campaign.expectedLeads === 'string' && isNaN(Number(campaign.expectedLeads))) {
-    errors.push(`Row ${rowIndex}: Expected Leads must be a number.`);
+  if (campaign.expectedLeads !== undefined && campaign.expectedLeads !== "") {
+    // Check if it's already a number type
+    if (typeof campaign.expectedLeads === 'number') {
+      if (isNaN(campaign.expectedLeads)) {
+        errors.push(`Row ${rowIndex}: Expected Leads is not a valid number.`);
+      }
+    } 
+    // If it's a string, try to parse it
+    else if (typeof campaign.expectedLeads === 'string') {
+      if (isNaN(Number(campaign.expectedLeads))) {
+        errors.push(`Row ${rowIndex}: Expected Leads must be a number.`);
+      }
+    }
   }
   
   return errors;
@@ -83,21 +105,42 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
  */
 export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Campaign> {
   const updatedCampaign = { ...campaign };
+  let expectedLeads = 0;
+  let forecastedCost = 0;
+  
+  // Normalize numeric inputs
+  if (typeof campaign.expectedLeads === 'number' && !isNaN(campaign.expectedLeads)) {
+    expectedLeads = campaign.expectedLeads;
+  } else if (typeof campaign.expectedLeads === 'string' && campaign.expectedLeads !== "") {
+    expectedLeads = parseFloat(campaign.expectedLeads) || 0;
+  }
+  
+  if (typeof campaign.forecastedCost === 'number' && !isNaN(campaign.forecastedCost)) {
+    forecastedCost = campaign.forecastedCost;
+  } else if (typeof campaign.forecastedCost === 'string' && campaign.forecastedCost !== "") {
+    forecastedCost = parseFloat(campaign.forecastedCost) || 0;
+  }
+  
+  console.log("Calculating derived fields:", { 
+    campaignType: campaign.campaignType,
+    expectedLeads,
+    forecastedCost,
+    originalExpectedLeads: campaign.expectedLeads,
+    originalForecastedCost: campaign.forecastedCost
+  });
   
   if (campaign.campaignType === "In-Account Events (1:1)") {
     // Special logic for "In-Account Events (1:1)" campaigns
-    if (typeof campaign.expectedLeads === 'number' && !isNaN(campaign.expectedLeads) && campaign.expectedLeads > 0) {
+    if (expectedLeads > 0) {
       // Standard calculation if leads are provided
-      const leads = campaign.expectedLeads;
-      updatedCampaign.mql = Math.round(leads * 0.1);
-      updatedCampaign.sql = Math.round(leads * 0.06);
+      updatedCampaign.mql = Math.round(expectedLeads * 0.1);
+      updatedCampaign.sql = Math.round(expectedLeads * 0.06);
       updatedCampaign.opportunities = Math.round((updatedCampaign.sql as number) * 0.8);
       updatedCampaign.pipelineForecast = (updatedCampaign.opportunities as number) * 50000;
     } 
     // If no leads but cost exists, use 20:1 ROI calculation
-    else if (typeof campaign.forecastedCost === 'number' && !isNaN(campaign.forecastedCost) && campaign.forecastedCost > 0) {
-      const cost = campaign.forecastedCost;
-      updatedCampaign.pipelineForecast = cost * 20; // 20:1 ROI based on cost
+    else if (forecastedCost > 0) {
+      updatedCampaign.pipelineForecast = forecastedCost * 20; // 20:1 ROI based on cost
       updatedCampaign.mql = 0;
       updatedCampaign.sql = 0;
       updatedCampaign.opportunities = 0;
@@ -110,10 +153,9 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
     }
   } 
   // Standard calculation for all other campaign types
-  else if (typeof campaign.expectedLeads === 'number' && !isNaN(campaign.expectedLeads) && campaign.expectedLeads > 0) {
-    const leads = campaign.expectedLeads;
-    updatedCampaign.mql = Math.round(leads * 0.1);
-    updatedCampaign.sql = Math.round(leads * 0.06);
+  else if (expectedLeads > 0) {
+    updatedCampaign.mql = Math.round(expectedLeads * 0.1);
+    updatedCampaign.sql = Math.round(expectedLeads * 0.06);
     updatedCampaign.opportunities = Math.round((updatedCampaign.sql as number) * 0.8);
     updatedCampaign.pipelineForecast = (updatedCampaign.opportunities as number) * 50000;
   } else {
@@ -140,7 +182,14 @@ export function processCsvData(csvData: string): {
   // Add debug information
   console.log("Beginning CSV import process");
   
-  const result = Papa.parse(csvData, { header: true, skipEmptyLines: true });
+  // Improved CSV parsing configuration
+  const result = Papa.parse(csvData, { 
+    header: true, 
+    skipEmptyLines: true,
+    dynamicTyping: false, // Keep as strings for our custom processing
+    transformHeader: (header) => header.trim(), // Trim whitespace from headers
+    transform: (value) => typeof value === 'string' ? value.trim() : value // Trim cell values
+  });
   console.log("CSV Parsing result headers:", result.meta.fields);
   
   const importedCampaigns: Campaign[] = [];
@@ -231,6 +280,18 @@ export function processCsvData(csvData: string): {
       // Parse boolean values
       const poRaised = row.poRaised === "true" || row.poRaised === true || row.poRaised === "yes" || row.poRaised === "Yes";
       
+      // Log numeric field processing
+      console.log(`Row ${index + 2} numeric fields:`, {
+        forecastedCost: {
+          rawValue: row.forecastedCost,
+          processedValue: row.forecastedCost !== undefined && row.forecastedCost !== "" ? Number(row.forecastedCost) : ""
+        },
+        expectedLeads: {
+          rawValue: row.expectedLeads,
+          processedValue: row.expectedLeads !== undefined && row.expectedLeads !== "" ? Number(row.expectedLeads) : ""
+        }
+      });
+      
       // Build the campaign object
       let campaign: Partial<Campaign> = {
         id: campaignId,
@@ -244,16 +305,16 @@ export function processCsvData(csvData: string): {
         country: row.country?.toString().trim() || "",
         owner: row.owner?.toString().trim() || "",
         description: row.description?.toString().trim() || "",
-        forecastedCost: row.forecastedCost ? Number(row.forecastedCost) : "",
-        expectedLeads: row.expectedLeads ? Number(row.expectedLeads) : "",
+        forecastedCost: row.forecastedCost !== undefined && row.forecastedCost !== "" ? Number(row.forecastedCost) : "",
+        expectedLeads: row.expectedLeads !== undefined && row.expectedLeads !== "" ? Number(row.expectedLeads) : "",
         impactedRegions: impactedRegions,
         status: row.status?.toString().trim() || "Planning",
         poRaised: poRaised,
         campaignCode: row.campaignCode?.toString().trim() || "",
         issueLink: row.issueLink?.toString().trim() || "",
-        actualCost: row.actualCost ? Number(row.actualCost) : "",
-        actualLeads: row.actualLeads ? Number(row.actualLeads) : "",
-        actualMQLs: row.actualMQLs ? Number(row.actualMQLs) : "",
+        actualCost: row.actualCost !== undefined && row.actualCost !== "" ? Number(row.actualCost) : "",
+        actualLeads: row.actualLeads !== undefined && row.actualLeads !== "" ? Number(row.actualLeads) : "",
+        actualMQLs: row.actualMQLs !== undefined && row.actualMQLs !== "" ? Number(row.actualMQLs) : "",
         mql: 0,
         sql: 0,
         opportunities: 0,
@@ -265,7 +326,16 @@ export function processCsvData(csvData: string): {
       
       // Check budget pool for owner
       const owner = campaign.owner;
-      const cost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : parseFloat(campaign.forecastedCost as string || "0");
+      let cost = 0;
+      
+      // Handle different ways the cost might be present
+      if (typeof campaign.forecastedCost === 'number' && !isNaN(campaign.forecastedCost)) {
+        cost = campaign.forecastedCost;
+      } else if (typeof campaign.forecastedCost === 'string' && campaign.forecastedCost !== "") {
+        cost = parseFloat(campaign.forecastedCost) || 0;
+      }
+      
+      console.log(`Row ${index + 2} owner budget check:`, { owner, cost, forecastedCost: campaign.forecastedCost });
       
       if (owner && cost > 0) {
         // Get the appropriate region for budget tracking based on owner

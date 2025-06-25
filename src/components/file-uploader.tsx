@@ -37,6 +37,17 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
         // Process the CSV data using our utility function
         const { campaigns, errors, warnings } = processCsvData(csvContent);
         
+        console.log("Processed campaigns data:", {
+          campaigns,
+          numericFieldSamples: campaigns.slice(0, 3).map(c => ({
+            id: c.id,
+            forecastedCost: c.forecastedCost,
+            expectedLeads: c.expectedLeads,
+            typeForecastedCost: typeof c.forecastedCost,
+            typeExpectedLeads: typeof c.expectedLeads
+          }))
+        });
+        
         // Show validation errors if any
         if (errors.length > 0) {
           toast.error(
@@ -323,7 +334,8 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
           <li>Required fields: Campaign Name, Type, Region, Country, Owner</li>
           <li>Strategic Pillars column is comma-separated (e.g., "Account Growth and Product Adoption, New Logo Acquisition")</li>
           <li>Strategic Pillars must match exactly one of the valid options</li>
-          <li>Numeric fields should contain only numbers without currency symbols</li>
+          <li><strong>Numeric fields (Forecasted Cost, Expected Leads) must contain only numbers (e.g., "15000", not "$15,000")</strong></li>
+          <li>Empty numeric fields are allowed and will be treated as zero</li>
           <li>Date fields should follow the format in the template</li>
         </ul>
       </div>
