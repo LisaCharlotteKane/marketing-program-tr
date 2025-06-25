@@ -59,64 +59,69 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
   const [lastSaved, setLastSaved] = useState<Date | undefined>(undefined);
   const [isLoaded, setIsLoaded] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const initialLoadRef = useRef(false);
   
   // Load data on mount
   useEffect(() => {
+    if (initialLoadRef.current) return; // Only run on first load
+    
     try {
-      if (kvData) {
+      // First, check if we have data in KV store
+      if (kvData && Array.isArray(kvData) && kvData.length > 0) {
+        console.log("Loading data from KV store", kvData.length, "campaigns");
+        
         // Data found in KV store
         const validatedData = ensureCampaignIntegrity(kvData) as T;
+        setData(validatedData);
         
-        // Only update if different to avoid loops
-        if (JSON.stringify(data) !== JSON.stringify(validatedData)) {
-          setData(validatedData);
-        }
+        // Also save to localStorage as backup
+        localStorage.setItem(key, JSON.stringify(validatedData));
+        
+        toast.success(`Loaded ${validatedData.length} campaigns from shared storage`);
       } else {
         // Fall back to localStorage for backward compatibility
+        console.log("No KV data found, checking localStorage");
         const savedData = localStorage.getItem(key);
+        
         if (savedData) {
-          const parsedData = JSON.parse(savedData);
-          const validatedData = ensureCampaignIntegrity(parsedData) as T;
-          
-          // Only update if different to avoid loops
-          if (JSON.stringify(data) !== JSON.stringify(validatedData)) {
-            setData(validatedData);
-          }
-          
-          // Migrate data to KV store - but don't do this on every render
-          const shouldMigrate = !localStorage.getItem(`${key}_migrated`);
-          if (shouldMigrate) {
-            setKvData(validatedData);
-            localStorage.setItem(`${key}_migrated`, 'true');
+          console.log("Found data in localStorage, migrating to KV");
+          try {
+            const parsedData = JSON.parse(savedData);
+            const validatedData = ensureCampaignIntegrity(parsedData) as T;
             
-            // Inform user about the migration
-            toast.success("Campaign data migrated to shared storage");
+            // Migrate to KV store
+            setKvData(validatedData);
+            setData(validatedData);
+            
+            toast.success(`Migrated ${validatedData.length} campaigns to shared storage`);
+          } catch (parseError) {
+            console.error("Error parsing localStorage data:", parseError);
+            
+            // If localStorage data is corrupt, initialize with empty array
+            setKvData(initialValue);
+            setData(initialValue);
           }
         } else {
-          // Only set KV data if it's not already set - this is key to preventing update loops
-          if (JSON.stringify(kvData) !== JSON.stringify(initialValue)) {
-            setKvData(initialValue);
-          }
+          // No data anywhere, initialize KV store with empty array
+          console.log("No data found, initializing empty storage");
+          setKvData(initialValue);
+          setData(initialValue);
         }
       }
+      
+      initialLoadRef.current = true;
       setIsLoaded(true);
     } catch (error) {
       console.error(`Error loading ${key} data:`, error);
       console.warn(`Using default ${key} data due to loading error`);
       
-      if (!(error instanceof Error) || !error.message.includes("GitHub API")) {
-        window.dispatchEvent(
-          new CustomEvent("app:error", {
-            detail: {
-              type: "storage",
-              message: `Error loading saved ${key} data. Using defaults.`
-            }
-          })
-        );
-      }
+      // Fall back to empty array rather than showing error
+      setData(initialValue);
       setIsLoaded(true);
+      
+      toast.error(`Error loading saved campaign data. Starting with empty list.`);
     }
-  }, [key, initialValue, kvData]);
+  }, [key, initialValue, kvData, setKvData]);
   
   // Custom setter that updates both local state and KV store
   const setDataAndKV = useCallback((newData: React.SetStateAction<T>) => {
@@ -125,32 +130,18 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         ? (newData as Function)(prev) 
         : newData;
       
-      // Update KV store when data changes, but only if different
-      const currentKvDataString = JSON.stringify(kvData || []);
-      const nextDataString = JSON.stringify(nextData);
-      
-      if (currentKvDataString !== nextDataString) {
-        setKvData(nextData);
-      }
+      // Always update KV store immediately to ensure data is shared
+      // This is critical for multi-user scenarios
+      setKvData(nextData);
       
       return nextData;
     });
-  }, [setKvData, kvData]);
+  }, [setKvData]);
   
   // Save data when it changes, with debounce (maintains backward compatibility)
-  const previousDataRef = useRef<T | null>(null);
-  
   useEffect(() => {
     // Skip initial render
     if (!isLoaded) return;
-    
-    // Skip if data hasn't changed to prevent infinite loops
-    if (previousDataRef.current && JSON.stringify(previousDataRef.current) === JSON.stringify(data)) {
-      return;
-    }
-    
-    // Update reference for next comparison
-    previousDataRef.current = JSON.parse(JSON.stringify(data));
     
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -162,11 +153,9 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         try {
           // Keep localStorage in sync for backward compatibility
           localStorage.setItem(key, JSON.stringify(data));
-          // Only update KV store if data has actually changed
-          const currentKvData = await JSON.parse(JSON.stringify(kvData || []));
-          if (JSON.stringify(currentKvData) !== JSON.stringify(data)) {
-            setKvData(data);
-          }
+          
+          // We already updated KV store in setDataAndKV, but this ensures
+          // we have a consistent save pattern and UI feedback
           setLastSaved(new Date());
         } catch (error) {
           console.error(`Error saving ${key} data:`, error);

@@ -317,16 +317,19 @@ export function processCsvData(csvData: string): {
         }
       });
       
-      // Process number fields with better error handling
+      // Process numeric fields with better error handling
       let forecastedCost: number | string = "";
       let expectedLeads: number | string = "";
       let actualCost: number | string = "";
       let actualLeads: number | string = "";
       let actualMQLs: number | string = "";
       
-      // Process forecastedCost
+      // Process forecastedCost - ensure it's a number if provided
       if (row.forecastedCost !== undefined && row.forecastedCost !== "") {
-        const parsedCost = Number(row.forecastedCost);
+        // Remove any currency symbols or commas that might be in the input
+        const cleanValue = String(row.forecastedCost).replace(/[$,]/g, '');
+        const parsedCost = Number(cleanValue);
+        
         if (!isNaN(parsedCost)) {
           forecastedCost = parsedCost;
           console.log(`Parsed forecastedCost: ${forecastedCost}`);
@@ -336,9 +339,12 @@ export function processCsvData(csvData: string): {
         }
       }
       
-      // Process expectedLeads
+      // Process expectedLeads - ensure it's a number if provided
       if (row.expectedLeads !== undefined && row.expectedLeads !== "") {
-        const parsedLeads = Number(row.expectedLeads);
+        // Remove any commas that might be in the input
+        const cleanValue = String(row.expectedLeads).replace(/,/g, '');
+        const parsedLeads = Number(cleanValue);
+        
         if (!isNaN(parsedLeads)) {
           expectedLeads = parsedLeads;
           console.log(`Parsed expectedLeads: ${expectedLeads}`);
@@ -350,7 +356,9 @@ export function processCsvData(csvData: string): {
       
       // Process actual metrics
       if (row.actualCost !== undefined && row.actualCost !== "") {
-        const parsedActualCost = Number(row.actualCost);
+        const cleanValue = String(row.actualCost).replace(/[$,]/g, '');
+        const parsedActualCost = Number(cleanValue);
+        
         if (!isNaN(parsedActualCost)) {
           actualCost = parsedActualCost;
         } else {
@@ -360,7 +368,9 @@ export function processCsvData(csvData: string): {
       }
       
       if (row.actualLeads !== undefined && row.actualLeads !== "") {
-        const parsedActualLeads = Number(row.actualLeads);
+        const cleanValue = String(row.actualLeads).replace(/,/g, '');
+        const parsedActualLeads = Number(cleanValue);
+        
         if (!isNaN(parsedActualLeads)) {
           actualLeads = parsedActualLeads;
         } else {
@@ -370,7 +380,9 @@ export function processCsvData(csvData: string): {
       }
       
       if (row.actualMQLs !== undefined && row.actualMQLs !== "") {
-        const parsedActualMQLs = Number(row.actualMQLs);
+        const cleanValue = String(row.actualMQLs).replace(/,/g, '');
+        const parsedActualMQLs = Number(cleanValue);
+        
         if (!isNaN(parsedActualMQLs)) {
           actualMQLs = parsedActualMQLs;
         } else {

@@ -1,7 +1,8 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Info } from "@phosphor-icons/react";
+import { Info, WarningCircle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export function StorageErrorHandler({ onRetry }: { onRetry: () => void }) {
   const [hasError, setHasError] = React.useState(false);
@@ -17,36 +18,22 @@ export function StorageErrorHandler({ onRetry }: { onRetry: () => void }) {
           return;
         }
         
-        // For other storage errors, show the message
-        setHasError(true);
-        setErrorMessage(event.detail.message);
+        // For other storage errors, show a toast instead of a blocking error card
+        toast.error("Data loading issue", {
+          description: event.detail.message,
+          action: {
+            label: "Retry",
+            onClick: onRetry
+          },
+          duration: 5000
+        });
       }
     };
     
     window.addEventListener("app:error", handleStorageError);
     return () => window.removeEventListener("app:error", handleStorageError);
-  }, []);
+  }, [onRetry]);
   
-  // If no errors, don't render anything
-  if (!hasError) return null;
-  
-  return (
-    <Card className="border border-red-200 bg-red-50">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-red-700 flex items-center gap-2">
-          <Info className="h-5 w-5" />
-          Storage Error
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-red-600 mb-4">{errorMessage || "There was an error loading saved data"}</p>
-        <Button variant="outline" onClick={() => {
-          setHasError(false);
-          onRetry();
-        }}>
-          Try Again
-        </Button>
-      </CardContent>
-    </Card>
-  );
+  // Component no longer renders an error card
+  return null;
 }

@@ -452,8 +452,63 @@ export function CampaignTable({
 
   // Handle file upload with campaigns
   const handleFileUpload = (importedCampaigns: Campaign[]) => {
-    setCampaigns((prevCampaigns) => [...prevCampaigns, ...importedCampaigns]);
-    setIsImportDialogOpen(false);
+    if (!importedCampaigns || importedCampaigns.length === 0) {
+      toast.error("No valid campaigns found in the uploaded file");
+      return;
+    }
+    
+    try {
+      console.log("Importing campaigns:", importedCampaigns);
+      
+      // Process numeric fields to ensure they're correctly formatted
+      const processedCampaigns = importedCampaigns.map(campaign => {
+        const processed = { ...campaign };
+        
+        // Convert numeric fields to actual numbers if they're strings
+        if (typeof processed.forecastedCost === 'string' && processed.forecastedCost !== '') {
+          processed.forecastedCost = parseFloat(processed.forecastedCost);
+        }
+        
+        if (typeof processed.expectedLeads === 'string' && processed.expectedLeads !== '') {
+          processed.expectedLeads = parseFloat(processed.expectedLeads);
+        }
+        
+        if (typeof processed.actualCost === 'string' && processed.actualCost !== '') {
+          processed.actualCost = parseFloat(processed.actualCost);
+        }
+        
+        if (typeof processed.actualLeads === 'string' && processed.actualLeads !== '') {
+          processed.actualLeads = parseFloat(processed.actualLeads);
+        }
+        
+        if (typeof processed.actualMQLs === 'string' && processed.actualMQLs !== '') {
+          processed.actualMQLs = parseFloat(processed.actualMQLs);
+        }
+        
+        // Handle special case for In-Account Events with no leads
+        if (processed.campaignType === "In-Account Events (1:1)" && 
+            (!processed.expectedLeads || processed.expectedLeads === 0) && 
+            typeof processed.forecastedCost === 'number' && processed.forecastedCost > 0) {
+          // Calculate pipeline based on 20:1 ROI
+          processed.pipelineForecast = processed.forecastedCost * 20;
+        } else if (typeof processed.expectedLeads === 'number' && processed.expectedLeads > 0) {
+          // Standard calculation for campaigns with leads
+          processed.mql = Math.round(processed.expectedLeads * 0.1);
+          processed.sql = Math.round(processed.expectedLeads * 0.06);
+          processed.opportunities = Math.round(processed.sql * 0.8);
+          processed.pipelineForecast = processed.opportunities * 50000;
+        }
+        
+        return processed;
+      });
+      
+      setCampaigns((prevCampaigns) => [...prevCampaigns, ...processedCampaigns]);
+      setIsImportDialogOpen(false);
+      toast.success(`Imported ${processedCampaigns.length} campaigns successfully`);
+    } catch (error) {
+      console.error("Error importing campaigns:", error);
+      toast.error("Failed to import campaigns. Please check the file format.");
+    }
   };
 
   // Check if a campaign is complete (shipped or cancelled)
@@ -923,53 +978,41 @@ export function CampaignTable({
                 </TableCell>
                 
                 {/* Description */}
-                <TableCell className="max-w-xs">
-                  {isCampaignComplete(campaign) ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="cursor-help truncate block">
-                            {campaign.description || "-"}
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" align="center" className="max-w-md">
-                          <p>{campaign.description || "No description"}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
+                <TableCell className="max-w-xs truncate group relative" title={campaign.description || ""}>
+                  <div className="flex items-center gap-1">
+                    <span className="truncate inline-block max-w-[180px]">
+                      {campaign.description || "-"}
+                    </span>
                     <Dialog>
                       <DialogTrigger asChild>
-                        <div className="flex items-center gap-1 cursor-pointer">
-                          <Input
-                            type="text"
-                            value={campaign.description || ""}
-                            onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
-                            placeholder="Enter description"
-                            className="w-full truncate"
-                            readOnly
-                          />
-                          <MagnifyingGlass className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                        </div>
+                        <Button 
+                          variant="ghost" 
+                          className="h-6 w-6 p-0 opacity-20 group-hover:opacity-100"
+                          disabled={isCampaignComplete(campaign)}
+                        >
+                          <MagnifyingGlass className="h-3.5 w-3.5" />
+                          <span className="sr-only">View full description</span>
+                        </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-md">
                         <DialogHeader>
                           <DialogTitle>{campaign.campaignName || "Campaign Description"}</DialogTitle>
                           <DialogDescription>
-                            Enter the full description for this campaign
+                            {isCampaignComplete(campaign) ? "View full description" : "Edit the description for this campaign"}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
                           <Textarea
                             value={campaign.description || ""}
-                            onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
-                            placeholder="Enter a detailed description"
+                            onChange={(e) => !isCampaignComplete(campaign) && updateCampaign(campaign.id, 'description', e.target.value)}
+                            placeholder="No description provided"
                             className="w-full h-32"
+                            readOnly={isCampaignComplete(campaign)}
                           />
                         </div>
                       </DialogContent>
                     </Dialog>
-                  )}
+                  </div>
                 </TableCell>
                 
                 {/* Forecasted Cost */}
