@@ -923,20 +923,52 @@ export function CampaignTable({
                 </TableCell>
                 
                 {/* Description */}
-                <TableCell className="max-w-xs truncate" title={campaign.description}>
+                <TableCell className="max-w-xs">
                   {isCampaignComplete(campaign) ? (
-                    <span className="cursor-help">
-                      {campaign.description || "-"}
-                    </span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="cursor-help truncate block">
+                            {campaign.description || "-"}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" align="center" className="max-w-md">
+                          <p>{campaign.description || "No description"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ) : (
-                    <Input
-                      type="text"
-                      value={campaign.description || ""}
-                      onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
-                      placeholder="Enter description"
-                      className="w-full cursor-help"
-                      title={campaign.description}
-                    />
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <div className="flex items-center gap-1 cursor-pointer">
+                          <Input
+                            type="text"
+                            value={campaign.description || ""}
+                            onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
+                            placeholder="Enter description"
+                            className="w-full truncate"
+                            readOnly
+                          />
+                          <MagnifyingGlass className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                        </div>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>{campaign.campaignName || "Campaign Description"}</DialogTitle>
+                          <DialogDescription>
+                            Enter the full description for this campaign
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-4">
+                          <Textarea
+                            value={campaign.description || ""}
+                            onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
+                            placeholder="Enter a detailed description"
+                            className="w-full h-32"
+                          />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   )}
                 </TableCell>
                 
