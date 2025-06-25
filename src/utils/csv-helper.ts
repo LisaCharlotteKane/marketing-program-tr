@@ -13,6 +13,12 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
   const errors: string[] = [];
   const validRegions = ["JP & Korea", "South APAC", "SAARC", "Digital Motions", "X APAC Non English", "X APAC English"];
   const validStatus = ["Planning", "On Track", "Shipped", "Cancelled"];
+  const validPillars = [
+    "Account Growth and Product Adoption",
+    "Pipeline Acceleration & Executive Engagement",
+    "Brand Awareness & Top of Funnel Demand Generation",
+    "New Logo Acquisition"
+  ];
   
   // Check required fields
   if (!campaign.campaignType) {
@@ -42,6 +48,21 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
   // Validate status if provided
   if (campaign.status && !validStatus.includes(campaign.status)) {
     errors.push(`Row ${rowIndex}: Invalid status "${campaign.status}". Must be one of: ${validStatus.join(", ")}`);
+  }
+  
+  // Validate strategic pillars
+  if (campaign.strategicPillars && Array.isArray(campaign.strategicPillars)) {
+    // Check if it's empty
+    if (campaign.strategicPillars.length === 0) {
+      errors.push(`Row ${rowIndex}: No Strategic Pillars provided. At least one is recommended.`);
+    } else {
+      // Check if all pillars are valid
+      const invalidPillars = campaign.strategicPillars.filter(pillar => !validPillars.includes(pillar));
+      if (invalidPillars.length > 0) {
+        errors.push(`Row ${rowIndex}: Some Strategic Pillars may be invalid: ${invalidPillars.join(", ")}. 
+        Valid options are: ${validPillars.join(", ")}`);
+      }
+    }
   }
   
   // Validate numeric fields
@@ -116,14 +137,16 @@ export function processCsvData(csvData: string): {
   errors: string[], 
   warnings: string[] 
 } {
+  // Add debug information
+  console.log("Beginning CSV import process");
+  
   const result = Papa.parse(csvData, { header: true, skipEmptyLines: true });
+  console.log("CSV Parsing result headers:", result.meta.fields);
   
   const importedCampaigns: Campaign[] = [];
   const errors: string[] = [];
   const warnings: string[] = [];
   
-  // Owner to region mapping for budget purposes is now imported from hooks/useRegionalBudgets
-
   // Budget pool tracking by region owner with used budget and overage tracking
   const budgetPoolByRegionOwner = {
     "JP & Korea": { owner: "Tomoko Tanaka", budget: getBudgetByRegion("JP & Korea"), used: 0, overage: 0 },
@@ -138,7 +161,7 @@ export function processCsvData(csvData: string): {
     });
   }
   
-  // Check for critical missing headers
+  // Check for critical missing headers (strategic pillars is no longer required)
   const requiredHeaders = ["campaignType", "region", "country", "owner"];
   const missingHeaders = requiredHeaders.filter(header => 
     !result.meta.fields?.includes(header)
@@ -157,20 +180,39 @@ export function processCsvData(csvData: string): {
       // Skip completely empty rows
       if (Object.keys(row).filter(key => row[key]?.toString().trim()).length === 0) return;
       
+      // Add debug log for this row
+      console.log(`Processing row ${index + 2}`, row);
+      
       // Generate an ID if not provided
       const campaignId = row.id || Math.random().toString(36).substring(2, 9);
       
       // Process strategic pillars with error handling
       let strategicPillars: string[] = [];
       try {
+        console.log(`strategicPillars raw value:`, row.strategicPillars);
         if (row.strategicPillars) {
-          strategicPillars = row.strategicPillars
-            .split(",")
-            .map((p: string) => p.trim())
-            .filter(Boolean);
+          // Check if it's already an array (from previous parsing)
+          if (Array.isArray(row.strategicPillars)) {
+            strategicPillars = row.strategicPillars.filter(Boolean);
+          } else {
+            // Parse from comma-separated string
+            strategicPillars = row.strategicPillars
+              .split(",")
+              .map((p: string) => p.trim())
+              .filter(Boolean);
+          }
+          
+          console.log(`Parsed strategic pillars for row ${index + 2}:`, strategicPillars);
+        } else {
+          warnings.push(`Row ${index + 2}: No Strategic Pillars provided. Default pillar will be added.`);
+          // Add a default pillar rather than failing
+          strategicPillars = ["Account Growth and Product Adoption"];
         }
       } catch (e) {
-        warnings.push(`Row ${index + 2}: Could not parse strategic pillars. Using empty array instead.`);
+        console.error(`Error parsing strategic pillars for row ${index + 2}:`, e, row.strategicPillars);
+        warnings.push(`Row ${index + 2}: Could not parse strategic pillars. Default pillar will be added.`);
+        // Add a default pillar rather than failing
+        strategicPillars = ["Account Growth and Product Adoption"];
       }
       
       // Process impacted regions with error handling
@@ -259,6 +301,9 @@ export function processCsvData(csvData: string): {
       errors.push(`Row ${index + 2}: ${(error as Error).message}`);
     }
   });
+  
+  // Log final results
+  console.log(`CSV import completed: ${importedCampaigns.length} campaigns imported, ${errors.length} errors, ${warnings.length} warnings`);
   
   // Format currency for user-friendly messages
   function formatCurrency(value: number): string {

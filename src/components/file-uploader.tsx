@@ -104,6 +104,12 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
 # - country: Country where campaign is running
 # - owner: Campaign owner name (determines budget pool allocation)
 #
+# STRATEGIC PILLARS (comma-separated, must match exactly):
+# - "Account Growth and Product Adoption"
+# - "Pipeline Acceleration & Executive Engagement"
+# - "Brand Awareness & Top of Funnel Demand Generation"
+# - "New Logo Acquisition"
+#
 # MULTI-SELECT FIELDS (comma-separated):
 # - strategicPillars: e.g. "Account Growth and Product Adoption, New Logo Acquisition"
 # - impactedRegions: For Digital campaigns, list affected regions
@@ -131,6 +137,29 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
         forecastedCost: "15000",
         expectedLeads: "100",
         impactedRegions: "South APAC, SAARC",
+        status: "Planning",
+        poRaised: "false",
+        campaignCode: "",
+        issueLink: "",
+        actualCost: "",
+        actualLeads: "",
+        actualMQLs: ""
+      },
+      {
+        id: "",
+        campaignName: "Executive Engagement Example",
+        campaignType: "Exec Engagement Programs",
+        strategicPillars: "Pipeline Acceleration & Executive Engagement",
+        revenuePlay: "Secure all developer workloads with the power of AI",
+        fiscalYear: "FY25",
+        quarterMonth: "Q2 - October",
+        region: "SAARC",
+        country: "India",
+        owner: "Shruti Narang",
+        description: "Executive roundtable for enterprise accounts",
+        forecastedCost: "25000",
+        expectedLeads: "50",
+        impactedRegions: "",
         status: "Planning",
         poRaised: "false",
         campaignCode: "",
@@ -195,7 +224,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
         quarterMonth: "Q1 - September",
         region: "South APAC",
         country: "Singapore",
-        owner: "Giorgia Parham",
+        owner: "Beverly Leung",
         description: "Example of a completed campaign with actuals",
         forecastedCost: "30000",
         expectedLeads: "80",
@@ -292,7 +321,8 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
         <ul className="list-disc pl-5 space-y-1 text-xs">
           <li>Download the template for correct column headers</li>
           <li>Required fields: Campaign Name, Type, Region, Country, Owner</li>
-          <li>For multi-select fields (like Strategic Pillars), separate values with commas</li>
+          <li>Strategic Pillars column is comma-separated (e.g., "Account Growth and Product Adoption, New Logo Acquisition")</li>
+          <li>Strategic Pillars must match exactly one of the valid options</li>
           <li>Numeric fields should contain only numbers without currency symbols</li>
           <li>Date fields should follow the format in the template</li>
         </ul>
