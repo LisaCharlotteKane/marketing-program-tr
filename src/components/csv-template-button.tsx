@@ -14,7 +14,7 @@ const templateData = [
     revenuePlay: "All",
     fiscalYear: "FY25",
     quarterMonth: "Q1 - July",
-    region: "North APAC",
+    region: "JP & Korea",
     country: "Japan",
     owner: "Tomoko Tanaka",
     description: "Example campaign - replace with real data",

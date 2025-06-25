@@ -14,7 +14,7 @@ export function getOwnerInfo(owner: string) {
 
 export function getBudgetByRegion(region: string): number {
   const budgetMap: Record<string, number> = {
-    "North APAC": 358000,
+    "JP & Korea": 358000,
     "South APAC": 385500,
     "SAARC": 265000,
     "Digital Motions": 68000

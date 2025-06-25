@@ -10,7 +10,7 @@ const sampleCampaign: Campaign = {
   revenuePlay: "All",
   fiscalYear: "FY25",
   quarterMonth: "Q1 - July",
-  region: "North APAC",
+  region: "JP & Korea",
   country: "Japan",
   owner: "Tomoko Tanaka",
   description: "Test description",
@@ -79,7 +79,7 @@ Invalid Campaign,Webinars,100`;
   test("should handle In-Account Events special calculation", () => {
     // CSV with In-Account Events but no leads (only cost)
     const inAccountEventsCsv = `campaignName,campaignType,region,country,owner,forecastedCost
-Special Event,In-Account Events (1:1),North APAC,Japan,Tomoko Tanaka,10000`;
+Special Event,In-Account Events (1:1),JP & Korea,Japan,Tomoko Tanaka,10000`;
     
     const { campaigns, errors, warnings } = processCsvData(inAccountEventsCsv);
     

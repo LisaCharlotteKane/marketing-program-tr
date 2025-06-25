@@ -21,7 +21,7 @@ function ensureCampaignIntegrity(campaigns: Campaign[]): Campaign[] {
       revenuePlay: campaign.revenuePlay || "All",
       fiscalYear: campaign.fiscalYear || "FY25",
       quarterMonth: campaign.quarterMonth || "Q1 - July",
-      region: campaign.region || "North APAC",
+      region: campaign.region || "JP & Korea",
       country: campaign.country || "",
       owner: campaign.owner || "",
       description: campaign.description || "",

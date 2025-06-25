@@ -143,7 +143,7 @@ export function CampaignTable({
     "Q4 - June"
   ];
   
-  const regionOptions = ["North APAC", "South APAC", "SAARC", "Digital Motions", "X APAC Non English", "X APAC English"];
+  const regionOptions = ["JP & Korea", "South APAC", "SAARC", "Digital Motions", "X APAC Non English", "X APAC English"];
   
   const countries = [
     "Afghanistan",
@@ -200,7 +200,7 @@ export function CampaignTable({
       revenuePlay: revenuePlays[0] || "All",
       fiscalYear: fiscalYears[0] || "FY25",
       quarterMonth: quartersMonths[0] || "Q1 - July",
-      region: regionOptions[0] || "North APAC",
+      region: regionOptions[0] || "JP & Korea",
       country: countries[0] || "Afghanistan",
       owner: preselectedOwner,
       description: "",
@@ -304,7 +304,7 @@ export function CampaignTable({
           
           // Owner to region mapping for budget purposes
           const ownerToRegionMap = {
-            "Tomoko Tanaka": "North APAC",
+            "Tomoko Tanaka": "JP & Korea",
             "Beverly Leung": "South APAC", 
             "Shruti Narang": "SAARC",
             "Giorgia Parham": "Digital Motions",
@@ -312,7 +312,7 @@ export function CampaignTable({
           
           // Budget pool tracking by region owner with used budget and overage tracking
           const budgetPoolByRegionOwner = {
-            "North APAC": { owner: "Tomoko Tanaka", budget: 358000, used: 0, overage: 0 },
+            "JP & Korea": { owner: "Tomoko Tanaka", budget: 358000, used: 0, overage: 0 },
             "South APAC": { owner: "Beverly Leung", budget: 385500, used: 0, overage: 0 },
             "SAARC": { owner: "Shruti Narang", budget: 265000, used: 0, overage: 0 },
             "Digital Motions": { owner: "Giorgia Parham", budget: 68000, used: 0, overage: 0 },

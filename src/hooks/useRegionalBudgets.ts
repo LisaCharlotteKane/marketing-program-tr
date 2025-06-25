@@ -27,7 +27,7 @@ interface BudgetStatus {
 
 // Owner to region mapping
 export const OWNER_TO_REGION_MAP: Record<string, string> = {
-  "Tomoko Tanaka": "North APAC",
+  "Tomoko Tanaka": "JP & Korea",
   "Beverly Leung": "South APAC",
   "Shruti Narang": "SAARC",
   "Giorgia Parham": "Digital Motions"
@@ -35,7 +35,7 @@ export const OWNER_TO_REGION_MAP: Record<string, string> = {
 
 // Default regional budgets - set as per management directive
 const DEFAULT_BUDGETS: RegionalBudgets = {
-  "North APAC": {
+  "JP & Korea": {
     assignedBudget: 358000,
     programs: [],
     lockedByOwner: true,

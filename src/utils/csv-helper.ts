@@ -11,7 +11,7 @@ import { getOwnerInfo, getBudgetByRegion } from "@/services/budget-service";
  */
 export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number): string[] {
   const errors: string[] = [];
-  const validRegions = ["North APAC", "South APAC", "SAARC", "Digital Motions", "X APAC Non English", "X APAC English"];
+  const validRegions = ["JP & Korea", "South APAC", "SAARC", "Digital Motions", "X APAC Non English", "X APAC English"];
   const validStatus = ["Planning", "On Track", "Shipped", "Cancelled"];
   
   // Check required fields
@@ -126,7 +126,7 @@ export function processCsvData(csvData: string): {
 
   // Budget pool tracking by region owner with used budget and overage tracking
   const budgetPoolByRegionOwner = {
-    "North APAC": { owner: "Tomoko Tanaka", budget: getBudgetByRegion("North APAC"), used: 0, overage: 0 },
+    "JP & Korea": { owner: "Tomoko Tanaka", budget: getBudgetByRegion("JP & Korea"), used: 0, overage: 0 },
     "South APAC": { owner: "Beverly Leung", budget: getBudgetByRegion("South APAC"), used: 0, overage: 0 },
     "SAARC": { owner: "Shruti Narang", budget: getBudgetByRegion("SAARC"), used: 0, overage: 0 },
     "Digital Motions": { owner: "Giorgia Parham", budget: getBudgetByRegion("Digital Motions"), used: 0, overage: 0 },

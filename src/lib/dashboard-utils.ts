@@ -17,7 +17,7 @@ export const campaignData = [
   },
   {
     id: "camp-002",
-    region: "North APAC",
+    region: "JP & Korea",
     country: "Japan",
     quarter: "Q1 2023",
     campaignOwner: "Tomoko Tanaka",
@@ -62,7 +62,7 @@ export const campaignData = [
   },
   {
     id: "camp-005",
-    region: "North APAC",
+    region: "JP & Korea",
     country: "China",
     quarter: "Q3 2023",
     campaignOwner: "Tomoko Tanaka",
@@ -104,7 +104,7 @@ export const campaignData = [
     actualLeads: 150,
     actualMQLs: 18,
     actualSQLs: 10,
-    impactedRegions: ["SAARC", "North APAC", "South APAC"]
+    impactedRegions: ["SAARC", "JP & Korea", "South APAC"]
   }
 ];
 
@@ -117,12 +117,12 @@ export const quarters = [
 ];
 
 // Define regions
-export const regions = ["North APAC", "South APAC", "SAARC", "Digital", "X APAC Non English"];
+export const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC Non English"];
 
 // Define countries by region
 const countriesByRegion = {
   "SAARC": ["India", "Pakistan", "Bangladesh", "Sri Lanka", "Nepal", "Afghanistan", "Bhutan", "Maldives", "X SAARC"],
-  "North APAC": ["Japan", "China", "South Korea", "Taiwan", "Hong Kong", "GCR"],
+  "JP & Korea": ["Japan", "China", "South Korea", "Taiwan", "Hong Kong", "GCR"],
   "South APAC": ["Singapore", "Malaysia", "Indonesia", "Thailand", "Philippines", "Vietnam", "Australia", "New Zealand", "Brunei", "Cambodia", "Laos", "Myanmar", "ASEAN", "X South APAC"],
   "Digital": ["Multiple Regions", "X Apac", "X APAC English", "X APAC Non English"] // Digital is cross-regional
 };

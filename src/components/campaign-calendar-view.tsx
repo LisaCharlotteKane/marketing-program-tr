@@ -23,7 +23,7 @@ const monthToNumber: Record<string, number> = {
 // Get region color class
 const getRegionColorClass = (region: string): string => {
   switch (region) {
-    case "North APAC":
+    case "JP & Korea":
       return "bg-blue-100 text-blue-800 border-blue-200";
     case "South APAC":
       return "bg-green-100 text-green-800 border-green-200";
@@ -232,7 +232,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
           <h4 className="font-medium mb-2">Region Legend</h4>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
-              North APAC
+              JP & Korea
             </Badge>
             <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
               South APAC

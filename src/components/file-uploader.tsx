@@ -100,7 +100,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
 # REQUIRED FIELDS:
 # - campaignName: Name of your campaign
 # - campaignType: Must be one of: "In-Account Events (1:1)", "Exec Engagement Programs", "CxO Events (1:Few)", etc.
-# - region: Must be one of: "North APAC", "South APAC", "SAARC", "Digital Motions", etc.
+# - region: Must be one of: "JP & Korea", "South APAC", "SAARC", "Digital Motions", etc.
 # - country: Country where campaign is running
 # - owner: Campaign owner name (determines budget pool allocation)
 #
@@ -124,7 +124,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
         revenuePlay: "All",
         fiscalYear: "FY25",
         quarterMonth: "Q1 - July",
-        region: "North APAC",
+        region: "JP & Korea",
         country: "Japan",
         owner: "Tomoko Tanaka",
         description: "Example campaign - replace with real data",
@@ -176,7 +176,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
         description: "Multi-region digital campaign",
         forecastedCost: "50000",
         expectedLeads: "200",
-        impactedRegions: "North APAC, South APAC", // Impacted regions for Digital campaign
+        impactedRegions: "JP & Korea, South APAC", // Impacted regions for Digital campaign
         status: "Planning",
         poRaised: "false",
         campaignCode: "",
