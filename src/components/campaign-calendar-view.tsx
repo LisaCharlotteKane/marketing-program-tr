@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { normalizeRegionName } from "@/lib/utils";
 
 // Fiscal year months (July to June)
 const FISCAL_YEAR_MONTHS = [
@@ -29,7 +30,8 @@ const monthToFiscalOrder: Record<string, number> = {
 
 // Get region color value for border
 const getRegionBorderColor = (region: string): string => {
-  switch (region) {
+  const normalizedRegion = normalizeRegionName(region);
+  switch (normalizedRegion) {
     case "JP & Korea":
       return "border-blue-500";
     case "South APAC":
@@ -49,7 +51,8 @@ const getRegionBorderColor = (region: string): string => {
 
 // Get region color class for badges
 const getRegionColorClass = (region: string): string => {
-  switch (region) {
+  const normalizedRegion = normalizeRegionName(region);
+  switch (normalizedRegion) {
     case "JP & Korea":
       return "bg-blue-100 text-blue-800 border-blue-200";
     case "South APAC":
@@ -92,7 +95,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
   const [fiscalYearFilter, setFiscalYearFilter] = useState("_all");
 
   // Get unique values for filters
-  const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
+  const regions = ["_all", ...new Set(campaigns.map(c => normalizeRegionName(c.region)))].filter(Boolean);
   const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
   const types = ["_all", ...new Set(campaigns.map(c => c.campaignType))].filter(Boolean);
   const plays = ["_all", ...new Set(campaigns.map(c => c.revenuePlay))].filter(Boolean);
@@ -101,7 +104,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
 
   // Apply filters
   const filteredCampaigns = campaigns.filter(campaign => {
-    return (regionFilter === "_all" || campaign.region === regionFilter) &&
+    return (regionFilter === "_all" || normalizeRegionName(campaign.region) === regionFilter) &&
            (ownerFilter === "_all" || campaign.owner === ownerFilter) &&
            (typeFilter === "_all" || campaign.campaignType === typeFilter) &&
            (playFilter === "_all" || campaign.revenuePlay === playFilter) &&
@@ -154,7 +157,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
                 <div className="flex justify-between items-start gap-2 mb-2">
                   <h4 className="font-medium leading-tight">{campaign.description || campaign.campaignName || campaign.campaignType}</h4>
                   <Badge variant="outline" className={getRegionColorClass(campaign.region)}>
-                    {campaign.region}
+                    {normalizeRegionName(campaign.region)}
                   </Badge>
                 </div>
                 

@@ -13,6 +13,7 @@ import { type Campaign } from "@/components/campaign-table";
 import { toast } from "sonner";
 import { ClearFiltersButton } from "@/components/clear-filters-button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { normalizeRegionName } from "@/lib/utils";
 
 export function ExecutionTracking({ 
   campaigns, 
@@ -32,7 +33,7 @@ export function ExecutionTracking({
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
   
   // Get unique regions and owners from campaigns with fallbacks for missing data
-  const regions = ["_all", ...new Set(campaigns.filter(c => c && c.region).map(c => c.region))];
+  const regions = ["_all", ...new Set(campaigns.filter(c => c && c.region).map(c => normalizeRegionName(c.region)))];
   const owners = ["_all", ...new Set(campaigns.filter(c => c && c.owner).map(c => c.owner))];
   
   // Extract strategic pillars (flattened from arrays) with safety checks
@@ -161,7 +162,7 @@ export function ExecutionTracking({
     if (!campaign || !campaign.id) return false;
     
     // Apply region filter
-    if (regionFilter !== "_all" && campaign.region !== regionFilter) return false;
+    if (regionFilter !== "_all" && normalizeRegionName(campaign.region) !== regionFilter) return false;
     
     // Apply owner filter
     if (ownerFilter !== "_all" && campaign.owner !== ownerFilter) return false;
@@ -380,7 +381,7 @@ export function ExecutionTracking({
                       <div className="text-xs">
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant="outline" className="bg-muted/30">{campaign.owner}</Badge>
-                          <Badge variant="outline" className="bg-muted/30">{campaign.region}</Badge>
+                          <Badge variant="outline" className="bg-muted/30">{normalizeRegionName(campaign.region)}</Badge>
                         </div>
                         {campaign.description && (
                           <div className="mt-1 text-foreground">

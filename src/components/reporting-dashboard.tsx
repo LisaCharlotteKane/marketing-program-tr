@@ -8,6 +8,7 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianG
 import { type Campaign } from "@/components/campaign-table";
 import { toast } from "sonner";
 import { ClearFiltersButton } from "@/components/clear-filters-button";
+import { normalizeRegionName } from "@/lib/utils";
 
 export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
   // Filters
@@ -21,7 +22,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
   const [ownerFilter, setOwnerFilter] = useState("_all");
   
   // Get unique filter options from campaigns
-  const regions = ["_all", ...new Set(campaigns.map(c => c.region))].filter(Boolean);
+  const regions = ["_all", ...new Set(campaigns.map(c => normalizeRegionName(c.region)))].filter(Boolean);
   const countries = ["_all", ...new Set(campaigns.map(c => c.country))].filter(Boolean);
   
   // Extract quarter and month from quarterMonth field
@@ -62,7 +63,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
   // Filter campaigns based on selected filters
   const filteredCampaigns = campaigns.filter(campaign => {
     // Apply region filter
-    if (regionFilter !== "_all" && campaign.region !== regionFilter) return false;
+    if (regionFilter !== "_all" && normalizeRegionName(campaign.region) !== regionFilter) return false;
     
     // Apply country filter
     if (countryFilter !== "_all" && campaign.country !== countryFilter) return false;

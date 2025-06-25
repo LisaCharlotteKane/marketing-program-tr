@@ -23,6 +23,7 @@ import { ChartBar, ChartLine, ChartPie, Table, TrendUp, FilterX } from "@phospho
 import { Campaign } from "./campaign-table";
 import { toast } from "sonner";
 import { ClearFiltersButton } from "./clear-filters-button";
+import { normalizeRegionName } from "@/lib/utils";
 
 interface ROIDashboardProps {
   campaigns: Campaign[];
@@ -62,7 +63,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
     let filtered = [...campaigns];
 
     if (selectedRegion !== "all") {
-      filtered = filtered.filter(campaign => campaign.region === selectedRegion);
+      filtered = filtered.filter(campaign => normalizeRegionName(campaign.region) === selectedRegion);
     }
 
     if (selectedQuarter !== "all") {
@@ -179,7 +180,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
   };
 
   // Unique regions for filter
-  const regions = ["all", ...new Set(campaigns.map(c => c.region).filter(Boolean))];
+  const regions = ["all", ...new Set(campaigns.map(c => normalizeRegionName(c.region)).filter(Boolean))];
 
   // Get unique quarters from campaign data
   const availableQuarters = new Set<string>();
