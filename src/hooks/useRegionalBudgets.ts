@@ -25,7 +25,7 @@ interface BudgetStatus {
   resetToDefaults: () => void;
 }
 
-// Owner to region mapping
+// Owner to region mapping (updated "North APAC" to "JP & Korea")
 export const OWNER_TO_REGION_MAP: Record<string, string> = {
   "Tomoko Tanaka": "JP & Korea",
   "Beverly Leung": "South APAC",

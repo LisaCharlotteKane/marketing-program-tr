@@ -102,3 +102,4 @@
 - This approach uniquely combines planning, execution, and reporting in a unified tool, which sets it apart from generic project management solutions.
 - The regional budget management with owner-based allocation provides a more nuanced approach than simple project budgeting.
 - Integration with GitHub for data persistence makes this tool particularly valuable for technical marketing teams already using GitHub for other purposes.
+- All references to "North APAC" have been renamed to "JP & Korea" throughout the application for regional consistency and accurate representation.
