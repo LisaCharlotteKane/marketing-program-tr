@@ -94,16 +94,24 @@ export function CampaignCalendarView({ campaigns = [] }) {
   const [statusFilter, setStatusFilter] = useState("_all");
   const [fiscalYearFilter, setFiscalYearFilter] = useState("_all");
 
-  // Get unique values for filters
+  // Get unique values for filters - exclude contractor campaigns from type options as they're filtered out
   const regions = ["_all", ...new Set(campaigns.map(c => normalizeRegionName(c.region)))].filter(Boolean);
   const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
-  const types = ["_all", ...new Set(campaigns.map(c => c.campaignType))].filter(Boolean);
+  const types = ["_all", ...new Set(campaigns
+    .filter(c => c.campaignType !== "Contractor" && c.campaignType !== "Contractor/Infrastructure")
+    .map(c => c.campaignType))].filter(Boolean);
   const plays = ["_all", ...new Set(campaigns.map(c => c.revenuePlay))].filter(Boolean);
   const statuses = ["_all", "Planning", "On Track", "Shipped", "Cancelled"];
   const fiscalYears = ["_all", "FY24", "FY25", "FY26", "FY27"];
 
   // Apply filters
   const filteredCampaigns = campaigns.filter(campaign => {
+    // First, exclude Contractor campaigns
+    if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
+      return false;
+    }
+    
+    // Then apply remaining filters
     return (regionFilter === "_all" || normalizeRegionName(campaign.region) === regionFilter) &&
            (ownerFilter === "_all" || campaign.owner === ownerFilter) &&
            (typeFilter === "_all" || campaign.campaignType === typeFilter) &&
@@ -207,6 +215,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
         </CardTitle>
         <CardDescription>
           View campaigns organized by {fiscalYearFilter === "_all" ? "fiscal year" : `${fiscalYearFilter} (July to June)`}
+          <span className="block text-xs mt-1">Note: Contractor/Infrastructure campaigns are excluded from this view</span>
         </CardDescription>
       </CardHeader>
       
