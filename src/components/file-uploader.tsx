@@ -38,13 +38,15 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
         const { campaigns, errors, warnings } = processCsvData(csvContent);
         
         console.log("Processed campaigns data:", {
-          campaigns,
+          totalImported: campaigns.length,
           numericFieldSamples: campaigns.slice(0, 3).map(c => ({
             id: c.id,
+            campaignName: c.campaignName,
             forecastedCost: c.forecastedCost,
             expectedLeads: c.expectedLeads,
             typeForecastedCost: typeof c.forecastedCost,
-            typeExpectedLeads: typeof c.expectedLeads
+            typeExpectedLeads: typeof c.expectedLeads,
+            strategicPillars: c.strategicPillars
           }))
         });
         
@@ -127,6 +129,12 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
 #
 # STATUS OPTIONS: "Planning", "On Track", "Shipped", "Cancelled"
 # 
+# NUMERIC FIELDS: Enter just numbers without currency symbols, commas or other formatting
+# - forecastedCost: e.g. "15000" (not "$15,000")
+# - expectedLeads: e.g. "100" (not "100 leads")
+# - actualCost: e.g. "15000" (not "$15,000")
+# - actualLeads: e.g. "100" (not "100 leads")
+#
 # Special calculation for "In-Account Events (1:1)":
 # If expectedLeads is empty but forecastedCost is provided, pipeline will be calculated as 20× the cost.
 #`;
@@ -334,11 +342,12 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
           <li>Required fields: Campaign Name, Type, Region, Country, Owner</li>
           <li>Strategic Pillars column is comma-separated (e.g., "Account Growth and Product Adoption, New Logo Acquisition")</li>
           <li>Strategic Pillars must match exactly one of the valid options</li>
-          <li><strong>Numeric fields (Forecasted Cost, Expected Leads) must contain only numbers (e.g., "15000", not "$15,000")</strong></li>
+          <li><strong>Numeric fields (Forecasted Cost, Expected Leads) must contain only numbers - no currency symbols or commas</strong></li>
+          <li><strong>Examples: Use "15000" not "$15,000" and "100" not "100 leads"</strong></li>
           <li>Empty numeric fields are allowed and will be treated as zero</li>
           <li>Date fields should follow the format in the template</li>
         </ul>
-      </div>
+    </div>
 
       <input
         type="file"

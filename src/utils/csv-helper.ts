@@ -108,17 +108,27 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
   let expectedLeads = 0;
   let forecastedCost = 0;
   
-  // Normalize numeric inputs
+  // Normalize numeric inputs with more robust error handling
   if (typeof campaign.expectedLeads === 'number' && !isNaN(campaign.expectedLeads)) {
     expectedLeads = campaign.expectedLeads;
   } else if (typeof campaign.expectedLeads === 'string' && campaign.expectedLeads !== "") {
-    expectedLeads = parseFloat(campaign.expectedLeads) || 0;
+    const parsedLeads = parseFloat(campaign.expectedLeads);
+    if (!isNaN(parsedLeads)) {
+      expectedLeads = parsedLeads;
+      // Convert the string to a number in the campaign object
+      updatedCampaign.expectedLeads = parsedLeads;
+    }
   }
   
   if (typeof campaign.forecastedCost === 'number' && !isNaN(campaign.forecastedCost)) {
     forecastedCost = campaign.forecastedCost;
   } else if (typeof campaign.forecastedCost === 'string' && campaign.forecastedCost !== "") {
-    forecastedCost = parseFloat(campaign.forecastedCost) || 0;
+    const parsedCost = parseFloat(campaign.forecastedCost);
+    if (!isNaN(parsedCost)) {
+      forecastedCost = parsedCost;
+      // Convert the string to a number in the campaign object
+      updatedCampaign.forecastedCost = parsedCost;
+    }
   }
   
   console.log("Calculating derived fields:", { 
@@ -126,7 +136,9 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
     expectedLeads,
     forecastedCost,
     originalExpectedLeads: campaign.expectedLeads,
-    originalForecastedCost: campaign.forecastedCost
+    originalForecastedCost: campaign.forecastedCost,
+    expectedLeadsType: typeof expectedLeads,
+    forecastedCostType: typeof forecastedCost
   });
   
   if (campaign.campaignType === "In-Account Events (1:1)") {
@@ -188,7 +200,20 @@ export function processCsvData(csvData: string): {
     skipEmptyLines: true,
     dynamicTyping: false, // Keep as strings for our custom processing
     transformHeader: (header) => header.trim(), // Trim whitespace from headers
-    transform: (value) => typeof value === 'string' ? value.trim() : value // Trim cell values
+    transform: (value, field) => {
+      // Trim all string values
+      if (typeof value === 'string') {
+        value = value.trim();
+      }
+      
+      // Handle numeric fields for validation, but keep as strings for now
+      if (['forecastedCost', 'expectedLeads', 'actualCost', 'actualLeads', 'actualMQLs'].includes(field)) {
+        // Log the raw numeric values to help with debugging
+        console.log(`CSV field: ${field}, raw value: "${value}"`);
+      }
+      
+      return value;
+    }
   });
   console.log("CSV Parsing result headers:", result.meta.fields);
   
@@ -292,6 +317,68 @@ export function processCsvData(csvData: string): {
         }
       });
       
+      // Process number fields with better error handling
+      let forecastedCost: number | string = "";
+      let expectedLeads: number | string = "";
+      let actualCost: number | string = "";
+      let actualLeads: number | string = "";
+      let actualMQLs: number | string = "";
+      
+      // Process forecastedCost
+      if (row.forecastedCost !== undefined && row.forecastedCost !== "") {
+        const parsedCost = Number(row.forecastedCost);
+        if (!isNaN(parsedCost)) {
+          forecastedCost = parsedCost;
+          console.log(`Parsed forecastedCost: ${forecastedCost}`);
+        } else {
+          warnings.push(`Row ${index + 2}: Forecasted Cost "${row.forecastedCost}" could not be parsed as a number.`);
+          forecastedCost = "";
+        }
+      }
+      
+      // Process expectedLeads
+      if (row.expectedLeads !== undefined && row.expectedLeads !== "") {
+        const parsedLeads = Number(row.expectedLeads);
+        if (!isNaN(parsedLeads)) {
+          expectedLeads = parsedLeads;
+          console.log(`Parsed expectedLeads: ${expectedLeads}`);
+        } else {
+          warnings.push(`Row ${index + 2}: Expected Leads "${row.expectedLeads}" could not be parsed as a number.`);
+          expectedLeads = "";
+        }
+      }
+      
+      // Process actual metrics
+      if (row.actualCost !== undefined && row.actualCost !== "") {
+        const parsedActualCost = Number(row.actualCost);
+        if (!isNaN(parsedActualCost)) {
+          actualCost = parsedActualCost;
+        } else {
+          warnings.push(`Row ${index + 2}: Actual Cost "${row.actualCost}" could not be parsed as a number.`);
+          actualCost = "";
+        }
+      }
+      
+      if (row.actualLeads !== undefined && row.actualLeads !== "") {
+        const parsedActualLeads = Number(row.actualLeads);
+        if (!isNaN(parsedActualLeads)) {
+          actualLeads = parsedActualLeads;
+        } else {
+          warnings.push(`Row ${index + 2}: Actual Leads "${row.actualLeads}" could not be parsed as a number.`);
+          actualLeads = "";
+        }
+      }
+      
+      if (row.actualMQLs !== undefined && row.actualMQLs !== "") {
+        const parsedActualMQLs = Number(row.actualMQLs);
+        if (!isNaN(parsedActualMQLs)) {
+          actualMQLs = parsedActualMQLs;
+        } else {
+          warnings.push(`Row ${index + 2}: Actual MQLs "${row.actualMQLs}" could not be parsed as a number.`);
+          actualMQLs = "";
+        }
+      }
+      
       // Build the campaign object
       let campaign: Partial<Campaign> = {
         id: campaignId,
@@ -305,16 +392,16 @@ export function processCsvData(csvData: string): {
         country: row.country?.toString().trim() || "",
         owner: row.owner?.toString().trim() || "",
         description: row.description?.toString().trim() || "",
-        forecastedCost: row.forecastedCost !== undefined && row.forecastedCost !== "" ? Number(row.forecastedCost) : "",
-        expectedLeads: row.expectedLeads !== undefined && row.expectedLeads !== "" ? Number(row.expectedLeads) : "",
+        forecastedCost: forecastedCost,
+        expectedLeads: expectedLeads,
         impactedRegions: impactedRegions,
         status: row.status?.toString().trim() || "Planning",
         poRaised: poRaised,
         campaignCode: row.campaignCode?.toString().trim() || "",
         issueLink: row.issueLink?.toString().trim() || "",
-        actualCost: row.actualCost !== undefined && row.actualCost !== "" ? Number(row.actualCost) : "",
-        actualLeads: row.actualLeads !== undefined && row.actualLeads !== "" ? Number(row.actualLeads) : "",
-        actualMQLs: row.actualMQLs !== undefined && row.actualMQLs !== "" ? Number(row.actualMQLs) : "",
+        actualCost: actualCost,
+        actualLeads: actualLeads,
+        actualMQLs: actualMQLs,
         mql: 0,
         sql: 0,
         opportunities: 0,
@@ -332,10 +419,18 @@ export function processCsvData(csvData: string): {
       if (typeof campaign.forecastedCost === 'number' && !isNaN(campaign.forecastedCost)) {
         cost = campaign.forecastedCost;
       } else if (typeof campaign.forecastedCost === 'string' && campaign.forecastedCost !== "") {
-        cost = parseFloat(campaign.forecastedCost) || 0;
+        const parsedCost = parseFloat(campaign.forecastedCost);
+        if (!isNaN(parsedCost)) {
+          cost = parsedCost;
+        }
       }
       
-      console.log(`Row ${index + 2} owner budget check:`, { owner, cost, forecastedCost: campaign.forecastedCost });
+      console.log(`Row ${index + 2} owner budget check:`, { 
+        owner, 
+        cost, 
+        forecastedCost: campaign.forecastedCost,
+        forecastedCostType: typeof campaign.forecastedCost
+      });
       
       if (owner && cost > 0) {
         // Get the appropriate region for budget tracking based on owner
