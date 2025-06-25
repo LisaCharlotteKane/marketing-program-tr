@@ -106,7 +106,7 @@ The application uses the following data structure:
 
 ### Regional Budget
 
-- Region (North APAC, South APAC, SAARC, Digital)
+- Region (JP & Korea, South APAC, SAARC, Digital Motions, X APAC English, X APAC Non English)
 - Assigned Budget (number)
 - Programs (array of program allocations)
 - Lock Status (boolean)
