@@ -71,12 +71,16 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
     if (typeof campaign.forecastedCost === 'number') {
       if (isNaN(campaign.forecastedCost)) {
         errors.push(`Row ${rowIndex}: Forecasted Cost is not a valid number.`);
+      } else if (campaign.forecastedCost < 0) {
+        errors.push(`Row ${rowIndex}: Forecasted Cost cannot be negative.`);
       }
     } 
     // If it's a string, try to parse it
     else if (typeof campaign.forecastedCost === 'string') {
-      if (isNaN(Number(campaign.forecastedCost))) {
-        errors.push(`Row ${rowIndex}: Forecasted Cost must be a number.`);
+      // Clean the string first
+      const cleanValue = campaign.forecastedCost.replace(/[$,]/g, '').trim();
+      if (isNaN(Number(cleanValue))) {
+        errors.push(`Row ${rowIndex}: Forecasted Cost must be a number. Found: "${campaign.forecastedCost}"`);
       }
     }
   }
@@ -86,12 +90,16 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
     if (typeof campaign.expectedLeads === 'number') {
       if (isNaN(campaign.expectedLeads)) {
         errors.push(`Row ${rowIndex}: Expected Leads is not a valid number.`);
+      } else if (campaign.expectedLeads < 0) {
+        errors.push(`Row ${rowIndex}: Expected Leads cannot be negative.`);
       }
     } 
     // If it's a string, try to parse it
     else if (typeof campaign.expectedLeads === 'string') {
-      if (isNaN(Number(campaign.expectedLeads))) {
-        errors.push(`Row ${rowIndex}: Expected Leads must be a number.`);
+      // Clean the string first
+      const cleanValue = campaign.expectedLeads.replace(/,/g, '').trim();
+      if (isNaN(Number(cleanValue))) {
+        errors.push(`Row ${rowIndex}: Expected Leads must be a number. Found: "${campaign.expectedLeads}"`);
       }
     }
   }
@@ -132,6 +140,7 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
   }
   
   console.log("Calculating derived fields:", { 
+    campaignName: campaign.campaignName,
     campaignType: campaign.campaignType,
     expectedLeads,
     forecastedCost,
@@ -149,6 +158,7 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
       updatedCampaign.sql = Math.round(expectedLeads * 0.06);
       updatedCampaign.opportunities = Math.round((updatedCampaign.sql as number) * 0.8);
       updatedCampaign.pipelineForecast = (updatedCampaign.opportunities as number) * 50000;
+      console.log(`Standard calculation for In-Account Events with leads: MQL=${updatedCampaign.mql}, SQL=${updatedCampaign.sql}, Opps=${updatedCampaign.opportunities}, Pipeline=${updatedCampaign.pipelineForecast}`);
     } 
     // If no leads but cost exists, use 20:1 ROI calculation
     else if (forecastedCost > 0) {
@@ -156,12 +166,14 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
       updatedCampaign.mql = 0;
       updatedCampaign.sql = 0;
       updatedCampaign.opportunities = 0;
+      console.log(`Special 20:1 ROI calculation for In-Account Events: Cost=${forecastedCost}, Pipeline=${updatedCampaign.pipelineForecast}`);
     } else {
       // Reset calculated values if input is invalid
       updatedCampaign.mql = 0;
       updatedCampaign.sql = 0;
       updatedCampaign.opportunities = 0;
       updatedCampaign.pipelineForecast = 0;
+      console.log(`Reset values for In-Account Events with no leads or cost`);
     }
   } 
   // Standard calculation for all other campaign types
@@ -170,12 +182,14 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
     updatedCampaign.sql = Math.round(expectedLeads * 0.06);
     updatedCampaign.opportunities = Math.round((updatedCampaign.sql as number) * 0.8);
     updatedCampaign.pipelineForecast = (updatedCampaign.opportunities as number) * 50000;
+    console.log(`Standard calculation for other campaign types: MQL=${updatedCampaign.mql}, SQL=${updatedCampaign.sql}, Opps=${updatedCampaign.opportunities}, Pipeline=${updatedCampaign.pipelineForecast}`);
   } else {
     // Reset calculated values if input is invalid
     updatedCampaign.mql = 0;
     updatedCampaign.sql = 0;
     updatedCampaign.opportunities = 0;
     updatedCampaign.pipelineForecast = 0;
+    console.log(`Reset values for campaign with no leads`);
   }
   
   return updatedCampaign;
@@ -203,17 +217,13 @@ export function processCsvData(csvData: string): {
     transform: (value, field) => {
       // Trim all string values
       if (typeof value === 'string') {
-        value = value.trim();
+        return value.trim();
       }
-      
-      // Handle numeric fields for validation, but keep as strings for now
-      if (['forecastedCost', 'expectedLeads', 'actualCost', 'actualLeads', 'actualMQLs'].includes(field)) {
-        // Log the raw numeric values to help with debugging
-        console.log(`CSV field: ${field}, raw value: "${value}"`);
-      }
-      
       return value;
-    }
+    },
+    // Prevent PapaParse from dropping fields with empty values
+    keepEmptyRows: true,
+    fastMode: false, // Disable fast mode to ensure accurate parsing
   });
   console.log("CSV Parsing result headers:", result.meta.fields);
   
@@ -263,7 +273,7 @@ export function processCsvData(csvData: string): {
       // Process strategic pillars with error handling
       let strategicPillars: string[] = [];
       try {
-        console.log(`strategicPillars raw value:`, row.strategicPillars);
+        console.log(`strategicPillars raw value: "${row.strategicPillars}"`);
         if (row.strategicPillars) {
           // Check if it's already an array (from previous parsing)
           if (Array.isArray(row.strategicPillars)) {
@@ -275,6 +285,33 @@ export function processCsvData(csvData: string): {
               .map((p: string) => p.trim())
               .filter(Boolean);
           }
+          
+          // Normalize pillar names to match expected values
+          const validPillars = [
+            "Account Growth and Product Adoption",
+            "Pipeline Acceleration & Executive Engagement",
+            "Brand Awareness & Top of Funnel Demand Generation",
+            "New Logo Acquisition"
+          ];
+          
+          // Try to match pillars even if they're not exact matches
+          strategicPillars = strategicPillars.map((pillar: string) => {
+            // Try exact match first
+            if (validPillars.includes(pillar)) {
+              return pillar;
+            }
+            
+            // Try case-insensitive match
+            const lowerPillar = pillar.toLowerCase();
+            for (const validPillar of validPillars) {
+              if (validPillar.toLowerCase() === lowerPillar) {
+                return validPillar; // Return the correctly cased version
+              }
+            }
+            
+            // If no match, return as is and validation will catch it
+            return pillar;
+          });
           
           console.log(`Parsed strategic pillars for row ${index + 2}:`, strategicPillars);
         } else {
@@ -327,67 +364,92 @@ export function processCsvData(csvData: string): {
       // Process forecastedCost - ensure it's a number if provided
       if (row.forecastedCost !== undefined && row.forecastedCost !== "") {
         // Remove any currency symbols or commas that might be in the input
-        const cleanValue = String(row.forecastedCost).replace(/[$,]/g, '');
-        const parsedCost = Number(cleanValue);
+        const cleanValue = String(row.forecastedCost).replace(/[$,]/g, '').trim();
+        console.log(`Cleaned forecastedCost value: "${cleanValue}"`);
         
-        if (!isNaN(parsedCost)) {
-          forecastedCost = parsedCost;
-          console.log(`Parsed forecastedCost: ${forecastedCost}`);
-        } else {
-          warnings.push(`Row ${index + 2}: Forecasted Cost "${row.forecastedCost}" could not be parsed as a number.`);
-          forecastedCost = "";
+        // Convert to number only if it's a valid number
+        if (cleanValue !== "") {
+          const parsedCost = Number(cleanValue);
+          
+          if (!isNaN(parsedCost)) {
+            forecastedCost = parsedCost;
+            console.log(`Parsed forecastedCost: ${forecastedCost}, type: ${typeof forecastedCost}`);
+          } else {
+            warnings.push(`Row ${index + 2}: Forecasted Cost "${row.forecastedCost}" could not be parsed as a number.`);
+            forecastedCost = "";
+          }
         }
       }
       
       // Process expectedLeads - ensure it's a number if provided
       if (row.expectedLeads !== undefined && row.expectedLeads !== "") {
         // Remove any commas that might be in the input
-        const cleanValue = String(row.expectedLeads).replace(/,/g, '');
-        const parsedLeads = Number(cleanValue);
+        const cleanValue = String(row.expectedLeads).replace(/,/g, '').trim();
+        console.log(`Cleaned expectedLeads value: "${cleanValue}"`);
         
-        if (!isNaN(parsedLeads)) {
-          expectedLeads = parsedLeads;
-          console.log(`Parsed expectedLeads: ${expectedLeads}`);
-        } else {
-          warnings.push(`Row ${index + 2}: Expected Leads "${row.expectedLeads}" could not be parsed as a number.`);
-          expectedLeads = "";
+        // Convert to number only if it's a valid number
+        if (cleanValue !== "") {
+          const parsedLeads = Number(cleanValue);
+          
+          if (!isNaN(parsedLeads)) {
+            expectedLeads = parsedLeads;
+            console.log(`Parsed expectedLeads: ${expectedLeads}, type: ${typeof expectedLeads}`);
+          } else {
+            warnings.push(`Row ${index + 2}: Expected Leads "${row.expectedLeads}" could not be parsed as a number.`);
+            expectedLeads = "";
+          }
         }
       }
       
       // Process actual metrics
       if (row.actualCost !== undefined && row.actualCost !== "") {
-        const cleanValue = String(row.actualCost).replace(/[$,]/g, '');
-        const parsedActualCost = Number(cleanValue);
+        const cleanValue = String(row.actualCost).replace(/[$,]/g, '').trim();
+        console.log(`Cleaned actualCost value: "${cleanValue}"`);
         
-        if (!isNaN(parsedActualCost)) {
-          actualCost = parsedActualCost;
-        } else {
-          warnings.push(`Row ${index + 2}: Actual Cost "${row.actualCost}" could not be parsed as a number.`);
-          actualCost = "";
+        if (cleanValue !== "") {
+          const parsedActualCost = Number(cleanValue);
+          
+          if (!isNaN(parsedActualCost)) {
+            actualCost = parsedActualCost;
+            console.log(`Parsed actualCost: ${actualCost}, type: ${typeof actualCost}`);
+          } else {
+            warnings.push(`Row ${index + 2}: Actual Cost "${row.actualCost}" could not be parsed as a number.`);
+            actualCost = "";
+          }
         }
       }
       
       if (row.actualLeads !== undefined && row.actualLeads !== "") {
-        const cleanValue = String(row.actualLeads).replace(/,/g, '');
-        const parsedActualLeads = Number(cleanValue);
+        const cleanValue = String(row.actualLeads).replace(/,/g, '').trim();
+        console.log(`Cleaned actualLeads value: "${cleanValue}"`);
         
-        if (!isNaN(parsedActualLeads)) {
-          actualLeads = parsedActualLeads;
-        } else {
-          warnings.push(`Row ${index + 2}: Actual Leads "${row.actualLeads}" could not be parsed as a number.`);
-          actualLeads = "";
+        if (cleanValue !== "") {
+          const parsedActualLeads = Number(cleanValue);
+          
+          if (!isNaN(parsedActualLeads)) {
+            actualLeads = parsedActualLeads;
+            console.log(`Parsed actualLeads: ${actualLeads}, type: ${typeof actualLeads}`);
+          } else {
+            warnings.push(`Row ${index + 2}: Actual Leads "${row.actualLeads}" could not be parsed as a number.`);
+            actualLeads = "";
+          }
         }
       }
       
       if (row.actualMQLs !== undefined && row.actualMQLs !== "") {
-        const cleanValue = String(row.actualMQLs).replace(/,/g, '');
-        const parsedActualMQLs = Number(cleanValue);
+        const cleanValue = String(row.actualMQLs).replace(/,/g, '').trim();
+        console.log(`Cleaned actualMQLs value: "${cleanValue}"`);
         
-        if (!isNaN(parsedActualMQLs)) {
-          actualMQLs = parsedActualMQLs;
-        } else {
-          warnings.push(`Row ${index + 2}: Actual MQLs "${row.actualMQLs}" could not be parsed as a number.`);
-          actualMQLs = "";
+        if (cleanValue !== "") {
+          const parsedActualMQLs = Number(cleanValue);
+          
+          if (!isNaN(parsedActualMQLs)) {
+            actualMQLs = parsedActualMQLs;
+            console.log(`Parsed actualMQLs: ${actualMQLs}, type: ${typeof actualMQLs}`);
+          } else {
+            warnings.push(`Row ${index + 2}: Actual MQLs "${row.actualMQLs}" could not be parsed as a number.`);
+            actualMQLs = "";
+          }
         }
       }
       

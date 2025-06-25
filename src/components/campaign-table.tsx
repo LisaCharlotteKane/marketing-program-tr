@@ -466,41 +466,94 @@ export function CampaignTable({
         
         // Convert numeric fields to actual numbers if they're strings
         if (typeof processed.forecastedCost === 'string' && processed.forecastedCost !== '') {
-          processed.forecastedCost = parseFloat(processed.forecastedCost);
+          const parsedCost = parseFloat(processed.forecastedCost);
+          if (!isNaN(parsedCost)) {
+            processed.forecastedCost = parsedCost;
+            console.log(`Converted forecastedCost string to number: ${parsedCost}`);
+          }
         }
         
         if (typeof processed.expectedLeads === 'string' && processed.expectedLeads !== '') {
-          processed.expectedLeads = parseFloat(processed.expectedLeads);
+          const parsedLeads = parseFloat(processed.expectedLeads);
+          if (!isNaN(parsedLeads)) {
+            processed.expectedLeads = parsedLeads;
+            console.log(`Converted expectedLeads string to number: ${parsedLeads}`);
+          }
         }
         
         if (typeof processed.actualCost === 'string' && processed.actualCost !== '') {
-          processed.actualCost = parseFloat(processed.actualCost);
+          const parsedActualCost = parseFloat(processed.actualCost);
+          if (!isNaN(parsedActualCost)) {
+            processed.actualCost = parsedActualCost;
+            console.log(`Converted actualCost string to number: ${parsedActualCost}`);
+          }
         }
         
         if (typeof processed.actualLeads === 'string' && processed.actualLeads !== '') {
-          processed.actualLeads = parseFloat(processed.actualLeads);
+          const parsedActualLeads = parseFloat(processed.actualLeads);
+          if (!isNaN(parsedActualLeads)) {
+            processed.actualLeads = parsedActualLeads;
+            console.log(`Converted actualLeads string to number: ${parsedActualLeads}`);
+          }
         }
         
         if (typeof processed.actualMQLs === 'string' && processed.actualMQLs !== '') {
-          processed.actualMQLs = parseFloat(processed.actualMQLs);
+          const parsedActualMQLs = parseFloat(processed.actualMQLs);
+          if (!isNaN(parsedActualMQLs)) {
+            processed.actualMQLs = parsedActualMQLs;
+            console.log(`Converted actualMQLs string to number: ${parsedActualMQLs}`);
+          }
+        }
+        
+        // Ensure all calculated fields are numbers (not strings)
+        if (typeof processed.mql === 'string') {
+          processed.mql = parseFloat(processed.mql) || 0;
+        }
+        
+        if (typeof processed.sql === 'string') {
+          processed.sql = parseFloat(processed.sql) || 0;
+        }
+        
+        if (typeof processed.opportunities === 'string') {
+          processed.opportunities = parseFloat(processed.opportunities) || 0;
+        }
+        
+        if (typeof processed.pipelineForecast === 'string') {
+          processed.pipelineForecast = parseFloat(processed.pipelineForecast) || 0;
         }
         
         // Handle special case for In-Account Events with no leads
         if (processed.campaignType === "In-Account Events (1:1)" && 
-            (!processed.expectedLeads || processed.expectedLeads === 0) && 
+            (!processed.expectedLeads || processed.expectedLeads === 0 || processed.expectedLeads === "") && 
             typeof processed.forecastedCost === 'number' && processed.forecastedCost > 0) {
           // Calculate pipeline based on 20:1 ROI
           processed.pipelineForecast = processed.forecastedCost * 20;
+          processed.mql = 0;
+          processed.sql = 0;
+          processed.opportunities = 0;
+          console.log(`Applied 20:1 ROI for In-Account Events: ${processed.forecastedCost} * 20 = ${processed.pipelineForecast}`);
         } else if (typeof processed.expectedLeads === 'number' && processed.expectedLeads > 0) {
           // Standard calculation for campaigns with leads
           processed.mql = Math.round(processed.expectedLeads * 0.1);
           processed.sql = Math.round(processed.expectedLeads * 0.06);
           processed.opportunities = Math.round(processed.sql * 0.8);
           processed.pipelineForecast = processed.opportunities * 50000;
+          console.log(`Applied standard ROI calculation: ${processed.expectedLeads} leads → ${processed.pipelineForecast} pipeline`);
         }
         
         return processed;
       });
+      
+      // Final debug check of processed campaigns
+      console.log("Final processed campaigns sample:", processedCampaigns.slice(0, 2).map(c => ({
+        id: c.id,
+        campaignName: c.campaignName,
+        forecastedCost: c.forecastedCost,
+        typeForecastedCost: typeof c.forecastedCost,
+        expectedLeads: c.expectedLeads,
+        typeExpectedLeads: typeof c.expectedLeads,
+        pipelineForecast: c.pipelineForecast
+      })));
       
       setCampaigns((prevCampaigns) => [...prevCampaigns, ...processedCampaigns]);
       setIsImportDialogOpen(false);

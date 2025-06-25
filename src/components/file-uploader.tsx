@@ -46,9 +46,46 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
             expectedLeads: c.expectedLeads,
             typeForecastedCost: typeof c.forecastedCost,
             typeExpectedLeads: typeof c.expectedLeads,
-            strategicPillars: c.strategicPillars
+            strategicPillars: c.strategicPillars,
+            calculatedMql: c.mql,
+            calculatedSql: c.sql,
+            calculatedOpps: c.opportunities,
+            calculatedPipeline: c.pipelineForecast
           }))
         });
+        
+        // Check for any numeric field issues before passing to parent component
+        const checkNumericIssues = campaigns.some(c => 
+          (c.forecastedCost === undefined || c.forecastedCost === null) ||
+          (c.expectedLeads === undefined || c.expectedLeads === null) ||
+          (typeof c.forecastedCost === 'string' && c.forecastedCost !== "") ||
+          (typeof c.expectedLeads === 'string' && c.expectedLeads !== "")
+        );
+        
+        if (checkNumericIssues) {
+          console.warn("Potential numeric field issues detected in imported campaigns");
+          
+          // Try to correct any string numeric values one more time
+          campaigns.forEach(campaign => {
+            // Fix forecastedCost if it's a string but should be a number
+            if (typeof campaign.forecastedCost === 'string' && campaign.forecastedCost !== "") {
+              const parsedCost = parseFloat(campaign.forecastedCost);
+              if (!isNaN(parsedCost)) {
+                campaign.forecastedCost = parsedCost;
+                console.log(`Fixed forecastedCost for ${campaign.campaignName}: ${parsedCost}`);
+              }
+            }
+            
+            // Fix expectedLeads if it's a string but should be a number
+            if (typeof campaign.expectedLeads === 'string' && campaign.expectedLeads !== "") {
+              const parsedLeads = parseFloat(campaign.expectedLeads);
+              if (!isNaN(parsedLeads)) {
+                campaign.expectedLeads = parsedLeads;
+                console.log(`Fixed expectedLeads for ${campaign.campaignName}: ${parsedLeads}`);
+              }
+            }
+          });
+        }
         
         // Show validation errors if any
         if (errors.length > 0) {
