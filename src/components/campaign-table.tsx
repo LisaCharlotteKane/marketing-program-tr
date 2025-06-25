@@ -703,10 +703,10 @@ export function CampaignTable({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <MagnifyingGlass className="h-3.5 w-3.5 text-muted-foreground" />
+                            <MagnifyingGlass className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
                           </TooltipTrigger>
                           <TooltipContent side="bottom">
-                            <p className="text-xs">Click the magnifying glass to view long descriptions</p>
+                            <p className="text-xs">Hover over text to view full description</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -923,62 +923,21 @@ export function CampaignTable({
                 </TableCell>
                 
                 {/* Description */}
-                <TableCell>
-                  <div className="relative w-full max-w-[200px]">
-                    <div className="relative">
-                      {/* Text input for description */}
-                      <Input
-                        type="text"
-                        value={campaign.description || ""}
-                        onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
-                        placeholder="Enter description"
-                        className="w-full truncate pr-8"
-                        disabled={isCampaignComplete(campaign)}
-                        title={campaign.description} // Show full text on hover
-                      />
-                    </div>
-                    
-                    {/* View dialog for long descriptions */}
-                    {campaign.description && campaign.description.length > 30 && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-primary hover:bg-accent/30"
-                            aria-label="View full description"
-                          >
-                            <MagnifyingGlass className="h-3.5 w-3.5" />
-                          </Button>
-                        </DialogTrigger>
-                        
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>
-                              {campaign.campaignName || 'Campaign Description'}
-                            </DialogTitle>
-                            <DialogDescription>
-                              {campaign.campaignType} • {campaign.region} • {campaign.owner}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="py-4">
-                            <Textarea 
-                              value={campaign.description}
-                              readOnly
-                              className="min-h-[200px] resize-none focus-visible:ring-0 border-0 bg-muted/30"
-                            />
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                    
-                    {/* Character count indicator */}
-                    {campaign.description && campaign.description.length > 30 && (
-                      <div className="absolute right-8 bottom-1 text-[10px] text-muted-foreground">
-                        {campaign.description.length}
-                      </div>
-                    )}
-                  </div>
+                <TableCell className="max-w-xs truncate" title={campaign.description}>
+                  {isCampaignComplete(campaign) ? (
+                    <span className="cursor-help">
+                      {campaign.description || "-"}
+                    </span>
+                  ) : (
+                    <Input
+                      type="text"
+                      value={campaign.description || ""}
+                      onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
+                      placeholder="Enter description"
+                      className="w-full cursor-help"
+                      title={campaign.description}
+                    />
+                  )}
                 </TableCell>
                 
                 {/* Forecasted Cost */}
