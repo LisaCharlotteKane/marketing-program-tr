@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -34,8 +34,6 @@ import { Button } from "@/components/ui/button"
 import { calculateRegionalMetrics } from "@/services/budget-service"
 import { PrimerHeader } from "@/components/primer/header"
 import { ErrorBoundary } from "@/components/error-boundary"
-
-
 
 function App() {
   // Form state

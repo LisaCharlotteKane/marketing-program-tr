@@ -318,11 +318,11 @@ export function ExecutionTracking({
             <h4 className="text-lg font-semibold mb-2">No campaigns match your filters</h4>
             <p className="text-sm text-muted-foreground mb-4">Try changing your filter criteria or add new campaigns</p>
               <ClearFiltersButton 
-              onClick={clearAllFilters}
-              className="mx-auto" 
-            >
-              <FilterX className="h-3.5 w-3.5 mr-1" /> Clear Filters
-            </ClearFiltersButton>
+                onClick={clearAllFilters}
+                className="mx-auto" 
+              >
+                <FilterX className="h-3.5 w-3.5 mr-1" /> Clear Filters
+              </ClearFiltersButton>
           </div>
         ) : (
           <div className="rounded-md border overflow-auto max-h-[calc(100vh-24rem)] bg-card">

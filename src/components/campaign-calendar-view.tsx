@@ -435,7 +435,6 @@ export function CampaignCalendarView({ campaigns = [] }) {
             </div>
           )}
         </div>
-        </div>
         
         {/* Legend */}
         <div className="mt-8 border-t pt-4">
