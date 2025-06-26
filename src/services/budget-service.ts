@@ -23,11 +23,33 @@ export function getBudgetByRegion(region: string): number {
   return budgetMap[region] || 0;
 }
 
+/**
+ * Calculate budget metrics for a region
+ * 
+ * Important: Budget deduction is based on campaign owner, not the campaign's region.
+ * This means:
+ * - A campaign's cost impacts the budget of the owner's assigned region
+ * - Each region has a designated owner:
+ *   - "Tomoko Tanaka" → "JP & Korea" = $358,000
+ *   - "Beverly Leung" → "South APAC" = $385,500
+ *   - "Shruti Narang" → "SAARC" = $265,000
+ *   - "Giorgia Parham" → "Digital Motions" = $68,000
+ * - All campaigns are flagged as either budgetImpacting or nonBudgetImpacting in App.tsx
+ * 
+ * @param regionalBudgets - All regional budget data
+ * @param region - The region to calculate metrics for
+ * @returns Budget metrics for the specified region
+ */
 export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, region: string) {
   const regionData = regionalBudgets[region] || { programs: [], assignedBudget: "" };
   
-  // Filter out non-budget impacting programs (only count programs by the region owner)
-  const budgetPrograms = regionData.programs.filter(program => !program.nonBudgetImpacting);
+  // Budget deduction logic is now based strictly on owner, not region
+  // For budget tracking, we only count programs owned by the region's owner
+  // The nonBudgetImpacting flag is set in App.tsx when programs are assigned to regions
+  const budgetPrograms = regionData.programs.filter(program => {
+    // A program is budget-impacting if it belongs to the region's owner
+    return !program.nonBudgetImpacting;
+  });
   
   // Calculate total forecasted cost for budget-impacting programs
   const totalForecasted = budgetPrograms.reduce(

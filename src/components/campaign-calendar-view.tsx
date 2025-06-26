@@ -94,7 +94,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
   const [statusFilter, setStatusFilter] = useState("_all");
   const [fiscalYearFilter, setFiscalYearFilter] = useState("_all");
 
-  // Get unique values for filters - exclude contractor campaigns from type options as they're filtered out
+  // Get unique values for filters - exclude contractor campaigns from type options
   const regions = ["_all", ...new Set(campaigns.map(c => normalizeRegionName(c.region)))].filter(Boolean);
   const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
   const types = ["_all", ...new Set(campaigns
@@ -106,7 +106,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
 
   // Apply filters
   const filteredCampaigns = campaigns.filter(campaign => {
-    // First, exclude Contractor campaigns
+    // First, exclude Contractor campaigns - they should not appear in calendar view at all
     if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
       return false;
     }
@@ -206,6 +206,17 @@ export function CampaignCalendarView({ campaigns = [] }) {
     const quarterMonths = FISCAL_YEAR_MONTHS.slice(startIdx, endIdx);
     return quarterMonths.some(month => (campaignsByMonth[month] || []).length > 0);
   };
+  
+  // Testing the filtering of contractor campaigns
+  const hasContractorCampaigns = campaigns.some(c => 
+    (c.campaignType === "Contractor" || c.campaignType === "Contractor/Infrastructure") &&
+    filteredCampaigns.includes(c)
+  );
+  
+  // If somehow contractor campaigns made it through our filter, log an error
+  if (hasContractorCampaigns) {
+    console.error("Contractor campaigns incorrectly showing in calendar view!");
+  }
 
   return (
     <Card className="border shadow-sm">
@@ -215,7 +226,9 @@ export function CampaignCalendarView({ campaigns = [] }) {
         </CardTitle>
         <CardDescription>
           View campaigns organized by {fiscalYearFilter === "_all" ? "fiscal year" : `${fiscalYearFilter} (July to June)`}
-          <span className="block text-xs mt-1">Note: Contractor/Infrastructure campaigns are excluded from this view</span>
+          <span className="block text-xs mt-1">
+            Note: Contractor/Infrastructure campaigns are excluded from this view
+          </span>
         </CardDescription>
       </CardHeader>
       
