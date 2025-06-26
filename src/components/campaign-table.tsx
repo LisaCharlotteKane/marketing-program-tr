@@ -664,7 +664,14 @@ export function CampaignTable({
             campaigns.forEach(campaign => {
               const owner = campaign.owner;
               if (!owner || !OWNER_TO_REGION_MAP[owner]) return;
+              
+              // Skip contractor campaigns for budget allocation
+              if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
+                return;
               }
+              
+              const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
+              existingCostByOwner[owner] = (existingCostByOwner[owner] || 0) + forecastedCost;
             });
             
             // Check each imported campaign for budget impact
