@@ -34,7 +34,7 @@ export const OWNER_TO_REGION_MAP: Record<string, string> = {
 };
 
 // Default regional budgets - set as per management directive
-const DEFAULT_BUDGETS: RegionalBudgets = {
+export const DEFAULT_BUDGETS: RegionalBudgets = {
   "JP & Korea": {
     assignedBudget: 358000,
     programs: [],

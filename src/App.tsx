@@ -27,7 +27,7 @@ import { Avatar } from "@/components/avatar"
 import { ThemeSwitch } from "@/components/theme-switch"
 import { Toaster, toast } from "sonner"
 import { useEnhancedCampaigns } from "@/hooks/useEnhancedCampaigns"
-import { useRegionalBudgets, RegionalBudget, RegionalBudgets } from "@/hooks/useRegionalBudgets"
+import { useRegionalBudgets, RegionalBudget, RegionalBudgets, DEFAULT_BUDGETS } from "@/hooks/useRegionalBudgets"
 import { runDataMigrations } from "@/services/migration-service"
 import { initAutoGitHubSync } from "@/services/auto-github-sync"
 import { Button } from "@/components/ui/button"
@@ -50,6 +50,9 @@ function App() {
 
   // Run data migrations on initial load
   useEffect(() => {
+    // Reset regional budgets to ensure correct owner mappings
+    setRegionalBudgets(DEFAULT_BUDGETS);
+    
     runDataMigrations().catch(error => {
       console.error("Failed to run data migrations:", error);
       // Continue anyway - don't let this block the app
@@ -177,7 +180,17 @@ function App() {
   const updateRegionalProgramData = useCallback(() => {
     if (!selectedRegion || typeof forecastedCost !== 'number') return;
 
+    // Ensure the default budget settings are properly applied
+    const updatedBudgets = { ...regionalBudgets };
+    
+    // Make sure owner names are correctly assigned
+    updatedBudgets["JP & Korea"].ownerName = "Tomoko Tanaka";
+    updatedBudgets["South APAC"].ownerName = "Beverly Leung";
+    updatedBudgets["SAARC"].ownerName = "Shruti Narang";
+    updatedBudgets["Digital Motions"].ownerName = "Giorgia Parham";
+    
     setRegionalBudgets(prev => {
+      const merged = { ...updatedBudgets };
       const currentPrograms = [...prev[selectedRegion].programs];
       
       // Find if the current program already exists
@@ -200,14 +213,14 @@ function App() {
       }
       
       return {
-        ...prev,
+        ...merged,
         [selectedRegion]: {
-          ...prev[selectedRegion],
+          ...merged[selectedRegion],
           programs: currentPrograms
         }
       };
     });
-  }, [programId, selectedRegion, forecastedCost, setRegionalBudgets]);
+  }, [programId, selectedRegion, forecastedCost, setRegionalBudgets, regionalBudgets]);
 
   // Calculate derived metrics whenever inputs change
   useEffect(() => {
@@ -451,10 +464,13 @@ function App() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={budgetStatus.resetToDefaults}
+                      onClick={() => {
+                        setRegionalBudgets(DEFAULT_BUDGETS);
+                        toast.success("Regional budgets and owners reset to defaults");
+                      }}
                       className="flex items-center gap-1 text-xs"
                     >
-                      <ArrowClockwise className="h-3 w-3" /> Reset All
+                      <ArrowClockwise className="h-3 w-3" /> Reset Budgets & Owners
                     </Button>
                     <BudgetSaveIndicator 
                       className="ml-2" 
