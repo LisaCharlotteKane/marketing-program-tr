@@ -146,6 +146,13 @@ export function ExecutionTracking({
     }
   });
   
+  // Function to refresh the component
+  const refreshComponent = () => {
+    // Force a re-render of the component and reload data
+    setCampaigns([...campaigns]);
+    toast.success("Campaign execution data refreshed");
+  };
+
   // Function to clear all filters
   const clearAllFilters = () => {
     setRegionFilter("_all");
@@ -218,7 +225,17 @@ export function ExecutionTracking({
               <FilterX className="h-4 w-4 text-muted-foreground" />
               Filter Campaigns
             </h4>
-            <ClearFiltersButton onClick={clearAllFilters} />
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={refreshComponent}
+                className="flex items-center gap-1 text-xs"
+              >
+                <ArrowClockwise className="h-3.5 w-3.5" /> Refresh Data
+              </Button>
+              <ClearFiltersButton onClick={clearAllFilters} />
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>

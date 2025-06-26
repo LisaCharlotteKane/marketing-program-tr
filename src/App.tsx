@@ -246,6 +246,49 @@ function App() {
     }
   }, [expectedLeads])
 
+  // Force refresh all regional budget data
+  const forceRefreshBudgetData = () => {
+    // Create a fresh copy of budgets with correct owner mappings
+    const refreshedBudgets = { ...regionalBudgets };
+    
+    // Update owner names based on the official mapping
+    refreshedBudgets["JP & Korea"].ownerName = "Tomoko Tanaka";
+    refreshedBudgets["South APAC"].ownerName = "Beverly Leung";
+    refreshedBudgets["SAARC"].ownerName = "Shruti Narang";
+    refreshedBudgets["Digital Motions"].ownerName = "Giorgia Parham";
+    
+    // Make sure assigned budgets match default values if they were changed
+    if (refreshedBudgets["JP & Korea"].assignedBudget !== 358000) {
+      refreshedBudgets["JP & Korea"].assignedBudget = 358000;
+    }
+    
+    if (refreshedBudgets["South APAC"].assignedBudget !== 385500) {
+      refreshedBudgets["South APAC"].assignedBudget = 385500;
+    }
+    
+    if (refreshedBudgets["SAARC"].assignedBudget !== 265000) {
+      refreshedBudgets["SAARC"].assignedBudget = 265000;
+    }
+    
+    if (refreshedBudgets["Digital Motions"].assignedBudget !== 68000) {
+      refreshedBudgets["Digital Motions"].assignedBudget = 68000;
+    }
+    
+    // Ensure X APAC regions have 0 budget as they don't need assignment
+    refreshedBudgets["X APAC English"].assignedBudget = 0;
+    refreshedBudgets["X APAC Non English"].assignedBudget = 0;
+    
+    // Update state with refreshed data
+    setRegionalBudgets(refreshedBudgets);
+    toast.success("Budget data refreshed with correct owner mappings and values");
+    
+    // Recalculate campaign associations
+    setTimeout(() => {
+      // This triggers the campaign processing useEffect
+      setCampaigns([...campaigns]);
+    }, 100);
+  }
+
   // Update regional program data when forecasted cost changes
   const previousForecastedCostRef = useRef(forecastedCost);
   const previousSelectedRegionRef = useRef(selectedRegion);
@@ -460,7 +503,7 @@ function App() {
                       <LockKey className="h-3 w-3" /> Admin-locked budgets cannot be modified
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                  <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -469,14 +512,37 @@ function App() {
                         toast.success("Regional budgets and owners reset to defaults");
                       }}
                       className="flex items-center gap-1 text-xs"
+                      title="Reset budgets and owner mappings to default values"
                     >
-                      <ArrowClockwise className="h-3 w-3" /> Reset Budgets & Owners
+                      <ArrowClockwise className="h-3 w-3" /> Reset Budgets
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={forceRefreshBudgetData}
+                      className="flex items-center gap-1 text-xs"
+                      title="Force update budget owner mappings without reloading the page"
+                    >
+                      <ArrowClockwise className="h-3 w-3" /> Force Refresh
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        window.location.reload();
+                        toast.success("Page refreshed to show latest budget changes");
+                      }}
+                      className="flex items-center gap-1 text-xs"
+                      title="Reload the page to ensure all data is fresh"
+                    >
+                      <ArrowClockwise className="h-3 w-3" /> Refresh Page
                     </Button>
                     <BudgetSaveIndicator 
-                      className="ml-2" 
+                      className="mt-2 sm:mt-0 sm:ml-2" 
                       lastSaved={budgetStatus.lastSaved}
                       isSaving={budgetStatus.isSaving}
                     />
+                      </div>
                   </div>
                 </CardDescription>
               </CardHeader>
@@ -513,8 +579,32 @@ function App() {
                             )}
                           </h3>
                           {regionalBudgets[region]?.ownerName && (
-                            <p className="text-sm font-medium text-primary">
+                            <p className="text-sm font-medium text-primary flex items-center gap-1">
                               Owner: {regionalBudgets[region]?.ownerName}
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-6 w-6 p-0 ml-1" 
+                                onClick={() => {
+                                  // Force refresh owner data for this region
+                                  const updatedBudgets = { ...regionalBudgets };
+                                  const regionName = region;
+                                  const ownerMap = {
+                                    "JP & Korea": "Tomoko Tanaka",
+                                    "South APAC": "Beverly Leung",
+                                    "SAARC": "Shruti Narang",
+                                    "Digital Motions": "Giorgia Parham"
+                                  };
+                                  
+                                  if (ownerMap[regionName]) {
+                                    updatedBudgets[regionName].ownerName = ownerMap[regionName];
+                                    setRegionalBudgets(updatedBudgets);
+                                    toast.success(`Updated owner for ${regionName} to ${ownerMap[regionName]}`);
+                                  }
+                                }}
+                              >
+                                <ArrowClockwise className="h-3 w-3" />
+                              </Button>
                             </p>
                           )}
                           <p className="text-sm text-muted-foreground">

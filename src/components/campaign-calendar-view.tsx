@@ -93,6 +93,11 @@ export function CampaignCalendarView({ campaigns = [] }) {
   const [playFilter, setPlayFilter] = useState("_all");
   const [statusFilter, setStatusFilter] = useState("_all");
   const [fiscalYearFilter, setFiscalYearFilter] = useState("_all");
+  
+  // Function to refresh the calendar view
+  const refreshCalendarView = () => {
+    window.location.reload();
+  };
 
   // Get unique values for filters - exclude contractor campaigns from type options
   const regions = ["_all", ...new Set(campaigns.map(c => normalizeRegionName(c.region)))].filter(Boolean);
@@ -221,9 +226,19 @@ export function CampaignCalendarView({ campaigns = [] }) {
   return (
     <Card className="border shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <Calendar className="h-5 w-5" /> Campaign Calendar View
-        </CardTitle>
+        <div className="flex justify-between items-start">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Calendar className="h-5 w-5" /> Campaign Calendar View
+          </CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshCalendarView}
+            className="flex items-center gap-1 text-xs"
+          >
+            <ArrowsClockwise className="h-3.5 w-3.5" /> Refresh Calendar
+          </Button>
+        </div>
         <CardDescription>
           View campaigns organized by {fiscalYearFilter === "_all" ? "fiscal year" : `${fiscalYearFilter} (July to June)`}
           <span className="block text-xs mt-1">
