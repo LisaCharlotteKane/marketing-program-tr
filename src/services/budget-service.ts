@@ -1,10 +1,14 @@
 import { RegionalBudgets } from "@/hooks/useRegionalBudgets";
 import { OWNER_TO_REGION_MAP } from "@/hooks/useRegionalBudgets";
 
+/**
+ * Gets the budget region and amount for a specific owner
+ * @param owner The campaign owner's name
+ * @returns Object with region and budget amount
+ */
 export function getOwnerInfo(owner: string) {
   // Find the region associated with this owner
-  const ownerRegion = Object.entries(OWNER_TO_REGION_MAP)
-    .find(([ownerName]) => ownerName === owner)?.[1];
+  const ownerRegion = OWNER_TO_REGION_MAP[owner];
     
   return {
     region: ownerRegion,
@@ -12,12 +16,19 @@ export function getOwnerInfo(owner: string) {
   };
 }
 
+/**
+ * Gets the assigned budget amount for a given region
+ * @param region The region name
+ * @returns The budget amount assigned to this region
+ */
 export function getBudgetByRegion(region: string): number {
   const budgetMap: Record<string, number> = {
     "JP & Korea": 358000,
     "South APAC": 385500,
     "SAARC": 265000,
-    "Digital Motions": 68000
+    "Digital Motions": 68000,
+    "X APAC English": 0,
+    "X APAC Non English": 0
   };
   
   return budgetMap[region] || 0;
@@ -48,8 +59,16 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
   // For budget tracking, we only count programs owned by the region's owner
   // The nonBudgetImpacting flag is set in App.tsx when programs are assigned to regions
   const budgetPrograms = regionData.programs.filter(program => {
+    // Skip if explicitly marked as non-budget impacting
+    if (program.nonBudgetImpacting) return false;
+    
+    // Skip contractor/infrastructure programs
+    if (program.campaignType === "Contractor" || program.campaignType === "Contractor/Infrastructure") {
+      return false;
+    }
+    
     // A program is budget-impacting if it belongs to the region's owner
-    return !program.nonBudgetImpacting;
+    return true;
   });
   
   // Calculate total forecasted cost for budget-impacting programs
@@ -83,6 +102,19 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
   // Only flag as exceeded if overage is greater than $500
   const forecastedExceedsBudget = forecastedOverage > 500;
   const actualExceedsBudget = actualOverage > 500;
+  
+  return {
+    totalForecasted,
+    totalActual,
+    assignedBudget,
+    forecastedPercent,
+    actualPercent,
+    forecastedExceedsBudget,
+    actualExceedsBudget,
+    forecastedOverage,
+    actualOverage
+  };
+}
   
   return {
     totalForecasted,

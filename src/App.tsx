@@ -364,6 +364,7 @@ function App() {
       
       // Skip contractor campaigns for budget allocation
       if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
+        console.log(`Skipping contractor campaign for budget: ${campaign.id} - ${campaign.description}`);
         return;
       }
       
@@ -376,7 +377,8 @@ function App() {
           id: campaign.id,
           forecastedCost: typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0,
           actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 0,
-          owner: owner
+          owner: owner,
+          campaignType: campaign.campaignType // Store campaign type for contractor filtering
         });
       }
     });
@@ -413,7 +415,8 @@ function App() {
               // These won't count against budget since they're not from the region's owner
               updated[campaignObj.region].programs.push({
                 ...campaign,
-                nonBudgetImpacting: true // Flag as non-budget impacting
+                nonBudgetImpacting: true, // Flag as non-budget impacting
+                campaignType: campaignObj.campaignType // Include campaign type for filtering
               });
             }
           });

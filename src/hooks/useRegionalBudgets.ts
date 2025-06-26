@@ -9,6 +9,8 @@ export interface RegionalBudget {
     forecastedCost: number;
     actualCost: number;
     owner?: string; // Track owner at the program level
+    nonBudgetImpacting?: boolean; // Flag for programs that don't impact budget
+    campaignType?: string; // Store campaign type to filter out contractor campaigns
   }[];
   lockedByOwner?: boolean;
   lockedTimestamp?: number;
