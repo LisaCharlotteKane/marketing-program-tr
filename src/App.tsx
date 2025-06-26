@@ -543,9 +543,8 @@ function App() {
                       isSaving={budgetStatus.isSaving}
                     />
                       </div>
-                  </div>
-                </CardDescription>
-              </CardHeader>
+                  </CardDescription>
+                </CardHeader>
 
               <CardContent className="space-y-6">
                 {regions.map(region => {
