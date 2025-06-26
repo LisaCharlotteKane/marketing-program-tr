@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { normalizeRegionName } from "@/lib/utils";
+import { normalizeRegionName, isContractorCampaign } from "@/lib/utils";
 
 // Fiscal year months (July to June)
 const FISCAL_YEAR_MONTHS = [
@@ -103,7 +103,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
   const regions = ["_all", ...new Set(campaigns.map(c => normalizeRegionName(c.region)))].filter(Boolean);
   const owners = ["_all", ...new Set(campaigns.map(c => c.owner))].filter(Boolean);
   const types = ["_all", ...new Set(campaigns
-    .filter(c => c.campaignType !== "Contractor" && c.campaignType !== "Contractor/Infrastructure")
+    .filter(c => !isContractorCampaign(c))
     .map(c => c.campaignType))].filter(Boolean);
   const plays = ["_all", ...new Set(campaigns.map(c => c.revenuePlay))].filter(Boolean);
   const statuses = ["_all", "Planning", "On Track", "Shipped", "Cancelled"];
@@ -112,7 +112,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
   // Apply filters
   const filteredCampaigns = campaigns.filter(campaign => {
     // First, exclude Contractor/Infrastructure campaigns - they should not appear in calendar view at all
-    if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
+    if (isContractorCampaign(campaign)) {
       return false;
     }
     
@@ -214,8 +214,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
   
   // Testing the filtering of contractor campaigns
   const hasContractorCampaigns = campaigns.some(c => 
-    (c.campaignType === "Contractor" || c.campaignType === "Contractor/Infrastructure") &&
-    filteredCampaigns.includes(c)
+    isContractorCampaign(c) && filteredCampaigns.includes(c)
   );
   
   // If somehow contractor campaigns made it through our filter, log an error
@@ -241,8 +240,8 @@ export function CampaignCalendarView({ campaigns = [] }) {
         </div>
         <CardDescription>
           View campaigns organized by {fiscalYearFilter === "_all" ? "fiscal year" : `${fiscalYearFilter} (July to June)`}
-          <span className="block text-xs mt-1">
-            Note: Contractor/Infrastructure campaigns are excluded from the calendar view
+          <span className="block text-xs mt-1 font-medium text-muted-foreground border-l-2 border-muted-foreground/30 pl-2 mt-2">
+            Note: All Contractor/Infrastructure campaigns are automatically excluded from the calendar view
           </span>
         </CardDescription>
       </CardHeader>

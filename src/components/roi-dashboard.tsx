@@ -23,7 +23,7 @@ import { ChartBar, ChartLine, ChartPie, Table, TrendUp, FilterX } from "@phospho
 import { Campaign } from "./campaign-table";
 import { toast } from "sonner";
 import { ClearFiltersButton } from "./clear-filters-button";
-import { normalizeRegionName } from "@/lib/utils";
+import { normalizeRegionName, isContractorCampaign } from "@/lib/utils";
 
 interface ROIDashboardProps {
   campaigns: Campaign[];
@@ -61,10 +61,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
   // Filtering campaigns based on selected filters
   useEffect(() => {
     // First, exclude all Contractor/Infrastructure campaigns from ROI reporting
-    let filtered = campaigns.filter(campaign => 
-      campaign.campaignType !== "Contractor" && 
-      campaign.campaignType !== "Contractor/Infrastructure"
-    );
+    let filtered = campaigns.filter(campaign => !isContractorCampaign(campaign));
 
     if (selectedRegion !== "all") {
       filtered = filtered.filter(campaign => normalizeRegionName(campaign.region) === selectedRegion);

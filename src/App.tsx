@@ -13,6 +13,7 @@ import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, W
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { ROIDashboard } from "@/components/roi-dashboard"
+import { isContractorCampaign } from "@/lib/utils"
 import { CampaignTable, Campaign } from "@/components/campaign-table"
 import { ExecutionTracking } from "@/components/execution-tracking"
 import { CampaignCalendarView } from "@/components/campaign-calendar-view"
@@ -362,8 +363,8 @@ function App() {
     campaigns.forEach(campaign => {
       const owner = campaign.owner;
       
-      // Skip contractor campaigns for budget allocation
-      if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
+      // Skip contractor campaigns for budget allocation using helper function
+      if (isContractorCampaign(campaign)) {
         console.log(`Skipping contractor campaign for budget: ${campaign.id} - ${campaign.description}`);
         return;
       }

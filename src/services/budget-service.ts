@@ -1,5 +1,6 @@
 import { RegionalBudgets } from "@/hooks/useRegionalBudgets";
 import { OWNER_TO_REGION_MAP } from "@/hooks/useRegionalBudgets";
+import { isContractorCampaign } from "@/lib/utils";
 
 /**
  * Gets the budget region and amount for a specific owner
@@ -62,8 +63,8 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
     // Skip if explicitly marked as non-budget impacting
     if (program.nonBudgetImpacting) return false;
     
-    // Skip contractor/infrastructure programs
-    if (program.campaignType === "Contractor" || program.campaignType === "Contractor/Infrastructure") {
+    // Skip contractor/infrastructure programs using the helper function
+    if (isContractorCampaign(program)) {
       return false;
     }
     
@@ -135,11 +136,17 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
   const assignedBudget = ownerBudgets[owner] || 0;
   
   // Filter campaigns by owner, excluding contractor/infrastructure campaigns
-  const ownerCampaigns = campaigns.filter(campaign => 
-    campaign.owner === owner && 
-    campaign.campaignType !== "Contractor" && 
-    campaign.campaignType !== "Contractor/Infrastructure"
-  );
+  const ownerCampaigns = campaigns.filter(campaign => {
+    // Must be owned by this owner
+    if (campaign.owner !== owner) return false;
+    
+    // Skip contractor/infrastructure programs using the helper function
+    if (isContractorCampaign(campaign)) {
+      return false;
+    }
+    
+    return true;
+  });
   
   // Calculate totals from filtered campaigns
   const totalForecasted = ownerCampaigns.reduce(
