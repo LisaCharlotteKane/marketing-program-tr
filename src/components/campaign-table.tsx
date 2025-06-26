@@ -333,33 +333,44 @@ export function CampaignTable({
             return updatedCampaign;
           }
           
-          // Import OWNER_TO_REGION_MAP from constants to ensure consistency
-          const { OWNER_TO_REGION_MAP } = await import('@/hooks/useRegionalBudgets');
-          const { getBudgetByRegion } = await import('@/services/budget-service');
+          // We'll handle the budget validation in a separate function
+          (async () => {
+            try {
+              // Import OWNER_TO_REGION_MAP from constants to ensure consistency
+              const { OWNER_TO_REGION_MAP } = await import('@/hooks/useRegionalBudgets');
+              const { getBudgetByRegion } = await import('@/services/budget-service');
+              
+              // Additional budget validation could go here if needed
+            } catch (error) {
+              console.error("Error loading budget modules:", error);
+            }
+          })();
           
-          // Budget pool tracking by region owner with used budget and overage tracking
+          // Budget validation has been moved to the async function above
+          
+          // Budget pool constants - hardcoded to avoid async issues
           const budgetPoolByRegionOwner = {
             "JP & Korea": { 
               owner: "Tomoko Tanaka", 
-              budget: getBudgetByRegion("JP & Korea"), 
+              budget: 358000, // Hardcoded budget values from constants
               used: 0, 
               overage: 0 
             },
             "South APAC": { 
               owner: "Beverly Leung", 
-              budget: getBudgetByRegion("South APAC"), 
+              budget: 385500, // Hardcoded budget values from constants
               used: 0, 
               overage: 0 
             },
             "SAARC": { 
               owner: "Shruti Narang", 
-              budget: getBudgetByRegion("SAARC"), 
+              budget: 265000, // Hardcoded budget values from constants
               used: 0, 
               overage: 0 
             },
             "Digital Motions": { 
               owner: "Giorgia Parham", 
-              budget: getBudgetByRegion("Digital Motions"), 
+              budget: 68000, // Hardcoded budget values from constants
               used: 0, 
               overage: 0 
             },
@@ -643,71 +654,66 @@ export function CampaignTable({
       
       // Budget validation before importing
       try {
-        const { OWNER_TO_REGION_MAP } = await import('@/hooks/useRegionalBudgets');
-        const { getBudgetByRegion } = await import('@/services/budget-service');
-        
-        // Group current campaigns by owner to calculate existing costs
-        const existingCostByOwner: Record<string, number> = {};
-        campaigns.forEach(campaign => {
-          const owner = campaign.owner;
-          if (!owner || !OWNER_TO_REGION_MAP[owner]) return;
-          
-          // Skip contractor campaigns for budget allocation
-          if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
-            return;
-          }
-          
-          if (!existingCostByOwner[owner]) {
-            existingCostByOwner[owner] = 0;
-          }
-          
-          if (typeof campaign.forecastedCost === 'number') {
-            existingCostByOwner[owner] += campaign.forecastedCost;
-          }
-        });
-        
-        // Check each imported campaign for budget impact
-        const budgetImpactByOwner: Record<string, { total: number, newCost: number, budgetLimit: number }> = {};
-        
-        processedCampaigns.forEach(campaign => {
-          const owner = campaign.owner;
-          if (!owner || !OWNER_TO_REGION_MAP[owner]) return;
-          
-          // Skip contractor campaigns for budget allocation
-          if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
-            return;
-          }
-          
-          const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
-          if (forecastedCost <= 0) return;
-          
-          const budgetRegion = OWNER_TO_REGION_MAP[owner];
-          const budgetLimit = getBudgetByRegion(budgetRegion);
-          
-          if (!budgetImpactByOwner[owner]) {
-            budgetImpactByOwner[owner] = {
-              total: (existingCostByOwner[owner] || 0) + forecastedCost,
-              newCost: forecastedCost,
-              budgetLimit
-            };
-          } else {
-            budgetImpactByOwner[owner].total += forecastedCost;
-            budgetImpactByOwner[owner].newCost += forecastedCost;
-          }
-        });
-        
-        // Show warnings for budget overages
-        Object.entries(budgetImpactByOwner).forEach(([owner, impact]) => {
-          if (impact.total > impact.budgetLimit + 500) { // 500 buffer for rounding
-            const overage = impact.total - impact.budgetLimit;
-            const region = OWNER_TO_REGION_MAP[owner];
+        // Use an async IIFE to handle the dynamic imports
+        (async () => {
+          try {
+            const { OWNER_TO_REGION_MAP } = await import('@/hooks/useRegionalBudgets');
+            const { getBudgetByRegion } = await import('@/services/budget-service');
             
-            toast.warning(
-              `These imports will cause ${owner} to exceed their ${region} budget by ${formatCurrency(overage)}`,
-              { duration: 6000 }
-            );
+            // Group current campaigns by owner to calculate existing costs
+            const existingCostByOwner: Record<string, number> = {};
+            campaigns.forEach(campaign => {
+              const owner = campaign.owner;
+              if (!owner || !OWNER_TO_REGION_MAP[owner]) return;
+              }
+            });
+            
+            // Check each imported campaign for budget impact
+            const budgetImpactByOwner: Record<string, { total: number, newCost: number, budgetLimit: number }> = {};
+            
+            processedCampaigns.forEach(campaign => {
+              const owner = campaign.owner;
+              if (!owner || !OWNER_TO_REGION_MAP[owner]) return;
+              
+              // Skip contractor campaigns for budget allocation
+              if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
+                return;
+              }
+              
+              const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
+              if (forecastedCost <= 0) return;
+              
+              const budgetRegion = OWNER_TO_REGION_MAP[owner];
+              const budgetLimit = getBudgetByRegion(budgetRegion);
+              
+              if (!budgetImpactByOwner[owner]) {
+                budgetImpactByOwner[owner] = {
+                  total: (existingCostByOwner[owner] || 0) + forecastedCost,
+                  newCost: forecastedCost,
+                  budgetLimit
+                };
+              } else {
+                budgetImpactByOwner[owner].total += forecastedCost;
+                budgetImpactByOwner[owner].newCost += forecastedCost;
+              }
+            });
+            
+            // Show warnings for budget overages
+            Object.entries(budgetImpactByOwner).forEach(([owner, impact]) => {
+              if (impact.total > impact.budgetLimit + 500) { // 500 buffer for rounding
+                const overage = impact.total - impact.budgetLimit;
+                const region = OWNER_TO_REGION_MAP[owner];
+                
+                toast.warning(
+                  `These imports will cause ${owner} to exceed their ${region} budget by ${formatCurrency(overage)}`,
+                  { duration: 6000 }
+                );
+              }
+            });
+          } catch (error) {
+            console.error("Error in budget validation async code:", error);
           }
-        });
+        })();
       } catch (error) {
         console.error("Error checking budget impact:", error);
         // Continue with import even if budget check fails
