@@ -115,6 +115,59 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
     actualOverage
   };
 }
+
+/**
+ * Calculate budget metrics for a specific owner
+ * 
+ * @param owner - The owner name to calculate budget metrics for
+ * @param campaigns - Array of campaign objects to calculate metrics from
+ * @returns Budget metrics for the specified owner
+ */
+export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
+  // Get the owner's budget region and assigned budget
+  const ownerBudgets: Record<string, number> = {
+    "Tomoko Tanaka": 358000,
+    "Beverly Leung": 385500,
+    "Shruti Narang": 265000,
+    "Giorgia Parham": 68000
+  };
+
+  const assignedBudget = ownerBudgets[owner] || 0;
+  
+  // Filter campaigns by owner, excluding contractor/infrastructure campaigns
+  const ownerCampaigns = campaigns.filter(campaign => 
+    campaign.owner === owner && 
+    campaign.campaignType !== "Contractor" && 
+    campaign.campaignType !== "Contractor/Infrastructure"
+  );
+  
+  // Calculate totals from filtered campaigns
+  const totalForecasted = ownerCampaigns.reduce(
+    (total, campaign) => total + (parseFloat(campaign.forecastedCost) || 0), 
+    0
+  );
+  
+  const totalActual = ownerCampaigns.reduce(
+    (total, campaign) => total + (parseFloat(campaign.actualCost) || 0), 
+    0
+  );
+  
+  // Calculate percentages if budget is assigned
+  const forecastedPercent = assignedBudget > 0 
+    ? (totalForecasted / assignedBudget) * 100
+    : 0;
+    
+  const actualPercent = assignedBudget > 0
+    ? (totalActual / assignedBudget) * 100
+    : 0;
+  
+  // Determine if forecasted or actual costs exceed budget
+  const forecastedOverage = Math.max(0, totalForecasted - assignedBudget);
+  const actualOverage = Math.max(0, totalActual - assignedBudget);
+  
+  // Only flag as exceeded if overage is greater than $500
+  const forecastedExceedsBudget = forecastedOverage > 500;
+  const actualExceedsBudget = actualOverage > 500;
   
   return {
     totalForecasted,
