@@ -250,7 +250,6 @@ export function CampaignTable({
             { duration: 5000 });
         }
       }
-      }
     } catch (error) {
       console.error("Error checking budget info:", error);
       // Continue with campaign creation even if budget check fails
