@@ -120,7 +120,9 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
   if (typeof campaign.expectedLeads === 'number' && !isNaN(campaign.expectedLeads)) {
     expectedLeads = campaign.expectedLeads;
   } else if (typeof campaign.expectedLeads === 'string' && campaign.expectedLeads !== "") {
-    const parsedLeads = parseFloat(campaign.expectedLeads);
+    // Try to clean the string before parsing
+    const cleanValue = campaign.expectedLeads.replace(/[,\s]/g, '').trim();
+    const parsedLeads = parseFloat(cleanValue);
     if (!isNaN(parsedLeads)) {
       expectedLeads = parsedLeads;
       // Convert the string to a number in the campaign object
@@ -131,7 +133,9 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
   if (typeof campaign.forecastedCost === 'number' && !isNaN(campaign.forecastedCost)) {
     forecastedCost = campaign.forecastedCost;
   } else if (typeof campaign.forecastedCost === 'string' && campaign.forecastedCost !== "") {
-    const parsedCost = parseFloat(campaign.forecastedCost);
+    // Try to clean the string before parsing
+    const cleanValue = campaign.forecastedCost.replace(/[$,\s]/g, '').trim();
+    const parsedCost = parseFloat(cleanValue);
     if (!isNaN(parsedCost)) {
       forecastedCost = parsedCost;
       // Convert the string to a number in the campaign object
@@ -224,8 +228,13 @@ export function processCsvData(csvData: string): {
     // Prevent PapaParse from dropping fields with empty values
     keepEmptyRows: true,
     fastMode: false, // Disable fast mode to ensure accurate parsing
+    comments: "#", // Ignore lines that start with #
+    error: (error) => {
+      console.error("CSV parsing error:", error);
+    }
   });
   console.log("CSV Parsing result headers:", result.meta.fields);
+  console.log("CSV Parsing sample rows:", result.data.slice(0, 2));
   
   const importedCampaigns: Campaign[] = [];
   const errors: string[] = [];
@@ -379,6 +388,10 @@ export function processCsvData(csvData: string): {
             forecastedCost = "";
           }
         }
+      } else {
+        // Explicitly handle empty/undefined cases
+        console.log(`Row ${index + 2}: forecastedCost is empty or undefined`);
+        forecastedCost = "";
       }
       
       // Process expectedLeads - ensure it's a number if provided
@@ -399,6 +412,10 @@ export function processCsvData(csvData: string): {
             expectedLeads = "";
           }
         }
+      } else {
+        // Explicitly handle empty/undefined cases
+        console.log(`Row ${index + 2}: expectedLeads is empty or undefined`);
+        expectedLeads = "";
       }
       
       // Process actual metrics
@@ -476,11 +493,23 @@ export function processCsvData(csvData: string): {
         actualCost: actualCost,
         actualLeads: actualLeads,
         actualMQLs: actualMQLs,
+        // Initialize calculated fields - will be updated by calculateDerivedFields
         mql: 0,
         sql: 0,
         opportunities: 0,
         pipelineForecast: 0
       };
+      
+      // Log the full campaign object before validation for debugging
+      console.log(`Campaign object built for row ${index + 2}:`, {
+        id: campaign.id,
+        campaignName: campaign.campaignName,
+        forecastedCost: campaign.forecastedCost,
+        forecastedCostType: typeof campaign.forecastedCost,
+        expectedLeads: campaign.expectedLeads,
+        expectedLeadsType: typeof campaign.expectedLeads,
+        strategicPillars: campaign.strategicPillars
+      });
       
       // Validate the campaign
       const validationErrors = validateCampaign(campaign, index + 2);

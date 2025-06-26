@@ -34,6 +34,9 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
           return;
         }
         
+        // Debug CSV content start to help diagnose issues
+        console.log("CSV content first 200 chars:", csvContent.substring(0, 200));
+        
         // Process the CSV data using our utility function
         const { campaigns, errors, warnings } = processCsvData(csvContent);
         
@@ -69,20 +72,69 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
           campaigns.forEach(campaign => {
             // Fix forecastedCost if it's a string but should be a number
             if (typeof campaign.forecastedCost === 'string' && campaign.forecastedCost !== "") {
-              const parsedCost = parseFloat(campaign.forecastedCost);
-              if (!isNaN(parsedCost)) {
-                campaign.forecastedCost = parsedCost;
-                console.log(`Fixed forecastedCost for ${campaign.campaignName}: ${parsedCost}`);
+              try {
+                // Try to handle currency formatting or other non-standard formats
+                const cleanedValue = campaign.forecastedCost.replace(/[$,\s]/g, '');
+                const parsedCost = parseFloat(cleanedValue);
+                if (!isNaN(parsedCost)) {
+                  campaign.forecastedCost = parsedCost;
+                  console.log(`Fixed forecastedCost for ${campaign.campaignName}: ${parsedCost}`);
+                }
+              } catch (err) {
+                console.error(`Error parsing forecastedCost: ${campaign.forecastedCost}`, err);
               }
             }
             
             // Fix expectedLeads if it's a string but should be a number
             if (typeof campaign.expectedLeads === 'string' && campaign.expectedLeads !== "") {
-              const parsedLeads = parseFloat(campaign.expectedLeads);
-              if (!isNaN(parsedLeads)) {
-                campaign.expectedLeads = parsedLeads;
-                console.log(`Fixed expectedLeads for ${campaign.campaignName}: ${parsedLeads}`);
+              try {
+                // Try to handle formatting or other non-standard formats
+                const cleanedValue = campaign.expectedLeads.replace(/[,\s]/g, '');
+                const parsedLeads = parseFloat(cleanedValue);
+                if (!isNaN(parsedLeads)) {
+                  campaign.expectedLeads = parsedLeads;
+                  console.log(`Fixed expectedLeads for ${campaign.campaignName}: ${parsedLeads}`);
+                }
+              } catch (err) {
+                console.error(`Error parsing expectedLeads: ${campaign.expectedLeads}`, err);
               }
+            }
+            
+            // Always recalculate derived fields after fixing numeric inputs
+            if ((typeof campaign.forecastedCost === 'number' && !isNaN(campaign.forecastedCost)) || 
+                (typeof campaign.expectedLeads === 'number' && !isNaN(campaign.expectedLeads))) {
+              
+              // Special logic for "In-Account Events (1:1)" campaigns
+              if (campaign.campaignType === "In-Account Events (1:1)") {
+                if (typeof campaign.expectedLeads === 'number' && campaign.expectedLeads > 0) {
+                  // Standard calculation if leads are provided
+                  campaign.mql = Math.round(campaign.expectedLeads * 0.1);
+                  campaign.sql = Math.round(campaign.expectedLeads * 0.06);
+                  campaign.opportunities = Math.round(campaign.sql * 0.8);
+                  campaign.pipelineForecast = campaign.opportunities * 50000;
+                } else if (typeof campaign.forecastedCost === 'number' && campaign.forecastedCost > 0) {
+                  // 20:1 ROI for in-account events with cost but no leads
+                  campaign.mql = 0;
+                  campaign.sql = 0;
+                  campaign.opportunities = 0;
+                  campaign.pipelineForecast = campaign.forecastedCost * 20;
+                }
+              } else if (typeof campaign.expectedLeads === 'number' && campaign.expectedLeads > 0) {
+                // Standard calculation for all other campaign types
+                campaign.mql = Math.round(campaign.expectedLeads * 0.1);
+                campaign.sql = Math.round(campaign.expectedLeads * 0.06);
+                campaign.opportunities = Math.round(campaign.sql * 0.8);
+                campaign.pipelineForecast = campaign.opportunities * 50000;
+              }
+              
+              console.log(`Recalculated derived fields for ${campaign.campaignName}:`, {
+                expectedLeads: campaign.expectedLeads,
+                forecastedCost: campaign.forecastedCost,
+                mql: campaign.mql,
+                sql: campaign.sql,
+                opportunities: campaign.opportunities,
+                pipelineForecast: campaign.pipelineForecast
+              });
             }
           });
         }
@@ -297,7 +349,8 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
 
     // Generate CSV content with comment header
     const csv = Papa.unparse(templateData);
-    const csvWithComments = headerComment + csv;
+    // Insert comment lines at the beginning of the file
+    const csvWithComments = headerComment + "\n\n" + csv;
     const blob = new Blob([csvWithComments], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     
@@ -310,7 +363,9 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
     link.click();
     document.body.removeChild(link);
     
-    toast.success('Template downloaded successfully');
+    toast.success('Template downloaded successfully', {
+      description: 'A CSV template with sample data has been downloaded. Use this as a guide for formatting your import data.'
+    });
   };
 
   const exportToCsv = () => {
