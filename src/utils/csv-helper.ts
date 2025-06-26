@@ -370,106 +370,75 @@ export function processCsvData(csvData: string): {
       let actualLeads: number | string = "";
       let actualMQLs: number | string = "";
       
-      // Process forecastedCost - ensure it's a number if provided
-      if (row.forecastedCost !== undefined && row.forecastedCost !== "") {
-        // Remove any currency symbols or commas that might be in the input
-        const cleanValue = String(row.forecastedCost).replace(/[$,]/g, '').trim();
-        console.log(`Cleaned forecastedCost value: "${cleanValue}"`);
-        
-        // Convert to number only if it's a valid number
-        if (cleanValue !== "") {
-          const parsedCost = Number(cleanValue);
-          
-          if (!isNaN(parsedCost)) {
-            forecastedCost = parsedCost;
-            console.log(`Parsed forecastedCost: ${forecastedCost}, type: ${typeof forecastedCost}`);
-          } else {
-            warnings.push(`Row ${index + 2}: Forecasted Cost "${row.forecastedCost}" could not be parsed as a number.`);
-            forecastedCost = "";
-          }
+      // Helper function to clean and parse numeric values
+      const parseNumericValue = (value: any, fieldName: string): number | string => {
+        if (value === undefined || value === null || value === "") {
+          return "";
         }
+        
+        // Convert to string first to ensure we can apply cleaning
+        const strValue = String(value);
+        
+        // More aggressive cleaning - remove currency symbols, commas, spaces, and any other non-numeric characters
+        // except for decimal point
+        const cleanValue = strValue.replace(/[^0-9.-]/g, '').trim();
+        console.log(`Cleaned ${fieldName} value: "${cleanValue}" (from original "${strValue}")`);
+        
+        if (cleanValue === "" || cleanValue === "-" || cleanValue === ".") {
+          return "";
+        }
+        
+        const parsedValue = Number(cleanValue);
+        if (!isNaN(parsedValue)) {
+          console.log(`Successfully parsed ${fieldName}: ${parsedValue}`);
+          return parsedValue;
+        } else {
+          warnings.push(`Row ${index + 2}: ${fieldName} "${strValue}" could not be parsed as a number after cleaning.`);
+          return "";
+        }
+      };
+      
+      // Process all numeric fields with the helper function
+      forecastedCost = parseNumericValue(row.forecastedCost, "Forecasted Cost");
+      expectedLeads = parseNumericValue(row.expectedLeads, "Expected Leads");
+      actualCost = parseNumericValue(row.actualCost, "Actual Cost");
+      actualLeads = parseNumericValue(row.actualLeads, "Actual Leads");
+      actualMQLs = parseNumericValue(row.actualMQLs, "Actual MQLs");
+      
+      // Process the Quarter - Month field using regex
+      let quarterMonth = "";
+      if (row.quarterMonth) {
+        quarterMonth = row.quarterMonth?.toString().trim() || "";
+      } else if (row["Quarter - Month"] || row["Quarter/Month"]) {
+        // Try alternative column names
+        quarterMonth = (row["Quarter - Month"] || row["Quarter/Month"])?.toString().trim() || "";
       } else {
-        // Explicitly handle empty/undefined cases
-        console.log(`Row ${index + 2}: forecastedCost is empty or undefined`);
-        forecastedCost = "";
-      }
-      
-      // Process expectedLeads - ensure it's a number if provided
-      if (row.expectedLeads !== undefined && row.expectedLeads !== "") {
-        // Remove any commas that might be in the input
-        const cleanValue = String(row.expectedLeads).replace(/,/g, '').trim();
-        console.log(`Cleaned expectedLeads value: "${cleanValue}"`);
+        // Try to parse from separate Quarter and Month columns if they exist
+        const quarter = row.Quarter?.toString().trim();
+        const month = row.Month?.toString().trim();
         
-        // Convert to number only if it's a valid number
-        if (cleanValue !== "") {
-          const parsedLeads = Number(cleanValue);
-          
-          if (!isNaN(parsedLeads)) {
-            expectedLeads = parsedLeads;
-            console.log(`Parsed expectedLeads: ${expectedLeads}, type: ${typeof expectedLeads}`);
-          } else {
-            warnings.push(`Row ${index + 2}: Expected Leads "${row.expectedLeads}" could not be parsed as a number.`);
-            expectedLeads = "";
-          }
-        }
-      } else {
-        // Explicitly handle empty/undefined cases
-        console.log(`Row ${index + 2}: expectedLeads is empty or undefined`);
-        expectedLeads = "";
-      }
-      
-      // Process actual metrics
-      if (row.actualCost !== undefined && row.actualCost !== "") {
-        const cleanValue = String(row.actualCost).replace(/[$,]/g, '').trim();
-        console.log(`Cleaned actualCost value: "${cleanValue}"`);
-        
-        if (cleanValue !== "") {
-          const parsedActualCost = Number(cleanValue);
-          
-          if (!isNaN(parsedActualCost)) {
-            actualCost = parsedActualCost;
-            console.log(`Parsed actualCost: ${actualCost}, type: ${typeof actualCost}`);
-          } else {
-            warnings.push(`Row ${index + 2}: Actual Cost "${row.actualCost}" could not be parsed as a number.`);
-            actualCost = "";
+        if (quarter && month) {
+          // Attempt to format as "Q1 - July" style
+          const quarterMatch = quarter.match(/q([1-4])/i);
+          if (quarterMatch) {
+            quarterMonth = `Q${quarterMatch[1]} - ${month}`;
           }
         }
       }
       
-      if (row.actualLeads !== undefined && row.actualLeads !== "") {
-        const cleanValue = String(row.actualLeads).replace(/,/g, '').trim();
-        console.log(`Cleaned actualLeads value: "${cleanValue}"`);
+      // If we couldn't parse a proper quarterMonth format, try regex extraction
+      if (quarterMonth && !quarterMonth.match(/^Q[1-4]\s*-\s*[A-Za-z]+$/)) {
+        // Extract quarter and month with regex
+        const qMatch = quarterMonth.match(/[Qq]([1-4])/);
+        const monthMatch = quarterMonth.match(/([A-Za-z]+)/);
         
-        if (cleanValue !== "") {
-          const parsedActualLeads = Number(cleanValue);
-          
-          if (!isNaN(parsedActualLeads)) {
-            actualLeads = parsedActualLeads;
-            console.log(`Parsed actualLeads: ${actualLeads}, type: ${typeof actualLeads}`);
-          } else {
-            warnings.push(`Row ${index + 2}: Actual Leads "${row.actualLeads}" could not be parsed as a number.`);
-            actualLeads = "";
-          }
+        if (qMatch && monthMatch) {
+          quarterMonth = `Q${qMatch[1]} - ${monthMatch[1]}`;
+        } else {
+          warnings.push(`Row ${index + 2}: Could not parse Quarter/Month value "${quarterMonth}" into standard format. Using as-is.`);
         }
       }
-      
-      if (row.actualMQLs !== undefined && row.actualMQLs !== "") {
-        const cleanValue = String(row.actualMQLs).replace(/,/g, '').trim();
-        console.log(`Cleaned actualMQLs value: "${cleanValue}"`);
-        
-        if (cleanValue !== "") {
-          const parsedActualMQLs = Number(cleanValue);
-          
-          if (!isNaN(parsedActualMQLs)) {
-            actualMQLs = parsedActualMQLs;
-            console.log(`Parsed actualMQLs: ${actualMQLs}, type: ${typeof actualMQLs}`);
-          } else {
-            warnings.push(`Row ${index + 2}: Actual MQLs "${row.actualMQLs}" could not be parsed as a number.`);
-            actualMQLs = "";
-          }
-        }
-      }
-      
+
       // Build the campaign object
       let campaign: Partial<Campaign> = {
         id: campaignId,
@@ -478,7 +447,7 @@ export function processCsvData(csvData: string): {
         strategicPillars: strategicPillars,
         revenuePlay: row.revenuePlay?.toString().trim() || "",
         fiscalYear: row.fiscalYear?.toString().trim() || "",
-        quarterMonth: row.quarterMonth?.toString().trim() || "",
+        quarterMonth: quarterMonth,
         region: row.region?.toString().trim() || "",
         country: row.country?.toString().trim() || "",
         owner: row.owner?.toString().trim() || "",

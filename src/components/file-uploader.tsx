@@ -73,12 +73,12 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
             // Fix forecastedCost if it's a string but should be a number
             if (typeof campaign.forecastedCost === 'string' && campaign.forecastedCost !== "") {
               try {
-                // Try to handle currency formatting or other non-standard formats
-                const cleanedValue = campaign.forecastedCost.replace(/[$,\s]/g, '');
+                // More aggressive cleaning - remove all non-numeric characters except decimal point
+                const cleanedValue = campaign.forecastedCost.replace(/[^0-9.-]/g, '');
                 const parsedCost = parseFloat(cleanedValue);
                 if (!isNaN(parsedCost)) {
                   campaign.forecastedCost = parsedCost;
-                  console.log(`Fixed forecastedCost for ${campaign.campaignName}: ${parsedCost}`);
+                  console.log(`Fixed forecastedCost for ${campaign.campaignName}: ${parsedCost} (from "${campaign.forecastedCost}")`);
                 }
               } catch (err) {
                 console.error(`Error parsing forecastedCost: ${campaign.forecastedCost}`, err);
@@ -88,15 +88,55 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
             // Fix expectedLeads if it's a string but should be a number
             if (typeof campaign.expectedLeads === 'string' && campaign.expectedLeads !== "") {
               try {
-                // Try to handle formatting or other non-standard formats
-                const cleanedValue = campaign.expectedLeads.replace(/[,\s]/g, '');
+                // More aggressive cleaning - remove all non-numeric characters except decimal point
+                const cleanedValue = campaign.expectedLeads.replace(/[^0-9.-]/g, '');
                 const parsedLeads = parseFloat(cleanedValue);
                 if (!isNaN(parsedLeads)) {
                   campaign.expectedLeads = parsedLeads;
-                  console.log(`Fixed expectedLeads for ${campaign.campaignName}: ${parsedLeads}`);
+                  console.log(`Fixed expectedLeads for ${campaign.campaignName}: ${parsedLeads} (from "${campaign.expectedLeads}")`);
                 }
               } catch (err) {
                 console.error(`Error parsing expectedLeads: ${campaign.expectedLeads}`, err);
+              }
+            }
+            
+            // Also fix actualCost, actualLeads, and actualMQLs
+            if (typeof campaign.actualCost === 'string' && campaign.actualCost !== "") {
+              try {
+                const cleanedValue = campaign.actualCost.replace(/[^0-9.-]/g, '');
+                const parsedValue = parseFloat(cleanedValue);
+                if (!isNaN(parsedValue)) {
+                  campaign.actualCost = parsedValue;
+                  console.log(`Fixed actualCost for ${campaign.campaignName}: ${parsedValue} (from "${campaign.actualCost}")`);
+                }
+              } catch (err) {
+                console.error(`Error parsing actualCost: ${campaign.actualCost}`, err);
+              }
+            }
+            
+            if (typeof campaign.actualLeads === 'string' && campaign.actualLeads !== "") {
+              try {
+                const cleanedValue = campaign.actualLeads.replace(/[^0-9.-]/g, '');
+                const parsedValue = parseFloat(cleanedValue);
+                if (!isNaN(parsedValue)) {
+                  campaign.actualLeads = parsedValue;
+                  console.log(`Fixed actualLeads for ${campaign.campaignName}: ${parsedValue} (from "${campaign.actualLeads}")`);
+                }
+              } catch (err) {
+                console.error(`Error parsing actualLeads: ${campaign.actualLeads}`, err);
+              }
+            }
+            
+            if (typeof campaign.actualMQLs === 'string' && campaign.actualMQLs !== "") {
+              try {
+                const cleanedValue = campaign.actualMQLs.replace(/[^0-9.-]/g, '');
+                const parsedValue = parseFloat(cleanedValue);
+                if (!isNaN(parsedValue)) {
+                  campaign.actualMQLs = parsedValue;
+                  console.log(`Fixed actualMQLs for ${campaign.campaignName}: ${parsedValue} (from "${campaign.actualMQLs}")`);
+                }
+              } catch (err) {
+                console.error(`Error parsing actualMQLs: ${campaign.actualMQLs}`, err);
               }
             }
             

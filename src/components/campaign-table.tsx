@@ -294,7 +294,28 @@ export function CampaignTable({
   const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
     setCampaigns(campaigns.map(campaign => {
       if (campaign.id === id) {
-        const updatedCampaign = { ...campaign, [field]: value };
+        let updatedValue = value;
+        
+        // Handle special case for quarterMonth - parse it correctly
+        if (field === 'quarterMonth' && typeof value === 'string') {
+          updatedValue = parseQuarterMonth(value);
+        }
+        
+        // Handle numeric fields - ensure proper cleaning and conversion
+        if (['forecastedCost', 'expectedLeads', 'actualCost', 'actualLeads', 'actualMQLs'].includes(field) && 
+            typeof value === 'string' && value !== '') {
+          // Clean and parse numeric values
+          const cleanedValue = value.replace(/[^0-9.-]/g, '');
+          const parsedValue = parseFloat(cleanedValue);
+          if (!isNaN(parsedValue)) {
+            updatedValue = parsedValue;
+          } else {
+            // If we can't parse it, keep it as a string - will be handled elsewhere
+            updatedValue = value;
+          }
+        }
+        
+        const updatedCampaign = { ...campaign, [field]: updatedValue };
         
         // Budget pool validation for owner + cost changes
         if ((field === 'forecastedCost' || field === 'owner') && 
@@ -437,6 +458,32 @@ export function CampaignTable({
       }
       return campaign;
     }));
+  };
+  
+  // Helper function to parse quarter-month format
+  const parseQuarterMonth = (value: string): string => {
+    if (!value) return quartersMonths[0]; // Default to first quarter-month
+    
+    // Check if it's already in the correct format
+    if (quartersMonths.includes(value)) {
+      return value;
+    }
+    
+    // Try to extract quarter and month with regex
+    const qMatch = value.match(/[Qq]([1-4])/);
+    const monthMatch = value.match(/([A-Za-z]+)/);
+    
+    if (qMatch && monthMatch) {
+      const formattedValue = `Q${qMatch[1]} - ${monthMatch[1]}`;
+      // Check if this is a valid quarter-month combination
+      if (quartersMonths.includes(formattedValue)) {
+        return formattedValue;
+      }
+    }
+    
+    // If we couldn't parse it properly, return the first quarter-month as default
+    console.warn(`Could not parse quarter-month value: "${value}", using default`);
+    return quartersMonths[0];
   };
 
   // Format currency
