@@ -106,7 +106,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
 
   // Apply filters
   const filteredCampaigns = campaigns.filter(campaign => {
-    // First, exclude Contractor campaigns - they should not appear in calendar view at all
+    // First, exclude Contractor/Infrastructure campaigns - they should not appear in calendar view at all
     if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
       return false;
     }
@@ -227,7 +227,7 @@ export function CampaignCalendarView({ campaigns = [] }) {
         <CardDescription>
           View campaigns organized by {fiscalYearFilter === "_all" ? "fiscal year" : `${fiscalYearFilter} (July to June)`}
           <span className="block text-xs mt-1">
-            Note: Contractor/Infrastructure campaigns are excluded from this view
+            Note: Contractor/Infrastructure campaigns are excluded from the calendar view
           </span>
         </CardDescription>
       </CardHeader>

@@ -34,6 +34,7 @@ export function getBudgetByRegion(region: string): number {
  *   - "Beverly Leung" → "South APAC" = $385,500
  *   - "Shruti Narang" → "SAARC" = $265,000
  *   - "Giorgia Parham" → "Digital Motions" = $68,000
+ * - Contractor/Infrastructure campaigns are excluded from budget calculations
  * - All campaigns are flagged as either budgetImpacting or nonBudgetImpacting in App.tsx
  * 
  * @param regionalBudgets - All regional budget data

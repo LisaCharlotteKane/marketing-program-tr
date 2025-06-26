@@ -302,9 +302,15 @@ function App() {
     // Step 1: Create a mapping of campaigns by owner
     const campaignsByOwner: { [key: string]: any[] } = {};
     
-    // Group campaigns by owner
+    // Group campaigns by owner, filtering out Contractor/Infrastructure campaigns for budget impact
     campaigns.forEach(campaign => {
       const owner = campaign.owner;
+      
+      // Skip contractor campaigns for budget allocation
+      if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
+        return;
+      }
+      
       if (owner && typeof campaign.forecastedCost === 'number') {
         if (!campaignsByOwner[owner]) {
           campaignsByOwner[owner] = [];

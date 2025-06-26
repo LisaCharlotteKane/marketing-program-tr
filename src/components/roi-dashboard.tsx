@@ -60,7 +60,11 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
 
   // Filtering campaigns based on selected filters
   useEffect(() => {
-    let filtered = [...campaigns];
+    // First, exclude all Contractor/Infrastructure campaigns from ROI reporting
+    let filtered = campaigns.filter(campaign => 
+      campaign.campaignType !== "Contractor" && 
+      campaign.campaignType !== "Contractor/Infrastructure"
+    );
 
     if (selectedRegion !== "all") {
       filtered = filtered.filter(campaign => normalizeRegionName(campaign.region) === selectedRegion);
@@ -258,7 +262,12 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
         <CardTitle className="flex items-center gap-2">
           <TrendUp className="h-5 w-5" /> ROI Performance Dashboard
         </CardTitle>
-        <CardDescription>Visualize campaign performance and return on investment</CardDescription>
+        <CardDescription>
+          Visualize campaign performance and return on investment
+          <span className="block text-xs mt-1">
+            Note: Contractor/Infrastructure campaigns are excluded from ROI reporting
+          </span>
+        </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
