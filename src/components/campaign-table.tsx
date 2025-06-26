@@ -406,7 +406,6 @@ export function CampaignTable({
                   { duration: 5000 }
                 );
               }
-              }
             } else {
               budgetPoolByRegionOwner[budgetRegion].overage = 0;
             }
