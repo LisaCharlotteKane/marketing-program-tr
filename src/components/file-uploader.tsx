@@ -1,10 +1,11 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import Papa from "papaparse";
 import { UploadSimple, DownloadSimple } from "@phosphor-icons/react";
 import { Campaign } from "@/components/campaign-table";
 import { processCsvData, exportCampaignsToCsv } from "@/utils/csv-helper";
+import { CsvPreviewModal } from "@/components/csv-preview-modal";
 
 interface FileUploaderProps {
   onFileUpload: (campaigns: Campaign[]) => void;
@@ -13,6 +14,18 @@ interface FileUploaderProps {
 
 export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // State for preview modal
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState<{
+    campaigns: Campaign[];
+    errors: string[];
+    warnings: string[];
+  }>({
+    campaigns: [],
+    errors: [],
+    warnings: []
+  });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -179,43 +192,14 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
           });
         }
         
-        // Show validation errors if any
-        if (errors.length > 0) {
-          toast.error(
-            <div>
-              <p>Import had errors:</p>
-              <ul className="text-sm mt-2 max-h-40 overflow-auto list-disc pl-4">
-                {errors.slice(0, 5).map((err, i) => (
-                  <li key={i}>{err}</li>
-                ))}
-                {errors.length > 5 && <li>...and {errors.length - 5} more errors</li>}
-              </ul>
-            </div>
-          );
-        }
+        // Instead of immediately importing, set preview data and open the preview modal
+        setPreviewData({
+          campaigns,
+          errors,
+          warnings
+        });
+        setIsPreviewOpen(true);
         
-        // Show warnings if any
-        if (warnings.length > 0) {
-          toast.warning(
-            <div>
-              <p>Import had warnings:</p>
-              <ul className="text-sm mt-2 max-h-40 overflow-auto list-disc pl-4">
-                {warnings.slice(0, 5).map((warning, i) => (
-                  <li key={i}>{warning}</li>
-                ))}
-                {warnings.length > 5 && <li>...and {warnings.length - 5} more warnings</li>}
-              </ul>
-            </div>
-          );
-        }
-        
-        // Process imported campaigns
-        if (campaigns.length > 0) {
-          onFileUpload(campaigns);
-          toast.success(`Imported ${campaigns.length} campaigns successfully`);
-        } else if (errors.length === 0) {
-          toast.error('No valid campaigns found in the CSV file');
-        }
       } catch (error) {
         console.error('Error processing CSV:', error);
         toast.error(`Failed to process CSV file: ${(error as Error).message}`);
@@ -232,6 +216,31 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
     };
     
     reader.readAsText(file);
+  };
+  
+  // Handle confirmation from the preview modal
+  const handleConfirmImport = () => {
+    const { campaigns, errors, warnings } = previewData;
+    
+    // Close the preview modal
+    setIsPreviewOpen(false);
+    
+    // Show errors and warnings as toasts (reduced version since they've already seen them in the preview)
+    if (errors.length > 0) {
+      toast.error(`Import had ${errors.length} error${errors.length !== 1 ? 's' : ''}`);
+    }
+    
+    if (warnings.length > 0) {
+      toast.warning(`Import had ${warnings.length} warning${warnings.length !== 1 ? 's' : ''}`);
+    }
+    
+    // Process imported campaigns
+    if (campaigns.length > 0) {
+      onFileUpload(campaigns);
+      toast.success(`Imported ${campaigns.length} campaigns successfully`);
+    } else if (errors.length === 0) {
+      toast.error('No valid campaigns found in the CSV file');
+    }
   };
 
   // Export current campaigns to CSV template
@@ -479,7 +488,17 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
           <li>Empty numeric fields are allowed and will be treated as zero</li>
           <li>Date fields should follow the format in the template</li>
         </ul>
-    </div>
+      </div>
+
+      {/* Preview Modal */}
+      <CsvPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        campaigns={previewData.campaigns}
+        errors={previewData.errors}
+        warnings={previewData.warnings}
+        onConfirm={handleConfirmImport}
+      />
 
       <input
         type="file"
