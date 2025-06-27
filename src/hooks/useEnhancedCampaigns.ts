@@ -61,13 +61,16 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initialLoadRef = useRef(false);
   
-  // Load data on mount
+  // Load data on mount with improved KV store handling
   useEffect(() => {
     if (initialLoadRef.current) return; // Only run on first load
     
     try {
-      // First, check if we have data in KV store
-      if (kvData && Array.isArray(kvData) && kvData.length > 0) {
+      // Log the current KV data state to help debugging
+      console.log("Current KV data state:", kvData);
+      
+      // First, check if we have data in KV store - with explicit validity check
+      if (kvData && Array.isArray(kvData)) {
         console.log("Loading data from KV store", kvData.length, "campaigns");
         
         // Data found in KV store
@@ -77,10 +80,34 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         // Also save to localStorage as backup
         localStorage.setItem(key, JSON.stringify(validatedData));
         
-        toast.success(`Loaded ${validatedData.length} campaigns from shared storage`);
+        if (validatedData.length > 0) {
+          toast.success(`Loaded ${validatedData.length} campaigns from shared storage`);
+        } else {
+          console.log("KV store contained an empty array, checking localStorage for potential data");
+          // Even though KV has empty array, we still check localStorage for backward compatibility
+          const savedData = localStorage.getItem(key);
+          
+          if (savedData) {
+            try {
+              const parsedData = JSON.parse(savedData);
+              if (Array.isArray(parsedData) && parsedData.length > 0) {
+                console.log("Found data in localStorage, migrating to KV");
+                const localValidatedData = ensureCampaignIntegrity(parsedData) as T;
+                
+                // Migrate to KV store - this is crucial for sharing with other users
+                setKvData(localValidatedData);
+                setData(localValidatedData);
+                
+                toast.success(`Migrated ${localValidatedData.length} campaigns to shared storage`);
+              }
+            } catch (parseError) {
+              console.error("Error parsing localStorage data:", parseError);
+            }
+          }
+        }
       } else {
         // Fall back to localStorage for backward compatibility
-        console.log("No KV data found, checking localStorage");
+        console.log("No valid KV data found, checking localStorage");
         const savedData = localStorage.getItem(key);
         
         if (savedData) {
@@ -89,7 +116,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
             const parsedData = JSON.parse(savedData);
             const validatedData = ensureCampaignIntegrity(parsedData) as T;
             
-            // Migrate to KV store
+            // Migrate to KV store - this is crucial for sharing with other users
             setKvData(validatedData);
             setData(validatedData);
             
@@ -214,6 +241,39 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       setIsSaving(false);
     }
   }, [data, key, setKvData]);
+  
+  // Add a global event listener for manual KV data refreshes
+  useEffect(() => {
+    const handleForcedDataLoad = async () => {
+      console.log("Forced data load requested");
+      
+      try {
+        // Check if we have data in KV store
+        if (kvData && Array.isArray(kvData) && kvData.length > 0) {
+          console.log("Loading data from KV store on forced load", kvData.length, "campaigns");
+          
+          // Data found in KV store
+          const validatedData = ensureCampaignIntegrity(kvData) as T;
+          setData(validatedData);
+          
+          // Also save to localStorage as backup
+          localStorage.setItem(key, JSON.stringify(validatedData));
+          
+          toast.success(`Loaded ${validatedData.length} campaigns from shared storage`);
+        } else {
+          console.log("No KV data found on forced load");
+        }
+      } catch (error) {
+        console.error("Error during forced data load:", error);
+      }
+    };
+    
+    window.addEventListener("campaign:init", handleForcedDataLoad);
+    
+    return () => {
+      window.removeEventListener("campaign:init", handleForcedDataLoad);
+    };
+  }, [key, kvData]);
   
   return [data, setDataAndKV, { isSaving, lastSaved, forceSave }];
 }

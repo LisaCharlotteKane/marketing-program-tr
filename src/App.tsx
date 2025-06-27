@@ -23,6 +23,8 @@ import { AutoSaveIndicator } from "@/components/auto-save-indicator"
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator"
 import { BudgetLockInfo } from "@/components/budget-lock-info"
 import { StorageErrorHandler } from "@/components/storage-error-handler"
+import { DataSharingService } from "@/components/data-sharing-service"
+import { CampaignSharingStatus } from "@/components/campaign-sharing-status"
 import { Logo } from "@/components/logo"
 import { Avatar } from "@/components/avatar"
 import { ThemeSwitch } from "@/components/theme-switch"
@@ -433,6 +435,7 @@ function App() {
       <Toaster position="top-right" richColors closeButton />
       <div className="flex flex-col min-h-screen">
         <StorageErrorHandler onRetry={handleRetryDataLoad} />
+        <DataSharingService campaigns={campaigns} />
         
         <PrimerHeader 
           title="Marketing Campaign Calculator" 
@@ -440,8 +443,23 @@ function App() {
         />
         
         <main className="flex-1 container mx-auto px-4 py-6">
-          <div className="flex items-center justify-end mb-4">
-            <AutoSaveIndicator forceSave={saveStatus.forceSave} />
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <CampaignSharingStatus campaigns={campaigns} />
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  window.location.reload();
+                  toast.success("Page refreshed to show latest shared data");
+                }}
+                className="flex items-center gap-1"
+                title="Reload the page to ensure all data is fresh"
+              >
+                <ArrowClockwise className="h-4 w-4" /> Refresh Data
+              </Button>
+              <AutoSaveIndicator forceSave={saveStatus.forceSave} />
+            </div>
           </div>
           
           <Tabs defaultValue="planning" className="w-full">
@@ -752,7 +770,7 @@ function App() {
           </TabsContent>
 
           <TabsContent value="github" className="space-y-8 pt-2">
-            <PersistentStorageInfo />
+            <PersistentStorageInfo campaigns={campaigns} />
             <GitHubSync campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
           </Tabs>

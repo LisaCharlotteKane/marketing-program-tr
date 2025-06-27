@@ -1,19 +1,53 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, GitBranch, FileJson, Users } from "@phosphor-icons/react";
+import { Database, GitBranch, FileJson, Users, CloudArrowUp } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
-export function PersistentStorageInfo() {
+export function PersistentStorageInfo({ campaigns = [] }) {
+  // Handle manual force sync
+  const forceSync = () => {
+    if (!campaigns || !Array.isArray(campaigns)) {
+      toast.error("No campaign data available to sync");
+      return;
+    }
+    
+    try {
+      // Dispatch a custom event that our DataSharingService component will handle
+      window.dispatchEvent(new CustomEvent('campaign:force-sync', { 
+        detail: { campaigns }
+      }));
+      
+      // Also use localStorage as a backup
+      localStorage.setItem('campaignData', JSON.stringify(campaigns));
+      
+      toast.success(`Synced ${campaigns.length} campaigns to shared storage`);
+    } catch (error) {
+      console.error("Error forcing campaign sync:", error);
+      toast.error("Failed to sync campaign data");
+    }
+  };
+  
   return (
     <Card className="border shadow-sm">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" /> Storage Information
         </CardTitle>
-        <CardDescription>How your campaign data is stored and persisted</CardDescription>
+        <CardDescription className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <span>How your campaign data is stored and persisted</span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={forceSync}
+            className="flex items-center gap-1 text-xs whitespace-nowrap"
+          >
+            <CloudArrowUp className="h-3.5 w-3.5" /> Force Sync Data
+          </Button>
+        </CardDescription>
       </CardHeader>
       
       <CardContent className="space-y-4">
