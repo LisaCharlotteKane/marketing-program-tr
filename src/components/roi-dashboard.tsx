@@ -468,7 +468,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
                   />
                   <Tooltip 
                     formatter={(value) => [`$${value.toLocaleString()}`, undefined]}
-                    labelFormatter={() => 'Spend Comparison'}
+                    labelFormatter={() => 'Forecasted Impact'}
                   />
                   <Legend />
                   <Bar 

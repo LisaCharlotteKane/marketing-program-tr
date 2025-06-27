@@ -485,7 +485,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           <Card className="border shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <ChartBar className="h-4 w-4" /> Cost Comparison by Region
+                <ChartBar className="h-4 w-4" /> Forecasted Impact
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
