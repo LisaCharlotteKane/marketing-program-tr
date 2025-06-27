@@ -147,12 +147,22 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       clearTimeout(saveTimeoutRef.current);
     }
     
+    // Compare current data with previous data to avoid unnecessary saves
+    const dataStr = JSON.stringify(data);
+    const prevDataRef = useRef(dataStr);
+    
+    if (prevDataRef.current === dataStr) {
+      return; // Skip save if data hasn't changed
+    }
+    
+    prevDataRef.current = dataStr;
+    
     saveTimeoutRef.current = setTimeout(() => {
       const saveData = async () => {
         setIsSaving(true);
         try {
           // Keep localStorage in sync for backward compatibility
-          localStorage.setItem(key, JSON.stringify(data));
+          localStorage.setItem(key, dataStr);
           
           // We already updated KV store in setDataAndKV, but this ensures
           // we have a consistent save pattern and UI feedback
@@ -169,7 +179,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         // Dispatch custom event to trigger GitHub sync
         window.dispatchEvent(new CustomEvent("campaign:updated"));
       });
-    }, 500); // 500ms debounce
+    }, 2000); // Increased debounce to 2000ms to reduce saves
     
     return () => {
       if (saveTimeoutRef.current) {

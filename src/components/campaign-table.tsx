@@ -188,7 +188,7 @@ export function CampaignTable({
   ];
 
   // Add a new row (campaign)
-  const addCampaign = async () => {
+  const addCampaign = () => {
     // Use selected owner from filter or default to first owner in list
     const preselectedOwner = selectedOwner !== "_all" ? selectedOwner : ownerOptions[0] || "Giorgia Parham";
     
@@ -222,37 +222,37 @@ export function CampaignTable({
       pipelineForecast: 0
     };
     
-    try {
-      // Check budget pool for selected owner
-      const { getOwnerInfo } = await import('@/services/budget-service');
-      const { OWNER_TO_REGION_MAP } = await import('@/hooks/useRegionalBudgets');
-      const ownerInfo = getOwnerInfo(preselectedOwner);
+    // Simple budget check without async imports
+    const ownerBudgets = {
+      "Tomoko Tanaka": { region: "JP & Korea", budget: 358000 },
+      "Beverly Leung": { region: "South APAC", budget: 385500 },
+      "Shruti Narang": { region: "SAARC", budget: 265000 },
+      "Giorgia Parham": { region: "Digital Motions", budget: 68000 }
+    };
+    
+    const ownerInfo = ownerBudgets[preselectedOwner] || { region: "", budget: 0 };
+    
+    // Calculate total cost for this owner's existing campaigns, excluding contractor types
+    const ownerExistingCost = campaigns
+      .filter(c => c.owner === preselectedOwner && 
+              !(c.campaignType === "Contractor" || c.campaignType === "Contractor/Infrastructure"))
+      .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
+    
+    // Check if owner is approaching budget limit
+    if (ownerInfo.budget > 0) {
+      const remainingBudget = ownerInfo.budget - ownerExistingCost;
+      const percentRemaining = (remainingBudget / ownerInfo.budget) * 100;
       
-      // Calculate total cost for this owner's existing campaigns, excluding contractor types
-      const ownerExistingCost = campaigns
-        .filter(c => c.owner === preselectedOwner && 
-                !(c.campaignType === "Contractor" || c.campaignType === "Contractor/Infrastructure"))
-        .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
+      // Get region name for more informative messaging
+      const regionName = ownerInfo.region;
       
-      // Check if owner is approaching budget limit
-      if (ownerInfo.budget > 0) {
-        const remainingBudget = ownerInfo.budget - ownerExistingCost;
-        const percentRemaining = (remainingBudget / ownerInfo.budget) * 100;
-        
-        // Get region name for more informative messaging
-        const regionName = OWNER_TO_REGION_MAP[preselectedOwner] || ownerInfo.region;
-        
-        if (percentRemaining < 10 && remainingBudget > 0) {
-          toast.warning(`${preselectedOwner} has only ${formatCurrency(remainingBudget)} budget remaining (${percentRemaining.toFixed(1)}%) in ${regionName}`,
-            { duration: 5000 });
-        } else if (remainingBudget <= 0) {
-          toast.error(`${preselectedOwner} has exceeded their ${regionName} budget pool by ${formatCurrency(Math.abs(remainingBudget))}`, 
-            { duration: 5000 });
-        }
+      if (percentRemaining < 10 && remainingBudget > 0) {
+        toast.warning(`${preselectedOwner} has only ${formatCurrency(remainingBudget)} budget remaining (${percentRemaining.toFixed(1)}%) in ${regionName}`,
+          { duration: 5000 });
+      } else if (remainingBudget <= 0) {
+        toast.error(`${preselectedOwner} has exceeded their ${regionName} budget pool by ${formatCurrency(Math.abs(remainingBudget))}`, 
+          { duration: 5000 });
       }
-    } catch (error) {
-      console.error("Error checking budget info:", error);
-      // Continue with campaign creation even if budget check fails
     }
     
     setCampaigns([...campaigns, newCampaign]);
@@ -322,62 +322,50 @@ export function CampaignTable({
         
         const updatedCampaign = { ...campaign, [field]: updatedValue };
         
-        // Budget pool validation for owner + cost changes
+        // Skip budget validation for contractor campaigns
         if ((field === 'forecastedCost' || field === 'owner' || field === 'campaignType') && 
             typeof updatedCampaign.forecastedCost === 'number' && 
             updatedCampaign.forecastedCost > 0 &&
-            updatedCampaign.owner) {
-          
-          // Skip budget check for contractor campaigns
-          if (updatedCampaign.campaignType === "Contractor" || updatedCampaign.campaignType === "Contractor/Infrastructure") {
-            return updatedCampaign;
-          }
-          
-          // We'll handle the budget validation in a separate function
-          (async () => {
-            try {
-              // Import OWNER_TO_REGION_MAP from constants to ensure consistency
-              const { OWNER_TO_REGION_MAP } = await import('@/hooks/useRegionalBudgets');
-              const { getBudgetByRegion } = await import('@/services/budget-service');
-              
-              // Additional budget validation could go here if needed
-            } catch (error) {
-              console.error("Error loading budget modules:", error);
-            }
-          })();
-          
-          // Budget validation has been moved to the async function above
+            updatedCampaign.owner &&
+            !(updatedCampaign.campaignType === "Contractor" || updatedCampaign.campaignType === "Contractor/Infrastructure")) {
           
           // Budget pool constants - hardcoded to avoid async issues
+          const ownerToRegionMap = {
+            "Tomoko Tanaka": "JP & Korea",
+            "Beverly Leung": "South APAC",
+            "Shruti Narang": "SAARC",
+            "Giorgia Parham": "Digital Motions"
+          };
+          
           const budgetPoolByRegionOwner = {
             "JP & Korea": { 
               owner: "Tomoko Tanaka", 
-              budget: 358000, // Hardcoded budget values from constants
+              budget: 358000,
               used: 0, 
               overage: 0 
             },
             "South APAC": { 
               owner: "Beverly Leung", 
-              budget: 385500, // Hardcoded budget values from constants
+              budget: 385500,
               used: 0, 
               overage: 0 
             },
             "SAARC": { 
               owner: "Shruti Narang", 
-              budget: 265000, // Hardcoded budget values from constants
+              budget: 265000,
               used: 0, 
               overage: 0 
             },
             "Digital Motions": { 
               owner: "Giorgia Parham", 
-              budget: 68000, // Hardcoded budget values from constants
+              budget: 68000,
               used: 0, 
               overage: 0 
             },
           };
           
-          // Get budget region from owner using imported constant
-          const budgetRegion = OWNER_TO_REGION_MAP[updatedCampaign.owner];
+          // Get budget region from owner
+          const budgetRegion = ownerToRegionMap[updatedCampaign.owner];
           
           // Check if this owner has a budget region assigned
           if (budgetRegion && budgetPoolByRegionOwner[budgetRegion]) {
@@ -392,22 +380,19 @@ export function CampaignTable({
             const totalCost = otherCampaignsCost + updatedCampaign.forecastedCost;
             const totalBudget = budgetPoolByRegionOwner[budgetRegion].budget;
             
-            // Update used and calculate overage
-            budgetPoolByRegionOwner[budgetRegion].used = totalCost;
+            // Calculate overage
             const remainingBudget = totalBudget - totalCost;
             
             if (remainingBudget < 0) {
-              budgetPoolByRegionOwner[budgetRegion].overage = Math.abs(remainingBudget);
+              const overage = Math.abs(remainingBudget);
               
               // Only show warning if overage exceeds $500
-              if (budgetPoolByRegionOwner[budgetRegion].overage > 500) {
+              if (overage > 500) {
                 toast.warning(
-                  `${updatedCampaign.owner} has exceeded their ${budgetRegion} budget by ${formatCurrency(budgetPoolByRegionOwner[budgetRegion].overage)}`,
+                  `${updatedCampaign.owner} has exceeded their ${budgetRegion} budget by ${formatCurrency(overage)}`,
                   { duration: 5000 }
                 );
               }
-            } else {
-              budgetPoolByRegionOwner[budgetRegion].overage = 0;
             }
           }
         }
@@ -537,7 +522,7 @@ export function CampaignTable({
   };
 
   // Handle file upload with campaigns
-  const handleFileUpload = async (importedCampaigns: Campaign[]) => {
+  const handleFileUpload = (importedCampaigns: Campaign[]) => {
     if (!importedCampaigns || importedCampaigns.length === 0) {
       toast.error("No valid campaigns found in the uploaded file");
       return;
@@ -640,90 +625,79 @@ export function CampaignTable({
         return processed;
       });
       
-      // Final debug check of processed campaigns
-      console.log("Final processed campaigns sample:", processedCampaigns.slice(0, 2).map(c => ({
-        id: c.id,
-        campaignName: c.campaignName,
-        forecastedCost: c.forecastedCost,
-        typeForecastedCost: typeof c.forecastedCost,
-        expectedLeads: c.expectedLeads,
-        typeExpectedLeads: typeof c.expectedLeads,
-        pipelineForecast: c.pipelineForecast
-      })));
-      
       // Budget validation before importing
-      try {
-        // Use an async IIFE to handle the dynamic imports
-        (async () => {
-          try {
-            const { OWNER_TO_REGION_MAP } = await import('@/hooks/useRegionalBudgets');
-            const { getBudgetByRegion } = await import('@/services/budget-service');
-            
-            // Group current campaigns by owner to calculate existing costs
-            const existingCostByOwner: Record<string, number> = {};
-            campaigns.forEach(campaign => {
-              const owner = campaign.owner;
-              if (!owner || !OWNER_TO_REGION_MAP[owner]) return;
-              
-              // Skip contractor campaigns for budget allocation
-              if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
-                return;
-              }
-              
-              const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
-              existingCostByOwner[owner] = (existingCostByOwner[owner] || 0) + forecastedCost;
-            });
-            
-            // Check each imported campaign for budget impact
-            const budgetImpactByOwner: Record<string, { total: number, newCost: number, budgetLimit: number }> = {};
-            
-            processedCampaigns.forEach(campaign => {
-              const owner = campaign.owner;
-              if (!owner || !OWNER_TO_REGION_MAP[owner]) return;
-              
-              // Skip contractor campaigns for budget allocation
-              if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
-                return;
-              }
-              
-              const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
-              if (forecastedCost <= 0) return;
-              
-              const budgetRegion = OWNER_TO_REGION_MAP[owner];
-              const budgetLimit = getBudgetByRegion(budgetRegion);
-              
-              if (!budgetImpactByOwner[owner]) {
-                budgetImpactByOwner[owner] = {
-                  total: (existingCostByOwner[owner] || 0) + forecastedCost,
-                  newCost: forecastedCost,
-                  budgetLimit
-                };
-              } else {
-                budgetImpactByOwner[owner].total += forecastedCost;
-                budgetImpactByOwner[owner].newCost += forecastedCost;
-              }
-            });
-            
-            // Show warnings for budget overages
-            Object.entries(budgetImpactByOwner).forEach(([owner, impact]) => {
-              if (impact.total > impact.budgetLimit + 500) { // 500 buffer for rounding
-                const overage = impact.total - impact.budgetLimit;
-                const region = OWNER_TO_REGION_MAP[owner];
-                
-                toast.warning(
-                  `These imports will cause ${owner} to exceed their ${region} budget by ${formatCurrency(overage)}`,
-                  { duration: 6000 }
-                );
-              }
-            });
-          } catch (error) {
-            console.error("Error in budget validation async code:", error);
-          }
-        })();
-      } catch (error) {
-        console.error("Error checking budget impact:", error);
-        // Continue with import even if budget check fails
-      }
+      // Simple budget impact check without dynamic imports
+      const ownerToRegionMap = {
+        "Tomoko Tanaka": "JP & Korea",
+        "Beverly Leung": "South APAC", 
+        "Shruti Narang": "SAARC",
+        "Giorgia Parham": "Digital Motions"
+      };
+      
+      const budgetLimits = {
+        "JP & Korea": 358000,
+        "South APAC": 385500,
+        "SAARC": 265000,
+        "Digital Motions": 68000
+      };
+      
+      // Group current campaigns by owner to calculate existing costs
+      const existingCostByOwner: Record<string, number> = {};
+      campaigns.forEach(campaign => {
+        const owner = campaign.owner;
+        if (!owner || !ownerToRegionMap[owner]) return;
+        
+        // Skip contractor campaigns for budget allocation
+        if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
+          return;
+        }
+        
+        const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
+        existingCostByOwner[owner] = (existingCostByOwner[owner] || 0) + forecastedCost;
+      });
+      
+      // Check each imported campaign for budget impact
+      const budgetImpactByOwner: Record<string, { total: number, newCost: number, budgetLimit: number }> = {};
+      
+      processedCampaigns.forEach(campaign => {
+        const owner = campaign.owner;
+        if (!owner || !ownerToRegionMap[owner]) return;
+        
+        // Skip contractor campaigns for budget allocation
+        if (campaign.campaignType === "Contractor" || campaign.campaignType === "Contractor/Infrastructure") {
+          return;
+        }
+        
+        const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
+        if (forecastedCost <= 0) return;
+        
+        const budgetRegion = ownerToRegionMap[owner];
+        const budgetLimit = budgetLimits[budgetRegion] || 0;
+        
+        if (!budgetImpactByOwner[owner]) {
+          budgetImpactByOwner[owner] = {
+            total: (existingCostByOwner[owner] || 0) + forecastedCost,
+            newCost: forecastedCost,
+            budgetLimit
+          };
+        } else {
+          budgetImpactByOwner[owner].total += forecastedCost;
+          budgetImpactByOwner[owner].newCost += forecastedCost;
+        }
+      });
+      
+      // Show warnings for budget overages
+      Object.entries(budgetImpactByOwner).forEach(([owner, impact]) => {
+        if (impact.total > impact.budgetLimit + 500) { // 500 buffer for rounding
+          const overage = impact.total - impact.budgetLimit;
+          const region = ownerToRegionMap[owner];
+          
+          toast.warning(
+            `These imports will cause ${owner} to exceed their ${region} budget by ${formatCurrency(overage)}`,
+            { duration: 6000 }
+          );
+        }
+      });
       
       setCampaigns((prevCampaigns) => [...prevCampaigns, ...processedCampaigns]);
       setIsImportDialogOpen(false);
@@ -1241,11 +1215,12 @@ export function CampaignTable({
                 {/* Forecasted Cost */}
                 <TableCell>
                   <Input
-                    type="number"
-                    value={campaign.forecastedCost === "" ? "" : Number(campaign.forecastedCost)}
+                    type="text"
+                    value={campaign.forecastedCost === "" ? "" : campaign.forecastedCost.toString()}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      updateCampaign(campaign.id, 'forecastedCost', value === "" ? "" : Number(value));
+                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      const numValue = value === "" ? "" : parseFloat(value);
+                      updateCampaign(campaign.id, 'forecastedCost', numValue);
                     }}
                     placeholder="USD"
                     className="w-full"
@@ -1256,11 +1231,12 @@ export function CampaignTable({
                 {/* Expected Leads */}
                 <TableCell>
                   <Input
-                    type="number"
-                    value={campaign.expectedLeads === "" ? "" : Number(campaign.expectedLeads)}
+                    type="text"
+                    value={campaign.expectedLeads === "" ? "" : campaign.expectedLeads.toString()}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      updateCampaign(campaign.id, 'expectedLeads', value === "" ? "" : Number(value));
+                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      const numValue = value === "" ? "" : parseFloat(value);
+                      updateCampaign(campaign.id, 'expectedLeads', numValue);
                     }}
                     placeholder="# Leads"
                     className="w-full"

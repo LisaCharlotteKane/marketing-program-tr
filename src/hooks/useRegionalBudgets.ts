@@ -211,22 +211,29 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
     // Update reference for next comparison
     previousBudgetsRef.current = JSON.parse(JSON.stringify(budgets));
     
-    const saveData = async () => {
-      setIsSaving(true);
-      try {
-        // Keep localStorage in sync for backward compatibility
-        localStorage.setItem("regionalBudgets", JSON.stringify(budgets));
-        // KV store is updated directly in setBudgetsAndKV
-        setLastSaved(new Date());
-      } catch (error) {
-        console.error("Error saving regional budgets:", error);
-        toast.error("Failed to save budget data");
-      } finally {
-        setIsSaving(false);
-      }
-    };
+    // Use debounce for saving to reduce performance impact
+    const timeoutId = setTimeout(() => {
+      const saveData = async () => {
+        setIsSaving(true);
+        try {
+          // Keep localStorage in sync for backward compatibility
+          localStorage.setItem("regionalBudgets", JSON.stringify(budgets));
+          // KV store is updated directly in setBudgetsAndKV
+          setLastSaved(new Date());
+        } catch (error) {
+          console.error("Error saving regional budgets:", error);
+          toast.error("Failed to save budget data");
+        } finally {
+          setIsSaving(false);
+        }
+      };
+      
+      saveData();
+    }, 2000); // 2 second debounce
     
-    saveData();
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [budgets]);
   
   // Function to reset budgets to defaults
