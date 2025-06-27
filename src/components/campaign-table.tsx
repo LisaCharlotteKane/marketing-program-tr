@@ -63,6 +63,27 @@ export function CampaignTable({
   // Mobile responsive state
   const isMobile = useMediaQuery("(max-width: 768px)");
   
+  // Helper function to ensure data persistence and sharing
+  const forceSaveAndShare = (updatedCampaigns) => {
+    try {
+      // Save to localStorage for redundancy
+      localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
+      
+      // Signal that data has been updated
+      window.dispatchEvent(new CustomEvent("campaign:updated", { 
+        detail: { count: updatedCampaigns.length } 
+      }));
+      
+      // Force synchronization with other components
+      window.dispatchEvent(new CustomEvent("campaign:force-sync", {
+        detail: { campaigns: updatedCampaigns }
+      }));
+    } catch (error) {
+      console.error("Error during forced data save:", error);
+      toast.error("Failed to save changes. Please try again.");
+    }
+  };
+  
   // Selected campaigns for bulk operations
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
   
@@ -255,20 +276,69 @@ export function CampaignTable({
       }
     }
     
-    setCampaigns([...campaigns, newCampaign]);
-    toast.success('New campaign added successfully');
+    // Create updated campaigns array
+    const updatedCampaigns = [...campaigns, newCampaign];
+    
+    // Update state with new campaign
+    setCampaigns(updatedCampaigns);
+    
+    // Force immediate save to ensure data is shared
+    try {
+      // Also update localStorage for backup
+      localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
+      
+      // Signal that data has been updated
+      window.dispatchEvent(new CustomEvent("campaign:updated", { 
+        detail: { count: updatedCampaigns.length } 
+      }));
+    } catch (error) {
+      console.error("Error saving new campaign:", error);
+    }
+    
+    toast.success('New campaign added and saved successfully');
   };
 
   // Remove a row (campaign)
   const removeCampaign = (id: string) => {
-    setCampaigns(campaigns.filter(campaign => campaign.id !== id));
+    const updatedCampaigns = campaigns.filter(campaign => campaign.id !== id);
+    setCampaigns(updatedCampaigns);
+    
+    // Force immediate save to ensure data is shared
+    try {
+      // Also update localStorage for backup
+      localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
+      
+      // Signal that data has been updated
+      window.dispatchEvent(new CustomEvent("campaign:updated", { 
+        detail: { count: updatedCampaigns.length } 
+      }));
+      
+      toast.success('Campaign removed successfully');
+    } catch (error) {
+      console.error("Error after removing campaign:", error);
+    }
   };
 
   // Handle bulk deletion of selected campaigns
   const removeSelectedCampaigns = () => {
     if (selectedCampaigns.length === 0) return;
     
-    setCampaigns(campaigns.filter(campaign => !selectedCampaigns.includes(campaign.id)));
+    const updatedCampaigns = campaigns.filter(campaign => !selectedCampaigns.includes(campaign.id));
+    setCampaigns(updatedCampaigns);
+    
+    // Force immediate save to ensure data is shared
+    try {
+      // Also update localStorage for backup
+      localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
+      
+      // Signal that data has been updated
+      window.dispatchEvent(new CustomEvent("campaign:updated", { 
+        detail: { count: updatedCampaigns.length } 
+      }));
+    } catch (error) {
+      console.error("Error after bulk campaign removal:", error);
+    }
+    
     setSelectedCampaigns([]); // Clear selection after deletion
     toast.success(`${selectedCampaigns.length} campaign(s) deleted successfully`);
   };
@@ -297,7 +367,8 @@ export function CampaignTable({
 
   // Update campaign cell value changes
   const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
-    setCampaigns(campaigns.map(campaign => {
+    // Create updated campaigns array
+    const updatedCampaigns = campaigns.map(campaign => {
       if (campaign.id === id) {
         let updatedValue = value;
         
@@ -453,12 +524,18 @@ export function CampaignTable({
         return updatedCampaign;
       }
       return campaign;
-    }));
+    });
+    
+    // Update state
+    setCampaigns(updatedCampaigns);
+    
+    // Force immediate save to ensure data is shared
+    forceSaveAndShare(updatedCampaigns);
   };
 
   // Toggle strategic pillar selection
   const togglePillar = (id: string, pillar: string) => {
-    setCampaigns(campaigns.map(campaign => {
+    const updatedCampaigns = campaigns.map(campaign => {
       if (campaign.id === id) {
         // Ensure currentPillars is always an array, even if undefined in stored data
         const currentPillars = Array.isArray(campaign.strategicPillars) 
@@ -481,7 +558,13 @@ export function CampaignTable({
         };
       }
       return campaign;
-    }));
+    });
+    
+    // Update state
+    setCampaigns(updatedCampaigns);
+    
+    // Force immediate save to ensure data is shared
+    forceSaveAndShare(updatedCampaigns);
   };
   
   // Helper function to parse quarter-month format
@@ -699,7 +782,15 @@ export function CampaignTable({
         }
       });
       
-      setCampaigns((prevCampaigns) => [...prevCampaigns, ...processedCampaigns]);
+      // Create updated campaigns list with new imports
+      const updatedCampaigns = [...campaigns, ...processedCampaigns];
+      
+      // Update state
+      setCampaigns(updatedCampaigns);
+      
+      // Force immediate save to ensure data is shared
+      forceSaveAndShare(updatedCampaigns);
+      
       setIsImportDialogOpen(false);
       toast.success(`Imported ${processedCampaigns.length} campaigns successfully`);
     } catch (error) {
@@ -723,6 +814,32 @@ export function CampaignTable({
     setSelectedRevenuePlay("_all");
   };
 
+  // Effect to monitor campaigns and ensure they are properly saved
+  useEffect(() => {
+    // Skip on initial render
+    if (campaigns.length === 0) return;
+    
+    // Set up a debounced auto-save
+    const saveTimeout = setTimeout(() => {
+      try {
+        // Save to localStorage
+        localStorage.setItem('campaignData', JSON.stringify(campaigns));
+        
+        // Signal that data has been updated
+        window.dispatchEvent(new CustomEvent("campaign:updated", { 
+          detail: { count: campaigns.length } 
+        }));
+        
+        console.log(`Auto-saved ${campaigns.length} campaigns`);
+      } catch (error) {
+        console.error("Auto-save error:", error);
+      }
+    }, 2000); // 2-second debounce
+    
+    // Clean up
+    return () => clearTimeout(saveTimeout);
+  }, [campaigns]);
+  
   // Filter campaigns based on the selected filters
   const filteredCampaigns = campaigns.filter(campaign => {
     const ownerMatch = selectedOwner === "_all" || campaign.owner === selectedOwner;
