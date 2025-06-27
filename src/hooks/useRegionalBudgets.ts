@@ -190,7 +190,7 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
   }, [setKvBudgets, kvBudgets]);
   
   // Save budgets to localStorage whenever they change (backward compatibility)
-  // Use a ref to track if this is the initial render
+  // Use refs to track initial render and previous budgets - MOVED OUTSIDE OF EFFECT
   const isInitialRender = React.useRef(true);
   const previousBudgetsRef = React.useRef<RegionalBudgets | null>(null);
   

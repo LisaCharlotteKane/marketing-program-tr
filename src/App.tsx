@@ -49,6 +49,11 @@ function App() {
   // Region selection
   const [selectedRegion, setSelectedRegion] = useState("_all")
 
+  // Create refs at the function component level
+  const previousForecastedCostRef = useRef(forecastedCost);
+  const previousSelectedRegionRef = useRef(selectedRegion);
+  const previousCampaignsRef = useRef([]);
+
   // Run data migrations on initial load
   useEffect(() => {
     // Reset regional budgets to ensure correct owner mappings
@@ -291,9 +296,6 @@ function App() {
   }
 
   // Update regional program data when forecasted cost changes
-  const previousForecastedCostRef = useRef(forecastedCost);
-  const previousSelectedRegionRef = useRef(selectedRegion);
-  
   useEffect(() => {
     // Skip if nothing has changed to prevent infinite loop
     if (previousForecastedCostRef.current === forecastedCost && 
@@ -342,8 +344,6 @@ function App() {
   }
   
   // Update regional budgets based on campaign table data
-  const previousCampaignsRef = useRef([]);
-  
   useEffect(() => {
     // Simple check if campaigns have actually changed to prevent unnecessary updates
     const campaignsString = JSON.stringify(campaigns);

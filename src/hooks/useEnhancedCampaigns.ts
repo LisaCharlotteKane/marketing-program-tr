@@ -138,6 +138,9 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
     });
   }, [setKvData]);
   
+  // Create prevDataRef outside useEffect
+  const prevDataRef = useRef("");
+  
   // Save data when it changes, with debounce (maintains backward compatibility)
   useEffect(() => {
     // Skip initial render
@@ -149,7 +152,6 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
     
     // Compare current data with previous data to avoid unnecessary saves
     const dataStr = JSON.stringify(data);
-    const prevDataRef = useRef(dataStr);
     
     if (prevDataRef.current === dataStr) {
       return; // Skip save if data hasn't changed
