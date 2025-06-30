@@ -47,14 +47,8 @@ export function DataSharingService({ campaigns }) {
           localStorage.setItem('campaignData', JSON.stringify(cleanCopy));
           
           toast.success(`Shared ${localLength} campaigns with other users`);
-        } else if (kvLength > localLength && localLength === 0) {
-          // This is a case where KV has data but local state is empty
-          // This could happen if someone cleared localStorage or is a new user
-          console.log("KV store has campaigns that local state doesn't, updating local state");
-          
-          // Dispatch an event to trigger reload from KV
-          window.dispatchEvent(new CustomEvent('campaign:init'));
         }
+        // Remove the check that triggers campaign:init - this was causing refresh loops
         
         // Reset sync counter periodically
         if (syncCountRef.current > 10) {

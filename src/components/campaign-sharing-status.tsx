@@ -68,15 +68,19 @@ export function CampaignSharingStatus({ campaigns, className = "" }) {
     e.preventDefault();
     e.stopPropagation();
     
-    // Force a data refresh
-    window.dispatchEvent(new CustomEvent("campaign:init"));
-    
-    setTimeout(() => {
-      // If that doesn't work, do a full page reload
-      window.location.reload();
-    }, 2000);
-    
     toast.info("Refreshing campaign data...");
+    
+    // Try to refresh data from KV store without reloading
+    try {
+      if (kvCampaigns && Array.isArray(kvCampaigns) && kvCampaigns.length > 0) {
+        // Just dispatch the refresh event, but don't reload the page
+        window.dispatchEvent(new CustomEvent("campaign:force-sync", {
+          detail: { campaigns: kvCampaigns }
+        }));
+      }
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    }
   };
   
   return (

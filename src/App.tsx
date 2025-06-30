@@ -460,8 +460,12 @@ function App() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => {
-                  window.location.reload();
-                  toast.success("Page refreshed to show latest shared data");
+                  // Don't reload immediately - just show intent to refresh
+                  toast.success("Attempting to refresh data...");
+                  // Give KV store a chance to sync, then reload after delay
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 5000);
                 }}
                 className="flex items-center gap-1"
                 title="Reload the page to ensure all data is fresh"
@@ -561,8 +565,12 @@ function App() {
                       variant="outline" 
                       size="sm" 
                       onClick={() => {
-                        window.location.reload();
-                        toast.success("Page refreshed to show latest budget changes");
+                        // Don't reload immediately - just show intent to refresh
+                        toast.success("Attempting to refresh budget data...");
+                        // Give KV store a chance to sync, then reload after delay
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 5000);
                       }}
                       className="flex items-center gap-1 text-xs"
                       title="Reload the page to ensure all data is fresh"

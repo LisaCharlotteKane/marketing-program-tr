@@ -267,7 +267,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
           window.dispatchEvent(new CustomEvent("campaign:updated"));
         }, 500);
       });
-    }, 3000); // Increased debounce to 3000ms to reduce saves frequency
+    }, 5000); // Increased debounce to 5000ms to reduce saves frequency
     
     return () => {
       if (saveTimeoutRef.current) {
@@ -349,18 +349,16 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
           setTimeout(() => {
             setIsLoaded(true);
             
-            // Force a browser refresh as a last resort
-            window.location.reload();
+            // Do not force page reload - it causes refresh loops
+            toast.info("Attempted to refresh campaign data");
           }, 500);
         }
       } catch (error) {
         console.error("Error during forced data load:", error);
-        toast.error("Failed to refresh campaign data. Trying again...");
+        toast.error("Failed to refresh campaign data");
         
-        // Force a browser refresh as a fallback
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        // Do not force page reload - it causes refresh loops
+        // Just show error message instead
       }
     };
     
