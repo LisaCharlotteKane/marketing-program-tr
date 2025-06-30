@@ -17,30 +17,38 @@ export function CampaignSharingStatus({ campaigns, className = "" }) {
           return;
         }
         
+        // Handle empty states
+        if (!kvCampaigns || !Array.isArray(kvCampaigns)) {
+          setStatus('syncing');
+          return;
+        }
+        
         const localCount = campaigns.length;
-        const kvCount = Array.isArray(kvCampaigns) ? kvCampaigns.length : 0;
+        const kvCount = kvCampaigns.length;
         
-        // Consider synced if either both are empty or counts match
-        // and campaigns have the same IDs (checking first 3 campaigns is sufficient as a heuristic)
-        let isSynced = (localCount === 0 && kvCount === 0) || localCount === kvCount;
+        // If counts are different, we're not in sync
+        if (localCount !== kvCount) {
+          setStatus('syncing');
+          return;
+        }
         
-        // If counts match but we have campaigns, do a deeper check on a few campaigns
-        if (isSynced && localCount > 0) {
-          // Check the first 3 campaigns (or fewer if less available)
+        // If we have campaigns, do a sample check on a few IDs
+        if (localCount > 0) {
+          // Check a sample of campaigns (up to 3)
           const samplesToCheck = Math.min(3, localCount);
           for (let i = 0; i < samplesToCheck; i++) {
-            // Find matching campaign by ID in KV array
             const localCampaign = campaigns[i];
-            const matchingKvCampaign = kvCampaigns.find(c => c.id === localCampaign.id);
+            const matchInKv = kvCampaigns.some(c => c.id === localCampaign.id);
             
-            if (!matchingKvCampaign) {
-              isSynced = false;
-              break;
+            if (!matchInKv) {
+              setStatus('syncing');
+              return;
             }
           }
         }
         
-        setStatus(isSynced ? 'synced' : 'syncing');
+        // If we got here, everything seems in sync
+        setStatus('synced');
         setLastCheck(new Date());
       } catch (error) {
         console.error("Error checking campaign sync status:", error);
@@ -48,11 +56,11 @@ export function CampaignSharingStatus({ campaigns, className = "" }) {
       }
     };
     
-    // Check on component mount and when dependencies change
+    // Check on mount and when dependencies change
     checkSyncStatus();
     
-    // Set up periodic checks (every 30 seconds instead of 15)
-    const interval = setInterval(checkSyncStatus, 30000);
+    // Set up periodic checks every 15 seconds
+    const interval = setInterval(checkSyncStatus, 15000);
     return () => clearInterval(interval);
   }, [campaigns, kvCampaigns]);
   
@@ -63,23 +71,21 @@ export function CampaignSharingStatus({ campaigns, className = "" }) {
     return `${Math.floor(seconds / 60)}m ago`;
   };
   
-  // Handle manual check/refresh
+  // Handle manual sync
   const handleRefresh = (e) => {
     e.preventDefault();
     e.stopPropagation();
     
     toast.info("Refreshing campaign data...");
     
-    // Try to refresh data from KV store without reloading
-    try {
-      if (kvCampaigns && Array.isArray(kvCampaigns) && kvCampaigns.length > 0) {
-        // Just dispatch the refresh event, but don't reload the page
-        window.dispatchEvent(new CustomEvent("campaign:force-sync", {
-          detail: { campaigns: kvCampaigns }
-        }));
-      }
-    } catch (error) {
-      console.error("Error refreshing data:", error);
+    // Fire a global refresh event
+    window.dispatchEvent(new CustomEvent("campaign:refresh"));
+    
+    // If we have campaigns locally, ensure they're in the KV store
+    if (campaigns && campaigns.length > 0) {
+      window.dispatchEvent(new CustomEvent("campaign:force-sync", {
+        detail: { campaigns }
+      }));
     }
   };
   
@@ -92,9 +98,9 @@ export function CampaignSharingStatus({ campaigns, className = "" }) {
       >
         <Users className="h-3 w-3" />
         {status === 'synced' 
-          ? 'Campaigns Synced' 
+          ? 'Data Synced' 
           : status === 'syncing' 
-            ? 'Syncing...' 
+            ? 'Syncing Data...' 
             : 'Sync Error'}
       </Badge>
       

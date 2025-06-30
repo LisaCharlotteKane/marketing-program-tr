@@ -4,83 +4,93 @@ import { useKV } from '@github/spark/hooks';
 
 /**
  * This component ensures campaign data is properly shared between users
- * by verifying KV store contains the most up-to-date data
+ * by monitoring KV store updates and syncing data across clients
  */
 export function DataSharingService({ campaigns }) {
-  // Create a direct reference to the KV store for verification
+  // Direct reference to the KV store for verification
   const [kvCampaigns, setKvCampaigns] = useKV('campaignData', []);
-  const lastSyncAttemptRef = useRef(0);
-  const syncCountRef = useRef(0);
+  const lastSyncRef = useRef(Date.now());
+  const syncAttemptsRef = useRef(0);
   
-  // Effect to periodically check if KV store has the latest data
+  // Effect to periodically check for KV store changes
   useEffect(() => {
+    // Skip if we don't have any campaigns to check
     if (!campaigns || !campaigns.length) return;
     
-    // Only run this check when we have campaigns to verify
-    const verifySharedData = () => {
+    const checkForKvUpdates = () => {
       try {
-        // Avoid too many syncs in a short period
+        // Throttle sync attempts to prevent excessive processing
         const now = Date.now();
-        if (now - lastSyncAttemptRef.current < 5000 && syncCountRef.current > 5) {
-          console.log("Throttling data sharing checks");
+        if (now - lastSyncRef.current < 10000 && syncAttemptsRef.current > 2) {
+          return; // Skip this check if we've done several recent checks
+        }
+        
+        lastSyncRef.current = now;
+        syncAttemptsRef.current += 1;
+        
+        // Skip if KV data is invalid
+        if (!kvCampaigns || !Array.isArray(kvCampaigns)) {
+          console.warn("KV campaigns data is invalid, skipping sync check");
           return;
         }
         
-        lastSyncAttemptRef.current = now;
-        syncCountRef.current += 1;
-        
-        // Compare KV data with current campaigns
-        const kvLength = Array.isArray(kvCampaigns) ? kvCampaigns.length : 0;
+        // Compare sizes first as a quick check
         const localLength = campaigns.length;
+        const kvLength = kvCampaigns.length;
         
-        console.log(`Data sharing check: KV=${kvLength} campaigns, Local=${localLength} campaigns`);
+        // Log current state for debugging
+        console.log(`Data sync check - Local: ${localLength} campaigns, KV: ${kvLength} campaigns`);
         
-        // If KV store is missing data that we have locally, update it
-        if (kvLength < localLength) {
-          console.log("Local campaigns not fully reflected in KV store, updating shared data");
+        // If KV store has more campaigns than local state, it likely means another user added campaigns
+        if (kvLength > localLength) {
+          console.log("KV store has more campaigns than local state - potential external update");
           
-          // Make a clean copy to avoid reference issues
-          const cleanCopy = JSON.parse(JSON.stringify(campaigns));
-          setKvCampaigns(cleanCopy);
+          // Check if the campaigns are actually different
+          // We can't do a full deep comparison, but we can check campaign IDs
+          const localIds = new Set(campaigns.map(c => c.id));
+          const hasNewCampaigns = kvCampaigns.some(c => !localIds.has(c.id));
           
-          // Also update localStorage as a backup
-          localStorage.setItem('campaignData', JSON.stringify(cleanCopy));
-          
-          toast.success(`Shared ${localLength} campaigns with other users`);
+          if (hasNewCampaigns) {
+            console.log("Found new campaigns in KV store from other users");
+            
+            // Trigger a refresh event that will be handled by useEnhancedCampaigns
+            window.dispatchEvent(new CustomEvent("campaign:refresh"));
+            
+            // Notify the user
+            toast.info("New campaign data available from other users");
+          }
         }
-        // Remove the check that triggers campaign:init - this was causing refresh loops
+        // If local has more campaigns than KV, our useEnhancedCampaigns hook should handle the update
         
-        // Reset sync counter periodically
-        if (syncCountRef.current > 10) {
+        // Reset sync counter after a long period of inactivity
+        if (syncAttemptsRef.current > 5) {
           setTimeout(() => {
-            syncCountRef.current = 0;
+            syncAttemptsRef.current = 0;
           }, 60000);
         }
       } catch (error) {
-        console.error("Error verifying shared data:", error);
+        console.error("Error during data sync check:", error);
       }
     };
     
-    // Run verification once on mount
-    verifySharedData();
+    // Run check initially after a short delay
+    const initialCheckTimeout = setTimeout(checkForKvUpdates, 5000);
     
-    // Set up periodic verification (every 30 seconds instead of 15)
-    const intervalId = setInterval(verifySharedData, 30000);
+    // Set up periodic checks every 30 seconds
+    const intervalId = setInterval(checkForKvUpdates, 30000);
     
-    // Listen for manual force sync events from other components
+    // Listen for manual force sync events
     const handleForceSync = (event) => {
       if (event.detail?.campaigns) {
         console.log("Force sync requested with campaigns:", event.detail.campaigns.length);
         setKvCampaigns(event.detail.campaigns);
-        
-        // Also update localStorage
-        localStorage.setItem('campaignData', JSON.stringify(event.detail.campaigns));
       }
     };
     
     window.addEventListener('campaign:force-sync', handleForceSync);
     
     return () => {
+      clearTimeout(initialCheckTimeout);
       clearInterval(intervalId);
       window.removeEventListener('campaign:force-sync', handleForceSync);
     };

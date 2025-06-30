@@ -460,15 +460,12 @@ function App() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => {
-                  // Don't reload immediately - just show intent to refresh
-                  toast.success("Attempting to refresh data...");
-                  // Give KV store a chance to sync, then reload after delay
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 5000);
+                  // Dispatch refresh event to trigger data reload from KV store
+                  window.dispatchEvent(new CustomEvent("campaign:refresh"));
+                  toast.success("Refreshing campaign data from shared storage...");
                 }}
                 className="flex items-center gap-1"
-                title="Reload the page to ensure all data is fresh"
+                title="Refresh data from shared storage"
               >
                 <ArrowClockwise className="h-4 w-4" /> Refresh Data
               </Button>

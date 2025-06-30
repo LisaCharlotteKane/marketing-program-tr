@@ -51,9 +51,8 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
   key: string,
   initialValue: T
 ): [T, React.Dispatch<React.SetStateAction<T>>, SaveStatus] {
-  // Use Spark's KV store for shared persistence across users with direct initialization
-  // Set the default value directly to ensure data is shared immediately
-  const [kvData, setKvData, deleteKvData] = useKV<T>(key, initialValue);
+  // Use Spark's KV store for shared persistence across users
+  const [kvData, setKvData] = useKV<T>(key, initialValue);
   const [data, setData] = useState<T>(initialValue);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | undefined>(undefined);
@@ -61,313 +60,218 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const initialLoadRef = useRef(false);
   const loadAttemptCountRef = useRef(0);
+  const kvUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Load data on mount with improved KV store handling
+  // This effect handles the initial loading of data
   useEffect(() => {
     if (initialLoadRef.current) return; // Only run on first load
     
-    // Define an async function to handle data loading
     const loadData = async () => {
       try {
-        // Log the current KV data state to help debugging
-        console.log("Current KV data state:", kvData);
+        console.log("Attempting to load campaign data from KV store...");
         
-        // First, check if we have data in KV store - with explicit validity check
+        // First check if KV data exists and is valid
         if (kvData && Array.isArray(kvData) && kvData.length > 0) {
-          console.log("Loading data from KV store", kvData.length, "campaigns");
+          console.log(`Found ${kvData.length} campaigns in KV store`);
           
-          // Data found in KV store
+          // Valid data found in KV store
           const validatedData = ensureCampaignIntegrity(kvData) as T;
           setData(validatedData);
-          
-          // Also save to localStorage as backup
           localStorage.setItem(key, JSON.stringify(validatedData));
           
           toast.success(`Loaded ${validatedData.length} campaigns from shared storage`);
-          
-          // Successfully loaded, mark as complete
           initialLoadRef.current = true;
           setIsLoaded(true);
           return;
-        } else if (kvData && Array.isArray(kvData) && kvData.length === 0) {
-          console.log("KV store contained an empty array, checking localStorage for potential data");
-          // Even though KV has empty array, we still check localStorage for backward compatibility
-          const savedData = localStorage.getItem(key);
-          
-          if (savedData) {
-            try {
-              const parsedData = JSON.parse(savedData);
-              if (Array.isArray(parsedData) && parsedData.length > 0) {
-                console.log("Found data in localStorage, migrating to KV");
-                const localValidatedData = ensureCampaignIntegrity(parsedData) as T;
-                
-                // Migrate to KV store - this is crucial for sharing with other users
-                setKvData(localValidatedData);
-                setData(localValidatedData);
-                
-                toast.success(`Migrated ${localValidatedData.length} campaigns to shared storage`);
-                
-                // Successfully loaded, mark as complete
-                initialLoadRef.current = true;
-                setIsLoaded(true);
-                return;
-              }
-            } catch (parseError) {
-              console.error("Error parsing localStorage data:", parseError);
-            }
-          }
-          
-          // If we reach here, KV was empty and localStorage had no valid data
-          // Initialize KV store with empty array
-          console.log("No data found, initializing empty storage");
-          setKvData(initialValue);
-          setData(initialValue);
-          initialLoadRef.current = true;
-          setIsLoaded(true);
-          return;
-        } else {
-          // KV data is not a valid array, try one more time after a short delay
-          // This helps with potential race conditions in KV store initialization
-          loadAttemptCountRef.current += 1;
-          
-          if (loadAttemptCountRef.current <= 3) {
-            console.log(`Attempt ${loadAttemptCountRef.current}: KV data not valid yet, retrying in 1 second...`);
-            setTimeout(loadData, 1000);
-            return;
-          }
-          
-          // If we've tried multiple times and still no data, fall back to localStorage
-          console.log("No valid KV data found after multiple attempts, checking localStorage");
-          const savedData = localStorage.getItem(key);
-          
-          if (savedData) {
-            console.log("Found data in localStorage, migrating to KV");
-            try {
-              const parsedData = JSON.parse(savedData);
-              const validatedData = ensureCampaignIntegrity(parsedData) as T;
+        } 
+        
+        // If KV store is empty, check localStorage as fallback
+        console.log("KV store empty or invalid, checking localStorage");
+        const savedData = localStorage.getItem(key);
+        
+        if (savedData) {
+          try {
+            const parsedData = JSON.parse(savedData);
+            if (Array.isArray(parsedData) && parsedData.length > 0) {
+              console.log(`Found ${parsedData.length} campaigns in localStorage`);
               
-              // Migrate to KV store - this is crucial for sharing with other users
-              setKvData(validatedData);
+              const validatedData = ensureCampaignIntegrity(parsedData) as T;
               setData(validatedData);
               
-              toast.success(`Migrated ${validatedData.length} campaigns to shared storage`);
-              initialLoadRef.current = true;
-              setIsLoaded(true);
-              return;
-            } catch (parseError) {
-              console.error("Error parsing localStorage data:", parseError);
+              // Important: Update KV store so other users can see this data
+              setKvData(validatedData);
               
-              // If localStorage data is corrupt, initialize with empty array
-              setKvData(initialValue);
-              setData(initialValue);
+              toast.success(`Loaded ${validatedData.length} campaigns from local storage`);
               initialLoadRef.current = true;
               setIsLoaded(true);
               return;
             }
-          } else {
-            // No data anywhere, initialize KV store with empty array
-            console.log("No data found, initializing empty storage");
-            setKvData(initialValue);
-            setData(initialValue);
-            initialLoadRef.current = true;
-            setIsLoaded(true);
-            return;
+          } catch (error) {
+            console.error("Error parsing localStorage data:", error);
           }
         }
-      } catch (error) {
-        console.error(`Error loading ${key} data:`, error);
-        console.warn(`Using default ${key} data due to loading error`);
         
-        // Fall back to empty array rather than showing error
+        // If we reach here, both KV and localStorage were empty
+        console.log("No campaign data found, starting with empty state");
         setData(initialValue);
         initialLoadRef.current = true;
         setIsLoaded(true);
         
-        toast.error(`Error loading saved campaign data. Starting with empty list.`);
+      } catch (error) {
+        console.error("Error loading campaign data:", error);
+        toast.error("Failed to load campaign data. Starting with empty state.");
+        setData(initialValue);
+        initialLoadRef.current = true;
+        setIsLoaded(true);
       }
     };
     
-    // Start the loading process
+    // Start loading process
     loadData();
   }, [key, initialValue, kvData, setKvData]);
+  
+  // This effect periodically checks for KV store updates from other users
+  useEffect(() => {
+    if (!isLoaded) return;
+    
+    const checkForKvUpdates = () => {
+      // Only run if we've completed initial loading
+      if (!initialLoadRef.current) return;
+      
+      try {
+        // Skip if KV data is invalid
+        if (!kvData || !Array.isArray(kvData)) return;
+        
+        // Compare local data with KV data
+        const localLength = data.length;
+        const kvLength = kvData.length;
+        
+        if (kvLength > localLength) {
+          console.log(`KV store has more campaigns (${kvLength}) than local state (${localLength})`);
+          
+          // KV has more data, likely updated by another user
+          const validatedData = ensureCampaignIntegrity(kvData) as T;
+          
+          // Update local state
+          setData(validatedData);
+          localStorage.setItem(key, JSON.stringify(validatedData));
+          
+          toast.info(`Updated with ${kvLength - localLength} new campaigns from other users`);
+        }
+        // We don't handle the case where KV has fewer items than local state here
+        // That's handled in the update logic below
+      } catch (error) {
+        console.error("Error checking for KV updates:", error);
+      }
+    };
+    
+    // Set up periodic checks for KV updates (every 15 seconds)
+    const intervalId = setInterval(checkForKvUpdates, 15000);
+    
+    return () => clearInterval(intervalId);
+  }, [isLoaded, data.length, kvData, key]);
   
   // Custom setter that updates both local state and KV store
   const setDataAndKV = useCallback((newData: React.SetStateAction<T>) => {
     setData(prev => {
+      // Calculate next data state
       const nextData = typeof newData === 'function' 
         ? (newData as Function)(prev) 
         : newData;
       
-      // Always update KV store immediately to ensure data is shared
-      // This is critical for multi-user scenarios
-      try {
-        // Log the update operation for debugging
-        console.log(`Updating KV store with ${Array.isArray(nextData) ? nextData.length : 0} campaigns`);
-        setKvData(nextData);
-        
-        // Also update localStorage as a backup
-        localStorage.setItem(key, JSON.stringify(nextData));
-        
-        // Dispatch an event that can be captured by other components
-        window.dispatchEvent(new CustomEvent("campaign:updated", { 
-          detail: { count: Array.isArray(nextData) ? nextData.length : 0 } 
-        }));
-      } catch (error) {
-        console.error("Error updating KV store:", error);
-        toast.error("Failed to sync campaign data. Please try again.");
+      // Schedule KV store update with debouncing
+      if (kvUpdateTimeoutRef.current) {
+        clearTimeout(kvUpdateTimeoutRef.current);
       }
+      
+      kvUpdateTimeoutRef.current = setTimeout(() => {
+        try {
+          console.log(`Updating KV store with ${nextData.length} campaigns`);
+          setKvData(nextData);
+          localStorage.setItem(key, JSON.stringify(nextData));
+          
+          // Dispatch event for other components
+          window.dispatchEvent(new CustomEvent("campaign:updated", { 
+            detail: { count: nextData.length } 
+          }));
+        } catch (error) {
+          console.error("Error updating KV store:", error);
+          toast.error("Failed to share campaign data with other users");
+        }
+      }, 500); // Short debounce for responsive updates
       
       return nextData;
     });
   }, [setKvData, key]);
   
-  // Create prevDataRef outside useEffect
-  const prevDataRef = useRef("");
-  
-  // Save data when it changes, with debounce (maintains backward compatibility)
+  // This is for UI feedback on save operations
   useEffect(() => {
-    // Skip initial render
     if (!isLoaded) return;
     
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     
-    // Compare current data with previous data to avoid unnecessary saves
-    const dataStr = JSON.stringify(data);
-    
-    if (prevDataRef.current === dataStr) {
-      return; // Skip save if data hasn't changed
-    }
-    
-    prevDataRef.current = dataStr;
-    
     saveTimeoutRef.current = setTimeout(() => {
-      const saveData = async () => {
-        setIsSaving(true);
-        try {
-          // Keep localStorage in sync for backward compatibility
-          localStorage.setItem(key, dataStr);
-          
-          // We already updated KV store in setDataAndKV, but this ensures
-          // we have a consistent save pattern and UI feedback
-          setLastSaved(new Date());
-        } catch (error) {
-          console.error(`Error saving ${key} data:`, error);
-          toast.error(`Failed to save ${key} data`);
-        } finally {
-          setIsSaving(false);
-        }
-      };
+      setIsSaving(true);
       
-      saveData().then(() => {
-        // Dispatch custom event to trigger GitHub sync
-        // Using a setTimeout to prevent immediate processing
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("campaign:updated"));
-        }, 500);
-      });
-    }, 5000); // Increased debounce to 5000ms to reduce saves frequency
+      try {
+        // Set lastSaved timestamp for UI feedback
+        setLastSaved(new Date());
+      } finally {
+        setIsSaving(false);
+      }
+    }, 500);
     
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [data, key, isLoaded]);
+  }, [data, isLoaded]);
   
-  // Force save function
+  // Force save function for manual sync
   const forceSave = useCallback(async () => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
     setIsSaving(true);
+    
     try {
-      // Create a clean copy of the data to avoid reference issues
+      // Clean copy to avoid reference issues
       const cleanCopy = JSON.parse(JSON.stringify(data));
       
-      // Save to both localStorage and KV store
+      // Update both storage methods
       localStorage.setItem(key, JSON.stringify(cleanCopy));
-      
-      // Explicitly call setKvData with clean copy
       await setKvData(cleanCopy);
       
-      // Force sync to other components
+      // Notify other components
       window.dispatchEvent(new CustomEvent("campaign:force-sync", {
         detail: { campaigns: cleanCopy }
       }));
       
-      // Trigger GitHub sync
-      window.dispatchEvent(new CustomEvent("campaign:updated"));
-      
       setLastSaved(new Date());
-      toast.success("Campaign data saved and shared successfully");
+      toast.success("Campaign data saved and shared with all users");
     } catch (error) {
-      console.error(`Error force saving ${key} data:`, error);
-      toast.error(`Failed to save campaign data. Please try again.`);
-      
-      // Try one more time after a delay
-      setTimeout(() => {
-        try {
-          // Last resort, try to save to localStorage only
-          localStorage.setItem(key, JSON.stringify(data));
-          toast.info("Data saved to local storage only. Refresh the page to try sharing again.");
-        } catch (secondError) {
-          console.error("Second save attempt failed:", secondError);
-        }
-      }, 1000);
+      console.error("Error force saving data:", error);
+      toast.error("Failed to share campaign data. Please try again.");
     } finally {
       setIsSaving(false);
     }
   }, [data, key, setKvData]);
   
-  // Add a global event listener for manual KV data refreshes
+  // Listen for forced data refresh events
   useEffect(() => {
-    const handleForcedDataLoad = async () => {
-      console.log("Forced data load requested");
-      
-      try {
-        // Check if we have data in KV store
-        if (kvData && Array.isArray(kvData) && kvData.length > 0) {
-          console.log("Loading data from KV store on forced load", kvData.length, "campaigns");
-          
-          // Data found in KV store
-          const validatedData = ensureCampaignIntegrity(kvData) as T;
-          setData(validatedData);
-          
-          // Also save to localStorage as backup
-          localStorage.setItem(key, JSON.stringify(validatedData));
-          
-          toast.success(`Loaded ${validatedData.length} campaigns from shared storage`);
-        } else {
-          // Trigger a direct KV refresh to ensure we have the latest data
-          console.log("No KV data found on forced load, directly accessing KV store");
-          
-          // Force rerender of the component by toggling isLoaded state
-          setIsLoaded(false);
-          setTimeout(() => {
-            setIsLoaded(true);
-            
-            // Do not force page reload - it causes refresh loops
-            toast.info("Attempted to refresh campaign data");
-          }, 500);
-        }
-      } catch (error) {
-        console.error("Error during forced data load:", error);
-        toast.error("Failed to refresh campaign data");
-        
-        // Do not force page reload - it causes refresh loops
-        // Just show error message instead
+    const handleForcedRefresh = () => {
+      // Only refresh if KV data is valid and different from local data
+      if (kvData && Array.isArray(kvData) && kvData.length > 0) {
+        const validatedData = ensureCampaignIntegrity(kvData) as T;
+        setData(validatedData);
+        localStorage.setItem(key, JSON.stringify(validatedData));
+        toast.success(`Refreshed with ${validatedData.length} campaigns from shared storage`);
       }
     };
     
-    window.addEventListener("campaign:init", handleForcedDataLoad);
-    
-    return () => {
-      window.removeEventListener("campaign:init", handleForcedDataLoad);
-    };
-  }, [key, kvData]);
+    window.addEventListener("campaign:refresh", handleForcedRefresh);
+    return () => window.removeEventListener("campaign:refresh", handleForcedRefresh);
+  }, [kvData, key]);
   
   return [data, setDataAndKV, { isSaving, lastSaved, forceSave }];
 }
