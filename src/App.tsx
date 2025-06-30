@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise, LockKey, TrendUp, Calendar } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise, LockKey, TrendUp, Calendar, CloudCheck } from "@phosphor-icons/react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { ROIDashboard } from "@/components/roi-dashboard"
@@ -38,6 +38,7 @@ import { Button } from "@/components/ui/button"
 import { calculateRegionalMetrics } from "@/services/budget-service"
 import { PrimerHeader } from "@/components/primer/header"
 import { ErrorBoundary } from "@/components/error-boundary"
+import StorageInfo from "@/components/storage-info"
 
 function App() {
   // Form state
@@ -476,7 +477,7 @@ function App() {
           
           <Tabs defaultValue="planning" className="w-full">
             <div className="sticky top-0 z-10 bg-background pt-2 pb-4 mb-4 border-b">
-              <TabsList className="w-full flex-nowrap md:grid md:grid-cols-7 shadow-sm">
+              <TabsList className="w-full flex-nowrap md:grid md:grid-cols-8 shadow-sm">
                 <TabsTrigger value="planning" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
                   <Calculator className="h-4 w-4 flex-shrink-0" /> 
                   <span>Planning</span>
@@ -496,6 +497,10 @@ function App() {
                 <TabsTrigger value="roi" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
                   <TrendUp className="h-4 w-4 flex-shrink-0" /> 
                   <span>ROI</span>
+                </TabsTrigger>
+                <TabsTrigger value="storage" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
+                  <CloudCheck className="h-4 w-4 flex-shrink-0" /> 
+                  <span>Storage</span>
                 </TabsTrigger>
                 <TabsTrigger value="github" className="whitespace-nowrap flex items-center gap-2 px-3 sm:px-4">
                   <Database className="h-4 w-4 flex-shrink-0" /> 
@@ -783,6 +788,12 @@ function App() {
 
           <TabsContent value="roi" className="space-y-8 pt-2">
             <ROIDashboard campaigns={campaigns} />
+          </TabsContent>
+
+          <TabsContent value="storage" className="space-y-8 pt-2">
+            <ErrorBoundary>
+              <StorageInfo />
+            </ErrorBoundary>
           </TabsContent>
 
           <TabsContent value="github" className="space-y-8 pt-2">
