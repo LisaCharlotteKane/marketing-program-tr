@@ -51,8 +51,8 @@ export function CampaignSharingStatus({ campaigns, className = "" }) {
     // Check on component mount and when dependencies change
     checkSyncStatus();
     
-    // Set up periodic checks
-    const interval = setInterval(checkSyncStatus, 15000);
+    // Set up periodic checks (every 30 seconds instead of 15)
+    const interval = setInterval(checkSyncStatus, 30000);
     return () => clearInterval(interval);
   }, [campaigns, kvCampaigns]);
   

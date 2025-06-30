@@ -229,7 +229,7 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
       };
       
       saveData();
-    }, 2000); // 2 second debounce
+    }, 5000); // 5 second debounce (increased from 2 seconds)
     
     return () => {
       clearTimeout(timeoutId);

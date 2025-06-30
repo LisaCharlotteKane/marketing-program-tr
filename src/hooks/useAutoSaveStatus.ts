@@ -77,6 +77,7 @@ export function useAutoSaveStatus() {
     window.addEventListener('forcedSave', handleForcedSave as EventListener);
     
     // Also check localStorage periodically to detect changes in the current tab
+    // Using 5000ms (5 seconds) instead of 1000ms to reduce refresh frequency
     const interval = setInterval(() => {
       try {
         const statusStr = localStorage.getItem('autoSaveStatus');
@@ -90,7 +91,7 @@ export function useAutoSaveStatus() {
       } catch (error) {
         console.error('Error reading auto-save status', error);
       }
-    }, 1000);
+    }, 5000);
     
     // Load initial state
     try {

@@ -70,8 +70,8 @@ export function DataSharingService({ campaigns }) {
     // Run verification once on mount
     verifySharedData();
     
-    // Set up periodic verification (every 15 seconds)
-    const intervalId = setInterval(verifySharedData, 15000);
+    // Set up periodic verification (every 30 seconds instead of 15)
+    const intervalId = setInterval(verifySharedData, 30000);
     
     // Listen for manual force sync events from other components
     const handleForceSync = (event) => {

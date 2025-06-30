@@ -262,9 +262,12 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       
       saveData().then(() => {
         // Dispatch custom event to trigger GitHub sync
-        window.dispatchEvent(new CustomEvent("campaign:updated"));
+        // Using a setTimeout to prevent immediate processing
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("campaign:updated"));
+        }, 500);
       });
-    }, 2000); // Increased debounce to 2000ms to reduce saves
+    }, 3000); // Increased debounce to 3000ms to reduce saves frequency
     
     return () => {
       if (saveTimeoutRef.current) {

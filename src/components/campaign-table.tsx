@@ -63,26 +63,45 @@ export function CampaignTable({
   // Mobile responsive state
   const isMobile = useMediaQuery("(max-width: 768px)");
   
-  // Helper function to ensure data persistence and sharing
-  const forceSaveAndShare = (updatedCampaigns) => {
-    try {
-      // Save to localStorage for redundancy
-      localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
+  // Helper function to ensure data persistence and sharing with debounce
+  const forceSaveAndShare = (() => {
+    const debouncedUpdate = (updatedCampaigns) => {
+      try {
+        // Save to localStorage for redundancy
+        localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
+        
+        // Signal that data has been updated - with delay to prevent immediate processing
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent("campaign:updated", { 
+            detail: { count: updatedCampaigns.length } 
+          }));
+          
+          // Force synchronization with other components
+          window.dispatchEvent(new CustomEvent("campaign:force-sync", {
+            detail: { campaigns: updatedCampaigns }
+          }));
+        }, 100);
+      } catch (error) {
+        console.error("Error during forced data save:", error);
+        toast.error("Failed to save changes. Please try again.");
+      }
+    };
+    
+    // Track the timeout for debouncing
+    let debounceTimeout = null;
+    
+    return (updatedCampaigns) => {
+      // Clear any pending timeout
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
       
-      // Signal that data has been updated
-      window.dispatchEvent(new CustomEvent("campaign:updated", { 
-        detail: { count: updatedCampaigns.length } 
-      }));
-      
-      // Force synchronization with other components
-      window.dispatchEvent(new CustomEvent("campaign:force-sync", {
-        detail: { campaigns: updatedCampaigns }
-      }));
-    } catch (error) {
-      console.error("Error during forced data save:", error);
-      toast.error("Failed to save changes. Please try again.");
-    }
-  };
+      // Set new timeout to debounce rapid changes
+      debounceTimeout = setTimeout(() => {
+        debouncedUpdate(updatedCampaigns);
+      }, 1000);
+    };
+  })();
   
   // Selected campaigns for bulk operations
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);

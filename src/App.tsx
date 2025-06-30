@@ -355,79 +355,89 @@ function App() {
       return; // Skip update if campaigns haven't changed
     }
     
-    // Update reference for next comparison
-    previousCampaignsRef.current = JSON.parse(campaignsString);
-    
-    // Step 1: Create a mapping of campaigns by owner
-    const campaignsByOwner: { [key: string]: any[] } = {};
-    
-    // Group campaigns by owner, filtering out Contractor/Infrastructure campaigns for budget impact
-    campaigns.forEach(campaign => {
-      const owner = campaign.owner;
+    // Create a debounced update function to prevent rapid repeated processing
+    const updateBudgets = () => {
+      // Update reference for next comparison
+      previousCampaignsRef.current = JSON.parse(campaignsString);
       
-      // Skip contractor campaigns for budget allocation using helper function
-      if (isContractorCampaign(campaign)) {
-        console.log(`Skipping contractor campaign for budget: ${campaign.id} - ${campaign.description}`);
-        return;
-      }
+      // Step 1: Create a mapping of campaigns by owner
+      const campaignsByOwner: { [key: string]: any[] } = {};
       
-      if (owner && typeof campaign.forecastedCost === 'number') {
-        if (!campaignsByOwner[owner]) {
-          campaignsByOwner[owner] = [];
+      // Group campaigns by owner, filtering out Contractor/Infrastructure campaigns for budget impact
+      campaigns.forEach(campaign => {
+        const owner = campaign.owner;
+        
+        // Skip contractor campaigns for budget allocation using helper function
+        if (isContractorCampaign(campaign)) {
+          console.log(`Skipping contractor campaign for budget: ${campaign.id} - ${campaign.description}`);
+          return;
         }
         
-        campaignsByOwner[owner].push({
-          id: campaign.id,
-          forecastedCost: typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0,
-          actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 0,
-          owner: owner,
-          campaignType: campaign.campaignType // Store campaign type for contractor filtering
-        });
-      }
-    });
-    
-    // Step 2: Update regional budgets based on owner's budget pool
-    setRegionalBudgets(prev => {
-      const updated = { ...prev };
-      
-      // Clear all programs first
-      Object.keys(updated).forEach(region => {
-        if (updated[region]) {
-          updated[region].programs = [];
-        }
-      });
-      
-      // Assign campaigns to the owner's region budget
-      Object.entries(campaignsByOwner).forEach(([owner, ownerCampaigns]) => {
-        // Find which region this owner is associated with
-        const ownerRegions = Object.entries(updated)
-          .filter(([_, budget]) => budget.ownerName === owner)
-          .map(([region]) => region);
-        
-        if (ownerRegions.length > 0) {
-          const ownerRegion = ownerRegions[0];
-          // Add all this owner's campaigns to their budget region
-          updated[ownerRegion].programs.push(...ownerCampaigns);
-        } else {
-          // For owners without a specific budget region
-          // This ensures campaigns still show up in reporting even if they don't count against a budget
-          ownerCampaigns.forEach(campaign => {
-            const campaignObj = campaigns.find(c => c.id === campaign.id);
-            if (campaignObj && campaignObj.region && updated[campaignObj.region]) {
-              // Add to the campaign's specified region for reporting purposes only
-              // These won't count against budget since they're not from the region's owner
-              updated[campaignObj.region].programs.push({
-                ...campaign,
-                nonBudgetImpacting: true, // Flag as non-budget impacting
-                campaignType: campaignObj.campaignType // Include campaign type for filtering
-              });
-            }
+        if (owner && typeof campaign.forecastedCost === 'number') {
+          if (!campaignsByOwner[owner]) {
+            campaignsByOwner[owner] = [];
+          }
+          
+          campaignsByOwner[owner].push({
+            id: campaign.id,
+            forecastedCost: typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0,
+            actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 0,
+            owner: owner,
+            campaignType: campaign.campaignType // Store campaign type for contractor filtering
           });
         }
       });
       
-      return updated;
-    });
+      // Step 2: Update regional budgets based on owner's budget pool
+      setRegionalBudgets(prev => {
+        const updated = { ...prev };
+        
+        // Clear all programs first
+        Object.keys(updated).forEach(region => {
+          if (updated[region]) {
+            updated[region].programs = [];
+          }
+        });
+        
+        // Assign campaigns to the owner's region budget
+        Object.entries(campaignsByOwner).forEach(([owner, ownerCampaigns]) => {
+          // Find which region this owner is associated with
+          const ownerRegions = Object.entries(updated)
+            .filter(([_, budget]) => budget.ownerName === owner)
+            .map(([region]) => region);
+          
+          if (ownerRegions.length > 0) {
+            const ownerRegion = ownerRegions[0];
+            // Add all this owner's campaigns to their budget region
+            updated[ownerRegion].programs.push(...ownerCampaigns);
+          } else {
+            // For owners without a specific budget region
+            // This ensures campaigns still show up in reporting even if they don't count against a budget
+            ownerCampaigns.forEach(campaign => {
+              const campaignObj = campaigns.find(c => c.id === campaign.id);
+              if (campaignObj && campaignObj.region && updated[campaignObj.region]) {
+                // Add to the campaign's specified region for reporting purposes only
+                // These won't count against budget since they're not from the region's owner
+                updated[campaignObj.region].programs.push({
+                  ...campaign,
+                  nonBudgetImpacting: true, // Flag as non-budget impacting
+                  campaignType: campaignObj.campaignType // Include campaign type for filtering
+                });
+              }
+            });
+          }
+        });
+        
+        return updated;
+      });
+    };
+    
+    // Debounce the updates to avoid overprocessing
+    const timeoutId = setTimeout(updateBudgets, 500);
+    
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [campaigns]); // Removed setRegionalBudgets from dependencies
 
   return (
