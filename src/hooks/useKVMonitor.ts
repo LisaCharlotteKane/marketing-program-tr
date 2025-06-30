@@ -1,90 +1,81 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { toast } from 'sonner';
+
+interface KVMonitorProps<T> {
+  /**
+   * The key to monitor in the KV store
+   */
+  storageKey: string;
+  
+  /**
+   * Default value if the key doesn't exist
+   */
+  defaultValue: T;
+  
+  /**
+   * Callback fired when the value changes
+   */
+  onChange?: (newValue: T, oldValue: T) => void;
+  
+  /**
+   * Interval in ms to check for changes (default: 2000ms)
+   */
+  interval?: number;
+}
 
 /**
- * Custom hook to monitor KV store for external changes
- * This helps with multi-user scenarios where data is shared between users
+ * A hook that monitors a KV store key for changes
+ * This is useful for detecting when other users update shared data
  */
-export function useKVMonitor<T>(key: string, onExternalUpdate?: (data: T) => void) {
-  const [kvData, setKvData] = useKV<T>(key, null as T);
-  const [isMonitoring, setIsMonitoring] = useState(false);
-  const dataRef = useRef<string | null>(null);
+export function useKVMonitor<T>({
+  storageKey,
+  defaultValue,
+  onChange,
+  interval = 2000
+}: KVMonitorProps<T>) {
+  // Access the KV store
+  const [kvValue, setKvValue] = useKV<T>(storageKey, defaultValue);
   
-  // Start monitoring when the hook is first used
+  // Keep track of the previous value for comparison
+  const [previousValue, setPreviousValue] = useState<T>(kvValue);
+  
+  // Track changes and notify via the onChange callback
   useEffect(() => {
-    setIsMonitoring(true);
+    // Simple equality check to detect changes
+    const hasChanged = JSON.stringify(kvValue) !== JSON.stringify(previousValue);
     
-    // Save initial data snapshot for comparison
-    if (kvData) {
-      try {
-        dataRef.current = JSON.stringify(kvData);
-      } catch (error) {
-        console.error(`Error serializing ${key} initial data:`, error);
-      }
-    }
-    
-    // Setup interval for polling the KV store
-    const intervalId = setInterval(() => {
-      if (!kvData) return;
+    if (hasChanged) {
+      console.log(`KV value changed for key "${storageKey}"`);
       
-      try {
-        // Get current data as a string for comparison
-        const currentDataStr = JSON.stringify(kvData);
-        
-        // If we have previous data to compare with
-        if (dataRef.current && dataRef.current !== currentDataStr) {
-          console.log(`Detected external change to ${key} in KV store`);
-          
-          // Call the callback if provided
-          if (onExternalUpdate) {
-            onExternalUpdate(kvData);
-          }
-          
-          // Update our reference
-          dataRef.current = currentDataStr;
-        } else if (!dataRef.current) {
-          // First time seeing data
-          dataRef.current = currentDataStr;
-        }
-      } catch (error) {
-        console.error(`Error checking for ${key} KV updates:`, error);
+      // Call the onChange handler if provided
+      if (onChange) {
+        onChange(kvValue, previousValue);
       }
-    }, 15000); // Check every 15 seconds
+      
+      // Update previous value
+      setPreviousValue(kvValue);
+    }
+  }, [kvValue, previousValue, onChange, storageKey]);
+  
+  // Periodically refresh the KV value to check for external changes
+  useEffect(() => {
+    const checkForChanges = () => {
+      // This forces a re-fetch from the KV store
+      // The actual comparison happens in the effect above
+      setKvValue(prev => {
+        // Return same reference if it's an object to avoid unnecessary rerenders
+        // when nothing has changed
+        return prev;
+      });
+    };
+    
+    // Set up the interval
+    const intervalId = setInterval(checkForChanges, interval);
     
     // Clean up on unmount
-    return () => {
-      clearInterval(intervalId);
-      setIsMonitoring(false);
-    };
-  }, [key, kvData, onExternalUpdate]);
+    return () => clearInterval(intervalId);
+  }, [interval, setKvValue]);
   
-  // Function to force a refresh of the KV data
-  const forceRefresh = async () => {
-    try {
-      // Get the latest data from KV store
-      if (kvData) {
-        // Notify callback with current KV data
-        if (onExternalUpdate) {
-          onExternalUpdate(kvData);
-        }
-        
-        // Update our reference
-        dataRef.current = JSON.stringify(kvData);
-        
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error(`Error refreshing ${key} KV data:`, error);
-      return false;
-    }
-  };
-  
-  return {
-    isMonitoring,
-    forceRefresh,
-    kvData,
-    setKvData
-  };
+  // Return the current value from KV store and setter
+  return [kvValue, setKvValue, previousValue];
 }

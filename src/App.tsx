@@ -25,6 +25,7 @@ import { BudgetLockInfo } from "@/components/budget-lock-info"
 import { StorageErrorHandler } from "@/components/storage-error-handler"
 import { DataSharingService } from "@/components/data-sharing-service"
 import { CampaignSharingStatus } from "@/components/campaign-sharing-status"
+import { StorageTest } from "@/components/storage-test"
 import { Logo } from "@/components/logo"
 import { Avatar } from "@/components/avatar"
 import { ThemeSwitch } from "@/components/theme-switch"
@@ -785,6 +786,7 @@ function App() {
           </TabsContent>
 
           <TabsContent value="github" className="space-y-8 pt-2">
+            <StorageTest />
             <PersistentStorageInfo campaigns={campaigns} />
             <GitHubSync campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
