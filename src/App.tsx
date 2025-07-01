@@ -5,11 +5,13 @@ import { CampaignTable } from "@/components/campaign-table";
 import { ReportingDashboard } from "@/components/reporting-dashboard";
 import { ExecutionTracking } from "@/components/execution-tracking";
 import { CampaignCalendarView } from "@/components/campaign-calendar-view";
+import { StorageManagement } from "@/components/storage-management";
+import { useMigrateToGlobal } from "@/hooks/useMigrateStorage";
 import { Toaster } from "sonner";
 import { Logo } from "@/components/logo";
 
 export function CampaignCountChecker() {
-  const [kvCampaigns] = useKV('campaignData', []);
+  const [kvCampaigns] = useKV('campaignData', [], { scope: 'global' });
   const [campaignCount, setCampaignCount] = useState(0);
   const [refreshTime, setRefreshTime] = useState(new Date());
 
@@ -27,8 +29,12 @@ export function CampaignCountChecker() {
 }
 
 export default function App() {
-  const [campaigns, setCampaigns] = useKV('campaignData', []);
+  const [campaigns, setCampaigns] = useKV('campaignData', [], { scope: 'global' });
   const [activeTab, setActiveTab] = useState('planning');
+  
+  // Migrate any existing user data to global scope
+  useMigrateToGlobal('campaignData');
+  useMigrateToGlobal('assignedBudgets');
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -49,6 +55,7 @@ export default function App() {
             <TabsTrigger value="execution">Execution Tracking</TabsTrigger>
             <TabsTrigger value="reporting">Reporting</TabsTrigger>
             <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+            <TabsTrigger value="storage">Storage</TabsTrigger>
           </TabsList>
 
           <TabsContent value="planning">
@@ -71,6 +78,10 @@ export default function App() {
 
           <TabsContent value="calendar">
             <CampaignCalendarView campaigns={campaigns} />
+          </TabsContent>
+          
+          <TabsContent value="storage">
+            <StorageManagement />
           </TabsContent>
         </Tabs>
       </main>
