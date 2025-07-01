@@ -9,6 +9,7 @@ import { useRegionalBudgets, RegionalBudget, OWNER_TO_REGION_MAP } from "@/hooks
 import { calculateRegionalMetrics } from "@/services/budget-service";
 import { BudgetLockInfo } from "@/components/budget-lock-info";
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator";
+import { BudgetAllocationDetails } from "@/components/budget-allocation-details";
 import { Progress } from "@/components/ui/progress";
 import { ArrowClockwise, Warning } from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/utils";
@@ -62,6 +63,7 @@ export function BudgetManagement() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="allocations">Budget Allocations</TabsTrigger>
           <TabsTrigger value="tracking">Spending Tracking</TabsTrigger>
+          <TabsTrigger value="details">Allocation Details</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -245,6 +247,52 @@ export function BudgetManagement() {
               })}
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="details">
+          <div className="space-y-6">
+            {regions.map((region) => {
+              const metrics = calculateRegionalMetrics(budgets, region);
+              
+              // Skip regions with no budget allocated or no programs
+              if (
+                (metrics.assignedBudget === "" || metrics.assignedBudget === 0) ||
+                !metrics.campaignAllocations || 
+                Object.keys(metrics.campaignAllocations).length === 0
+              ) {
+                return null;
+              }
+              
+              // Create a mapping of campaign IDs to names for display
+              const campaignDetails: Record<string, { id: string; name: string; owner: string }> = {};
+              
+              // Map campaign IDs to names and owners
+              budgets[region].programs.forEach(program => {
+                if (program.id) {
+                  campaignDetails[program.id] = {
+                    id: program.id,
+                    name: program.id, // Use a more descriptive field if available
+                    owner: program.owner || 'Unknown'
+                  };
+                }
+              });
+              
+              // Get the total and remaining budget for the region
+              const totalBudget = typeof metrics.assignedBudget === "number" ? metrics.assignedBudget : 0;
+              const remainingBudget = metrics.remainingBudget || 0;
+              
+              return (
+                <BudgetAllocationDetails
+                  key={region}
+                  regionName={region}
+                  campaignAllocations={metrics.campaignAllocations || {}}
+                  campaignDetails={campaignDetails}
+                  totalBudget={totalBudget}
+                  remainingBudget={remainingBudget}
+                />
+              );
+            })}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

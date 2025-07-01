@@ -36,6 +36,125 @@ export function getBudgetByRegion(region: string): number {
 }
 
 /**
+ * Allocate budget to campaigns based on owner's budget limit
+ * @param campaigns Array of campaigns to allocate budget to
+ * @returns Object with updated campaigns, allocations, and budget status
+ */
+export function allocateBudgetToCampaigns(campaigns: any[] = []) {
+  // Group campaigns by owner
+  const campaignsByOwner: Record<string, any[]> = {};
+  
+  campaigns.forEach(campaign => {
+    if (!campaign.owner) return;
+    
+    // Skip contractor/infrastructure campaigns
+    if (campaign.campaignType && isContractorCampaign({ campaignType: campaign.campaignType })) {
+      return;
+    }
+    
+    if (!campaignsByOwner[campaign.owner]) {
+      campaignsByOwner[campaign.owner] = [];
+    }
+    
+    campaignsByOwner[campaign.owner].push(campaign);
+  });
+  
+  // Process each owner's campaigns
+  const allocations: Record<string, Record<string, {
+    allocated: number;
+    forecasted: number;
+    actual: number;
+    remaining: number;
+  }>> = {};
+  
+  const updatedCampaigns = [...campaigns];
+  
+  // For each owner
+  Object.entries(campaignsByOwner).forEach(([owner, ownerCampaigns]) => {
+    // Get owner's budget
+    const ownerInfo = getOwnerInfo(owner);
+    let remainingBudget = ownerInfo.budget;
+    
+    allocations[owner] = {};
+    
+    // Sort campaigns by priority (could be enhanced with actual priority field)
+    ownerCampaigns.sort((a, b) => {
+      // Default sort by forecasted cost (higher first)
+      const costA = parseFloat(a.forecastedCost) || 0;
+      const costB = parseFloat(b.forecastedCost) || 0;
+      return costB - costA;
+    });
+    
+    // Allocate budget to each campaign
+    ownerCampaigns.forEach(campaign => {
+      // Get forecasted cost
+      let forecastedCost = 0;
+      if (typeof campaign.forecastedCost === 'number') {
+        forecastedCost = campaign.forecastedCost;
+      } else if (typeof campaign.forecastedCost === 'string') {
+        const cleanedValue = String(campaign.forecastedCost)
+          .replace(/[$,]/g, '')
+          .trim();
+        forecastedCost = parseFloat(cleanedValue) || 0;
+      }
+      
+      // Get actual cost
+      let actualCost = 0;
+      if (typeof campaign.actualCost === 'number') {
+        actualCost = campaign.actualCost;
+      } else if (typeof campaign.actualCost === 'string') {
+        const cleanedValue = String(campaign.actualCost)
+          .replace(/[$,]/g, '')
+          .trim();
+        actualCost = parseFloat(cleanedValue) || 0;
+      }
+      
+      // Allocate budget from remaining budget
+      const allocated = Math.min(forecastedCost, remainingBudget);
+      remainingBudget = Math.max(0, remainingBudget - forecastedCost);
+      
+      // Store allocation
+      if (campaign.id) {
+        allocations[owner][campaign.id] = {
+          allocated,
+          forecasted: forecastedCost,
+          actual: actualCost,
+          remaining: allocated - forecastedCost
+        };
+        
+        // Update campaign with budget info
+        const campaignIndex = updatedCampaigns.findIndex(c => c.id === campaign.id);
+        if (campaignIndex >= 0) {
+          updatedCampaigns[campaignIndex] = {
+            ...updatedCampaigns[campaignIndex],
+            allocatedBudget: allocated,
+            budgetStatus: allocated < forecastedCost ? 'over-budget' : 'within-budget'
+          };
+        }
+      }
+    });
+  });
+  
+  return {
+    campaigns: updatedCampaigns,
+    allocations,
+    ownerBudgets: Object.fromEntries(
+      Object.entries(campaignsByOwner).map(([owner, _]) => {
+        const ownerInfo = getOwnerInfo(owner);
+        const ownerCampaigns = campaigns.filter(c => c.owner === owner);
+        const metrics = getOwnerBudgetSummary(owner, ownerCampaigns);
+        return [owner, {
+          assigned: ownerInfo.budget,
+          used: metrics.totalForecasted,
+          remaining: ownerInfo.budget - metrics.totalForecasted,
+          status: metrics.forecastedExceedsBudget ? 'over-budget' : 'within-budget'
+        }];
+      })
+    )
+  };
+}
+
+/**
  * Calculate budget metrics for a region
  * 
  * Important: Budget deduction is based on campaign owner, not the campaign's region.
@@ -72,7 +191,21 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
     return true;
   });
   
-  // Calculate total forecasted cost for budget-impacting programs
+  // Get assigned budget (may be a number or empty string)
+  const assignedBudget = regionData.assignedBudget;
+  
+  // Track budget allocation per campaign
+  const campaignBudgetAllocations: Record<string, { 
+    allocated: number, 
+    forecasted: number, 
+    actual: number, 
+    remaining: number 
+  }> = {};
+  
+  // Prepare budget tracking object
+  let remainingBudget = typeof assignedBudget === "number" ? assignedBudget : 0;
+  
+  // Calculate total forecasted cost with budget tracking per campaign
   const totalForecasted = budgetPrograms.reduce(
     (total, program) => {
       // Parse forecastedCost more robustly
@@ -82,10 +215,29 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
       } else if (typeof program.forecastedCost === 'string') {
         cost = parseFloat(program.forecastedCost) || 0;
       }
+      
+      // Calculate allocation for this campaign
+      // Each campaign gets allocated its forecasted cost from the remaining budget
+      const allocation = Math.min(cost, remainingBudget);
+      remainingBudget = Math.max(0, remainingBudget - cost);
+      
+      // Store allocation details for this campaign
+      if (program.id) {
+        campaignBudgetAllocations[program.id] = {
+          allocated: allocation,
+          forecasted: cost,
+          actual: 0, // Will be set below
+          remaining: allocation - cost
+        };
+      }
+      
       return total + cost;
     },
     0
   );
+  
+  // Reset remaining budget for actual cost calculation
+  remainingBudget = typeof assignedBudget === "number" ? assignedBudget : 0;
   
   // Calculate total actual cost for budget-impacting programs
   const totalActual = budgetPrograms.reduce(
@@ -97,13 +249,21 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
       } else if (typeof program.actualCost === 'string') {
         cost = parseFloat(program.actualCost) || 0;
       }
+      
+      // Deduct actual cost from remaining budget
+      remainingBudget = Math.max(0, remainingBudget - cost);
+      
+      // Update allocation details for this campaign
+      if (program.id && campaignBudgetAllocations[program.id]) {
+        campaignBudgetAllocations[program.id].actual = cost;
+        campaignBudgetAllocations[program.id].remaining = 
+          campaignBudgetAllocations[program.id].allocated - cost;
+      }
+      
       return total + cost;
     },
     0
   );
-  
-  // Get assigned budget (may be a number or empty string)
-  const assignedBudget = regionData.assignedBudget;
   
   // Calculate percentages if budget is assigned
   const forecastedPercent = typeof assignedBudget === "number" && assignedBudget > 0 
@@ -122,6 +282,11 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
   const forecastedExceedsBudget = forecastedOverage > 500;
   const actualExceedsBudget = actualOverage > 500;
   
+  // Calculate final remaining budget after all deductions
+  const finalRemainingBudget = typeof assignedBudget === "number" 
+    ? Math.max(0, assignedBudget - totalForecasted) 
+    : 0;
+  
   return {
     totalForecasted,
     totalActual,
@@ -131,7 +296,9 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
     forecastedExceedsBudget,
     actualExceedsBudget,
     forecastedOverage,
-    actualOverage
+    actualOverage,
+    campaignAllocations: campaignBudgetAllocations,
+    remainingBudget: finalRemainingBudget
   };
 }
 
@@ -140,7 +307,7 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
  * 
  * @param owner - The owner name to calculate budget metrics for
  * @param campaigns - Array of campaign objects to calculate metrics from
- * @returns Budget metrics for the specified owner
+ * @returns Budget metrics for the specified owner including allocation per campaign
  */
 export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
   // Get the owner's budget region and assigned budget
@@ -166,7 +333,18 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
     return true;
   });
   
-  // Calculate totals from filtered campaigns
+  // Track budget allocation per campaign
+  const campaignBudgetAllocations: Record<string, { 
+    allocated: number, 
+    forecasted: number, 
+    actual: number, 
+    remaining: number 
+  }> = {};
+  
+  // Prepare budget tracking object
+  let remainingBudget = assignedBudget;
+  
+  // Calculate totals from filtered campaigns with budget tracking per campaign
   const totalForecasted = ownerCampaigns.reduce(
     (total, campaign) => {
       // Parse forecastedCost more robustly
@@ -180,10 +358,29 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
           .trim();
         cost = parseFloat(cleanedValue) || 0;
       }
+      
+      // Calculate allocation for this campaign
+      // Each campaign gets allocated its forecasted cost from the remaining budget
+      const allocation = Math.min(cost, remainingBudget);
+      remainingBudget = Math.max(0, remainingBudget - cost);
+      
+      // Store allocation details for this campaign
+      if (campaign.id) {
+        campaignBudgetAllocations[campaign.id] = {
+          allocated: allocation,
+          forecasted: cost,
+          actual: 0, // Will be set below
+          remaining: allocation - cost
+        };
+      }
+      
       return total + cost;
     }, 
     0
   );
+  
+  // Reset remaining budget for actual cost calculation
+  remainingBudget = assignedBudget;
   
   const totalActual = ownerCampaigns.reduce(
     (total, campaign) => {
@@ -198,6 +395,17 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
           .trim();
         cost = parseFloat(cleanedValue) || 0;
       }
+      
+      // Deduct actual cost from remaining budget
+      remainingBudget = Math.max(0, remainingBudget - cost);
+      
+      // Update allocation details for this campaign
+      if (campaign.id && campaignBudgetAllocations[campaign.id]) {
+        campaignBudgetAllocations[campaign.id].actual = cost;
+        campaignBudgetAllocations[campaign.id].remaining = 
+          campaignBudgetAllocations[campaign.id].allocated - cost;
+      }
+      
       return total + cost;
     }, 
     0
@@ -220,6 +428,9 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
   const forecastedExceedsBudget = forecastedOverage > 500;
   const actualExceedsBudget = actualOverage > 500;
   
+  // Calculate final remaining budget after all deductions
+  const finalRemainingBudget = Math.max(0, assignedBudget - totalForecasted);
+  
   return {
     totalForecasted,
     totalActual,
@@ -229,6 +440,8 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
     forecastedExceedsBudget,
     actualExceedsBudget,
     forecastedOverage,
-    actualOverage
+    actualOverage,
+    campaignAllocations: campaignBudgetAllocations,
+    remainingBudget: finalRemainingBudget
   };
 }
