@@ -498,35 +498,62 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
         </div>
         
         {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
           {/* Region Cost Comparison Chart */}
-          <Card className="border shadow-sm">
+          <Card className="border shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <ChartBar className="h-4 w-4" /> Region Pipeline Forecast
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="h-64">
+              <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={regionData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
+                    barGap={10}
+                    barSize={40}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12, fontWeight: 500 }}
+                      tickMargin={10}
+                      height={60}
+                      interval={0}
+                      textAnchor="middle"
+                    />
                     <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
                     <Tooltip 
-                      formatter={(value) => [`$${value.toLocaleString()}`, undefined]}
+                      formatter={(value) => [`$${value.toLocaleString()}`, "Pipeline Forecast"]}
                       labelFormatter={(label) => `Region: ${label}`}
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                      itemStyle={{ padding: '4px 0' }}
                     />
                     <Legend />
                     <Bar 
                       dataKey="pipelineForecast" 
                       name="Pipeline Forecast"
                       fill="var(--chart-1)" 
-                      radius={[4, 4, 0, 0]} 
-                    />
+                      radius={[4, 4, 0, 0]}
+                    >
+                      {regionData.map((entry, index) => {
+                        // Different colors based on region
+                        let color = "var(--chart-1)"; // Default
+                        if (entry.name === "JP & Korea") color = "var(--chart-1)";
+                        else if (entry.name === "South APAC") color = "var(--chart-2)";
+                        else if (entry.name === "SAARC") color = "var(--chart-3)";
+                        else if (entry.name === "Digital") color = "var(--chart-4)";
+                        return <Cell key={`cell-${index}`} fill={color} />;
+                      })}
+                    
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -534,29 +561,54 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           </Card>
           
           {/* Leads Pipeline Chart */}
-          <Card className="border shadow-sm">
+          <Card className="border shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <FunnelSimple className="h-4 w-4" /> Lead Generation Pipeline
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="h-64">
+              <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={pipelineData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
+                    barGap={10}
+                    barSize={40}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="name" />
+                    <XAxis 
+                      dataKey="name"
+                      tick={{ fontSize: 12, fontWeight: 500 }}
+                      tickMargin={10}
+                      height={60}
+                      interval={0}
+                      textAnchor="middle"
+                    />
                     <YAxis />
-                    <Tooltip formatter={(value) => [value.toLocaleString(), undefined]} />
+                    <Tooltip 
+                      formatter={(value) => [value.toLocaleString(), "Count"]}
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                      itemStyle={{ padding: '4px 0' }}
+                    />
                     <Bar 
                       dataKey="value" 
                       name="Count"
                       fill="var(--chart-3)" 
-                      radius={[4, 4, 0, 0]} 
-                    />
+                      radius={[4, 4, 0, 0]}
+                    >
+                      {pipelineData.map((entry, index) => {
+                        // Different color for each stage of the pipeline
+                        const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)"];
+                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                      })}
+                    }
                   </BarChart>
                 </ResponsiveContainer>
               </div>
