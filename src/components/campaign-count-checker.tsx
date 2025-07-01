@@ -49,10 +49,4 @@ export function CampaignCountChecker() {
       </CardContent>
     </Card>
   );
-}</function_results>
-
-Now let's modify the App.tsx to temporarily add this component to the storage tab:
-
-<function_calls>
-<invoke name="str_replace_editor">
-<parameter name="command">str_replace
+}

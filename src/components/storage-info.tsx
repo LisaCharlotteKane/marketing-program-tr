@@ -165,9 +165,14 @@ function StorageInfo() {
                     {kvStatus.campaigns === 'working' ? 'Connected' : 'Error'}
                   </Badge>
                 </p>
-                <p>
-                  Campaigns: <span className="font-bold">{kvCampaigns && Array.isArray(kvCampaigns) ? kvCampaigns.length : 'Unknown'}</span>
+                <p className="font-bold text-lg text-primary">
+                  Campaigns: <span className="text-xl">{kvCampaigns && Array.isArray(kvCampaigns) ? kvCampaigns.length : 'Unknown'}</span>
                 </p>
+                {kvCampaigns && Array.isArray(kvCampaigns) && kvCampaigns.length > 0 && (
+                  <div className="text-xs mt-1">
+                    First campaign ID: {kvCampaigns[0]?.id || 'n/a'}
+                  </div>
+                )}
               </div>
             </div>
             
