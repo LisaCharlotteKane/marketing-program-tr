@@ -154,18 +154,36 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
     actualCost: typeof campaign.actualCost === "number" ? campaign.actualCost : 0
   }));
   
-  // Aggregate by region for region-based chart
+  // Aggregate by region for region-based chart - calculating pipeline forecast instead of cost
   const regionData = regions
     .filter(region => region !== "_all")
     .map(region => {
-      const regionCampaigns = filteredCampaigns.filter(c => c.region === region);
-      const forecastedCost = regionCampaigns.reduce((sum, c) => sum + (typeof c.forecastedCost === "number" ? c.forecastedCost : 0), 0);
-      const actualCost = regionCampaigns.reduce((sum, c) => sum + (typeof c.actualCost === "number" ? c.actualCost : 0), 0);
+      const regionCampaigns = filteredCampaigns.filter(c => normalizeRegionName(c.region) === region);
+      
+      // Calculate pipeline forecast per region
+      let regionPipelineForecast = 0;
+      
+      regionCampaigns.forEach(campaign => {
+        const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
+        const expectedLeads = typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0;
+        
+        if (campaign.campaignType === "In-Account Events (1:1)" && 
+            (!expectedLeads || expectedLeads <= 0) && 
+            forecastedCost > 0) {
+          // Special 20:1 ROI calculation for In-Account Events without leads
+          regionPipelineForecast += forecastedCost * 20;
+        } else if (expectedLeads > 0) {
+          // Standard calculation based on leads
+          const mqlValue = Math.round(expectedLeads * 0.1);
+          const sqlValue = Math.round(expectedLeads * 0.06);
+          const oppsValue = Math.round(sqlValue * 0.8);
+          regionPipelineForecast += oppsValue * 50000;
+        }
+      });
       
       return {
         name: region,
-        forecastedCost,
-        actualCost
+        pipelineForecast: regionPipelineForecast
       };
     });
   
@@ -485,7 +503,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           <Card className="border shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <ChartBar className="h-4 w-4" /> Forecasted Impact
+                <ChartBar className="h-4 w-4" /> Region Pipeline Forecast
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
@@ -504,15 +522,9 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                     />
                     <Legend />
                     <Bar 
-                      dataKey="forecastedCost" 
-                      name="Forecasted Cost"
+                      dataKey="pipelineForecast" 
+                      name="Pipeline Forecast"
                       fill="var(--chart-1)" 
-                      radius={[4, 4, 0, 0]} 
-                    />
-                    <Bar 
-                      dataKey="actualCost" 
-                      name="Actual Cost"
-                      fill="var(--chart-2)" 
                       radius={[4, 4, 0, 0]} 
                     />
                   </BarChart>
