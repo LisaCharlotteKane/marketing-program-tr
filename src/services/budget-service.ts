@@ -47,7 +47,7 @@ export function getBudgetByRegion(region: string): number {
  *   - "Shruti Narang" → "SAARC" = $265,000
  *   - "Giorgia Parham" → "Digital Motions" = $68,000
  * - Contractor/Infrastructure campaigns are excluded from budget calculations
- * - All campaigns are flagged as either budgetImpacting or nonBudgetImpacting in App.tsx
+ * - Budget data is pulled directly from the Planning tab campaigns
  * 
  * @param regionalBudgets - All regional budget data
  * @param region - The region to calculate metrics for
@@ -74,13 +74,31 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
   
   // Calculate total forecasted cost for budget-impacting programs
   const totalForecasted = budgetPrograms.reduce(
-    (total, program) => total + (typeof program.forecastedCost === 'number' ? program.forecastedCost : 0),
+    (total, program) => {
+      // Parse forecastedCost more robustly
+      let cost = 0;
+      if (typeof program.forecastedCost === 'number') {
+        cost = program.forecastedCost;
+      } else if (typeof program.forecastedCost === 'string') {
+        cost = parseFloat(program.forecastedCost) || 0;
+      }
+      return total + cost;
+    },
     0
   );
   
   // Calculate total actual cost for budget-impacting programs
   const totalActual = budgetPrograms.reduce(
-    (total, program) => total + (typeof program.actualCost === 'number' ? program.actualCost : 0),
+    (total, program) => {
+      // Parse actualCost more robustly
+      let cost = 0;
+      if (typeof program.actualCost === 'number') {
+        cost = program.actualCost;
+      } else if (typeof program.actualCost === 'string') {
+        cost = parseFloat(program.actualCost) || 0;
+      }
+      return total + cost;
+    },
     0
   );
   
@@ -150,14 +168,38 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
   
   // Calculate totals from filtered campaigns
   const totalForecasted = ownerCampaigns.reduce(
-    (total, campaign) => total + (typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 
-                                 (parseFloat(campaign.forecastedCost) || 0)), 
+    (total, campaign) => {
+      // Parse forecastedCost more robustly
+      let cost = 0;
+      if (typeof campaign.forecastedCost === 'number') {
+        cost = campaign.forecastedCost;
+      } else if (typeof campaign.forecastedCost === 'string') {
+        // Handle various string formats, including currency symbols and commas
+        const cleanedValue = String(campaign.forecastedCost)
+          .replace(/[$,]/g, '') // Remove $ and commas
+          .trim();
+        cost = parseFloat(cleanedValue) || 0;
+      }
+      return total + cost;
+    }, 
     0
   );
   
   const totalActual = ownerCampaigns.reduce(
-    (total, campaign) => total + (typeof campaign.actualCost === 'number' ? campaign.actualCost : 
-                                 (parseFloat(campaign.actualCost) || 0)), 
+    (total, campaign) => {
+      // Parse actualCost more robustly
+      let cost = 0;
+      if (typeof campaign.actualCost === 'number') {
+        cost = campaign.actualCost;
+      } else if (typeof campaign.actualCost === 'string') {
+        // Handle various string formats, including currency symbols and commas
+        const cleanedValue = String(campaign.actualCost)
+          .replace(/[$,]/g, '') // Remove $ and commas
+          .trim();
+        cost = parseFloat(cleanedValue) || 0;
+      }
+      return total + cost;
+    }, 
     0
   );
   

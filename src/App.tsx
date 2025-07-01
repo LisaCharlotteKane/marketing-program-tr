@@ -389,9 +389,11 @@ function App() {
         campaignsByOwner[owner].push({
           id: campaign.id,
           forecastedCost: typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 
-                         (parseFloat(campaign.forecastedCost as string) || 0),
+                         (typeof campaign.forecastedCost === 'string' ? 
+                           parseFloat(campaign.forecastedCost.replace(/[$,]/g, '')) : 0),
           actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 
-                     (parseFloat(campaign.actualCost as string) || 0),
+                     (typeof campaign.actualCost === 'string' ? 
+                       parseFloat(campaign.actualCost.replace(/[$,]/g, '')) : 0),
           owner: owner,
           campaignType: campaign.campaignType // Store campaign type for contractor filtering
         });

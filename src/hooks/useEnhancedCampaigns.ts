@@ -25,8 +25,8 @@ function ensureCampaignIntegrity(campaigns: Campaign[]): Campaign[] {
       country: campaign.country || "",
       owner: campaign.owner || "",
       description: campaign.description || "",
-      forecastedCost: campaign.forecastedCost || "",
-      expectedLeads: campaign.expectedLeads || "",
+      forecastedCost: campaign.forecastedCost !== undefined ? campaign.forecastedCost : "",
+      expectedLeads: campaign.expectedLeads !== undefined ? campaign.expectedLeads : "",
       impactedRegions: campaign.impactedRegions || [],
       
       // Execution tracking fields

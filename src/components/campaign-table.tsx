@@ -276,7 +276,18 @@ export function CampaignTable({
     const ownerExistingCost = campaigns
       .filter(c => c.owner === preselectedOwner && 
               !(c.campaignType === "Contractor" || c.campaignType === "Contractor/Infrastructure"))
-      .reduce((sum, c) => sum + (typeof c.forecastedCost === 'number' ? c.forecastedCost : 0), 0);
+      .reduce((sum, c) => {
+        // Handle various formats of forecastedCost
+        let cost = 0;
+        if (typeof c.forecastedCost === 'number') {
+          cost = c.forecastedCost;
+        } else if (typeof c.forecastedCost === 'string' && c.forecastedCost.trim() !== '') {
+          // Clean the string value by removing currency symbols and commas
+          const cleanValue = c.forecastedCost.replace(/[$,]/g, '').trim();
+          cost = parseFloat(cleanValue) || 0;
+        }
+        return sum + cost;
+      }, 0);
     
     // Check if owner is approaching budget limit
     if (ownerInfo.budget > 0) {
