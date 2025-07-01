@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ArrowClockwise } from "@phosphor-icons/react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CampaignTable } from "@/components/campaign-table";
+import { ReportingDashboard } from "@/components/reporting-dashboard";
+import { ExecutionTracking } from "@/components/execution-tracking";
+import { CampaignCalendarView } from "@/components/campaign-calendar-view";
+import { Toaster } from "sonner";
+import { Logo } from "@/components/logo";
 
 export function CampaignCountChecker() {
   const [kvCampaigns] = useKV('campaignData', []);
@@ -15,44 +19,61 @@ export function CampaignCountChecker() {
     }
   }, [kvCampaigns]);
 
-  const handleRefresh = () => {
-    if (Array.isArray(kvCampaigns)) {
-      setCampaignCount(kvCampaigns.length);
-      setRefreshTime(new Date());
-    }
-  };
+  return (
+    <div className="text-xs text-muted-foreground">
+      Storage: {campaignCount} campaigns
+    </div>
+  );
+}
+
+export default function App() {
+  const [campaigns, setCampaigns] = useKV('campaignData', []);
+  const [activeTab, setActiveTab] = useState('planning');
 
   return (
-    <Card className="border shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg">Campaign Count Checker</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-center p-4 bg-muted rounded-md">
-          <p className="text-3xl font-bold">{campaignCount}</p>
-          <p className="text-sm text-muted-foreground">campaigns in storage</p>
+    <div className="min-h-screen flex flex-col bg-background">
+      <Toaster position="top-right" richColors />
+      <header className="border-b shadow-sm">
+        <div className="container mx-auto p-4 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <Logo />
+          </div>
+          <CampaignCountChecker />
         </div>
-        
-        <div className="flex justify-between items-center">
-          <p className="text-xs text-muted-foreground">
-            Last checked: {refreshTime.toLocaleTimeString()}
-          </p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefresh}
-            className="flex items-center gap-1"
-          >
-            <ArrowClockwise className="h-3 w-3" /> Refresh Count
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      </header>
+      
+      <main className="flex-1 container mx-auto p-4">
+        <Tabs defaultValue="planning" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="planning">Campaign Planning</TabsTrigger>
+            <TabsTrigger value="execution">Execution Tracking</TabsTrigger>
+            <TabsTrigger value="reporting">Reporting</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="planning">
+            <CampaignTable 
+              campaigns={campaigns} 
+              setCampaigns={setCampaigns} 
+            />
+          </TabsContent>
+
+          <TabsContent value="execution">
+            <ExecutionTracking 
+              campaigns={campaigns} 
+              setCampaigns={setCampaigns}
+            />
+          </TabsContent>
+
+          <TabsContent value="reporting">
+            <ReportingDashboard campaigns={campaigns} />
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <CampaignCalendarView campaigns={campaigns} />
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
   );
-}</function_results>
-
-Now let's modify the App.tsx to temporarily add this component to the storage tab:
-
-<function_calls>
-<invoke name="str_replace_editor">
-<parameter name="command">str_replace
+}
