@@ -64,7 +64,7 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
     if (program.nonBudgetImpacting) return false;
     
     // Skip contractor/infrastructure programs using the helper function
-    if (isContractorCampaign(program)) {
+    if (program.campaignType && isContractorCampaign({ campaignType: program.campaignType })) {
       return false;
     }
     
@@ -74,13 +74,13 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
   
   // Calculate total forecasted cost for budget-impacting programs
   const totalForecasted = budgetPrograms.reduce(
-    (total, program) => total + (program.forecastedCost || 0),
+    (total, program) => total + (typeof program.forecastedCost === 'number' ? program.forecastedCost : 0),
     0
   );
   
   // Calculate total actual cost for budget-impacting programs
   const totalActual = budgetPrograms.reduce(
-    (total, program) => total + (program.actualCost || 0),
+    (total, program) => total + (typeof program.actualCost === 'number' ? program.actualCost : 0),
     0
   );
   
@@ -141,7 +141,7 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
     if (campaign.owner !== owner) return false;
     
     // Skip contractor/infrastructure programs using the helper function
-    if (isContractorCampaign(campaign)) {
+    if (campaign.campaignType && isContractorCampaign({ campaignType: campaign.campaignType })) {
       return false;
     }
     
@@ -150,12 +150,14 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
   
   // Calculate totals from filtered campaigns
   const totalForecasted = ownerCampaigns.reduce(
-    (total, campaign) => total + (parseFloat(campaign.forecastedCost) || 0), 
+    (total, campaign) => total + (typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 
+                                 (parseFloat(campaign.forecastedCost) || 0)), 
     0
   );
   
   const totalActual = ownerCampaigns.reduce(
-    (total, campaign) => total + (parseFloat(campaign.actualCost) || 0), 
+    (total, campaign) => total + (typeof campaign.actualCost === 'number' ? campaign.actualCost : 
+                                 (parseFloat(campaign.actualCost) || 0)), 
     0
   );
   

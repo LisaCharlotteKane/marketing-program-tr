@@ -188,7 +188,11 @@ function App() {
 
   // Update regional budget program data
   const updateRegionalProgramData = useCallback(() => {
-    if (!selectedRegion || typeof forecastedCost !== 'number') return;
+    if (!selectedRegion || selectedRegion === "_all") return;
+
+    // Ensure we have a valid forecasted cost
+    const numForecasted = typeof forecastedCost === 'number' ? forecastedCost : 
+                         (typeof forecastedCost === 'string' && forecastedCost !== "" ? parseFloat(forecastedCost) : 0);
 
     // Ensure the default budget settings are properly applied
     const updatedBudgets = { ...regionalBudgets };
@@ -210,14 +214,14 @@ function App() {
         // Update existing program
         currentPrograms[programIndex] = {
           ...currentPrograms[programIndex],
-          forecastedCost: forecastedCost || 0,
+          forecastedCost: numForecasted,
           actualCost: currentPrograms[programIndex].actualCost || 0
         };
       } else {
         // Add new program
         currentPrograms.push({
           id: programId,
-          forecastedCost: forecastedCost || 0,
+          forecastedCost: numForecasted,
           actualCost: 0
         });
       }
@@ -312,7 +316,7 @@ function App() {
     previousSelectedRegionRef.current = selectedRegion;
     
     // Now proceed with the update only if both values are meaningful
-    if (selectedRegion && selectedRegion !== "_all" && typeof forecastedCost === 'number') {
+    if (selectedRegion && selectedRegion !== "_all") {
       updateRegionalProgramData();
     }
   }, [forecastedCost, selectedRegion]) // Removed updateRegionalProgramData from dependencies
@@ -369,25 +373,28 @@ function App() {
       campaigns.forEach(campaign => {
         const owner = campaign.owner;
         
+        // Skip campaigns without an owner
+        if (!owner) return;
+        
         // Skip contractor campaigns for budget allocation using helper function
         if (isContractorCampaign(campaign)) {
           console.log(`Skipping contractor campaign for budget: ${campaign.id} - ${campaign.description}`);
           return;
         }
         
-        if (owner && typeof campaign.forecastedCost === 'number') {
-          if (!campaignsByOwner[owner]) {
-            campaignsByOwner[owner] = [];
-          }
-          
-          campaignsByOwner[owner].push({
-            id: campaign.id,
-            forecastedCost: typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0,
-            actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 0,
-            owner: owner,
-            campaignType: campaign.campaignType // Store campaign type for contractor filtering
-          });
+        if (!campaignsByOwner[owner]) {
+          campaignsByOwner[owner] = [];
         }
+        
+        campaignsByOwner[owner].push({
+          id: campaign.id,
+          forecastedCost: typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 
+                         (parseFloat(campaign.forecastedCost as string) || 0),
+          actualCost: typeof campaign.actualCost === 'number' ? campaign.actualCost : 
+                     (parseFloat(campaign.actualCost as string) || 0),
+          owner: owner,
+          campaignType: campaign.campaignType // Store campaign type for contractor filtering
+        });
       });
       
       // Step 2: Update regional budgets based on owner's budget pool
@@ -735,7 +742,7 @@ function App() {
                               data={[
                                 {
                                   name: region,
-                                  Budget: assignedBudget,
+                                  Budget: typeof assignedBudget === 'number' ? assignedBudget : 0,
                                   Forecasted: totalForecasted,
                                   Actual: totalActual,
                                 },
