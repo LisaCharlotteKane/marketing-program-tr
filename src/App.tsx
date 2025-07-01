@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise, LockKey, TrendUp, Calendar, CloudCheck } from "@phosphor-icons/react"
+import { Calculator, ChartLineUp, ClipboardText, Sparkle, ChartBar, Buildings, Warning, X, PresentationChart, Table, Database, ArrowClockwise, LockKey, TrendUp, Calendar, CloudCheck, CloudArrowUp } from "@phosphor-icons/react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { ReportingDashboard } from "@/components/reporting-dashboard"
 import { ROIDashboard } from "@/components/roi-dashboard"
@@ -465,8 +465,26 @@ function App() {
         
         <main className="flex-1 container mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-4 gap-2">
-            <CampaignSharingStatus campaigns={campaigns} />
             <div className="flex items-center gap-2">
+              <CampaignSharingStatus campaigns={campaigns} />
+              <Badge variant="outline" className="text-xs">
+                {campaigns.length} {campaigns.length === 1 ? 'campaign' : 'campaigns'}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  // Force save and share all campaign data
+                  saveStatus.forceSave();
+                  toast.success("Forcing save and share of all campaign data...");
+                }}
+                className="flex items-center gap-1"
+                title="Force save and share all campaign data"
+              >
+                <CloudArrowUp className="h-4 w-4" /> Save & Share
+              </Button>
               <Button 
                 variant="outline" 
                 size="sm" 

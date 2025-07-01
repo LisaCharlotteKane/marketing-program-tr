@@ -130,7 +130,7 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
     loadData();
   }, [key, initialValue, kvData, setKvData]);
   
-  // This effect periodically checks for KV store updates from other users
+  // Enhanced effect to check for KV store updates from other users
   useEffect(() => {
     if (!isLoaded) return;
     
@@ -146,6 +146,10 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
         const localLength = data.length;
         const kvLength = kvData.length;
         
+        // Log sync status for debugging
+        console.log(`KV sync check - Local: ${localLength} campaigns, KV: ${kvLength} campaigns`);
+        
+        // Check if KV has more data than local state
         if (kvLength > localLength) {
           console.log(`KV store has more campaigns (${kvLength}) than local state (${localLength})`);
           
@@ -157,19 +161,71 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
           localStorage.setItem(key, JSON.stringify(validatedData));
           
           toast.info(`Updated with ${kvLength - localLength} new campaigns from other users`);
+          return;
         }
-        // We don't handle the case where KV has fewer items than local state here
-        // That's handled in the update logic below
+        
+        // Check if local and KV have same count but different data
+        if (kvLength === localLength && localLength > 0) {
+          // Check for campaigns that exist in KV but not in local
+          const localIds = new Set(data.map(c => c.id));
+          const kvIds = new Set(kvData.map(c => c.id));
+          
+          // Find IDs that are in KV but not in local
+          const onlyInKv = [...kvIds].filter(id => !localIds.has(id));
+          
+          // Find IDs that are in local but not in KV
+          const onlyInLocal = [...localIds].filter(id => !kvIds.has(id));
+          
+          if (onlyInKv.length > 0 || onlyInLocal.length > 0) {
+            console.log(`Found data differences - Only in KV: ${onlyInKv.length}, Only in local: ${onlyInLocal.length}`);
+            
+            // If there are differences, we need to merge the data
+            const mergedData = [...data];
+            
+            // Add campaigns from KV that don't exist locally
+            kvData.forEach(kvCampaign => {
+              if (!localIds.has(kvCampaign.id)) {
+                mergedData.push(kvCampaign);
+              }
+            });
+            
+            const validatedData = ensureCampaignIntegrity(mergedData) as T;
+            
+            // Update local state with merged data
+            setData(validatedData);
+            localStorage.setItem(key, JSON.stringify(validatedData));
+            
+            // Update KV store with merged data if there are local-only campaigns
+            if (onlyInLocal.length > 0) {
+              setKvData(validatedData);
+            }
+            
+            toast.info(`Synchronized ${onlyInKv.length + onlyInLocal.length} campaigns with shared storage`);
+          }
+        }
+        
+        // If local has more data than KV, ensure KV is updated
+        if (localLength > kvLength) {
+          console.log(`Local has more campaigns (${localLength}) than KV store (${kvLength}) - updating shared storage`);
+          setKvData(data);
+          toast.success(`Shared ${localLength} campaigns with all users`);
+        }
       } catch (error) {
         console.error("Error checking for KV updates:", error);
       }
     };
     
-    // Set up periodic checks for KV updates (every 15 seconds)
-    const intervalId = setInterval(checkForKvUpdates, 15000);
+    // Run initial check after a short delay
+    const initialCheck = setTimeout(checkForKvUpdates, 3000);
     
-    return () => clearInterval(intervalId);
-  }, [isLoaded, data.length, kvData, key]);
+    // Set up periodic checks for KV updates (every 10 seconds)
+    const intervalId = setInterval(checkForKvUpdates, 10000);
+    
+    return () => {
+      clearTimeout(initialCheck);
+      clearInterval(intervalId);
+    };
+  }, [isLoaded, data, kvData, key, setKvData]);
   
   // Custom setter that updates both local state and KV store
   const setDataAndKV = useCallback((newData: React.SetStateAction<T>) => {
@@ -187,13 +243,24 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
       kvUpdateTimeoutRef.current = setTimeout(() => {
         try {
           console.log(`Updating KV store with ${nextData.length} campaigns`);
-          setKvData(nextData);
-          localStorage.setItem(key, JSON.stringify(nextData));
+          
+          // Make a clean copy to prevent reference issues
+          const cleanCopy = JSON.parse(JSON.stringify(nextData));
+          
+          // Ensure all campaigns have valid fields before saving
+          const validatedData = ensureCampaignIntegrity(cleanCopy) as T;
+          
+          // Update KV store with validated data
+          setKvData(validatedData);
+          localStorage.setItem(key, JSON.stringify(validatedData));
           
           // Dispatch event for other components
           window.dispatchEvent(new CustomEvent("campaign:updated", { 
-            detail: { count: nextData.length } 
+            detail: { count: validatedData.length } 
           }));
+          
+          toast.success(`Saved and shared ${validatedData.length} campaigns with all users`);
+          setLastSaved(new Date());
         } catch (error) {
           console.error("Error updating KV store:", error);
           toast.error("Failed to share campaign data with other users");
@@ -235,20 +302,42 @@ export function useEnhancedCampaigns<T extends Campaign[]>(
     setIsSaving(true);
     
     try {
-      // Clean copy to avoid reference issues
+      // Create a clean copy to avoid reference issues
       const cleanCopy = JSON.parse(JSON.stringify(data));
+      const validatedData = ensureCampaignIntegrity(cleanCopy) as T;
       
       // Update both storage methods
-      localStorage.setItem(key, JSON.stringify(cleanCopy));
-      await setKvData(cleanCopy);
+      localStorage.setItem(key, JSON.stringify(validatedData));
+      
+      // Use a direct, non-async call first to immediately update
+      setKvData(validatedData);
+      
+      // Double-check after a short delay that KV store was updated
+      setTimeout(async () => {
+        try {
+          // Get current KV data
+          const currentKvData = await window.spark?.kv?.get(key);
+          
+          // Check if current KV data matches what we expect
+          if (!currentKvData || 
+              !Array.isArray(currentKvData) || 
+              currentKvData.length !== validatedData.length) {
+            console.log("KV store sync check failed - retrying update");
+            // Try again with direct API call
+            await window.spark?.kv?.set(key, validatedData);
+          }
+        } catch (error) {
+          console.error("Error in KV store verification:", error);
+        }
+      }, 1000);
       
       // Notify other components
       window.dispatchEvent(new CustomEvent("campaign:force-sync", {
-        detail: { campaigns: cleanCopy }
+        detail: { campaigns: validatedData }
       }));
       
       setLastSaved(new Date());
-      toast.success("Campaign data saved and shared with all users");
+      toast.success(`${validatedData.length} campaigns saved and shared with all users`);
     } catch (error) {
       console.error("Error force saving data:", error);
       toast.error("Failed to share campaign data. Please try again.");
