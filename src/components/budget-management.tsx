@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -6,18 +6,60 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRegionalBudgets, RegionalBudget, OWNER_TO_REGION_MAP } from "@/hooks/useRegionalBudgets";
-import { calculateRegionalMetrics } from "@/services/budget-service";
+import { calculateRegionalMetrics, allocateBudgetToCampaigns } from "@/services/budget-service";
 import { BudgetLockInfo } from "@/components/budget-lock-info";
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator";
 import { BudgetAllocationDetails } from "@/components/budget-allocation-details";
 import { Progress } from "@/components/ui/progress";
-import { ArrowClockwise, Warning } from "@phosphor-icons/react";
-import { formatCurrency } from "@/lib/utils";
+import { ArrowClockwise, Warning, ArrowsClockwise } from "@phosphor-icons/react";
+import { formatCurrency, isContractorCampaign } from "@/lib/utils";
 import { toast } from "sonner";
+import { useKV } from "@github/spark/hooks";
 
 export function BudgetManagement() {
   const [budgets, setBudgets, budgetStatus] = useRegionalBudgets();
+  const [campaigns] = useKV('campaignData', [], { scope: 'global' });
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Sync campaigns with budget data
+  useEffect(() => {
+    if (Array.isArray(campaigns) && campaigns.length > 0) {
+      // Group campaigns by region and update budgets
+      const newBudgets = { ...budgets };
+      
+      // Clear existing programs
+      Object.keys(newBudgets).forEach(region => {
+        newBudgets[region].programs = [];
+      });
+      
+      // Add campaigns to their regions based on owner's region
+      campaigns.forEach(campaign => {
+        const owner = campaign.owner;
+        const ownerRegion = OWNER_TO_REGION_MAP[owner];
+        
+        // Skip if we can't determine the region for this owner
+        if (!ownerRegion || !newBudgets[ownerRegion]) return;
+        
+        // Add this campaign to the owner's region
+        newBudgets[ownerRegion].programs.push({
+          id: campaign.id,
+          forecastedCost: typeof campaign.forecastedCost === 'number' 
+            ? campaign.forecastedCost 
+            : parseFloat(String(campaign.forecastedCost).replace(/[$,]/g, '')) || 0,
+          actualCost: typeof campaign.actualCost === 'number' 
+            ? campaign.actualCost 
+            : parseFloat(String(campaign.actualCost).replace(/[$,]/g, '')) || 0,
+          owner: campaign.owner,
+          nonBudgetImpacting: isContractorCampaign(campaign),
+          campaignType: campaign.campaignType
+        });
+      });
+      
+      // Update budgets state with new campaigns
+      setBudgets(newBudgets);
+    }
+  }, [campaigns, setBudgets]);
 
   // Function to handle budget changes
   const handleBudgetChange = (region: string, value: string) => {
@@ -38,6 +80,56 @@ export function BudgetManagement() {
     }));
   };
 
+  // Manual refresh of budget data
+  const refreshBudgetData = () => {
+    setIsRefreshing(true);
+    
+    // Re-allocate budget to campaigns
+    if (Array.isArray(campaigns) && campaigns.length > 0) {
+      const { campaigns: updatedCampaigns, allocations, ownerBudgets } = allocateBudgetToCampaigns(campaigns);
+      
+      // Group campaigns by region and update budgets
+      const newBudgets = { ...budgets };
+      
+      // Clear existing programs
+      Object.keys(newBudgets).forEach(region => {
+        newBudgets[region].programs = [];
+      });
+      
+      // Add campaigns to their regions based on owner's region
+      updatedCampaigns.forEach(campaign => {
+        const owner = campaign.owner;
+        const ownerRegion = OWNER_TO_REGION_MAP[owner];
+        
+        // Skip if we can't determine the region for this owner
+        if (!ownerRegion || !newBudgets[ownerRegion]) return;
+        
+        // Add this campaign to the owner's region
+        newBudgets[ownerRegion].programs.push({
+          id: campaign.id,
+          forecastedCost: typeof campaign.forecastedCost === 'number' 
+            ? campaign.forecastedCost 
+            : parseFloat(String(campaign.forecastedCost).replace(/[$,]/g, '')) || 0,
+          actualCost: typeof campaign.actualCost === 'number' 
+            ? campaign.actualCost 
+            : parseFloat(String(campaign.actualCost).replace(/[$,]/g, '')) || 0,
+          owner: campaign.owner,
+          nonBudgetImpacting: isContractorCampaign(campaign),
+          campaignType: campaign.campaignType
+        });
+      });
+      
+      // Update budgets state with new campaigns
+      setBudgets(newBudgets);
+      
+      toast.success("Budget data refreshed successfully");
+    } else {
+      toast.info("No campaigns found to refresh budget data");
+    }
+    
+    setIsRefreshing(false);
+  };
+
   // Get all regions sorted
   const regions = Object.keys(budgets).sort();
 
@@ -47,6 +139,15 @@ export function BudgetManagement() {
         <h2 className="text-2xl font-bold">Budget Management</h2>
         <div className="flex items-center gap-3">
           <BudgetSaveIndicator status={budgetStatus} />
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={refreshBudgetData}
+            disabled={isRefreshing}
+          >
+            <ArrowsClockwise className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+          </Button>
           <Button 
             variant="outline" 
             size="sm"
@@ -139,44 +240,60 @@ export function BudgetManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Region</TableHead>
-                    <TableHead>Owner</TableHead>
-                    <TableHead>Budget Allocation</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {regions.map((region) => {
-                    const regionData = budgets[region];
-                    const isLocked = regionData.lockedByOwner;
+              {Array.isArray(campaigns) && campaigns.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Region</TableHead>
+                      <TableHead>Owner</TableHead>
+                      <TableHead>Budget Allocation</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {regions.map((region) => {
+                      const regionData = budgets[region];
+                      const isLocked = regionData.lockedByOwner;
 
-                    return (
-                      <TableRow key={region}>
-                        <TableCell className="font-medium">{region}</TableCell>
-                        <TableCell>{regionData.ownerName || "Unassigned"}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 w-full max-w-xs">
-                            <span className="text-muted-foreground">$</span>
-                            <Input
-                              type="number"
-                              value={regionData.assignedBudget === "" ? "" : regionData.assignedBudget}
-                              onChange={(e) => handleBudgetChange(region, e.target.value)}
-                              disabled={isLocked}
-                              placeholder="Enter budget amount"
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <BudgetLockInfo budget={regionData} />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                      return (
+                        <TableRow key={region}>
+                          <TableCell className="font-medium">{region}</TableCell>
+                          <TableCell>{regionData.ownerName || "Unassigned"}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 w-full max-w-xs">
+                              <span className="text-muted-foreground">$</span>
+                              <Input
+                                type="number"
+                                value={regionData.assignedBudget === "" ? "" : regionData.assignedBudget}
+                                onChange={(e) => handleBudgetChange(region, e.target.value)}
+                                disabled={isLocked}
+                                placeholder="Enter budget amount"
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <BudgetLockInfo budget={regionData} />
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="p-4 text-center">
+                  <p className="text-muted-foreground">No campaigns found. Please add campaigns in the Planning tab or refresh the data.</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={refreshBudgetData}
+                    disabled={isRefreshing}
+                    className="mt-4"
+                  >
+                    <ArrowsClockwise className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

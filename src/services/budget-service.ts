@@ -175,9 +175,7 @@ export function allocateBudgetToCampaigns(campaigns: any[] = []) {
 export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, region: string) {
   const regionData = regionalBudgets[region] || { programs: [], assignedBudget: "" };
   
-  // Budget deduction logic is now based strictly on owner, not region
-  // For budget tracking, we only count programs owned by the region's owner
-  // The nonBudgetImpacting flag is set in App.tsx when programs are assigned to regions
+  // For budget tracking, we only count programs associated with this region
   const budgetPrograms = regionData.programs.filter(program => {
     // Skip if explicitly marked as non-budget impacting
     if (program.nonBudgetImpacting) return false;
@@ -187,7 +185,8 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
       return false;
     }
     
-    // A program is budget-impacting if it belongs to the region's owner
+    // A program is budget-impacting for this region if:
+    // 1. It belongs to the owner of this region
     return true;
   });
   
