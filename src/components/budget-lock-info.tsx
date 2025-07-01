@@ -1,16 +1,23 @@
 import React from "react";
-import { LockKey } from "@phosphor-icons/react";
+import { LockKey, LockOpen } from "@phosphor-icons/react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { type RegionalBudget } from "@/hooks/useRegionalBudgets";
 
 export function BudgetLockInfo({ 
-  region, 
   budget 
 }: { 
-  region: string;
   budget: RegionalBudget;
 }) {
+  if (!budget.lockedByOwner) {
+    return (
+      <Badge variant="outline" className="ml-2">
+        <LockOpen className="h-3 w-3 mr-1" />
+        Editable
+      </Badge>
+    );
+  }
+  
   return (
     <TooltipProvider>
       <Tooltip>

@@ -6,6 +6,7 @@ import { ReportingDashboard } from "@/components/reporting-dashboard";
 import { ExecutionTracking } from "@/components/execution-tracking";
 import { CampaignCalendarView } from "@/components/campaign-calendar-view";
 import { StorageManagement } from "@/components/storage-management";
+import { BudgetManagement } from "@/components/budget-management";
 import { useMigrateToGlobal } from "@/hooks/useMigrateStorage";
 import { Toaster } from "sonner";
 import { Logo } from "@/components/logo";
@@ -53,6 +54,7 @@ export default function App() {
           <TabsList className="mb-4">
             <TabsTrigger value="planning">Campaign Planning</TabsTrigger>
             <TabsTrigger value="execution">Execution Tracking</TabsTrigger>
+            <TabsTrigger value="budget">Budget Management</TabsTrigger>
             <TabsTrigger value="reporting">Reporting</TabsTrigger>
             <TabsTrigger value="calendar">Calendar View</TabsTrigger>
             <TabsTrigger value="storage">Storage</TabsTrigger>
@@ -70,6 +72,10 @@ export default function App() {
               campaigns={campaigns} 
               setCampaigns={setCampaigns}
             />
+          </TabsContent>
+
+          <TabsContent value="budget">
+            <BudgetManagement />
           </TabsContent>
 
           <TabsContent value="reporting">

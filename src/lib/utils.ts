@@ -6,6 +6,34 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Format a number as currency
+ * @param amount The amount to format
+ * @returns Formatted currency string
+ */
+export function formatCurrency(amount: number | string): string {
+  // Handle empty or non-numeric values
+  if (amount === "" || amount === null || amount === undefined) {
+    return "$0";
+  }
+
+  // Convert to number if it's a string
+  const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+
+  // Handle NaN
+  if (isNaN(numAmount)) {
+    return "$0";
+  }
+
+  // Format as currency
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(numAmount);
+}
+
+/**
  * Normalize region names to handle legacy data
  * - Converts "North APAC" to "JP & Korea" for backward compatibility
  * - Ensures consistent region naming throughout the application

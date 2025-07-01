@@ -1,32 +1,47 @@
 import React from "react";
-import { FloppyDisk, Check } from "@phosphor-icons/react";
+import { CloudCheck, CloudSlash, CloudArrowUp } from "@phosphor-icons/react";
+import { Badge } from "@/components/ui/badge";
 
-export function BudgetSaveIndicator({ 
-  className = "", 
-  lastSaved,
-  isSaving
-}: { 
-  className?: string;
+interface BudgetStatus {
+  isSaving: boolean;
   lastSaved?: Date;
-  isSaving?: boolean;
-}) {
-  if (isSaving) {
+  resetToDefaults: () => void;
+}
+
+export function BudgetSaveIndicator({ status }: { status: BudgetStatus }) {
+  // Format timestamp
+  const getTimeString = () => {
+    if (!status.lastSaved) return "";
+    
+    // Format as hours:minutes
+    return status.lastSaved.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
+
+  if (status.isSaving) {
     return (
-      <div className={`flex items-center text-xs text-muted-foreground ${className}`}>
-        <FloppyDisk className="h-3 w-3 mr-1 animate-pulse" />
+      <Badge variant="outline" className="animate-pulse">
+        <CloudArrowUp className="h-4 w-4 mr-1" />
         Saving...
-      </div>
+      </Badge>
     );
   }
-  
-  if (lastSaved) {
+
+  if (status.lastSaved) {
     return (
-      <div className={`flex items-center text-xs text-muted-foreground ${className}`}>
-        <Check className="h-3 w-3 mr-1 text-green-500" />
-        Saved
-      </div>
+      <Badge variant="outline">
+        <CloudCheck className="h-4 w-4 mr-1 text-green-500" />
+        Saved at {getTimeString()}
+      </Badge>
     );
   }
-  
-  return null;
+
+  return (
+    <Badge variant="outline">
+      <CloudSlash className="h-4 w-4 mr-1" />
+      Not saved
+    </Badge>
+  );
 }
