@@ -553,7 +553,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                         else if (entry.name === "Digital") color = "var(--chart-4)";
                         return <Cell key={`cell-${index}`} fill={color} />;
                       })}
-                    
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -608,7 +608,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                         const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)"];
                         return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
                       })}
-                    }
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
