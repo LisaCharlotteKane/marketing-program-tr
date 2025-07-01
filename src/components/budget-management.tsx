@@ -51,7 +51,6 @@ export function BudgetManagement() {
             ? campaign.actualCost 
             : parseFloat(String(campaign.actualCost).replace(/[$,]/g, '')) || 0,
           owner: campaign.owner,
-          nonBudgetImpacting: isContractorCampaign(campaign),
           campaignType: campaign.campaignType
         });
       });
@@ -114,7 +113,6 @@ export function BudgetManagement() {
             ? campaign.actualCost 
             : parseFloat(String(campaign.actualCost).replace(/[$,]/g, '')) || 0,
           owner: campaign.owner,
-          nonBudgetImpacting: isContractorCampaign(campaign),
           campaignType: campaign.campaignType
         });
       });
@@ -163,7 +161,7 @@ export function BudgetManagement() {
         <p className="flex items-center gap-2">
           <ChartPie className="h-4 w-4" />
           <span>
-            Note: Campaigns marked as "Contractor/Infrastructure" are excluded from budget calculations.
+            All campaign types are included in budget calculations.
             The "By Campaign Type" tab shows all campaign types and their respective budgets.
           </span>
         </p>
@@ -461,11 +459,6 @@ export function BudgetManagement() {
                       .map(([type, typeCampaigns]) => {
                         // Calculate total forecasted cost for this type
                         const totalForecasted = typeCampaigns.reduce((sum, campaign) => {
-                          // Skip if non-budget impacting
-                          if (isContractorCampaign(campaign) && type !== "Contractor/Infrastructure") {
-                            return sum;
-                          }
-                          
                           // Parse forecastedCost
                           let cost = 0;
                           if (typeof campaign.forecastedCost === 'number') {
@@ -479,11 +472,6 @@ export function BudgetManagement() {
                         
                         // Calculate total actual cost for this type
                         const totalActual = typeCampaigns.reduce((sum, campaign) => {
-                          // Skip if non-budget impacting
-                          if (isContractorCampaign(campaign) && type !== "Contractor/Infrastructure") {
-                            return sum;
-                          }
-                          
                           // Parse actualCost
                           let cost = 0;
                           if (typeof campaign.actualCost === 'number') {

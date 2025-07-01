@@ -47,11 +47,6 @@ export function allocateBudgetToCampaigns(campaigns: any[] = []) {
   campaigns.forEach(campaign => {
     if (!campaign.owner) return;
     
-    // Skip contractor/infrastructure campaigns
-    if (campaign.campaignType && isContractorCampaign({ campaignType: campaign.campaignType })) {
-      return;
-    }
-    
     // Ensure campaign type is valid
     if (!campaign.campaignType) {
       return;
@@ -182,14 +177,6 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
   
   // For budget tracking, we only count programs associated with this region
   const budgetPrograms = regionData.programs.filter(program => {
-    // Skip if explicitly marked as non-budget impacting
-    if (program.nonBudgetImpacting) return false;
-    
-    // Skip contractor/infrastructure programs using the helper function
-    if (program.campaignType && isContractorCampaign({ campaignType: program.campaignType })) {
-      return false;
-    }
-    
     // Ensure campaign type is valid
     if (!program.campaignType) {
       return false;
@@ -333,11 +320,6 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
   const ownerCampaigns = campaigns.filter(campaign => {
     // Must be owned by this owner
     if (campaign.owner !== owner) return false;
-    
-    // Skip contractor/infrastructure programs using the helper function
-    if (campaign.campaignType && isContractorCampaign({ campaignType: campaign.campaignType })) {
-      return false;
-    }
     
     // Ensure campaign type is valid
     if (!campaign.campaignType) {
