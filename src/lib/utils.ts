@@ -70,3 +70,26 @@ export function isContractorCampaign(campaign: any): boolean {
   // Not a contractor campaign
   return false;
 }
+
+/**
+ * Get a list of all known campaign types
+ * This ensures we have a consistent list across the application
+ */
+export function getAllCampaignTypes(): string[] {
+  return [
+    "In-Account Events (1:1)",
+    "Exec Engagement Programs",
+    "CxO Events (1:Few)",
+    "Localized Events",
+    "Localized Programs",
+    "Lunch & Learns and Workshops (1:Few)",
+    "Microsoft",
+    "Partners",
+    "Webinars",
+    "3P Sponsored Events",
+    "Flagship Events (Galaxy, Universe Recaps) (1:Many)",
+    "Targeted Paid Ads & Content Syndication",
+    "User Groups",
+    "Contractor/Infrastructure"
+  ];
+}

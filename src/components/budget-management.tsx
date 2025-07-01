@@ -11,8 +11,8 @@ import { BudgetLockInfo } from "@/components/budget-lock-info";
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator";
 import { BudgetAllocationDetails } from "@/components/budget-allocation-details";
 import { Progress } from "@/components/ui/progress";
-import { ArrowClockwise, Warning, ArrowsClockwise } from "@phosphor-icons/react";
-import { formatCurrency, isContractorCampaign } from "@/lib/utils";
+import { ArrowClockwise, Warning, ArrowsClockwise, ChartPie } from "@phosphor-icons/react";
+import { formatCurrency, isContractorCampaign, getAllCampaignTypes } from "@/lib/utils";
 import { toast } from "sonner";
 import { useKV } from "@github/spark/hooks";
 
@@ -158,6 +158,16 @@ export function BudgetManagement() {
           </Button>
         </div>
       </div>
+      
+      <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md border border-border">
+        <p className="flex items-center gap-2">
+          <ChartPie className="h-4 w-4" />
+          <span>
+            Note: Campaigns marked as "Contractor/Infrastructure" are excluded from budget calculations.
+            The "By Campaign Type" tab shows all campaign types and their respective budgets.
+          </span>
+        </p>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
@@ -165,6 +175,7 @@ export function BudgetManagement() {
           <TabsTrigger value="allocations">Budget Allocations</TabsTrigger>
           <TabsTrigger value="tracking">Spending Tracking</TabsTrigger>
           <TabsTrigger value="details">Allocation Details</TabsTrigger>
+          <TabsTrigger value="by-type">By Campaign Type</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -410,6 +421,154 @@ export function BudgetManagement() {
               );
             })}
           </div>
+        </TabsContent>
+        
+        <TabsContent value="by-type">
+          <Card>
+            <CardHeader>
+              <CardTitle>Budget Allocation by Campaign Type</CardTitle>
+              <CardDescription>
+                Budget distribution across different campaign types
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(campaigns) && campaigns.length > 0 ? (
+                <div className="space-y-6">
+                  {/* Group campaigns by type and show budget allocation */}
+                  {(() => {
+                    // Get all campaign types from the utility
+                    const allCampaignTypes = getAllCampaignTypes();
+                    
+                    // Group campaigns by type
+                    const campaignsByType: Record<string, any[]> = {};
+                    allCampaignTypes.forEach(type => campaignsByType[type] = []);
+                    
+                    // Add "Other" category for any types not in our predefined list
+                    campaignsByType["Other"] = [];
+                    
+                    // Categorize campaigns
+                    campaigns.forEach(campaign => {
+                      if (!campaign.campaignType || !campaignsByType[campaign.campaignType]) {
+                        campaignsByType["Other"].push(campaign);
+                      } else {
+                        campaignsByType[campaign.campaignType].push(campaign);
+                      }
+                    });
+                    
+                    // Calculate budgets per type
+                    const typeBudgets = Object.entries(campaignsByType)
+                      .filter(([_, typeCampaigns]) => typeCampaigns.length > 0)
+                      .map(([type, typeCampaigns]) => {
+                        // Calculate total forecasted cost for this type
+                        const totalForecasted = typeCampaigns.reduce((sum, campaign) => {
+                          // Skip if non-budget impacting
+                          if (isContractorCampaign(campaign) && type !== "Contractor/Infrastructure") {
+                            return sum;
+                          }
+                          
+                          // Parse forecastedCost
+                          let cost = 0;
+                          if (typeof campaign.forecastedCost === 'number') {
+                            cost = campaign.forecastedCost;
+                          } else if (typeof campaign.forecastedCost === 'string') {
+                            cost = parseFloat(campaign.forecastedCost.replace(/[$,]/g, '')) || 0;
+                          }
+                          
+                          return sum + cost;
+                        }, 0);
+                        
+                        // Calculate total actual cost for this type
+                        const totalActual = typeCampaigns.reduce((sum, campaign) => {
+                          // Skip if non-budget impacting
+                          if (isContractorCampaign(campaign) && type !== "Contractor/Infrastructure") {
+                            return sum;
+                          }
+                          
+                          // Parse actualCost
+                          let cost = 0;
+                          if (typeof campaign.actualCost === 'number') {
+                            cost = campaign.actualCost;
+                          } else if (typeof campaign.actualCost === 'string') {
+                            cost = parseFloat(campaign.actualCost.replace(/[$,]/g, '')) || 0;
+                          }
+                          
+                          return sum + cost;
+                        }, 0);
+                        
+                        return {
+                          type,
+                          campaignCount: typeCampaigns.length,
+                          totalForecasted,
+                          totalActual,
+                          campaigns: typeCampaigns
+                        };
+                      })
+                      .sort((a, b) => b.totalForecasted - a.totalForecasted);
+                    
+                    // Calculate grand totals for percentage calculation
+                    const grandTotalForecasted = typeBudgets.reduce((sum, item) => sum + item.totalForecasted, 0);
+                    
+                    return (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Campaign Type</TableHead>
+                            <TableHead>Count</TableHead>
+                            <TableHead>Forecasted Spend</TableHead>
+                            <TableHead>Actual Spend</TableHead>
+                            <TableHead>% of Total</TableHead>
+                            <TableHead>Allocation</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {typeBudgets.map(budget => {
+                            const percentage = grandTotalForecasted ? (budget.totalForecasted / grandTotalForecasted) * 100 : 0;
+                            
+                            return (
+                              <TableRow key={budget.type}>
+                                <TableCell className="font-medium">
+                                  {budget.type}
+                                </TableCell>
+                                <TableCell>{budget.campaignCount}</TableCell>
+                                <TableCell>{formatCurrency(budget.totalForecasted)}</TableCell>
+                                <TableCell>{formatCurrency(budget.totalActual)}</TableCell>
+                                <TableCell>{percentage.toFixed(1)}%</TableCell>
+                                <TableCell className="w-32">
+                                  <Progress value={percentage} />
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                          <TableRow className="font-semibold">
+                            <TableCell>Total</TableCell>
+                            <TableCell>{campaigns.length}</TableCell>
+                            <TableCell>{formatCurrency(grandTotalForecasted)}</TableCell>
+                            <TableCell>{formatCurrency(typeBudgets.reduce((sum, item) => sum + item.totalActual, 0))}</TableCell>
+                            <TableCell>100%</TableCell>
+                            <TableCell></TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <div className="p-4 text-center">
+                  <p className="text-muted-foreground">No campaigns found. Please add campaigns in the Planning tab or refresh the data.</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={refreshBudgetData}
+                    disabled={isRefreshing}
+                    className="mt-4"
+                  >
+                    <ArrowsClockwise className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    {isRefreshing ? 'Refreshing...' : 'Refresh Data'}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

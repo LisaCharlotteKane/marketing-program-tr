@@ -52,6 +52,11 @@ export function allocateBudgetToCampaigns(campaigns: any[] = []) {
       return;
     }
     
+    // Ensure campaign type is valid
+    if (!campaign.campaignType) {
+      return;
+    }
+    
     if (!campaignsByOwner[campaign.owner]) {
       campaignsByOwner[campaign.owner] = [];
     }
@@ -182,6 +187,11 @@ export function calculateRegionalMetrics(regionalBudgets: RegionalBudgets, regio
     
     // Skip contractor/infrastructure programs using the helper function
     if (program.campaignType && isContractorCampaign({ campaignType: program.campaignType })) {
+      return false;
+    }
+    
+    // Ensure campaign type is valid
+    if (!program.campaignType) {
       return false;
     }
     
@@ -326,6 +336,11 @@ export function getOwnerBudgetSummary(owner: string, campaigns: any[] = []) {
     
     // Skip contractor/infrastructure programs using the helper function
     if (campaign.campaignType && isContractorCampaign({ campaignType: campaign.campaignType })) {
+      return false;
+    }
+    
+    // Ensure campaign type is valid
+    if (!campaign.campaignType) {
       return false;
     }
     
