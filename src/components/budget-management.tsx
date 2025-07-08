@@ -11,16 +11,24 @@ import { BudgetLockInfo } from "@/components/budget-lock-info";
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator";
 import { BudgetAllocationDetails } from "@/components/budget-allocation-details";
 import { Progress } from "@/components/ui/progress";
-import { ArrowClockwise, Warning, ArrowsClockwise, ChartPie } from "@phosphor-icons/react";
+import { ArrowClockwise, Warning, ArrowsClockwise, ChartPie, FilterX } from "@phosphor-icons/react";
 import { formatCurrency, isContractorCampaign, getAllCampaignTypes } from "@/lib/utils";
 import { toast } from "sonner";
 import { useKV } from "@github/spark/hooks";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function BudgetManagement() {
   const [budgets, setBudgets, budgetStatus] = useRegionalBudgets();
   const [campaigns] = useKV('campaignData', [], { scope: 'global' });
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Filter states
+  const [selectedRegion, setSelectedRegion] = useState("_all");
+  const [selectedQuarter, setSelectedQuarter] = useState("_all");
+  
+  // Get unique quarters from campaigns
+  const availableQuarters = ["_all", ...new Set(campaigns.map(c => c.quarterMonth))].filter(Boolean).sort();
   
   // Sync campaigns with budget data
   useEffect(() => {
@@ -33,8 +41,23 @@ export function BudgetManagement() {
         newBudgets[region].programs = [];
       });
       
+      // Filter campaigns based on selected filters
+      const filteredCampaigns = campaigns.filter(campaign => {
+        // Filter by region if selected
+        if (selectedRegion !== "_all" && campaign.region !== selectedRegion) {
+          return false;
+        }
+        
+        // Filter by quarter if selected
+        if (selectedQuarter !== "_all" && campaign.quarterMonth !== selectedQuarter) {
+          return false;
+        }
+        
+        return true;
+      });
+      
       // Add campaigns to their regions based on owner's region
-      campaigns.forEach(campaign => {
+      filteredCampaigns.forEach(campaign => {
         const owner = campaign.owner;
         const ownerRegion = OWNER_TO_REGION_MAP[owner];
         
@@ -58,7 +81,7 @@ export function BudgetManagement() {
       // Update budgets state with new campaigns
       setBudgets(newBudgets);
     }
-  }, [campaigns, setBudgets]);
+  }, [campaigns, setBudgets, selectedRegion, selectedQuarter]);
 
   // Function to handle budget changes
   const handleBudgetChange = (region: string, value: string) => {
@@ -85,7 +108,22 @@ export function BudgetManagement() {
     
     // Re-allocate budget to campaigns
     if (Array.isArray(campaigns) && campaigns.length > 0) {
-      const { campaigns: updatedCampaigns, allocations, ownerBudgets } = allocateBudgetToCampaigns(campaigns);
+      // Filter campaigns based on selected filters
+      const filteredCampaigns = campaigns.filter(campaign => {
+        // Filter by region if selected
+        if (selectedRegion !== "_all" && campaign.region !== selectedRegion) {
+          return false;
+        }
+        
+        // Filter by quarter if selected
+        if (selectedQuarter !== "_all" && campaign.quarterMonth !== selectedQuarter) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      const { campaigns: updatedCampaigns, allocations, ownerBudgets } = allocateBudgetToCampaigns(filteredCampaigns);
       
       // Group campaigns by region and update budgets
       const newBudgets = { ...budgets };
@@ -131,6 +169,12 @@ export function BudgetManagement() {
   // Get all regions sorted
   const regions = Object.keys(budgets).sort();
 
+  // Function to clear all filters
+  const clearAllFilters = () => {
+    setSelectedRegion("_all");
+    setSelectedQuarter("_all");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -155,6 +199,58 @@ export function BudgetManagement() {
             Reset to Defaults
           </Button>
         </div>
+      </div>
+      
+      {/* Filter Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+        <div className="w-full sm:w-48">
+          <label className="text-sm font-medium mb-1 block">
+            Region
+          </label>
+          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Region" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_all">All Regions</SelectItem>
+              {regions.map(region => (
+                <SelectItem key={region} value={region}>
+                  {region}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="w-full sm:w-48">
+          <label className="text-sm font-medium mb-1 block">
+            Quarter/Month
+          </label>
+          <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Quarter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_all">All Quarters</SelectItem>
+              {availableQuarters.map(quarter => (
+                <SelectItem key={quarter} value={quarter}>
+                  {quarter}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {(selectedRegion !== "_all" || selectedQuarter !== "_all") && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={clearAllFilters}
+            className="mt-4 sm:mt-0"
+          >
+            <FilterX className="h-3.5 w-3.5 mr-1" /> Clear Filters
+          </Button>
+        )}
       </div>
       
       <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md border border-border">
