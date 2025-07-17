@@ -202,19 +202,6 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
       };
     });
   
-  // Data for leads pipeline comparison chart
-  const leadComparisonData = [
-    { name: "Leads", forecasted: totalExpectedLeads, actual: totalActualLeads },
-    { name: "MQLs", forecasted: totalMQLs, actual: totalActualMQLs },
-    { name: "SQLs", forecasted: totalSQLs, actual: Math.round(totalActualLeads * 0.06) },
-    { name: "Opportunities", forecasted: totalOpportunities, actual: Math.round(totalActualLeads * 0.06 * 0.8) }
-  ];
-
-  // Data for pipeline comparison chart  
-  const pipelineComparisonData = [
-    { name: "Pipeline", forecasted: totalPipelineForecast, actual: totalActualPipeline }
-  ];
-  
   // Export to CSV function
   const exportToCSV = () => {
     if (filteredCampaigns.length === 0) {
@@ -525,82 +512,28 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
         </div>
         
         {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-          {/* Pipeline Forecasted vs Actual */}
+        <div className="grid grid-cols-1 gap-6 mt-4">
+          {/* Combined Pipeline and Lead Generation: Forecasted vs Actual */}
           <Card className="border shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <ChartBar className="h-4 w-4" /> Pipeline: Forecasted vs Actual
+                <ChartBar className="h-4 w-4" /> Campaign Performance: Forecasted vs Actual
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="h-80">
+              <div className="h-96">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={pipelineComparisonData}
+                    data={[
+                      { name: "Pipeline", forecasted: totalPipelineForecast, actual: totalActualPipeline },
+                      { name: "Leads", forecasted: totalExpectedLeads, actual: totalActualLeads },
+                      { name: "MQLs", forecasted: totalMQLs, actual: totalActualMQLs },
+                      { name: "SQLs", forecasted: totalSQLs, actual: Math.round(totalActualLeads * 0.06) },
+                      { name: "Opportunities", forecasted: totalOpportunities, actual: Math.round(totalActualLeads * 0.06 * 0.8) }
+                    ]}
                     margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
                     barGap={10}
-                    barSize={60}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={{ fontSize: 12, fontWeight: 500 }}
-                      tickMargin={10}
-                      height={60}
-                      interval={0}
-                      textAnchor="middle"
-                    />
-                    <YAxis tickFormatter={(value) => `$${(value/1000000).toFixed(1)}M`} />
-                    <Tooltip 
-                      formatter={(value, name) => [
-                        `$${value.toLocaleString()}`, 
-                        name === 'forecasted' ? 'Forecasted Pipeline' : 'Actual Pipeline'
-                      ]}
-                      labelFormatter={(label) => `Pipeline Performance`}
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '6px',
-                        padding: '8px 12px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                      }}
-                      itemStyle={{ padding: '4px 0' }}
-                    />
-                    <Legend />
-                    <Bar 
-                      dataKey="forecasted" 
-                      name="Forecasted Pipeline"
-                      fill="var(--chart-1)" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar 
-                      dataKey="actual" 
-                      name="Actual Pipeline"
-                      fill="var(--chart-2)" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Lead Generation: Forecasted vs Actual */}
-          <Card className="border shadow-sm h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FunnelSimple className="h-4 w-4" /> Lead Generation: Forecasted vs Actual
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={leadComparisonData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
-                    barGap={10}
-                    barSize={30}
+                    barSize={40}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis 
@@ -611,12 +544,22 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                       interval={0}
                       textAnchor="middle"
                     />
-                    <YAxis />
+                    <YAxis tickFormatter={(value) => {
+                      if (value >= 1000000) return `$${(value/1000000).toFixed(1)}M`;
+                      if (value >= 1000) return `${(value/1000).toFixed(1)}K`;
+                      return value.toString();
+                    }} />
                     <Tooltip 
-                      formatter={(value, name) => [
-                        value.toLocaleString(), 
-                        name === 'forecasted' ? 'Forecasted' : 'Actual'
-                      ]}
+                      formatter={(value, name, props) => {
+                        const metricName = props.payload.name;
+                        const displayValue = metricName === 'Pipeline' 
+                          ? `$${value.toLocaleString()}`
+                          : value.toLocaleString();
+                        return [
+                          displayValue, 
+                          name === 'forecasted' ? 'Forecasted' : 'Actual'
+                        ];
+                      }}
                       contentStyle={{ 
                         backgroundColor: 'white', 
                         border: '1px solid #e5e7eb',
@@ -630,13 +573,13 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                     <Bar 
                       dataKey="forecasted" 
                       name="Forecasted"
-                      fill="var(--chart-3)" 
+                      fill="var(--chart-1)" 
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar 
                       dataKey="actual" 
                       name="Actual"
-                      fill="var(--chart-4)" 
+                      fill="var(--chart-2)" 
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
@@ -644,10 +587,8 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Region Pipeline Comparison */}
-        <div className="grid grid-cols-1 gap-6 mt-4">
+          {/* Region Pipeline Comparison */}
           <Card className="border shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
@@ -708,6 +649,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
             </CardContent>
           </Card>
         </div>
+
       </CardContent>
     </Card>
   );
