@@ -120,18 +120,26 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
     (total, campaign) => total + (typeof campaign.actualLeads === "number" ? campaign.actualLeads : 0),
     0
   );
-  
+
+  const totalActualMQLs = filteredCampaigns.reduce(
+    (total, campaign) => total + (typeof campaign.actualMQLs === "number" ? campaign.actualMQLs : 0),
+    0
+  );
+
   const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of Expected Leads
   const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of Expected Leads
   const totalOpportunities = Math.round(totalSQLs * 0.8); // 80% of SQLs
   
   // Calculate pipeline with special logic for In-Account Events
   let totalPipelineForecast = 0;
+  let totalActualPipeline = 0;
   
   filteredCampaigns.forEach(campaign => {
     const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
     const expectedLeads = typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0;
+    const actualLeads = typeof campaign.actualLeads === 'number' ? campaign.actualLeads : 0;
     
+    // Calculate forecasted pipeline
     if (campaign.campaignType === "In-Account Events (1:1)" && 
         (!expectedLeads || expectedLeads <= 0) && 
         forecastedCost > 0) {
@@ -144,7 +152,14 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
       const oppsValue = Math.round(sqlValue * 0.8);
       totalPipelineForecast += oppsValue * 50000;
     }
-    // If neither condition is met, no pipeline is added
+    
+    // Calculate actual pipeline based on actual leads
+    if (actualLeads > 0) {
+      const actualMqlValue = Math.round(actualLeads * 0.1);
+      const actualSqlValue = Math.round(actualLeads * 0.06);
+      const actualOppsValue = Math.round(actualSqlValue * 0.8);
+      totalActualPipeline += actualOppsValue * 50000;
+    }
   });
   
   // Data for charts
@@ -187,12 +202,17 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
       };
     });
   
-  // Data for leads pipeline chart
-  const pipelineData = [
-    { name: "Expected Leads", value: totalExpectedLeads },
-    { name: "MQLs (10%)", value: totalMQLs },
-    { name: "SQLs (6%)", value: totalSQLs },
-    { name: "Opps (80% of SQL)", value: totalOpportunities }
+  // Data for leads pipeline comparison chart
+  const leadComparisonData = [
+    { name: "Leads", forecasted: totalExpectedLeads, actual: totalActualLeads },
+    { name: "MQLs", forecasted: totalMQLs, actual: totalActualMQLs },
+    { name: "SQLs", forecasted: totalSQLs, actual: Math.round(totalActualLeads * 0.06) },
+    { name: "Opportunities", forecasted: totalOpportunities, actual: Math.round(totalActualLeads * 0.06 * 0.8) }
+  ];
+
+  // Data for pipeline comparison chart  
+  const pipelineComparisonData = [
+    { name: "Pipeline", forecasted: totalPipelineForecast, actual: totalActualPipeline }
   ];
   
   // Export to CSV function
@@ -460,7 +480,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
         </Card>
         
         {/* Summary Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
               <div className="text-sm font-medium text-muted-foreground">Total Forecasted Spend</div>
@@ -477,33 +497,161 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground">Total Pipeline Forecast</div>
+              <div className="text-sm font-medium text-muted-foreground">Pipeline Forecast</div>
               <div className="text-2xl font-bold mt-1">{formatCurrency(totalPipelineForecast)}</div>
             </CardContent>
           </Card>
-          
+
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground">Total MQLs (10%)</div>
-              <div className="text-2xl font-bold mt-1">{totalMQLs.toLocaleString()}</div>
+              <div className="text-sm font-medium text-muted-foreground">Actual Pipeline</div>
+              <div className="text-2xl font-bold mt-1">{formatCurrency(totalActualPipeline)}</div>
             </CardContent>
           </Card>
           
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground">Total SQLs (6%)</div>
-              <div className="text-2xl font-bold mt-1">{totalSQLs.toLocaleString()}</div>
+              <div className="text-sm font-medium text-muted-foreground">Expected Leads</div>
+              <div className="text-2xl font-bold mt-1">{totalExpectedLeads.toLocaleString()}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border shadow-sm bg-primary/5">
+            <CardContent className="p-4">
+              <div className="text-sm font-medium text-muted-foreground">Actual Leads</div>
+              <div className="text-2xl font-bold mt-1">{totalActualLeads.toLocaleString()}</div>
             </CardContent>
           </Card>
         </div>
         
         {/* Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-          {/* Region Cost Comparison Chart */}
+          {/* Pipeline Forecasted vs Actual */}
           <Card className="border shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <ChartBar className="h-4 w-4" /> Region Pipeline Forecast
+                <ChartBar className="h-4 w-4" /> Pipeline: Forecasted vs Actual
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={pipelineComparisonData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
+                    barGap={10}
+                    barSize={60}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12, fontWeight: 500 }}
+                      tickMargin={10}
+                      height={60}
+                      interval={0}
+                      textAnchor="middle"
+                    />
+                    <YAxis tickFormatter={(value) => `$${(value/1000000).toFixed(1)}M`} />
+                    <Tooltip 
+                      formatter={(value, name) => [
+                        `$${value.toLocaleString()}`, 
+                        name === 'forecasted' ? 'Forecasted Pipeline' : 'Actual Pipeline'
+                      ]}
+                      labelFormatter={(label) => `Pipeline Performance`}
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                      itemStyle={{ padding: '4px 0' }}
+                    />
+                    <Legend />
+                    <Bar 
+                      dataKey="forecasted" 
+                      name="Forecasted Pipeline"
+                      fill="var(--chart-1)" 
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      dataKey="actual" 
+                      name="Actual Pipeline"
+                      fill="var(--chart-2)" 
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Lead Generation: Forecasted vs Actual */}
+          <Card className="border shadow-sm h-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FunnelSimple className="h-4 w-4" /> Lead Generation: Forecasted vs Actual
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={leadComparisonData}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
+                    barGap={10}
+                    barSize={30}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis 
+                      dataKey="name"
+                      tick={{ fontSize: 12, fontWeight: 500 }}
+                      tickMargin={10}
+                      height={60}
+                      interval={0}
+                      textAnchor="middle"
+                    />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value, name) => [
+                        value.toLocaleString(), 
+                        name === 'forecasted' ? 'Forecasted' : 'Actual'
+                      ]}
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                      itemStyle={{ padding: '4px 0' }}
+                    />
+                    <Legend />
+                    <Bar 
+                      dataKey="forecasted" 
+                      name="Forecasted"
+                      fill="var(--chart-3)" 
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      dataKey="actual" 
+                      name="Actual"
+                      fill="var(--chart-4)" 
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Region Pipeline Comparison */}
+        <div className="grid grid-cols-1 gap-6 mt-4">
+          <Card className="border shadow-sm h-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ChartLine className="h-4 w-4" /> Forecasted Impact by Region
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
@@ -552,61 +700,6 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                         else if (entry.name === "SAARC") color = "var(--chart-3)";
                         else if (entry.name === "Digital") color = "var(--chart-4)";
                         return <Cell key={`cell-${index}`} fill={color} />;
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Leads Pipeline Chart */}
-          <Card className="border shadow-sm h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <FunnelSimple className="h-4 w-4" /> Lead Generation Pipeline
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={pipelineData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
-                    barGap={10}
-                    barSize={40}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis 
-                      dataKey="name"
-                      tick={{ fontSize: 12, fontWeight: 500 }}
-                      tickMargin={10}
-                      height={60}
-                      interval={0}
-                      textAnchor="middle"
-                    />
-                    <YAxis />
-                    <Tooltip 
-                      formatter={(value) => [value.toLocaleString(), "Count"]}
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '6px',
-                        padding: '8px 12px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                      }}
-                      itemStyle={{ padding: '4px 0' }}
-                    />
-                    <Bar 
-                      dataKey="value" 
-                      name="Count"
-                      fill="var(--chart-3)" 
-                      radius={[4, 4, 0, 0]}
-                    >
-                      {pipelineData.map((entry, index) => {
-                        // Different color for each stage of the pipeline
-                        const colors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)"];
-                        return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
                       })}
                     </Bar>
                   </BarChart>
