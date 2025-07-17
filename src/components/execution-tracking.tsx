@@ -25,6 +25,7 @@ export function ExecutionTracking({
   // Filters
   const [regionFilter, setRegionFilter] = useState("_all");
   const [ownerFilter, setOwnerFilter] = useState("_all");
+  const [quarterFilter, setQuarterFilter] = useState("_all");
   const [pillarFilter, setPillarFilter] = useState("_all");
   const [campaignTypeFilter, setCampaignTypeFilter] = useState("_all");
   const [revenuePlayFilter, setRevenuePlayFilter] = useState("_all");
@@ -35,6 +36,7 @@ export function ExecutionTracking({
   // Get unique regions and owners from campaigns with fallbacks for missing data
   const regions = ["_all", ...new Set(campaigns.filter(c => c && c.region).map(c => normalizeRegionName(c.region)))];
   const owners = ["_all", ...new Set(campaigns.filter(c => c && c.owner).map(c => c.owner))];
+  const quarters = ["_all", ...new Set(campaigns.filter(c => c && c.quarterMonth).map(c => c.quarterMonth))];
   
   // Extract strategic pillars (flattened from arrays) with safety checks
   const allPillars = campaigns.reduce((acc, campaign) => {
@@ -120,6 +122,11 @@ export function ExecutionTracking({
         return false;
       }
       
+      // Apply quarter filter with safety check
+      if (quarterFilter !== "_all" && campaign.quarterMonth !== quarterFilter) {
+        return false;
+      }
+      
       // Apply strategic pillar filter with safety check
       if (pillarFilter !== "_all") {
         // Handle potential undefined strategicPillars
@@ -157,6 +164,7 @@ export function ExecutionTracking({
   const clearAllFilters = () => {
     setRegionFilter("_all");
     setOwnerFilter("_all");
+    setQuarterFilter("_all");
     setPillarFilter("_all");
     setCampaignTypeFilter("_all");
     setRevenuePlayFilter("_all");
@@ -173,6 +181,9 @@ export function ExecutionTracking({
     
     // Apply owner filter
     if (ownerFilter !== "_all" && campaign.owner !== ownerFilter) return false;
+    
+    // Apply quarter filter
+    if (quarterFilter !== "_all" && campaign.quarterMonth !== quarterFilter) return false;
     
     // Apply strategic pillar filter (check if any pillar matches)
     if (pillarFilter !== "_all") {
@@ -237,7 +248,7 @@ export function ExecutionTracking({
               <ClearFiltersButton onClick={clearAllFilters} />
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <div>
               <Label htmlFor="region-filter" className="text-xs mb-1.5 block">Region</Label>
               <Select 
@@ -269,6 +280,24 @@ export function ExecutionTracking({
                   <SelectItem value="_all">All Owners</SelectItem>
                   {owners.filter(o => o !== "_all").map((owner) => (
                     <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="quarter-filter" className="text-xs mb-1.5 block">Quarter</Label>
+              <Select 
+                value={quarterFilter}
+                onValueChange={setQuarterFilter}
+              >
+                <SelectTrigger id="quarter-filter">
+                  <SelectValue placeholder="All Quarters" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All Quarters</SelectItem>
+                  {quarters.filter(q => q !== "_all").map((quarter) => (
+                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
