@@ -278,7 +278,7 @@ export const exportToCSV = (campaigns) => {
     "Status",
     "Forecasted Cost",
     "Actual Cost",
-    "Expected Leads",
+    "Forecasted Leads",
     "Actual Leads",
     "Actual MQLs",
     "Actual SQLs"

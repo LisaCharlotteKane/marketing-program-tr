@@ -89,9 +89,9 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
     // Check if it's already a number type
     if (typeof campaign.expectedLeads === 'number') {
       if (isNaN(campaign.expectedLeads)) {
-        errors.push(`Row ${rowIndex}: Expected Leads is not a valid number.`);
+        errors.push(`Row ${rowIndex}: Forecasted Leads is not a valid number.`);
       } else if (campaign.expectedLeads < 0) {
-        errors.push(`Row ${rowIndex}: Expected Leads cannot be negative.`);
+        errors.push(`Row ${rowIndex}: Forecasted Leads cannot be negative.`);
       }
     } 
     // If it's a string, try to parse it
@@ -99,7 +99,7 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
       // Clean the string first
       const cleanValue = campaign.expectedLeads.replace(/,/g, '').trim();
       if (isNaN(Number(cleanValue))) {
-        errors.push(`Row ${rowIndex}: Expected Leads must be a number. Found: "${campaign.expectedLeads}"`);
+        errors.push(`Row ${rowIndex}: Forecasted Leads must be a number. Found: "${campaign.expectedLeads}"`);
       }
     }
   }
@@ -400,7 +400,7 @@ export function processCsvData(csvData: string): {
       
       // Process all numeric fields with the helper function
       forecastedCost = parseNumericValue(row.forecastedCost, "Forecasted Cost");
-      expectedLeads = parseNumericValue(row.expectedLeads, "Expected Leads");
+      expectedLeads = parseNumericValue(row.expectedLeads, "Forecasted Leads");
       actualCost = parseNumericValue(row.actualCost, "Actual Cost");
       actualLeads = parseNumericValue(row.actualLeads, "Actual Leads");
       actualMQLs = parseNumericValue(row.actualMQLs, "Actual MQLs");

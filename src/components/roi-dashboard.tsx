@@ -564,7 +564,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground tracking-wider">Campaign</th>
                     <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Forecasted Cost</th>
                     <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Actual Cost</th>
-                    <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Expected Leads</th>
+                    <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Forecasted Leads</th>
                     <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Actual Leads</th>
                     <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">Pipeline Value</th>
                     <th className="px-3 py-2 text-right text-xs font-medium text-muted-foreground tracking-wider">ROI</th>

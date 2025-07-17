@@ -1112,7 +1112,7 @@ export function CampaignTable({
                     </div>
                   </TableHead>
                   <TableHead className="w-[120px] font-medium">Forecasted Cost</TableHead>
-                  <TableHead className="w-[110px] font-medium">Expected Leads</TableHead>
+                  <TableHead className="w-[110px] font-medium">Forecasted Leads</TableHead>
                   <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">MQLs</TableHead>
                   <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">SQLs</TableHead>
                   <TableHead className="w-[110px] font-medium text-muted-foreground bg-muted/5">Opps</TableHead>
@@ -1375,7 +1375,7 @@ export function CampaignTable({
                   />
                 </TableCell>
                 
-                {/* Expected Leads */}
+                {/* Forecasted Leads */}
                 <TableCell>
                   <Input
                     type="text"
@@ -1491,7 +1491,7 @@ export function CampaignTable({
               </dd>
             </div>
             <div className="p-3 rounded-md bg-background border">
-              <dt className="text-xs text-muted-foreground mb-1">Expected Leads</dt>
+              <dt className="text-xs text-muted-foreground mb-1">Forecasted Leads</dt>
               <dd className="text-2xl font-semibold">
                 {filteredCampaigns.reduce((sum, c) => 
                   sum + (typeof c.expectedLeads === 'number' ? c.expectedLeads : 0), 0)}
@@ -1516,16 +1516,16 @@ export function CampaignTable({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Standard calculations based on <span className="font-medium text-foreground">Expected Leads</span>:
+              Standard calculations based on <span className="font-medium text-foreground">Forecasted Leads</span>:
             </p>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-muted/20 p-3 rounded-md">
                 <Badge variant="outline" className="font-mono mb-1">MQLs</Badge>
-                <p className="text-sm text-muted-foreground">10% of Expected Leads</p>
+                <p className="text-sm text-muted-foreground">10% of Forecasted Leads</p>
               </div>
               <div className="bg-muted/20 p-3 rounded-md">
                 <Badge variant="outline" className="font-mono mb-1">SQLs</Badge>
-                <p className="text-sm text-muted-foreground">6% of Expected Leads</p>
+                <p className="text-sm text-muted-foreground">6% of Forecasted Leads</p>
               </div>
               <div className="bg-muted/20 p-3 rounded-md">
                 <Badge variant="outline" className="font-mono mb-1">Opps</Badge>

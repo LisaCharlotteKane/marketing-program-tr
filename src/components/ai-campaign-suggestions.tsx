@@ -50,7 +50,7 @@ For each campaign, include:
 - Country (appropriate for the region)
 - Description (brief description of the campaign)
 - Forecasted Cost (reasonable estimate in USD)
-- Expected Leads (reasonable number of expected leads)
+- Forecasted Leads (reasonable number of forecasted leads)
 
 Return in JSON format ONLY (without explanation) as an array of 3 campaign objects with these exact properties:
 [
@@ -250,7 +250,7 @@ Return in JSON format ONLY (without explanation) as an array of 3 campaign objec
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Expected Leads:</span>
+                        <span className="text-muted-foreground">Forecasted Leads:</span>
                         <span className="font-medium">{suggestion.expectedLeads || 0}</span>
                       </div>
                     </div>

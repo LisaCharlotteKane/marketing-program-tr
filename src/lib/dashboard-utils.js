@@ -83,7 +83,7 @@ export const exportToCSV = (filteredCampaigns) => {
   // Define headers for the CSV
   const headers = [
     "ID", "Region", "Country", "Quarter", "Campaign Owner", "Program Type",
-    "Strategic Pillars", "Revenue Play", "Forecasted Cost", "Expected Leads",
+    "Strategic Pillars", "Revenue Play", "Forecasted Cost", "Forecasted Leads",
     "MQL", "SQL", "Opportunities", "Pipeline", "Status", "PO Raised",
     "Campaign Code", "Issue Link", "Actual Cost", "Actual Leads",
     "Actual MQL", "Actual SQL", "Actual Opportunities", "Actual Pipeline"

@@ -483,7 +483,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
           <li>Required fields: Campaign Name, Type, Region, Country, Owner</li>
           <li>Strategic Pillars column is comma-separated (e.g., "Account Growth and Product Adoption, New Logo Acquisition")</li>
           <li>Strategic Pillars must match exactly one of the valid options</li>
-          <li><strong>Numeric fields (Forecasted Cost, Expected Leads) must contain only numbers - no currency symbols or commas</strong></li>
+          <li><strong>Numeric fields (Forecasted Cost, Forecasted Leads) must contain only numbers - no currency symbols or commas</strong></li>
           <li><strong>Examples: Use "15000" not "$15,000" and "100" not "100 leads"</strong></li>
           <li>Empty numeric fields are allowed and will be treated as zero</li>
           <li>Date fields should follow the format in the template</li>

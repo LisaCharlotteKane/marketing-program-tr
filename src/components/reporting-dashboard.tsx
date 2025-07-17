@@ -126,8 +126,8 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
     0
   );
 
-  const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of Expected Leads
-  const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of Expected Leads
+  const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of Forecasted Leads
+  const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of Forecasted Leads
   const totalOpportunities = Math.round(totalSQLs * 0.8); // 80% of SQLs
   
   // Calculate pipeline with special logic for In-Account Events
@@ -221,7 +221,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
       "Owner",
       "Description",
       "Forecasted Cost",
-      "Expected Leads",
+      "Forecasted Leads",
       "MQLs",
       "SQLs",
       "Opportunities",
@@ -498,7 +498,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground">Expected Leads</div>
+              <div className="text-sm font-medium text-muted-foreground">Forecasted Leads</div>
               <div className="text-2xl font-bold mt-1">{totalExpectedLeads.toLocaleString()}</div>
             </CardContent>
           </Card>
