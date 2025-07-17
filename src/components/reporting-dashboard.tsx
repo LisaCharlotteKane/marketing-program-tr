@@ -573,13 +573,13 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                     <Bar 
                       dataKey="forecasted" 
                       name="Forecasted"
-                      fill="var(--chart-1)" 
+                      fill="#3b82f6" 
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar 
                       dataKey="actual" 
                       name="Actual"
-                      fill="var(--chart-2)" 
+                      fill="#22c55e" 
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
