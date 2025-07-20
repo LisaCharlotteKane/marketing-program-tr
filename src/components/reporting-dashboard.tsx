@@ -100,14 +100,9 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
     return true;
   });
   
-  // Calculate summary metrics
+  // Calculate summary metrics - Forecasted only
   const totalForecastedSpend = filteredCampaigns.reduce(
     (total, campaign) => total + (typeof campaign.forecastedCost === "number" ? campaign.forecastedCost : 0),
-    0
-  );
-  
-  const totalActualSpend = filteredCampaigns.reduce(
-    (total, campaign) => total + (typeof campaign.actualCost === "number" ? campaign.actualCost : 0),
     0
   );
   
@@ -115,29 +110,17 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
     (total, campaign) => total + (typeof campaign.expectedLeads === "number" ? campaign.expectedLeads : 0),
     0
   );
-  
-  const totalActualLeads = filteredCampaigns.reduce(
-    (total, campaign) => total + (typeof campaign.actualLeads === "number" ? campaign.actualLeads : 0),
-    0
-  );
-
-  const totalActualMQLs = filteredCampaigns.reduce(
-    (total, campaign) => total + (typeof campaign.actualMQLs === "number" ? campaign.actualMQLs : 0),
-    0
-  );
 
   const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of Forecasted Leads
   const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of Forecasted Leads
   const totalOpportunities = Math.round(totalSQLs * 0.8); // 80% of SQLs
   
-  // Calculate pipeline with special logic for In-Account Events
+  // Calculate forecasted pipeline with special logic for In-Account Events
   let totalPipelineForecast = 0;
-  let totalActualPipeline = 0;
   
   filteredCampaigns.forEach(campaign => {
     const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
     const expectedLeads = typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0;
-    const actualLeads = typeof campaign.actualLeads === 'number' ? campaign.actualLeads : 0;
     
     // Calculate forecasted pipeline
     if (campaign.campaignType === "In-Account Events (1:1)" && 
@@ -152,22 +135,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
       const oppsValue = Math.round(sqlValue * 0.8);
       totalPipelineForecast += oppsValue * 50000;
     }
-    
-    // Calculate actual pipeline based on actual leads
-    if (actualLeads > 0) {
-      const actualMqlValue = Math.round(actualLeads * 0.1);
-      const actualSqlValue = Math.round(actualLeads * 0.06);
-      const actualOppsValue = Math.round(actualSqlValue * 0.8);
-      totalActualPipeline += actualOppsValue * 50000;
-    }
   });
-  
-  // Data for charts
-  const costComparisonData = filteredCampaigns.map(campaign => ({
-    name: campaign.campaignName || campaign.description?.substring(0, 20) || "Untitled",
-    forecastedCost: typeof campaign.forecastedCost === "number" ? campaign.forecastedCost : 0,
-    actualCost: typeof campaign.actualCost === "number" ? campaign.actualCost : 0
-  }));
   
   // Aggregate by region for region-based chart - calculating pipeline forecast instead of cost
   const regionData = regions
@@ -225,14 +193,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
       "MQLs",
       "SQLs",
       "Opportunities",
-      "Pipeline Forecast",
-      "Status",
-      "PO Raised",
-      "Campaign Code",
-      "Issue Link",
-      "Actual Cost",
-      "Actual Leads",
-      "Actual MQLs"
+      "Pipeline Forecast"
     ].join(",");
     
     // Create CSV rows
@@ -258,14 +219,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
         campaign.mql || "",
         campaign.sql || "",
         campaign.opportunities || "",
-        campaign.pipelineForecast || "",
-        campaign.status || "",
-        campaign.poRaised ? "Yes" : "No",
-        campaign.campaignCode || "",
-        campaign.issueLink || "",
-        typeof campaign.actualCost === "number" ? campaign.actualCost : "",
-        typeof campaign.actualLeads === "number" ? campaign.actualLeads : "",
-        typeof campaign.actualMQLs === "number" ? campaign.actualMQLs : ""
+        campaign.pipelineForecast || ""
       ].join(",");
     });
     
@@ -466,8 +420,8 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           </CardContent>
         </Card>
         
-        {/* Summary Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        {/* Summary Metrics - Forecasted Only */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
               <div className="text-sm font-medium text-muted-foreground">Total Forecasted Spend</div>
@@ -477,22 +431,8 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground">Total Actual Spend</div>
-              <div className="text-2xl font-bold mt-1">{formatCurrency(totalActualSpend)}</div>
-            </CardContent>
-          </Card>
-          
-          <Card className="border shadow-sm bg-primary/5">
-            <CardContent className="p-4">
               <div className="text-sm font-medium text-muted-foreground">Forecasted Pipeline</div>
               <div className="text-2xl font-bold mt-1">{formatCurrency(totalPipelineForecast)}</div>
-            </CardContent>
-          </Card>
-
-          <Card className="border shadow-sm bg-primary/5">
-            <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground">Actual Pipeline</div>
-              <div className="text-2xl font-bold mt-1">{formatCurrency(totalActualPipeline)}</div>
             </CardContent>
           </Card>
           
@@ -505,19 +445,19 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
 
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground">Actual Leads</div>
-              <div className="text-2xl font-bold mt-1">{totalActualLeads.toLocaleString()}</div>
+              <div className="text-sm font-medium text-muted-foreground">Forecasted MQLs</div>
+              <div className="text-2xl font-bold mt-1">{totalMQLs.toLocaleString()}</div>
             </CardContent>
           </Card>
         </div>
         
         {/* Charts */}
         <div className="grid grid-cols-1 gap-6 mt-4">
-          {/* Combined Pipeline and Lead Generation: Forecasted vs Actual */}
+          {/* Campaign Performance: Forecasted Only */}
           <Card className="border shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <ChartBar className="h-4 w-4" /> Campaign Performance: Forecasted vs Actual
+                <ChartBar className="h-4 w-4" /> Campaign Performance: Forecasted
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
@@ -525,15 +465,13 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={[
-                      { name: "Pipeline", forecasted: totalPipelineForecast, actual: totalActualPipeline },
-                      { name: "Leads", forecasted: totalExpectedLeads, actual: totalActualLeads },
-                      { name: "MQLs", forecasted: totalMQLs, actual: totalActualMQLs },
-                      { name: "SQLs", forecasted: totalSQLs, actual: Math.round(totalActualLeads * 0.06) },
-                      { name: "Opportunities", forecasted: totalOpportunities, actual: Math.round(totalActualLeads * 0.06 * 0.8) }
+                      { name: "Forecasted Pipeline", value: totalPipelineForecast },
+                      { name: "Forecasted Leads", value: totalExpectedLeads },
+                      { name: "Forecasted MQLs", value: totalMQLs }
                     ]}
                     margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
                     barGap={10}
-                    barSize={40}
+                    barSize={60}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis 
@@ -552,13 +490,10 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                     <Tooltip 
                       formatter={(value, name, props) => {
                         const metricName = props.payload.name;
-                        const displayValue = metricName === 'Pipeline' 
+                        const displayValue = metricName.includes('Pipeline') 
                           ? `$${value.toLocaleString()}`
                           : value.toLocaleString();
-                        return [
-                          displayValue, 
-                          name === 'forecasted' ? 'Forecasted' : 'Actual'
-                        ];
+                        return [displayValue, metricName];
                       }}
                       contentStyle={{ 
                         backgroundColor: 'white', 
@@ -569,17 +504,10 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                       }}
                       itemStyle={{ padding: '4px 0' }}
                     />
-                    <Legend />
                     <Bar 
-                      dataKey="forecasted" 
+                      dataKey="value" 
                       name="Forecasted"
                       fill="#3b82f6" 
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar 
-                      dataKey="actual" 
-                      name="Actual"
-                      fill="#22c55e" 
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
