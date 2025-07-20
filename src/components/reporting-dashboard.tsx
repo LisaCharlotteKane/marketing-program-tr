@@ -452,22 +452,75 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
         </div>
         
         {/* Charts */}
-        <div className="grid grid-cols-1 gap-6 mt-4">
-          {/* Campaign Performance: Forecasted Only */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+          {/* Forecasted Pipeline */}
           <Card className="border shadow-sm h-full">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
-                <ChartBar className="h-4 w-4" /> Campaign Performance: Forecasted
+                <ChartBar className="h-4 w-4" /> Forecasted Pipeline
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <div className="h-96">
+              <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={[
-                      { name: "Forecasted Pipeline", value: totalPipelineForecast },
-                      { name: "Forecasted Leads", value: totalExpectedLeads },
-                      { name: "Forecasted MQLs", value: totalMQLs }
+                      { name: "Pipeline", value: totalPipelineForecast }
+                    ]}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
+                    barGap={10}
+                    barSize={80}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis 
+                      dataKey="name"
+                      tick={{ fontSize: 12, fontWeight: 500 }}
+                      tickMargin={10}
+                      height={60}
+                      interval={0}
+                      textAnchor="middle"
+                    />
+                    <YAxis tickFormatter={(value) => {
+                      if (value >= 1000000) return `$${(value/1000000).toFixed(1)}M`;
+                      if (value >= 1000) return `$${(value/1000).toFixed(0)}K`;
+                      return `$${value.toString()}`;
+                    }} />
+                    <Tooltip 
+                      formatter={(value) => [`$${value.toLocaleString()}`, "Forecasted Pipeline"]}
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                      itemStyle={{ padding: '4px 0' }}
+                    />
+                    <Bar 
+                      dataKey="value" 
+                      fill="#3b82f6" 
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Forecasted Leads & MQLs */}
+          <Card className="border shadow-sm h-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <ChartBar className="h-4 w-4" /> Forecasted Leads & MQLs
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={[
+                      { name: "Leads", value: totalExpectedLeads },
+                      { name: "MQLs", value: totalMQLs }
                     ]}
                     margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
                     barGap={10}
@@ -483,18 +536,11 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                       textAnchor="middle"
                     />
                     <YAxis tickFormatter={(value) => {
-                      if (value >= 1000000) return `$${(value/1000000).toFixed(1)}M`;
                       if (value >= 1000) return `${(value/1000).toFixed(1)}K`;
                       return value.toString();
                     }} />
                     <Tooltip 
-                      formatter={(value, name, props) => {
-                        const metricName = props.payload.name;
-                        const displayValue = metricName.includes('Pipeline') 
-                          ? `$${value.toLocaleString()}`
-                          : value.toLocaleString();
-                        return [displayValue, metricName];
-                      }}
+                      formatter={(value, name) => [value.toLocaleString(), `Forecasted ${name}`]}
                       contentStyle={{ 
                         backgroundColor: 'white', 
                         border: '1px solid #e5e7eb',
@@ -506,8 +552,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                     />
                     <Bar 
                       dataKey="value" 
-                      name="Forecasted"
-                      fill="#3b82f6" 
+                      fill="#22c55e"
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
@@ -516,67 +561,71 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
             </CardContent>
           </Card>
 
-          {/* Region Pipeline Comparison */}
-          <Card className="border shadow-sm h-full">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <ChartLine className="h-4 w-4" /> Forecasted Impact by Region
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={regionData}
-                    margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
-                    barGap={10}
-                    barSize={40}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                    <XAxis 
-                      dataKey="name" 
-                      tick={{ fontSize: 12, fontWeight: 500 }}
-                      tickMargin={10}
-                      height={60}
-                      interval={0}
-                      textAnchor="middle"
-                    />
-                    <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
-                    <Tooltip 
-                      formatter={(value) => [`$${value.toLocaleString()}`, "Pipeline Forecast"]}
-                      labelFormatter={(label) => `Region: ${label}`}
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '6px',
-                        padding: '8px 12px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                      }}
-                      itemStyle={{ padding: '4px 0' }}
-                    />
-                    <Legend />
-                    <Bar 
-                      dataKey="pipelineForecast" 
-                      name="Pipeline Forecast"
-                      fill="var(--chart-1)" 
-                      radius={[4, 4, 0, 0]}
-                    >
-                      {regionData.map((entry, index) => {
-                        // Different colors based on region
-                        let color = "var(--chart-1)"; // Default
-                        if (entry.name === "JP & Korea") color = "var(--chart-1)";
-                        else if (entry.name === "South APAC") color = "var(--chart-2)";
-                        else if (entry.name === "SAARC") color = "var(--chart-3)";
-                        else if (entry.name === "Digital") color = "var(--chart-4)";
-                        return <Cell key={`cell-${index}`} fill={color} />;
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* Region Pipeline Comparison - Full Width */}
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ChartLine className="h-4 w-4" /> Forecasted Impact by Region
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4">
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={regionData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 30 }}
+                  barGap={10}
+                  barSize={60}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fontSize: 12, fontWeight: 500 }}
+                    tickMargin={10}
+                    height={60}
+                    interval={0}
+                    textAnchor="middle"
+                  />
+                  <YAxis tickFormatter={(value) => {
+                    if (value >= 1000000) return `$${(value/1000000).toFixed(1)}M`;
+                    if (value >= 1000) return `$${(value/1000).toFixed(0)}K`;
+                    return `$${value.toString()}`;
+                  }} />
+                  <Tooltip 
+                    formatter={(value) => [`$${value.toLocaleString()}`, "Pipeline Forecast"]}
+                    labelFormatter={(label) => `Region: ${label}`}
+                    contentStyle={{ 
+                      backgroundColor: 'white', 
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                    itemStyle={{ padding: '4px 0' }}
+                  />
+                  <Bar 
+                    dataKey="pipelineForecast" 
+                    name="Pipeline Forecast"
+                    fill="var(--chart-1)" 
+                    radius={[4, 4, 0, 0]}
+                  >
+                    {regionData.map((entry, index) => {
+                      // Different colors based on region
+                      let color = "var(--chart-1)"; // Default
+                      if (entry.name === "JP & Korea") color = "var(--chart-1)";
+                      else if (entry.name === "South APAC") color = "var(--chart-2)";
+                      else if (entry.name === "SAARC") color = "var(--chart-3)";
+                      else if (entry.name === "Digital") color = "var(--chart-4)";
+                      return <Cell key={`cell-${index}`} fill={color} />;
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
       </CardContent>
     </Card>
