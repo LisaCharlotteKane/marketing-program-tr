@@ -484,7 +484,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground">Pipeline Forecast</div>
+              <div className="text-sm font-medium text-muted-foreground">Forecasted Pipeline</div>
               <div className="text-2xl font-bold mt-1">{formatCurrency(totalPipelineForecast)}</div>
             </CardContent>
           </Card>
@@ -498,7 +498,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
           
           <Card className="border shadow-sm bg-primary/5">
             <CardContent className="p-4">
-              <div className="text-sm font-medium text-muted-foreground">Expected Leads</div>
+              <div className="text-sm font-medium text-muted-foreground">Forecasted Leads</div>
               <div className="text-2xl font-bold mt-1">{totalExpectedLeads.toLocaleString()}</div>
             </CardContent>
           </Card>
@@ -557,7 +557,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                           : value.toLocaleString();
                         return [
                           displayValue, 
-                          name === 'forecasted' ? 'Expected' : 'Actual'
+                          name === 'forecasted' ? 'Forecasted' : 'Actual'
                         ];
                       }}
                       contentStyle={{ 
@@ -572,7 +572,7 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
                     <Legend />
                     <Bar 
                       dataKey="forecasted" 
-                      name="Expected"
+                      name="Forecasted"
                       fill="#3b82f6" 
                       radius={[4, 4, 0, 0]}
                     />

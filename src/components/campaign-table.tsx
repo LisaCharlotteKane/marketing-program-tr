@@ -1116,7 +1116,7 @@ export function CampaignTable({
                   <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">MQLs</TableHead>
                   <TableHead className="w-[80px] font-medium text-muted-foreground bg-muted/5">SQLs</TableHead>
                   <TableHead className="w-[110px] font-medium text-muted-foreground bg-muted/5">Opps</TableHead>
-                  <TableHead className="w-[130px] font-medium text-primary bg-muted/5">Pipeline</TableHead>
+                  <TableHead className="w-[130px] font-medium text-primary bg-muted/5">Forecasted Pipeline</TableHead>
                   <TableHead className="w-[80px] font-medium">Status</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
@@ -1498,7 +1498,7 @@ export function CampaignTable({
               </dd>
             </div>
             <div className="p-3 rounded-md bg-background border">
-              <dt className="text-xs text-muted-foreground mb-1">Pipeline Forecast</dt>
+              <dt className="text-xs text-muted-foreground mb-1">Forecasted Pipeline</dt>
               <dd className="text-2xl font-semibold">
                 {formatCurrency(filteredCampaigns.reduce((sum, c) => sum + c.pipelineForecast, 0))}
               </dd>
@@ -1532,7 +1532,7 @@ export function CampaignTable({
                 <p className="text-sm text-muted-foreground">80% of SQLs</p>
               </div>
               <div className="bg-muted/20 p-3 rounded-md">
-                <Badge variant="outline" className="font-mono mb-1">Pipeline</Badge>
+                <Badge variant="outline" className="font-mono mb-1">Forecasted Pipeline</Badge>
                 <p className="text-sm text-muted-foreground">Opps × $50,000</p>
               </div>
             </div>

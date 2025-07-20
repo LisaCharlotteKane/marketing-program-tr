@@ -29,7 +29,7 @@ export function CsvTemplateButton() {
 #
 # NUMERIC FIELDS: Enter just numbers without currency symbols, commas or other formatting
 # - forecastedCost: e.g. "15000" (not "$15,000")
-# - expectedLeads: e.g. "100" (not "100 leads")
+# - expectedLeads: e.g. "100" (not "100 leads") [displays as "Forecasted Leads"]
 # - actualCost: e.g. "15000" (not "$15,000")
 # - actualLeads: e.g. "100" (not "100 leads")
 #
