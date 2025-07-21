@@ -630,7 +630,4 @@ export function ReportingDashboard({ campaigns }: { campaigns: Campaign[] }) {
       </CardContent>
     </Card>
   );
-}      </CardContent>
-    </Card>
-  );
 }

@@ -63,46 +63,6 @@ export function CampaignTable({
   // Mobile responsive state
   const isMobile = useMediaQuery("(max-width: 768px)");
   
-  // Helper function to ensure data persistence and sharing with debounce
-  const forceSaveAndShare = (() => {
-    const debouncedUpdate = (updatedCampaigns) => {
-      try {
-        // Save to localStorage for redundancy
-        localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
-        
-        // Signal that data has been updated - with delay to prevent immediate processing
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent("campaign:updated", { 
-            detail: { count: updatedCampaigns.length } 
-          }));
-          
-          // Force synchronization with other components
-          window.dispatchEvent(new CustomEvent("campaign:force-sync", {
-            detail: { campaigns: updatedCampaigns }
-          }));
-        }, 100);
-      } catch (error) {
-        console.error("Error during forced data save:", error);
-        toast.error("Failed to save changes. Please try again.");
-      }
-    };
-    
-    // Track the timeout for debouncing
-    let debounceTimeout = null;
-    
-    return (updatedCampaigns) => {
-      // Clear any pending timeout
-      if (debounceTimeout) {
-        clearTimeout(debounceTimeout);
-      }
-      
-      // Set new timeout to debounce rapid changes
-      debounceTimeout = setTimeout(() => {
-        debouncedUpdate(updatedCampaigns);
-      }, 1000);
-    };
-  })();
-  
   // Selected campaigns for bulk operations
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
   
@@ -312,18 +272,10 @@ export function CampaignTable({
     // Update state with new campaign
     setCampaigns(updatedCampaigns);
     
-    // Force immediate save to ensure data is shared
-    try {
-      // Also update localStorage for backup
-      localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
-      
-      // Signal that data has been updated
-      window.dispatchEvent(new CustomEvent("campaign:updated", { 
-        detail: { count: updatedCampaigns.length } 
-      }));
-    } catch (error) {
-      console.error("Error saving new campaign:", error);
-    }
+    // Signal data update for other components
+    window.dispatchEvent(new CustomEvent("campaign:updated", { 
+      detail: { count: updatedCampaigns.length } 
+    }));
     
     toast.success('New campaign added and saved successfully');
   };
@@ -333,20 +285,12 @@ export function CampaignTable({
     const updatedCampaigns = campaigns.filter(campaign => campaign.id !== id);
     setCampaigns(updatedCampaigns);
     
-    // Force immediate save to ensure data is shared
-    try {
-      // Also update localStorage for backup
-      localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
-      
-      // Signal that data has been updated
-      window.dispatchEvent(new CustomEvent("campaign:updated", { 
-        detail: { count: updatedCampaigns.length } 
-      }));
-      
-      toast.success('Campaign removed successfully');
-    } catch (error) {
-      console.error("Error after removing campaign:", error);
-    }
+    // Signal data update
+    window.dispatchEvent(new CustomEvent("campaign:updated", { 
+      detail: { count: updatedCampaigns.length } 
+    }));
+    
+    toast.success('Campaign removed successfully');
   };
 
   // Handle bulk deletion of selected campaigns
@@ -356,18 +300,10 @@ export function CampaignTable({
     const updatedCampaigns = campaigns.filter(campaign => !selectedCampaigns.includes(campaign.id));
     setCampaigns(updatedCampaigns);
     
-    // Force immediate save to ensure data is shared
-    try {
-      // Also update localStorage for backup
-      localStorage.setItem('campaignData', JSON.stringify(updatedCampaigns));
-      
-      // Signal that data has been updated
-      window.dispatchEvent(new CustomEvent("campaign:updated", { 
-        detail: { count: updatedCampaigns.length } 
-      }));
-    } catch (error) {
-      console.error("Error after bulk campaign removal:", error);
-    }
+    // Signal data update
+    window.dispatchEvent(new CustomEvent("campaign:updated", { 
+      detail: { count: updatedCampaigns.length } 
+    }));
     
     setSelectedCampaigns([]); // Clear selection after deletion
     toast.success(`${selectedCampaigns.length} campaign(s) deleted successfully`);
@@ -558,9 +494,6 @@ export function CampaignTable({
     
     // Update state
     setCampaigns(updatedCampaigns);
-    
-    // Force immediate save to ensure data is shared
-    forceSaveAndShare(updatedCampaigns);
   };
 
   // Toggle strategic pillar selection
@@ -592,9 +525,6 @@ export function CampaignTable({
     
     // Update state
     setCampaigns(updatedCampaigns);
-    
-    // Force immediate save to ensure data is shared
-    forceSaveAndShare(updatedCampaigns);
   };
   
   // Helper function to parse quarter-month format
@@ -818,9 +748,6 @@ export function CampaignTable({
       // Update state
       setCampaigns(updatedCampaigns);
       
-      // Force immediate save to ensure data is shared
-      forceSaveAndShare(updatedCampaigns);
-      
       setIsImportDialogOpen(false);
       toast.success(`Imported ${processedCampaigns.length} campaigns successfully`);
     } catch (error) {
@@ -844,31 +771,7 @@ export function CampaignTable({
     setSelectedRevenuePlay("_all");
   };
 
-  // Effect to monitor campaigns and ensure they are properly saved
-  useEffect(() => {
-    // Skip on initial render
-    if (campaigns.length === 0) return;
-    
-    // Set up a debounced auto-save
-    const saveTimeout = setTimeout(() => {
-      try {
-        // Save to localStorage
-        localStorage.setItem('campaignData', JSON.stringify(campaigns));
-        
-        // Signal that data has been updated
-        window.dispatchEvent(new CustomEvent("campaign:updated", { 
-          detail: { count: campaigns.length } 
-        }));
-        
-        console.log(`Auto-saved ${campaigns.length} campaigns`);
-      } catch (error) {
-        console.error("Auto-save error:", error);
-      }
-    }, 2000); // 2-second debounce
-    
-    // Clean up
-    return () => clearTimeout(saveTimeout);
-  }, [campaigns]);
+  // Auto-save is handled by useKV hook - no additional useEffect needed
   
   // Filter campaigns based on the selected filters
   const filteredCampaigns = campaigns.filter(campaign => {
