@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "sonner";
-
-// Import components individually to identify issues
-import { CampaignTable } from '@/components/campaign-table';
+import { SimpleCampaignTable } from '@/components/simple-campaign-table';
 
 export default function App() {
   const [campaigns, setCampaigns] = useKV('campaignData', [], { scope: 'global' });
@@ -32,11 +30,10 @@ export default function App() {
             <TabsTrigger value="budget">Budget Management</TabsTrigger>
             <TabsTrigger value="reporting">Reporting</TabsTrigger>
             <TabsTrigger value="calendar">Calendar View</TabsTrigger>
-            <TabsTrigger value="storage">Storage</TabsTrigger>
           </TabsList>
 
           <TabsContent value="planning">
-            <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
+            <SimpleCampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
 
           <TabsContent value="execution">
@@ -71,15 +68,6 @@ export default function App() {
               <h2 className="text-xl font-semibold mb-4">Calendar View</h2>
               <p className="text-muted-foreground">
                 Loading calendar view...
-              </p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="storage">
-            <div className="text-center py-10">
-              <h2 className="text-xl font-semibold mb-4">Storage Management</h2>
-              <p className="text-muted-foreground">
-                Storage: {campaigns.length} campaigns
               </p>
             </div>
           </TabsContent>
