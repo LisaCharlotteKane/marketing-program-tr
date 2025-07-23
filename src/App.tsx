@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "sonner";
 import { SimpleCampaignTable } from '@/components/simple-campaign-table';
+import { ExecutionTracking } from '@/components/execution-tracking';
+import { BudgetManagement } from '@/components/budget-management';
+import { ReportingDashboard } from '@/components/reporting-dashboard';
+import { CampaignCalendarView } from '@/components/campaign-calendar-view';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Error Boundary Component
@@ -113,67 +117,19 @@ function AppContent() {
           </TabsContent>
 
           <TabsContent value="execution">
-            <Card>
-              <CardHeader>
-                <CardTitle>Execution Tracking</CardTitle>
-                <CardDescription>
-                  Track campaign execution status and performance
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  This feature will be available soon. You can continue using the Planning tab to add campaigns.
-                </p>
-              </CardContent>
-            </Card>
+            <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
           </TabsContent>
 
           <TabsContent value="budget">
-            <Card>
-              <CardHeader>
-                <CardTitle>Budget Management</CardTitle>
-                <CardDescription>
-                  Monitor and manage regional marketing budgets
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  This feature will be available soon. You can continue using the Planning tab to add campaigns.
-                </p>
-              </CardContent>
-            </Card>
+            <BudgetManagement />
           </TabsContent>
 
           <TabsContent value="reporting">  
-            <Card>
-              <CardHeader>
-                <CardTitle>Reporting Dashboard</CardTitle>
-                <CardDescription>
-                  View performance metrics and analytics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  This feature will be available soon. You can continue using the Planning tab to add campaigns.
-                </p>
-              </CardContent>
-            </Card>
+            <ReportingDashboard campaigns={campaigns} />
           </TabsContent>
 
           <TabsContent value="calendar">
-            <Card>
-              <CardHeader>
-                <CardTitle>Calendar View</CardTitle>
-                <CardDescription>
-                  View campaigns in a calendar layout
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  This feature will be available soon. You can continue using the Planning tab to add campaigns.
-                </p>
-              </CardContent>
-            </Card>
+            <CampaignCalendarView campaigns={campaigns} />
           </TabsContent>
         </Tabs>
       </main>
