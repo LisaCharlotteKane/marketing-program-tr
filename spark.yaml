@@ -1,0 +1,14 @@
+name: Marketing Campaign Planner
+description: A comprehensive marketing campaign planning and tracking tool
+version: "1.0.0"
+runtime:
+  type: web
+  build_command: npm run build
+  output_dir: dist
+  node_version: "18"
+environment:
+  - name: NODE_ENV
+    value: production
+permissions:
+  - storage:read
+  - storage:write
