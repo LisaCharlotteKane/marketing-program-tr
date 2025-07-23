@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FilterX } from "@phosphor-icons/react";
+import { X } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 interface ClearFiltersButtonProps {
@@ -28,7 +28,7 @@ export function ClearFiltersButton({
       size="sm"
       className={`flex items-center gap-1.5 text-xs font-medium bg-muted/20 border-muted hover:bg-muted hover:text-foreground ${className}`}
     >
-      <FilterX className="h-3.5 w-3.5" /> 
+      <X className="h-3.5 w-3.5" /> 
       <span>Clear Filters</span>
     </Button>
   );

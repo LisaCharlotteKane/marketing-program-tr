@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { PresentationChart, Download, ChartLine, ChartPie, ChartBar, FunnelSimple, Sliders, FilterX } from "@phosphor-icons/react";
+import { PresentationChart, Download, ChartLine, ChartPie, ChartBar, FunnelSimple, Sliders, X } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from "recharts";
 import { type Campaign } from "@/components/campaign-table";

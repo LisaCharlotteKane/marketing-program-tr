@@ -11,7 +11,7 @@ import { BudgetLockInfo } from "@/components/budget-lock-info";
 import { BudgetSaveIndicator } from "@/components/budget-save-indicator";
 import { BudgetAllocationDetails } from "@/components/budget-allocation-details";
 import { Progress } from "@/components/ui/progress";
-import { ArrowClockwise, Warning, ArrowsClockwise, ChartPie, FilterX } from "@phosphor-icons/react";
+import { ArrowClockwise, Warning, ArrowsClockwise, ChartPie, X } from "@phosphor-icons/react";
 import { formatCurrency, isContractorCampaign, getAllCampaignTypes } from "@/lib/utils";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -259,7 +259,7 @@ export function BudgetManagement() {
             onClick={clearAllFilters}
             className="mt-4 sm:mt-0"
           >
-            <FilterX className="h-3.5 w-3.5 mr-1" /> Clear Filters
+            <X className="h-3.5 w-3.5 mr-1" /> Clear Filters
           </Button>
         )}
       </div>

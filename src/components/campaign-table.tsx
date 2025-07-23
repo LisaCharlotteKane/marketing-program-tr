@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
-import { TrashSimple, FileCsv, Plus, ChartBar, FilterX, DownloadSimple, UploadSimple, Calculator, MagnifyingGlass } from "@phosphor-icons/react";
+import { TrashSimple, FileCsv, Plus, ChartBar, X, DownloadSimple, UploadSimple, Calculator, MagnifyingGlass } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 import { ClearFiltersButton } from "@/components/clear-filters-button";
@@ -853,7 +853,7 @@ export function CampaignTable({
         <div className="rounded-lg p-4 mb-4 bg-slate-50">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <FilterX className="h-4 w-4 text-muted-foreground" />
+              <X className="h-4 w-4 text-muted-foreground" />
               <h4 className="text-sm font-medium">Filter Campaigns</h4>
             </div>
             <ClearFiltersButton onClick={clearAllFilters} />
@@ -967,7 +967,7 @@ export function CampaignTable({
       {/* Display error if no campaigns match filters */}
       {filteredCampaigns.length === 0 && (
         <div className="flex flex-col items-center justify-center p-8 bg-card border rounded-lg text-center">
-          <FilterX className="h-10 w-10 text-muted-foreground mb-4 opacity-50" />
+          <X className="h-10 w-10 text-muted-foreground mb-4 opacity-50" />
           <h3 className="text-lg font-semibold mb-2">No campaigns match the filters</h3>
           <p className="text-muted-foreground mb-4 max-w-md">Try clearing some filters or add a new campaign to get started.</p>
           <ClearFiltersButton 

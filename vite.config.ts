@@ -29,6 +29,7 @@ export default defineConfig({
     tagSourcePlugin() as PluginOption, 
     designerHost() as PluginOption,
   ],
+  base: './',
   build: {
     outDir: process.env.OUTPUT_DIR || 'dist'
   },

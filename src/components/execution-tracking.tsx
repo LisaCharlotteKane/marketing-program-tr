@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { FilterX, ClipboardText, Search, TrashSimple, ArrowClockwise } from "@phosphor-icons/react";
+import { X, ClipboardText, MagnifyingGlass, TrashSimple, ArrowClockwise } from "@phosphor-icons/react";
 import { type Campaign } from "@/components/campaign-table";
 import { toast } from "sonner";
 import { ClearFiltersButton } from "@/components/clear-filters-button";
@@ -233,7 +233,7 @@ export function ExecutionTracking({
         <div className="bg-muted/30 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-medium flex items-center gap-2">
-              <FilterX className="h-4 w-4 text-muted-foreground" />
+              <X className="h-4 w-4 text-muted-foreground" />
               Filter Campaigns
             </h4>
             <div className="flex gap-2">
@@ -361,7 +361,7 @@ export function ExecutionTracking({
         
         {safeFilteredCampaigns.length === 0 ? (
           <div className="text-center py-12 px-4 bg-card/50 border rounded-lg">
-            <Search className="h-12 w-12 mx-auto mb-4 opacity-20" />
+            <MagnifyingGlass className="h-12 w-12 mx-auto mb-4 opacity-20" />
             <h4 className="text-lg font-semibold mb-2">No campaigns match your filters</h4>
             <p className="text-sm text-muted-foreground mb-4">Try changing your filter criteria or add new campaigns</p>
               <Button 
@@ -369,7 +369,7 @@ export function ExecutionTracking({
                 onClick={clearAllFilters}
                 className="mx-auto flex items-center gap-1" 
               >
-                <FilterX className="h-3.5 w-3.5" /> Clear Filters
+                <X className="h-3.5 w-3.5" /> Clear Filters
               </Button>
           </div>
         ) : (

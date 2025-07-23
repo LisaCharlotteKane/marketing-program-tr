@@ -19,7 +19,7 @@ import {
   Pie,
   Cell
 } from "recharts";
-import { ChartBar, ChartLine, ChartPie, Table, TrendUp, FilterX } from "@phosphor-icons/react";
+import { ChartBar, ChartLine, ChartPie, Table, TrendUp, X } from "@phosphor-icons/react";
 import { Campaign } from "./campaign-table";
 import { toast } from "sonner";
 import { ClearFiltersButton } from "./clear-filters-button";
