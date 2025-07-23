@@ -1,41 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CampaignTable } from "@/components/campaign-table";
-import { ReportingDashboard } from "@/components/reporting-dashboard";
-import { ExecutionTracking } from "@/components/execution-tracking";
-import { CampaignCalendarView } from "@/components/campaign-calendar-view";
-import { StorageManagement } from "@/components/storage-management";
-import { BudgetManagement } from "@/components/budget-management";
-import { useMigrateToGlobal } from "@/hooks/useMigrateStorage";
 import { Toaster } from "sonner";
-import { Logo } from "@/components/logo";
-
-export function CampaignCountChecker() {
-  const [kvCampaigns] = useKV('campaignData', [], { scope: 'global' });
-  const [campaignCount, setCampaignCount] = useState(0);
-  const [refreshTime, setRefreshTime] = useState(new Date());
-
-  useEffect(() => {
-    if (Array.isArray(kvCampaigns)) {
-      setCampaignCount(kvCampaigns.length);
-    }
-  }, [kvCampaigns]);
-
-  return (
-    <div className="text-xs text-muted-foreground">
-      Storage: {campaignCount} campaigns
-    </div>
-  );
-}
 
 export default function App() {
   const [campaigns, setCampaigns] = useKV('campaignData', [], { scope: 'global' });
   const [activeTab, setActiveTab] = useState('planning');
-  
-  // Migrate any existing user data to global scope
-  useMigrateToGlobal('campaignData');
-  useMigrateToGlobal('assignedBudgets');
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -43,9 +13,11 @@ export default function App() {
       <header className="border-b shadow-sm">
         <div className="container mx-auto p-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Logo />
+            <h1 className="text-xl font-semibold">Marketing Campaign Planner</h1>
           </div>
-          <CampaignCountChecker />
+          <div className="text-xs text-muted-foreground">
+            Storage: {campaigns.length} campaigns
+          </div>
         </div>
       </header>
       
@@ -61,33 +33,57 @@ export default function App() {
           </TabsList>
 
           <TabsContent value="planning">
-            <CampaignTable 
-              campaigns={campaigns} 
-              setCampaigns={setCampaigns} 
-            />
+            <div className="text-center py-10">
+              <h2 className="text-xl font-semibold mb-4">Campaign Planning</h2>
+              <p className="text-muted-foreground">
+                Campaign table component will be restored here.
+              </p>
+            </div>
           </TabsContent>
 
           <TabsContent value="execution">
-            <ExecutionTracking 
-              campaigns={campaigns} 
-              setCampaigns={setCampaigns}
-            />
+            <div className="text-center py-10">
+              <h2 className="text-xl font-semibold mb-4">Execution Tracking</h2>
+              <p className="text-muted-foreground">
+                Execution tracking component will be restored here.
+              </p>
+            </div>
           </TabsContent>
 
           <TabsContent value="budget">
-            <BudgetManagement />
+            <div className="text-center py-10">
+              <h2 className="text-xl font-semibold mb-4">Budget Management</h2>
+              <p className="text-muted-foreground">
+                Budget management component will be restored here.
+              </p>
+            </div>
           </TabsContent>
 
           <TabsContent value="reporting">
-            <ReportingDashboard campaigns={campaigns} />
+            <div className="text-center py-10">
+              <h2 className="text-xl font-semibold mb-4">Reporting</h2>
+              <p className="text-muted-foreground">
+                Reporting dashboard will be restored here.
+              </p>
+            </div>
           </TabsContent>
 
           <TabsContent value="calendar">
-            <CampaignCalendarView campaigns={campaigns} />
+            <div className="text-center py-10">
+              <h2 className="text-xl font-semibold mb-4">Calendar View</h2>
+              <p className="text-muted-foreground">
+                Calendar view will be restored here.
+              </p>
+            </div>
           </TabsContent>
           
           <TabsContent value="storage">
-            <StorageManagement />
+            <div className="text-center py-10">
+              <h2 className="text-xl font-semibold mb-4">Storage Management</h2>
+              <p className="text-muted-foreground">
+                Storage management will be restored here.
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </main>
