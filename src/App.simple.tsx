@@ -3,9 +3,6 @@ import { useKV } from '@github/spark/hooks';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "sonner";
 
-// Import components individually to identify issues
-import { CampaignTable } from '@/components/campaign-table';
-
 export default function App() {
   const [campaigns, setCampaigns] = useKV('campaignData', [], { scope: 'global' });
   const [activeTab, setActiveTab] = useState('planning');
@@ -36,7 +33,12 @@ export default function App() {
           </TabsList>
 
           <TabsContent value="planning">
-            <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
+            <div className="text-center py-10">
+              <h2 className="text-xl font-semibold mb-4">Campaign Planning</h2>
+              <p className="text-muted-foreground">
+                Loading campaign components...
+              </p>
+            </div>
           </TabsContent>
 
           <TabsContent value="execution">
