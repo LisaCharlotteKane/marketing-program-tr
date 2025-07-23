@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toaster } from "sonner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 // Simple storage hook using localStorage
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
@@ -26,7 +27,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
   return [storedValue, setValue];
 }
 
-export default function App() {
+function App() {
   const [campaigns, setCampaigns] = useLocalStorage('campaignData', []);
 
   return (
@@ -53,28 +54,12 @@ export default function App() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                The application is being rebuilt. This minimal version shows that the core system is working.
-              </p>
-              <div className="p-4 bg-muted rounded-lg">
-                <h3 className="font-medium mb-2">System Status:</h3>
-                <ul className="space-y-1 text-sm">
-                  <li>✓ React app is running</li>
-                  <li>✓ Storage system is working</li>
-                  <li>✓ UI components are loaded</li>
-                  <li>⏳ Full campaign features being restored...</li>
-                </ul>
-              </div>
-              
-              {Array.isArray(campaigns) && campaigns.length > 0 && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h3 className="font-medium mb-2 text-green-800">Found Existing Campaign Data:</h3>
-                  <p className="text-sm text-green-700">
-                    {campaigns.length} campaign(s) are saved in storage and will be restored when the full app is rebuilt.
-                  </p>
-                </div>
-              )}
+            <p className="text-muted-foreground">
+              Application is loading... If you see this message, the app is working but some components may need to be rebuilt.
+            </p>
+            <div className="mt-4 p-4 bg-muted rounded-lg">
+              <h3 className="font-medium mb-2">Current Storage:</h3>
+              <p>{JSON.stringify(campaigns, null, 2)}</p>
             </div>
           </CardContent>
         </Card>
@@ -82,3 +67,5 @@ export default function App() {
     </div>
   );
 }
+
+export default App;
