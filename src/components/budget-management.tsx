@@ -14,14 +14,25 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowClockwise, Warning, ArrowsClockwise, ChartPie, FilterX } from "@phosphor-icons/react";
 import { formatCurrency, isContractorCampaign, getAllCampaignTypes } from "@/lib/utils";
 import { toast } from "sonner";
-import { useKV } from "@github/spark/hooks";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function BudgetManagement() {
   const [budgets, setBudgets, budgetStatus] = useRegionalBudgets();
-  const [campaigns] = useKV('campaignData', [], { scope: 'global' });
+  const [campaigns, setCampaigns] = useState([]); // Use localStorage fallback
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Load campaigns from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('campaignData');
+      if (stored) {
+        setCampaigns(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading campaigns:', error);
+    }
+  }, []);
   
   // Filter states
   const [selectedRegion, setSelectedRegion] = useState("_all");

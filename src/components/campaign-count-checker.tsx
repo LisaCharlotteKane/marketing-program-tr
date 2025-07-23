@@ -1,24 +1,40 @@
 import React, { useEffect, useState } from 'react';
-import { useKV } from '@github/spark/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowClockwise } from "@phosphor-icons/react";
 
 export function CampaignCountChecker() {
-  const [kvCampaigns] = useKV('campaignData', []);
   const [campaignCount, setCampaignCount] = useState(0);
   const [refreshTime, setRefreshTime] = useState(new Date());
 
   useEffect(() => {
-    if (Array.isArray(kvCampaigns)) {
-      setCampaignCount(kvCampaigns.length);
+    // Load from localStorage
+    try {
+      const stored = localStorage.getItem('campaignData');
+      if (stored) {
+        const campaigns = JSON.parse(stored);
+        if (Array.isArray(campaigns)) {
+          setCampaignCount(campaigns.length);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading campaigns:', error);
+      setCampaignCount(0);
     }
-  }, [kvCampaigns]);
+  }, []);
 
   const handleRefresh = () => {
-    if (Array.isArray(kvCampaigns)) {
-      setCampaignCount(kvCampaigns.length);
+    try {
+      const stored = localStorage.getItem('campaignData');
+      if (stored) {
+        const campaigns = JSON.parse(stored);
+        if (Array.isArray(campaigns)) {
+          setCampaignCount(campaigns.length);
+        }
+      }
       setRefreshTime(new Date());
+    } catch (error) {
+      console.error('Error refreshing campaigns:', error);
     }
   };
 

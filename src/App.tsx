@@ -54,7 +54,7 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
   }
 }
 
-// Fallback localStorage hook if GitHub Spark is not available
+// Fallback localStorage hook
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
@@ -78,7 +78,7 @@ function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => voi
   return [storedValue, setValue];
 }
 
-// Simple storage hook using localStorage to avoid authentication issues
+// Simple storage hook using localStorage - no authentication required
 function useCampaignStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   return useLocalStorage(key, initialValue);
 }

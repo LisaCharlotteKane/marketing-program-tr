@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { useKV } from "@github/spark/hooks";
 
 export interface RegionalBudget {
   assignedBudget: number | "";
@@ -27,15 +26,15 @@ interface BudgetStatus {
   resetToDefaults: () => void;
 }
 
-// Owner to region mapping (updated "North APAC" to "JP & Korea")
-export const OWNER_TO_REGION_MAP: Record<string, string> = {
+// Owner to region mapping
+export const OWNER_TO_REGION_MAP = {
   "Tomoko Tanaka": "JP & Korea",
-  "Beverly Leung": "South APAC",
+  "Beverly Leung": "South APAC", 
   "Shruti Narang": "SAARC",
   "Giorgia Parham": "Digital Motions"
 };
 
-// Default regional budgets - set as per management directive
+// Default budget allocations with locked states
 export const DEFAULT_BUDGETS: RegionalBudgets = {
   "JP & Korea": {
     assignedBudget: 358000,
@@ -80,10 +79,6 @@ export const DEFAULT_BUDGETS: RegionalBudgets = {
 };
 
 export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.SetStateAction<RegionalBudgets>>, BudgetStatus] {
-  // Use Spark's KV store for shared persistence across users with direct initialization
-  const [kvBudgets, setKvBudgets, deleteKvBudgets] = useKV<RegionalBudgets>("regionalBudgets", DEFAULT_BUDGETS);
-  
-  // Initialize with default budgets
   const [budgets, setBudgets] = useState<RegionalBudgets>(DEFAULT_BUDGETS);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | undefined>(undefined);
@@ -91,156 +86,60 @@ export function useRegionalBudgets(): [RegionalBudgets, React.Dispatch<React.Set
   // Load saved budgets on mount
   useEffect(() => {
     try {
-      if (kvBudgets) {
-        // Data found in KV store
+      const savedBudgets = localStorage.getItem("regionalBudgets");
+      if (savedBudgets) {
+        const parsedBudgets = JSON.parse(savedBudgets);
         const mergedBudgets = { ...DEFAULT_BUDGETS };
         
-        // Overwrite with saved values, preserving locks
-        Object.keys(kvBudgets).forEach(region => {
+        // Merge saved data with defaults
+        Object.keys(parsedBudgets).forEach(region => {
           if (mergedBudgets[region]) {
-            // Preserve the locked status from defaults
-            const lockedByOwner = mergedBudgets[region].lockedByOwner;
-            const lockedTimestamp = mergedBudgets[region].lockedTimestamp;
-            
             mergedBudgets[region] = {
-              ...kvBudgets[region],
-              lockedByOwner,
-              lockedTimestamp
+              ...mergedBudgets[region],
+              ...parsedBudgets[region]
             };
           } else {
-            mergedBudgets[region] = kvBudgets[region];
+            mergedBudgets[region] = parsedBudgets[region];
           }
         });
         
-        // Only update state if the data is different to prevent loops
-        if (JSON.stringify(budgets) !== JSON.stringify(mergedBudgets)) {
-          setBudgets(mergedBudgets);
-        }
-      } else {
-        // Fall back to localStorage for backward compatibility
-        const savedBudgets = localStorage.getItem("regionalBudgets");
-        if (savedBudgets) {
-          const parsedBudgets = JSON.parse(savedBudgets);
-          
-          // Make sure we have entries for all regions from defaults
-          const mergedBudgets = { ...DEFAULT_BUDGETS };
-          
-          // Overwrite with saved values, preserving locks
-          Object.keys(parsedBudgets).forEach(region => {
-            if (mergedBudgets[region]) {
-              // Preserve the locked status from defaults
-              const lockedByOwner = mergedBudgets[region].lockedByOwner;
-              const lockedTimestamp = mergedBudgets[region].lockedTimestamp;
-              
-              mergedBudgets[region] = {
-                ...parsedBudgets[region],
-                lockedByOwner,
-                lockedTimestamp
-              };
-            } else {
-              mergedBudgets[region] = parsedBudgets[region];
-            }
-          });
-          
-          // Only update state if different to prevent loops
-          if (JSON.stringify(budgets) !== JSON.stringify(mergedBudgets)) {
-            setBudgets(mergedBudgets);
-          }
-          
-          // Migrate data to KV store, only if different from current KV data
-          if (JSON.stringify(kvBudgets) !== JSON.stringify(mergedBudgets)) {
-            setKvBudgets(mergedBudgets);
-            // Inform user about the migration
-            toast.success("Budget data migrated to shared storage");
-          }
-        } else {
-          // Ensure KV has initial data if nothing is found, but only if different
-          if (JSON.stringify(kvBudgets) !== JSON.stringify(DEFAULT_BUDGETS)) {
-            setKvBudgets(DEFAULT_BUDGETS);
-          }
-        }
+        setBudgets(mergedBudgets);
       }
     } catch (error) {
       console.error("Error loading regional budgets:", error);
-      // Ensure KV store has the default budgets, but only if different
-      if (JSON.stringify(kvBudgets) !== JSON.stringify(DEFAULT_BUDGETS)) {
-        setKvBudgets(DEFAULT_BUDGETS);
-      }
-      // Silently fall back to defaults
+      setBudgets(DEFAULT_BUDGETS);
     }
-  }, [kvBudgets]);
-  
-  // Custom setter that updates both local state and KV store
-  const setBudgetsAndKV = useCallback((newBudgets: React.SetStateAction<RegionalBudgets>) => {
-    setBudgets(prev => {
-      const nextBudgets = typeof newBudgets === 'function'
-        ? (newBudgets as Function)(prev)
-        : newBudgets;
-      
-      // Update KV store when budgets change, but only if they're different
-      const currentKvBudgetsString = JSON.stringify(kvBudgets || {});
-      const nextBudgetsString = JSON.stringify(nextBudgets);
-      
-      if (currentKvBudgetsString !== nextBudgetsString) {
-        setKvBudgets(nextBudgets);
-      }
-      
-      return nextBudgets;
-    });
-  }, [setKvBudgets, kvBudgets]);
-  
-  // Save budgets to localStorage whenever they change (backward compatibility)
-  // Use refs to track initial render and previous budgets - MOVED OUTSIDE OF EFFECT
-  const isInitialRender = React.useRef(true);
-  const previousBudgetsRef = React.useRef<RegionalBudgets | null>(null);
-  
+  }, []);
+
+  // Save budgets to localStorage whenever they change
   useEffect(() => {
-    // Skip saving on initial render to prevent loop
-    if (isInitialRender.current) {
-      isInitialRender.current = false;
-      previousBudgetsRef.current = budgets;
-      return;
-    }
-    
-    // Skip if nothing has changed to prevent update loops
-    if (previousBudgetsRef.current && 
-        JSON.stringify(previousBudgetsRef.current) === JSON.stringify(budgets)) {
-      return;
-    }
-    
-    // Update reference for next comparison
-    previousBudgetsRef.current = JSON.parse(JSON.stringify(budgets));
-    
-    // Use debounce for saving to reduce performance impact
     const timeoutId = setTimeout(() => {
-      const saveData = async () => {
-        setIsSaving(true);
-        try {
-          // Keep localStorage in sync for backward compatibility
-          localStorage.setItem("regionalBudgets", JSON.stringify(budgets));
-          // KV store is updated directly in setBudgetsAndKV
-          setLastSaved(new Date());
-        } catch (error) {
-          console.error("Error saving regional budgets:", error);
-          toast.error("Failed to save budget data");
-        } finally {
-          setIsSaving(false);
-        }
-      };
-      
-      saveData();
-    }, 5000); // 5 second debounce (increased from 2 seconds)
-    
-    return () => {
-      clearTimeout(timeoutId);
-    };
+      setIsSaving(true);
+      try {
+        localStorage.setItem("regionalBudgets", JSON.stringify(budgets));
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error("Error saving regional budgets:", error);
+        toast.error("Failed to save budget changes");
+      } finally {
+        setIsSaving(false);
+      }
+    }, 500); // Debounce saves
+
+    return () => clearTimeout(timeoutId);
   }, [budgets]);
-  
-  // Function to reset budgets to defaults
-  const resetToDefaults = () => {
-    setBudgetsAndKV(DEFAULT_BUDGETS);
-    toast.success("Regional budgets reset to defaults");
+
+  const resetToDefaults = useCallback(() => {
+    setBudgets(DEFAULT_BUDGETS);
+    localStorage.removeItem("regionalBudgets");
+    toast.success("Budget settings reset to defaults");
+  }, []);
+
+  const budgetStatus: BudgetStatus = {
+    isSaving,
+    lastSaved,
+    resetToDefaults
   };
-  
-  return [budgets, setBudgetsAndKV, { isSaving, lastSaved, resetToDefaults }];
+
+  return [budgets, setBudgets, budgetStatus];
 }
