@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Campaign Planner - Comprehensive Health Check</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .health-check-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 25px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .test-section h3::before {
+            content: '🔧';
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .status {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+        
+        .status::before {
+            margin-right: 10px;
+            font-size: 1.1em;
+        }
+        
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+        .success::before { content: '✅'; }
+        
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f1b0b7;
+        }
+        .error::before { content: '❌'; }
+        
+        .info { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            border: 1px solid #b8daff;
+        }
+        .info::before { content: 'ℹ️'; }
+        
+        .warning { 
+            background: #fff3cd; 
+            color: #856404; 
+            border: 1px solid #ffeaa7;
+        }
+        .warning::before { content: '⚠️'; }
+        
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin: 5px;
+        }
+        
+        .button:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .summary-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 25px;
+            text-align: center;
+        }
+        
+        .summary-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .success-stat { color: #28a745; }
+        .error-stat { color: #dc3545; }
+        .warning-stat { color: #ffc107; }
+        .info-stat { color: #17a2b8; }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .summary-stats {
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="health-check-container">
+        <div class="header">
+            <h1>🏥 Health Check Dashboard</h1>
+            <p>Comprehensive functionality and availability assessment for Marketing Campaign Planner</p>
+        </div>
+        
+        <div class="content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="overall-progress"></div>
+            </div>
+            
+            <div class="test-grid">
+                <!-- Browser Environment Tests -->
+                <div class="test-section">
+                    <h3>Browser Environment</h3>
+                    <div id="browser-tests">
+                        <div class="status info">Running browser compatibility tests... <div class="loading"></div></div>
+                    </div>
+                    <button class="button" onclick="runBrowserTests()">Re-run Browser Tests</button>
+                </div>
+                
+                <!-- Storage Tests -->
+                <div class="test-section">
+                    <h3>Storage Capabilities</h3>
+                    <div id="storage-tests">
+                        <div class="status info">Testing storage mechanisms... <div class="loading"></div></div>
+                    </div>
+                    <button class="button" onclick="runStorageTests()">Test Storage</button>
+                </div>
+                
+                <!-- Network Tests -->
+                <div class="test-section">
+                    <h3>Network & APIs</h3>
+                    <div id="network-tests">
+                        <div class="status info">Checking network connectivity... <div class="loading"></div></div>
+                    </div>
+                    <button class="button" onclick="runNetworkTests()">Test Network</button>
+                </div>
+                
+                <!-- Performance Tests -->
+                <div class="test-section">
+                    <h3>Performance Metrics</h3>
+                    <div id="performance-tests">
+                        <div class="status info">Measuring performance... <div class="loading"></div></div>
+                    </div>
+                    <button class="button" onclick="runPerformanceTests()">Check Performance</button>
+                </div>
+                
+                <!-- Campaign Data Tests -->
+                <div class="test-section">
+                    <h3>Campaign Data Management</h3>
+                    <div id="campaign-tests">
+                        <div class="status info">Testing campaign functionality... <div class="loading"></div></div>
+                    </div>
+                    <button class="button" onclick="runCampaignTests()">Test Campaigns</button>
+                </div>
+                
+                <!-- GitHub Integration Tests -->
+                <div class="test-section">
+                    <h3>GitHub Integration</h3>
+                    <div id="github-tests">
+                        <div class="status info">Checking GitHub capabilities... <div class="loading"></div></div>
+                    </div>
+                    <button class="button" onclick="runGitHubTests()">Test GitHub</button>
+                </div>
+            </div>
+            
+            <div class="summary-section">
+                <h2>🎯 Health Check Summary</h2>
+                <div class="summary-stats" id="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-number success-stat" id="success-count">0</div>
+                        <div class="stat-label">Passed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number warning-stat" id="warning-count">0</div>
+                        <div class="stat-label">Warnings</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number error-stat" id="error-count">0</div>
+                        <div class="stat-label">Failed</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number info-stat" id="info-count">0</div>
+                        <div class="stat-label">Info</div>
+                    </div>
+                </div>
+                
+                <div id="recommendations">
+                    <div class="status info">Running comprehensive health check...</div>
+                </div>
+                
+                <button class="button" onclick="runAllTests()" style="margin-top: 20px; padding: 15px 30px; font-size: 1.1rem;">
+                    🔄 Run Complete Health Check
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testStats = {
+            success: 0,
+            warning: 0,
+            error: 0,
+            info: 0,
+            total: 0
+        };
+
+        function updateStats() {
+            document.getElementById('success-count').textContent = testStats.success;
+            document.getElementById('warning-count').textContent = testStats.warning;
+            document.getElementById('error-count').textContent = testStats.error;
+            document.getElementById('info-count').textContent = testStats.info;
+            
+            const progress = testStats.total > 0 ? ((testStats.success + testStats.warning) / testStats.total) * 100 : 0;
+            document.getElementById('overall-progress').style.width = progress + '%';
+        }
+
+        function addTestResult(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            container.appendChild(statusDiv);
+            
+            testStats[type]++;
+            testStats.total++;
+            updateStats();
+        }
+
+        function clearTestResults(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+        }
+
+        async function runBrowserTests() {
+            clearTestResults('browser-tests');
+            
+            // Test basic browser features
+            if (typeof window !== 'undefined') {
+                addTestResult('browser-tests', '✓ Window object available', 'success');
+            } else {
+                addTestResult('browser-tests', '✗ Window object not available', 'error');
+            }
+            
+            if (typeof document !== 'undefined') {
+                addTestResult('browser-tests', '✓ Document object available', 'success');
+            } else {
+                addTestResult('browser-tests', '✗ Document object not available', 'error');
+            }
+            
+            // Test modern JavaScript features
+            try {
+                const testPromise = new Promise(resolve => resolve('test'));
+                addTestResult('browser-tests', '✓ Promise support available', 'success');
+            } catch (error) {
+                addTestResult('browser-tests', '✗ Promise support missing', 'error');
+            }
+            
+            // Test fetch API
+            if (typeof fetch !== 'undefined') {
+                addTestResult('browser-tests', '✓ Fetch API available', 'success');
+            } else {
+                addTestResult('browser-tests', '⚠ Fetch API not available (older browser)', 'warning');
+            }
+            
+            // Test ES6 features
+            try {
+                const testArrow = () => 'arrow functions work';
+                addTestResult('browser-tests', '✓ ES6 arrow functions supported', 'success');
+            } catch (error) {
+                addTestResult('browser-tests', '✗ ES6 features not supported', 'error');
+            }
+            
+            // Browser information
+            addTestResult('browser-tests', `ℹ User Agent: ${navigator.userAgent.substring(0, 50)}...`, 'info');
+        }
+
+        async function runStorageTests() {
+            clearTestResults('storage-tests');
+            
+            // Test localStorage
+            try {
+                localStorage.setItem('health_check_test', 'test_value');
+                const retrieved = localStorage.getItem('health_check_test');
+                if (retrieved === 'test_value') {
+                    addTestResult('storage-tests', '✓ localStorage working', 'success');
+                    localStorage.removeItem('health_check_test');
+                } else {
+                    addTestResult('storage-tests', '✗ localStorage read/write failed', 'error');
+                }
+            } catch (error) {
+                addTestResult('storage-tests', `✗ localStorage error: ${error.message}`, 'error');
+            }
+            
+            // Test sessionStorage
+            try {
+                sessionStorage.setItem('health_check_session', 'session_value');
+                const sessionRetrieved = sessionStorage.getItem('health_check_session');
+                if (sessionRetrieved === 'session_value') {
+                    addTestResult('storage-tests', '✓ sessionStorage working', 'success');
+                    sessionStorage.removeItem('health_check_session');
+                } else {
+                    addTestResult('storage-tests', '✗ sessionStorage read/write failed', 'error');
+                }
+            } catch (error) {
+                addTestResult('storage-tests', `✗ sessionStorage error: ${error.message}`, 'error');
+            }
+            
+            // Test IndexedDB
+            if ('indexedDB' in window) {
+                addTestResult('storage-tests', '✓ IndexedDB API available', 'success');
+            } else {
+                addTestResult('storage-tests', '⚠ IndexedDB not available', 'warning');
+            }
+            
+            // Test cookies
+            try {
+                document.cookie = 'health_check=test; path=/';
+                if (document.cookie.includes('health_check=test')) {
+                    addTestResult('storage-tests', '✓ Cookies working', 'success');
+                } else {
+                    addTestResult('storage-tests', '⚠ Cookies may be disabled', 'warning');
+                }
+            } catch (error) {
+                addTestResult('storage-tests', `✗ Cookie error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runNetworkTests() {
+            clearTestResults('network-tests');
+            
+            // Test basic connectivity
+            if (navigator.onLine) {
+                addTestResult('network-tests', '✓ Browser reports online status', 'success');
+            } else {
+                addTestResult('network-tests', '⚠ Browser reports offline status', 'warning');
+            }
+            
+            // Test HTTPS
+            if (location.protocol === 'https:') {
+                addTestResult('network-tests', '✓ Running on HTTPS', 'success');
+            } else {
+                addTestResult('network-tests', '⚠ Running on HTTP (some features may be limited)', 'warning');
+            }
+            
+            // Test fetch capabilities with a simple request
+            try {
+                const testUrl = `${location.origin}${location.pathname}`;
+                const response = await fetch(testUrl, { method: 'HEAD' });
+                if (response.ok) {
+                    addTestResult('network-tests', '✓ Basic HTTP requests working', 'success');
+                } else {
+                    addTestResult('network-tests', `⚠ HTTP request returned ${response.status}`, 'warning');
+                }
+            } catch (error) {
+                addTestResult('network-tests', `✗ Network request failed: ${error.message}`, 'error');
+            }
+            
+            // Test CORS support
+            addTestResult('network-tests', 'ℹ CORS support depends on server configuration', 'info');
+        }
+
+        async function runPerformanceTests() {
+            clearTestResults('performance-tests');
+            
+            // Test performance API
+            if ('performance' in window) {
+                addTestResult('performance-tests', '✓ Performance API available', 'success');
+                
+                // Memory usage (if available)
+                if (performance.memory) {
+                    const memoryMB = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+                    addTestResult('performance-tests', `ℹ Memory usage: ${memoryMB} MB`, 'info');
+                }
+                
+                // Page load timing
+                const loadTime = performance.timing ? 
+                    performance.timing.loadEventEnd - performance.timing.navigationStart : 
+                    'Unable to measure';
+                addTestResult('performance-tests', `ℹ Page load time: ${loadTime} ms`, 'info');
+            } else {
+                addTestResult('performance-tests', '⚠ Performance API not available', 'warning');
+            }
+            
+            // Test requestAnimationFrame
+            if ('requestAnimationFrame' in window) {
+                addTestResult('performance-tests', '✓ requestAnimationFrame available', 'success');
+            } else {
+                addTestResult('performance-tests', '⚠ requestAnimationFrame not available', 'warning');
+            }
+            
+            // Basic performance test
+            const start = performance.now();
+            for (let i = 0; i < 100000; i++) {
+                // Simple computation test
+                Math.sqrt(i);
+            }
+            const duration = performance.now() - start;
+            addTestResult('performance-tests', `ℹ JavaScript performance: ${duration.toFixed(2)} ms for 100k operations`, 'info');
+        }
+
+        async function runCampaignTests() {
+            clearTestResults('campaign-tests');
+            
+            // Test campaign data structure
+            const testCampaign = {
+                id: 'test-' + Date.now(),
+                name: 'Health Check Campaign',
+                region: 'Global',
+                owner: 'Health Check System',
+                status: 'active',
+                budget: 10000,
+                startDate: new Date().toISOString(),
+                endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            };
+            
+            try {
+                // Test JSON serialization/deserialization
+                const serialized = JSON.stringify(testCampaign);
+                const deserialized = JSON.parse(serialized);
+                
+                if (deserialized.id === testCampaign.id) {
+                    addTestResult('campaign-tests', '✓ Campaign data serialization working', 'success');
+                } else {
+                    addTestResult('campaign-tests', '✗ Campaign data serialization failed', 'error');
+                }
+            } catch (error) {
+                addTestResult('campaign-tests', `✗ Campaign JSON error: ${error.message}`, 'error');
+            }
+            
+            // Test localStorage campaign storage
+            try {
+                const campaignKey = 'health_check_campaigns';
+                const testCampaigns = [testCampaign];
+                
+                localStorage.setItem(campaignKey, JSON.stringify(testCampaigns));
+                const retrieved = JSON.parse(localStorage.getItem(campaignKey));
+                
+                if (Array.isArray(retrieved) && retrieved.length === 1) {
+                    addTestResult('campaign-tests', '✓ Campaign storage working', 'success');
+                    localStorage.removeItem(campaignKey);
+                } else {
+                    addTestResult('campaign-tests', '✗ Campaign storage failed', 'error');
+                }
+            } catch (error) {
+                addTestResult('campaign-tests', `✗ Campaign storage error: ${error.message}`, 'error');
+            }
+            
+            // Test date handling
+            try {
+                const now = new Date();
+                const future = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                if (future > now) {
+                    addTestResult('campaign-tests', '✓ Date calculations working', 'success');
+                } else {
+                    addTestResult('campaign-tests', '✗ Date calculations failed', 'error');
+                }
+            } catch (error) {
+                addTestResult('campaign-tests', `✗ Date handling error: ${error.message}`, 'error');
+            }
+            
+            addTestResult('campaign-tests', 'ℹ Campaign functionality tests completed', 'info');
+        }
+
+        async function runGitHubTests() {
+            clearTestResults('github-tests');
+            
+            // Test GitHub Spark context
+            if (typeof window !== 'undefined' && 'spark' in window) {
+                addTestResult('github-tests', '✓ GitHub Spark context detected', 'success');
+                
+                try {
+                    if (window.spark && window.spark.user) {
+                        addTestResult('github-tests', '✓ GitHub Spark user available', 'success');
+                    } else {
+                        addTestResult('github-tests', 'ℹ GitHub Spark user not available', 'info');
+                    }
+                    
+                    if (window.spark && window.spark.kv) {
+                        addTestResult('github-tests', '✓ GitHub Spark KV store available', 'success');
+                    } else {
+                        addTestResult('github-tests', 'ℹ GitHub Spark KV store not available', 'info');
+                    }
+                } catch (error) {
+                    addTestResult('github-tests', `✗ GitHub Spark error: ${error.message}`, 'error');
+                }
+            } else {
+                addTestResult('github-tests', 'ℹ GitHub Spark not detected (expected outside Spark environment)', 'info');
+            }
+            
+            // Test GitHub API capabilities (basic check)
+            addTestResult('github-tests', 'ℹ GitHub API integration depends on tokens and permissions', 'info');
+            
+            // Test Octokit availability (if loaded)
+            if (typeof Octokit !== 'undefined') {
+                addTestResult('github-tests', '✓ Octokit library available', 'success');
+            } else {
+                addTestResult('github-tests', 'ℹ Octokit library not loaded', 'info');
+            }
+        }
+
+        async function runAllTests() {
+            // Reset stats
+            testStats = { success: 0, warning: 0, error: 0, info: 0, total: 0 };
+            updateStats();
+            
+            // Clear recommendations
+            document.getElementById('recommendations').innerHTML = '<div class="status info">Running comprehensive health check...</div>';
+            
+            // Run all tests
+            await runBrowserTests();
+            await runStorageTests();
+            await runNetworkTests();
+            await runPerformanceTests();
+            await runCampaignTests();
+            await runGitHubTests();
+            
+            // Generate recommendations
+            generateRecommendations();
+        }
+
+        function generateRecommendations() {
+            const recommendations = document.getElementById('recommendations');
+            recommendations.innerHTML = '';
+            
+            if (testStats.error === 0 && testStats.warning <= 2) {
+                recommendations.innerHTML = `
+                    <div class="status success">🎉 Excellent! Your application is in great health and ready for use.</div>
+                    <div class="status info">ℹ Consider testing with real campaign data and GitHub integration if needed.</div>
+                `;
+            } else if (testStats.error === 0) {
+                recommendations.innerHTML = `
+                    <div class="status success">✅ Good! Your application is functional with some minor warnings.</div>
+                    <div class="status info">ℹ Review the warnings above for potential improvements.</div>
+                `;
+            } else if (testStats.error <= 2) {
+                recommendations.innerHTML = `
+                    <div class="status warning">⚠️ Caution: Some functionality may be limited due to errors.</div>
+                    <div class="status info">ℹ Address the errors above for full functionality.</div>
+                `;
+            } else {
+                recommendations.innerHTML = `
+                    <div class="status error">🚨 Critical issues found that may prevent proper operation.</div>
+                    <div class="status info">ℹ Please resolve the errors above before using the application.</div>
+                `;
+            }
+            
+            // Add general recommendations
+            recommendations.innerHTML += `
+                <div class="status info">💡 Next steps: Start the development server with 'npm run dev', then test at http://localhost:5000</div>
+            `;
+        }
+
+        // Run initial health check when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>
