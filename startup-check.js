@@ -1,37 +1,41 @@
 // Simple diagnostic script to check if the app can be loaded
+import { existsSync, readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
 console.log('Checking app dependencies and setup...');
 
 // Check if package.json exists
 try {
-  const fs = require('fs');
-  const path = require('path');
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
   
-  const packagePath = path.join(__dirname, 'package.json');
-  if (fs.existsSync(packagePath)) {
+  const packagePath = join(__dirname, 'package.json');
+  if (existsSync(packagePath)) {
     console.log('✓ package.json found');
     
     // Check if node_modules exists
-    const nodeModulesPath = path.join(__dirname, 'node_modules');
-    if (fs.existsSync(nodeModulesPath)) {
+    const nodeModulesPath = join(__dirname, 'node_modules');
+    if (existsSync(nodeModulesPath)) {
       console.log('✓ node_modules directory found');
     } else {
       console.log('✗ node_modules directory missing - run npm install');
     }
     
     // Check main source files
-    const srcPath = path.join(__dirname, 'src');
-    if (fs.existsSync(srcPath)) {
+    const srcPath = join(__dirname, 'src');
+    if (existsSync(srcPath)) {
       console.log('✓ src directory found');
       
-      const appPath = path.join(srcPath, 'App.tsx');
-      if (fs.existsSync(appPath)) {
+      const appPath = join(srcPath, 'App.tsx');
+      if (existsSync(appPath)) {
         console.log('✓ App.tsx found');
       } else {
         console.log('✗ App.tsx missing');
       }
       
-      const mainPath = path.join(srcPath, 'main.tsx');
-      if (fs.existsSync(mainPath)) {
+      const mainPath = join(srcPath, 'main.tsx');
+      if (existsSync(mainPath)) {
         console.log('✓ main.tsx found');
       } else {
         console.log('✗ main.tsx missing');
@@ -41,8 +45,8 @@ try {
     }
     
     // Check index.html
-    const indexPath = path.join(__dirname, 'index.html');
-    if (fs.existsSync(indexPath)) {
+    const indexPath = join(__dirname, 'index.html');
+    if (existsSync(indexPath)) {
       console.log('✓ index.html found');
     } else {
       console.log('✗ index.html missing');
