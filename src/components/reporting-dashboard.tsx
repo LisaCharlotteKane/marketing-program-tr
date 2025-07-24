@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { BarChart3, Download } from "@phosphor-icons/react";
+import { ChartBar, Download } from "@phosphor-icons/react";
 import { Campaign } from "@/components/campaign-table";
 
 interface ReportingDashboardProps {
@@ -85,7 +85,7 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
+            <ChartBar className="h-5 w-5" />
             Report Filters
           </CardTitle>
         </CardHeader>
