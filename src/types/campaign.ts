@@ -1,56 +1,44 @@
-// Shared Campaign interface for the marketing planning tool
+/**
+ * Shared Campaign interface for consistency across all components
+ */
 export interface Campaign {
   id: string;
-  campaignName: string;
+  description: string;
   campaignType: string;
-  strategicPillars: string[];
+  strategicPillar: string[];
   revenuePlay: string;
-  fiscalYear: string;
+  fy: string;
   quarterMonth: string;
   region: string;
   country: string;
   owner: string;
-  description: string;
-  forecastedCost: number | string;
-  expectedLeads: number | string;
-  
-  // Calculated fields
+  forecastedCost: number;
+  expectedLeads: number;
   mql: number;
   sql: number;
   opportunities: number;
   pipelineForecast: number;
-  
-  // Execution tracking fields
-  status: string;
-  poRaised: boolean;
-  campaignCode: string;
-  issueLink: string;
-  actualCost: number | string;
-  actualLeads: number | string;
-  actualMQLs: number | string;
+  // Optional execution tracking fields
+  status?: string;
+  poRaised?: boolean;
+  salesforceCampaignCode?: string;
+  issueLink?: string;
+  actualCost?: number;
+  actualLeads?: number;
+  actualMQLs?: number;
 }
 
-// Budget allocation interface
-export interface BudgetAllocation {
-  owner: string;
-  region: string;
-  budget: number;
+/**
+ * Props for components that need to manage campaigns
+ */
+export interface CampaignTableProps {
+  campaigns: Campaign[];
+  setCampaigns: (campaigns: Campaign[]) => void;
 }
 
-// Region color mapping for calendar and visualizations
-export const REGION_COLORS = {
-  "JP & Korea": "#3b82f6",     // blue
-  "South APAC": "#10b981",      // green  
-  "SAARC": "#f59e0b",          // orange
-  "Digital": "#8b5cf6",        // purple
-  "X APAC English": "#ef4444",  // red
-  "X APAC Non English": "#6b7280" // gray
-} as const;
-
-// Budget allocations by owner
-export const BUDGET_ALLOCATIONS: Record<string, BudgetAllocation> = {
-  "Tomoko Tanaka": { owner: "Tomoko Tanaka", region: "JP & Korea", budget: 358000 },
-  "Beverly Leung": { owner: "Beverly Leung", region: "South APAC", budget: 385500 },
-  "Shruti Narang": { owner: "Shruti Narang", region: "SAARC", budget: 265000 },
-  "Giorgia Parham": { owner: "Giorgia Parham", region: "Digital", budget: 68000 }
-};
+/**
+ * Props for components that only need to display campaigns
+ */
+export interface CampaignDisplayProps {
+  campaigns: Campaign[];
+}

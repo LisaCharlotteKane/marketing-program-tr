@@ -4,22 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "@phosphor-icons/react";
-
-interface Campaign {
-  id: string;
-  description: string;
-  campaignType: string;
-  strategicPillar: string[];
-  revenuePlay: string;
-  fy: string;
-  quarterMonth: string;
-  region: string;
-  country: string;
-  owner: string;
-  forecastedCost: number;
-  expectedLeads: number;
-  status?: string;
-}
+import { Campaign, CampaignDisplayProps } from "@/types/campaign";
 
 interface CampaignCalendarViewProps {
   campaigns: Campaign[];
@@ -46,7 +31,7 @@ const MONTHS = [
   "January", "February", "March", "April", "May", "June"
 ];
 
-export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
+export function CampaignCalendarView({ campaigns = [] }: CampaignCalendarViewProps) {
   const [regionFilter, setRegionFilter] = useState<string>('all');
   const [ownerFilter, setOwnerFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -64,6 +49,9 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
   };
 
   const filteredCampaigns = useMemo(() => {
+    if (!Array.isArray(campaigns)) {
+      return [];
+    }
     return campaigns.filter(campaign => {
       if (campaign.campaignType === "Contractor/Infrastructure" || campaign.campaignType === "Contractor") return false;
       if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;

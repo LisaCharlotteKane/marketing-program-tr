@@ -5,17 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { X, Warning, AlertTriangle } from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
-interface Campaign {
-  id: string;
-  description: string;
-  campaignType: string;
-  owner: string;
-  region: string;
-  quarterMonth: string;
-  forecastedCost: number;
-  actualCost?: number;
-}
+import { Campaign, CampaignDisplayProps } from "@/types/campaign";
 
 interface BudgetManagementProps {
   campaigns: Campaign[];
@@ -29,7 +19,7 @@ const BUDGET_ALLOCATIONS = {
   "Giorgia Parham": { region: "Digital", budget: 68000 }
 };
 
-export function BudgetManagement({ campaigns }: BudgetManagementProps) {
+export function BudgetManagement({ campaigns = [] }: BudgetManagementProps) {
   const [regionFilter, setRegionFilter] = useState<string>('all');
   const [quarterFilter, setQuarterFilter] = useState<string>('all');
 
@@ -42,6 +32,9 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
   ];
 
   const filteredCampaigns = useMemo(() => {
+    if (!Array.isArray(campaigns)) {
+      return [];
+    }
     return campaigns.filter(campaign => {
       if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
       if (quarterFilter !== 'all' && campaign.quarterMonth !== quarterFilter) return false;

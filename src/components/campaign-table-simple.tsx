@@ -7,32 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { Campaign, CampaignTableProps } from "@/types/campaign";
 
-interface Campaign {
-  id: string;
-  description: string;
-  campaignType: string;
-  strategicPillar: string[];
-  revenuePlay: string;
-  fy: string;
-  quarterMonth: string;
-  region: string;
-  country: string;
-  owner: string;
-  forecastedCost: number;
-  expectedLeads: number;
-  mql: number;
-  sql: number;
-  opportunities: number;
-  pipelineForecast: number;
-}
-
-interface CampaignTableProps {
-  campaigns: Campaign[];
-  setCampaigns: (campaigns: Campaign[]) => void;
-}
-
-export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
+export function CampaignTable({ campaigns = [], setCampaigns }: CampaignTableProps) {
   const [regionFilter, setRegionFilter] = useState<string>('all');
   const [quarterFilter, setQuarterFilter] = useState<string>('all');
   const [selectedCampaigns, setSelectedCampaigns] = useState<Set<string>>(new Set());
@@ -43,12 +20,19 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
   };
 
   const deleteSelectedCampaigns = () => {
+    if (!Array.isArray(campaigns)) {
+      toast.error("Invalid campaign data");
+      return;
+    }
     setCampaigns(campaigns.filter(c => !selectedCampaigns.has(c.id)));
     toast.success(`Deleted ${selectedCampaigns.size} campaign(s)`);
     setSelectedCampaigns(new Set());
   };
 
   const filteredCampaigns = useMemo(() => {
+    if (!Array.isArray(campaigns)) {
+      return [];
+    }
     return campaigns.filter(c => {
       if (regionFilter !== 'all' && c.region !== regionFilter) return false;
       if (quarterFilter !== 'all' && c.quarterMonth !== quarterFilter) return false;
@@ -91,7 +75,32 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
             </Select>
 
             <Button variant="outline" onClick={clearFilters}>Clear Filters</Button>
-            <Button className="flex items-center gap-2">
+            <Button 
+              className="flex items-center gap-2"
+              onClick={() => {
+                const newId = `campaign-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                const newCampaign = {
+                  id: newId,
+                  description: "New Campaign",
+                  campaignType: "",
+                  strategicPillar: [],
+                  revenuePlay: "",
+                  fy: "FY25",
+                  quarterMonth: "Q1 - July",
+                  region: "JP & Korea",
+                  country: "",
+                  owner: "Tomoko Tanaka",
+                  forecastedCost: 0,
+                  expectedLeads: 0,
+                  mql: 0,
+                  sql: 0,
+                  opportunities: 0,
+                  pipelineForecast: 0
+                };
+                setCampaigns([...campaigns, newCampaign]);
+                toast.success("New campaign added");
+              }}
+            >
               <Plus className="h-4 w-4" />
               Add Campaign
             </Button>
@@ -142,12 +151,12 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                         }}
                       />
                     </TableCell>
-                    <TableCell>{c.description}</TableCell>
-                    <TableCell>{c.campaignType}</TableCell>
-                    <TableCell>{c.region}</TableCell>
-                    <TableCell>{c.quarterMonth}</TableCell>
-                    <TableCell>{c.owner}</TableCell>
-                    <TableCell>${c.forecastedCost.toLocaleString()}</TableCell>
+                    <TableCell>{c.description || "Untitled"}</TableCell>
+                    <TableCell>{c.campaignType || "-"}</TableCell>
+                    <TableCell>{c.region || "-"}</TableCell>
+                    <TableCell>{c.quarterMonth || "-"}</TableCell>
+                    <TableCell>{c.owner || "-"}</TableCell>
+                    <TableCell>${(c.forecastedCost || 0).toLocaleString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

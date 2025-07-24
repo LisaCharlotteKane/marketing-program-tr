@@ -6,35 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FilterX } from "@phosphor-icons/react";
-
-interface Campaign {
-  id: string;
-  description: string;
-  campaignType: string;
-  strategicPillar: string[];
-  revenuePlay: string;
-  fy: string;
-  quarterMonth: string;
-  region: string;
-  country: string;
-  owner: string;
-  forecastedCost: number;
-  expectedLeads: number;
-  status?: string;
-  poRaised?: boolean;
-  salesforceCampaignCode?: string;
-  issueLink?: string;
-  actualCost?: number;
-  actualLeads?: number;
-  actualMQLs?: number;
-}
+import { Campaign, CampaignTableProps } from "@/types/campaign";
 
 interface ExecutionTrackingProps {
   campaigns: Campaign[];
   setCampaigns: (campaigns: Campaign[]) => void;
 }
 
-export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTrackingProps) {
+export function ExecutionTracking({ campaigns = [], setCampaigns }: ExecutionTrackingProps) {
   const [regionFilter, setRegionFilter] = useState<string>('all');
   const [ownerFilter, setOwnerFilter] = useState<string>('all');
   const [quarterFilter, setQuarterFilter] = useState<string>('all');
@@ -50,6 +29,9 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
   const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
 
   const filteredCampaigns = useMemo(() => {
+    if (!Array.isArray(campaigns)) {
+      return [];
+    }
     return campaigns.filter(c => {
       if (regionFilter !== 'all' && c.region !== regionFilter) return false;
       if (ownerFilter !== 'all' && c.owner !== ownerFilter) return false;
@@ -59,6 +41,9 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
   }, [campaigns, regionFilter, ownerFilter, quarterFilter]);
 
   const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
+    if (!Array.isArray(campaigns)) {
+      return;
+    }
     setCampaigns(campaigns.map(c =>
       c.id === id ? { ...c, [field]: value } : c
     ));

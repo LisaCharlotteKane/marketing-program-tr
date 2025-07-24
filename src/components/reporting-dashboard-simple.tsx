@@ -5,34 +5,13 @@ import { Button } from "@/components/ui/button";
 import { X } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-interface Campaign {
-  id: string;
-  description: string;
-  campaignType: string;
-  strategicPillar: string[];
-  revenuePlay: string;
-  fy: string;
-  quarterMonth: string;
-  region: string;
-  country: string;
-  owner: string;
-  forecastedCost: number;
-  expectedLeads: number;
-  mql: number;
-  sql: number;
-  opportunities: number;
-  pipelineForecast: number;
-  actualCost?: number;
-  actualLeads?: number;
-  actualMQLs?: number;
-}
+import { Campaign, CampaignDisplayProps } from "@/types/campaign";
 
 interface ReportingDashboardProps {
   campaigns: Campaign[];
 }
 
-export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
+export function ReportingDashboard({ campaigns = [] }: ReportingDashboardProps) {
   const [regionFilter, setRegionFilter] = useState<string>('all');
   const [ownerFilter, setOwnerFilter] = useState<string>('all');
   const [quarterFilter, setQuarterFilter] = useState<string>('all');
@@ -53,6 +32,9 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
   };
 
   const filteredCampaigns = useMemo(() => {
+    if (!Array.isArray(campaigns)) {
+      return [];
+    }
     return campaigns.filter(campaign => {
       if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
       if (ownerFilter !== 'all' && campaign.owner !== ownerFilter) return false;
