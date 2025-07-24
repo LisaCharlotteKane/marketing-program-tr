@@ -11,6 +11,7 @@ import { CampaignCalendarView } from "@/components/campaign-calendar-view";
 import { BudgetManagement } from "@/components/budget-management";
 
 export default function App() {
+  // Use global scope for shared campaign data across users
   const [campaigns, setCampaigns] = useKV('campaignData', [], { scope: 'global' });
 
   return (

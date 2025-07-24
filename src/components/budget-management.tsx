@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { Building2, AlertTriangle } from "@phosphor-icons/react";
 import { Campaign } from "@/components/campaign-table";
 
@@ -113,12 +114,13 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
             </div>
 
             <div className="flex items-end">
-              <button 
+              <Button 
+                variant="outline"
                 onClick={clearFilters}
-                className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="w-full"
               >
                 Clear Filters
-              </button>
+              </Button>
             </div>
           </div>
         </CardContent>

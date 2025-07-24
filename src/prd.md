@@ -1,70 +1,61 @@
-# Budget Management Tab PRD
+# Marketing Campaign Planner PRD
 
 ## Core Purpose & Success
-- **Mission Statement**: Provide a comprehensive tool for managing, tracking, and analyzing marketing campaign budgets across different regions.
-- **Success Indicators**: Accurate budget tracking, clear visualization of budget allocation vs. spending, and prevention of budget overruns.
-- **Experience Qualities**: Insightful, intuitive, actionable.
+
+**Mission Statement**: Create a comprehensive marketing campaign planning and tracking tool for APAC Marketing Operations that enables planning, execution tracking, and performance reporting across all regions and campaign types.
+
+**Success Indicators**: 
+- Teams can plan campaigns with accurate ROI forecasting
+- Budget allocation and tracking is clear and automated
+- Campaign execution status is transparently tracked
+- Performance reporting provides actionable insights
+- Data is shared seamlessly across team members
+
+**Experience Qualities**: Efficient, Transparent, Collaborative
 
 ## Project Classification & Approach
-- **Complexity Level**: Light Application (multiple features with basic state)
-- **Primary User Activity**: Consuming and Acting - users primarily view budget data and make allocation decisions.
 
-## Thought Process for Feature Selection
-- **Core Problem Analysis**: Marketing teams need to track and manage budgets across different regions and owners to ensure proper allocation and prevent overspending.
-- **User Context**: Marketing managers and finance teams will use this tab to set budgets, monitor spending, and make informed decisions about future campaigns.
-- **Critical Path**: View budget overview → analyze spending trends → adjust allocations as needed → track changes over time.
-- **Key Moments**: Setting budget allocations, reviewing spending vs. budget metrics, and identifying potential overruns before they occur.
+**Complexity Level**: Complex Application (advanced functionality, shared state, multi-tab interface)
+**Primary User Activity**: Creating (campaign plans) + Interacting (with data and reports)
 
 ## Essential Features
-1. **Budget Overview**
-   - What: High-level summary of budget allocations and spending across all regions
-   - Why: Provides quick insights into overall budget health
-   - Success: Users can identify at-a-glance which regions need attention
 
-2. **Budget Allocation Management**
-   - What: Interface to set and adjust budget amounts for each region
-   - Why: Allows customization of budgets based on marketing priorities
-   - Success: Users can confidently update budgets with appropriate controls
-
-3. **Spending Tracking**
-   - What: Visual representation of forecasted and actual spending against budgets
-   - Why: Enables proactive budget management before overspending occurs
-   - Success: Clear visualization that helps predict potential budget issues
+1. **Campaign Planning** - Add campaigns with full metadata, automatic ROI calculations
+2. **Execution Tracking** - Update campaign status and actual performance
+3. **Budget Management** - Track owner-based budget allocation and overages
+4. **Reporting Dashboard** - Visual performance metrics and data tables
+5. **Calendar View** - Timeline visualization of campaigns by fiscal year
+6. **Shared Storage** - Global data persistence across users
 
 ## Design Direction
 
 ### Visual Tone & Identity
-- **Emotional Response**: Confidence, clarity, and control
-- **Design Personality**: Professional, organized, and data-focused
-- **Visual Metaphors**: Progress bars and indicators that resemble financial dashboards
-- **Simplicity Spectrum**: Balanced approach with clear data presentation but comprehensive features
+**Emotional Response**: Professional, reliable, data-driven
+**Design Personality**: Clean, modern, GitHub-aligned
+**Visual Metaphors**: Dashboard, planning grids, performance metrics
+**Simplicity Spectrum**: Clean interface with rich functionality
 
 ### Color Strategy
-- **Color Scheme Type**: Using the existing application color palette for consistency
-- **Primary Color**: Blue (#3b82f6) for primary actions and focus areas
-- **Secondary Colors**: Neutral grays for supporting information
-- **Accent Color**: Warning colors for budget alerts (yellow for approaching limits, red for overruns)
-- **Foreground/Background Pairings**: Dark text on light backgrounds for optimal readability
+**Color Scheme Type**: Monochromatic with accent colors
+**Primary Color**: GitHub Blue (#3b82f6) - trust and reliability
+**Secondary Colors**: Grays for data and structure
+**Accent Color**: Blue variants for CTAs and highlights
+**Color Psychology**: Blue conveys trust and professionalism for enterprise tool
 
 ### Typography System
-- **Font Pairing Strategy**: Using the application's existing Inter font for consistency
-- **Typographic Hierarchy**: Clear heading structures for different sections
-- **Readability Focus**: Optimized spacing and font sizes for financial data readability
-
-### Visual Hierarchy & Layout
-- **Attention Direction**: Tabs at the top guide users through different budget perspectives
-- **White Space Philosophy**: Generous spacing between data points to prevent overwhelming users
-- **Grid System**: Tabular presentation for budget data with consistent column alignment
-- **Content Density**: Balanced approach that provides comprehensive data without crowding
+**Font Pairing Strategy**: Single font family (Inter) for consistency
+**Typographic Hierarchy**: Clear weight and size relationships
+**Font Personality**: Clean, readable, professional
+**Which fonts**: Inter (Google Fonts)
 
 ### UI Elements & Component Selection
-- **Component Usage**: Tables for data presentation, cards for section organization, progress bars for budget visualization
-- **Visual Consistency Framework**: Consistent with other application tabs for a seamless experience
-
-## Edge Cases & Problem Scenarios
-- **Potential Obstacles**: Managing locked budgets, handling budget resets, ensuring data consistency
-- **Edge Case Handling**: Clear error messages and confirmation dialogs for important actions
+**Component Usage**: ShadCN components for consistency
+**Component Hierarchy**: Card-based layout with tabbed navigation
+**Spacing System**: Tailwind spacing scale
+**Mobile Adaptation**: Responsive grid and table layouts
 
 ## Implementation Considerations
-- **Data Persistence**: Using the application's KV store for reliable budget data storage
-- **Critical Questions**: Ensuring budget data is accurately synchronized across all users
+
+**Scalability Needs**: Support for multiple regions and hundreds of campaigns
+**Data Sharing**: Global storage scope for team collaboration
+**Performance**: Efficient filtering and calculation algorithms
