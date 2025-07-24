@@ -6,7 +6,7 @@ export function clearProblematicCookies() {
   try {
     // Get all cookies
     const cookies = document.cookie.split(';');
-    
+
     // Clear potentially problematic cookies
     const problematicPatterns = [
       'github-',
@@ -17,38 +17,36 @@ export function clearProblematicCookies() {
       'kv-store',
       'large-data'
     ];
-    
+
     cookies.forEach(cookie => {
       const [name] = cookie.split('=');
       const cleanName = name.trim();
-      
-      // Check if cookie matches problematic patterns or is too large
+
       const shouldDelete = problematicPatterns.some(pattern => 
         cleanName.toLowerCase().includes(pattern.toLowerCase())
-      ) || cookie.length > 4096; // Cookies larger than 4KB
-      
+      ) || cookie.length > 4096;
+
       if (shouldDelete) {
-        // Delete the cookie by setting it to expire
         document.cookie = `${cleanName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname}`;
         document.cookie = `${cleanName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
         console.log(`Cleared problematic cookie: ${cleanName}`);
       }
     });
-    
-    // Also clear from all possible domains
+
+    // Also attempt domain-wide deletion for known patterns
     const domains = [
       window.location.hostname,
       `.${window.location.hostname}`,
       'github.app',
       '.github.app'
     ];
-    
+
     domains.forEach(domain => {
       problematicPatterns.forEach(pattern => {
         document.cookie = `${pattern}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain}`;
       });
     });
-    
+
   } catch (error) {
     console.warn('Cookie cleanup failed:', error);
   }

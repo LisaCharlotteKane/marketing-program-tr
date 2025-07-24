@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Trash, ArrowClockwise, Info } from "@phosphor-icons/react";
 import { getStorageUsage, emergencyCleanup } from "@/lib/storage-cleanup";
 import { clearAllCookies } from "@/lib/cookie-cleanup";
 import { toast } from "sonner";
@@ -38,32 +40,53 @@ export function StorageCleanupPanel() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle>Storage Usage</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Trash className="h-5 w-5" />
+            Storage Management
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="text-sm font-medium">Local Storage</div>
-              <div className="text-2xl font-bold">{formatBytes(storageInfo.localStorage)}</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium">Session Storage</div>
-              <div className="text-2xl font-bold">{formatBytes(storageInfo.sessionStorage)}</div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm">Total Usage:</span>
-            <Badge variant={storageInfo.total > 100000 ? "destructive" : "secondary"}>
-              {formatBytes(storageInfo.total)}
-            </Badge>
-          </div>
-          
-          <Button onClick={refreshStorageInfo} variant="outline" size="sm">
-            Refresh
-          </Button>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              If you're experiencing HTTP 431 "Request Header Fields Too Large" errors, 
+              these tools can help clean up problematic data that might be causing the issue.
+            </AlertDescription>
+          </Alert>
+
+          {storageInfo && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium">Local Storage</div>
+                  <div className="text-2xl font-bold">{formatBytes(storageInfo.localStorage)}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium">Session Storage</div>
+                  <div className="text-2xl font-bold">{formatBytes(storageInfo.sessionStorage)}</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm">Total Usage:</span>
+                <Badge variant={storageInfo.total > 100000 ? "destructive" : "secondary"}>
+                  {formatBytes(storageInfo.total)}
+                </Badge>
+              </div>
+
+              <Button 
+                onClick={refreshStorageInfo} 
+                variant="ghost" 
+                size="sm"
+                className="w-full"
+              >
+                <ArrowClockwise className="h-4 w-4 mr-2" />
+                Refresh Storage Info
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
 

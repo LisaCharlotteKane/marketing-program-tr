@@ -49,20 +49,18 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
   ];
   const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
 
-  // Filter campaigns
   const filteredCampaigns = useMemo(() => {
-    return campaigns.filter(campaign => {
-      if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
-      if (ownerFilter !== 'all' && campaign.owner !== ownerFilter) return false;
-      if (quarterFilter !== 'all' && campaign.quarterMonth !== quarterFilter) return false;
+    return campaigns.filter(c => {
+      if (regionFilter !== 'all' && c.region !== regionFilter) return false;
+      if (ownerFilter !== 'all' && c.owner !== ownerFilter) return false;
+      if (quarterFilter !== 'all' && c.quarterMonth !== quarterFilter) return false;
       return true;
     });
   }, [campaigns, regionFilter, ownerFilter, quarterFilter]);
 
-  // Update campaign execution data
   const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
-    setCampaigns(campaigns.map(campaign => 
-      campaign.id === id ? { ...campaign, [field]: value } : campaign
+    setCampaigns(campaigns.map(c =>
+      c.id === id ? { ...c, [field]: value } : c
     ));
   };
 
@@ -72,19 +70,8 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
     setQuarterFilter('all');
   };
 
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      'Planning': 'secondary',
-      'On Track': 'default',
-      'Shipped': 'default',
-      'Cancelled': 'destructive'
-    };
-    return variants[status as keyof typeof variants] || 'secondary';
-  };
-
   return (
     <div className="space-y-4">
-      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle>Filters</CardTitle>
@@ -105,7 +92,6 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                 </SelectContent>
               </Select>
             </div>
-            
             <div>
               <label className="text-sm font-medium">Owner</label>
               <Select value={ownerFilter} onValueChange={setOwnerFilter}>
@@ -120,7 +106,6 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                 </SelectContent>
               </Select>
             </div>
-
             <div>
               <label className="text-sm font-medium">Quarter</label>
               <Select value={quarterFilter} onValueChange={setQuarterFilter}>
@@ -135,9 +120,8 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                 </SelectContent>
               </Select>
             </div>
-
             <div className="flex items-end">
-              <Button onClick={clearFilters} variant="outline" className="flex items-center gap-2">
+              <Button onClick={clearFilters} variant="outline" className="flex items-center gap-2 w-full">
                 <FilterX className="h-4 w-4" />
                 Clear Filters
               </Button>
@@ -146,7 +130,6 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
         </CardContent>
       </Card>
 
-      {/* Execution Tracking Table */}
       <Card>
         <CardHeader>
           <CardTitle>Campaign Execution Tracking ({filteredCampaigns.length})</CardTitle>
@@ -168,7 +151,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCampaigns.map((campaign) => (
+                {filteredCampaigns.map(campaign => (
                   <TableRow key={campaign.id}>
                     <TableCell className="max-w-xs">
                       <div className="font-medium truncate" title={campaign.description}>
@@ -252,7 +235,6 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
               </TableBody>
             </Table>
           </div>
-
           {filteredCampaigns.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               No campaigns found matching the current filters.

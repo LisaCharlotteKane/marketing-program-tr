@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Building2, AlertTriangle } from "@phosphor-icons/react";
+import { Building2, Warning } from "@phosphor-icons/react";
 import { Campaign } from "@/components/campaign-table";
 
 interface BudgetManagementProps {
@@ -176,7 +176,7 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
 
               {(budget.forecastedOverage > 500 || budget.actualOverage > 500) && (
                 <div className="flex items-center gap-1 text-red-600 text-xs">
-                  <AlertTriangle className="h-3 w-3" />
+                  <Warning className="h-3 w-3" />
                   <span>Budget Exceeded</span>
                 </div>
               )}

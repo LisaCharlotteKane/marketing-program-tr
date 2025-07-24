@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { X } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -44,7 +46,12 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
     "Q4 - April", "Q4 - May", "Q4 - June"
   ];
 
-  // Filter campaigns
+  const clearFilters = () => {
+    setRegionFilter('all');
+    setOwnerFilter('all');
+    setQuarterFilter('all');
+  };
+
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter(campaign => {
       if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
@@ -54,7 +61,6 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
     });
   }, [campaigns, regionFilter, ownerFilter, quarterFilter]);
 
-  // Calculate summary metrics
   const summaryMetrics = useMemo(() => {
     const totalForecastedCost = filteredCampaigns.reduce((sum, c) => sum + (c.forecastedCost || 0), 0);
     const totalActualCost = filteredCampaigns.reduce((sum, c) => sum + (c.actualCost || 0), 0);
@@ -75,10 +81,9 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
     };
   }, [filteredCampaigns]);
 
-  // Regional performance data
   const regionalData = useMemo(() => {
     const regionMap = new Map();
-    
+
     filteredCampaigns.forEach(campaign => {
       const region = campaign.region;
       if (!regionMap.has(region)) {
@@ -94,7 +99,7 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
           campaignCount: 0
         });
       }
-      
+
       const data = regionMap.get(region);
       data.forecastedCost += campaign.forecastedCost || 0;
       data.actualCost += campaign.actualCost || 0;
@@ -105,19 +110,18 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
       data.forecastedPipeline += campaign.pipelineForecast || 0;
       data.campaignCount += 1;
     });
-    
+
     return Array.from(regionMap.values());
   }, [filteredCampaigns]);
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
       <Card>
         <CardHeader>
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium">Region</label>
               <Select value={regionFilter} onValueChange={setRegionFilter}>
@@ -132,7 +136,7 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Owner</label>
               <Select value={ownerFilter} onValueChange={setOwnerFilter}>
@@ -161,6 +165,17 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Button 
+                variant="outline" 
+                onClick={clearFilters}
+                className="flex items-center gap-2 w-full"
+              >
+                <X className="h-4 w-4" />
+                Clear Filters
+              </Button>
             </div>
           </div>
         </CardContent>

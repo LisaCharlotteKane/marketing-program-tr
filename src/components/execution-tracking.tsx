@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Target, FilterX } from "@phosphor-icons/react";
+import { Target, X } from "@phosphor-icons/react";
 import { Campaign } from "@/components/campaign-table";
 
 interface ExecutionTrackingProps {
@@ -120,7 +120,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
 
             <div className="flex items-end">
               <Button variant="outline" onClick={clearFilters} className="w-full">
-                <FilterX className="h-4 w-4 mr-2" />
+                <X className="h-4 w-4 mr-2" />
                 Clear Filters
               </Button>
             </div>

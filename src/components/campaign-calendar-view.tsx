@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, FilterX } from "@phosphor-icons/react";
+import { Calendar, X } from "@phosphor-icons/react";
 import { Campaign } from "@/components/campaign-table";
 
 interface CampaignCalendarViewProps {
@@ -164,7 +164,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
 
             <div className="flex items-end">
               <Button variant="outline" onClick={clearFilters} className="w-full">
-                <FilterX className="h-4 w-4 mr-2" />
+                <X className="h-4 w-4 mr-2" />
                 Clear
               </Button>
             </div>

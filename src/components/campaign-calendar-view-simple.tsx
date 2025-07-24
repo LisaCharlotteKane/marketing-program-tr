@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { X } from "@phosphor-icons/react";
 
 interface Campaign {
   id: string;
@@ -55,20 +57,15 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
   const types = [...new Set(campaigns.map(c => c.campaignType).filter(Boolean))];
   const statuses = ["Planning", "On Track", "Shipped", "Cancelled"];
 
-  // Extract month from quarterMonth (e.g., "Q1 - July" -> "July")
   const getMonthFromQuarter = (quarterMonth: string): string => {
     if (!quarterMonth) return '';
     const match = quarterMonth.match(/- (.+)$/);
     return match ? match[1] : '';
   };
 
-  // Filter campaigns (exclude Contractor types)
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter(campaign => {
-      // Exclude contractor campaigns from calendar
-      if (campaign.campaignType === "Contractor/Infrastructure" || 
-          campaign.campaignType === "Contractor") return false;
-          
+      if (campaign.campaignType === "Contractor/Infrastructure" || campaign.campaignType === "Contractor") return false;
       if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
       if (ownerFilter !== 'all' && campaign.owner !== ownerFilter) return false;
       if (typeFilter !== 'all' && campaign.campaignType !== typeFilter) return false;
@@ -77,21 +74,15 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
     });
   }, [campaigns, regionFilter, ownerFilter, typeFilter, statusFilter]);
 
-  // Group campaigns by month
   const campaignsByMonth = useMemo(() => {
     const monthMap = new Map<string, Campaign[]>();
-    
-    MONTHS.forEach(month => {
-      monthMap.set(month, []);
-    });
-    
+    MONTHS.forEach(month => monthMap.set(month, []));
     filteredCampaigns.forEach(campaign => {
       const month = getMonthFromQuarter(campaign.quarterMonth);
       if (month && monthMap.has(month)) {
         monthMap.get(month)!.push(campaign);
       }
     });
-    
     return monthMap;
   }, [filteredCampaigns]);
 
@@ -125,7 +116,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Owner</label>
               <Select value={ownerFilter} onValueChange={setOwnerFilter}>
@@ -172,12 +163,14 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
             </div>
 
             <div className="flex items-end">
-              <button 
+              <Button
+                variant="outline"
                 onClick={clearFilters}
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                className="flex items-center gap-2 w-full"
               >
+                <X className="h-4 w-4" />
                 Clear Filters
-              </button>
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -203,7 +196,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {MONTHS.map(month => {
           const monthCampaigns = campaignsByMonth.get(month) || [];
-          
+
           return (
             <Card key={month} className="min-h-[300px]">
               <CardHeader>
@@ -217,28 +210,24 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
                   {monthCampaigns.map(campaign => {
                     const regionColor = REGION_COLORS[campaign.region as keyof typeof REGION_COLORS] || "bg-gray-100 text-gray-800 border-gray-200";
                     const statusColor = STATUS_COLORS[(campaign.status || 'Planning') as keyof typeof STATUS_COLORS] || "bg-gray-100 text-gray-800";
-                    
+
                     return (
-                      <div 
-                        key={campaign.id} 
+                      <div
+                        key={campaign.id}
                         className={`p-3 rounded-lg border ${regionColor} space-y-2`}
                       >
                         <div className="font-medium text-sm leading-tight">
                           {campaign.description || "Untitled Campaign"}
                         </div>
-                        
+
                         <div className="space-y-1">
-                          <div className="text-xs opacity-80">
-                            {campaign.country}
-                          </div>
-                          <div className="text-xs font-medium">
-                            {campaign.owner}
-                          </div>
+                          <div className="text-xs opacity-80">{campaign.country}</div>
+                          <div className="text-xs font-medium">{campaign.owner}</div>
                         </div>
-                        
+
                         <div className="flex justify-between items-center">
-                          <Badge 
-                            variant="secondary" 
+                          <Badge
+                            variant="secondary"
                             className={`text-xs ${statusColor}`}
                           >
                             {campaign.status || 'Planning'}
@@ -250,7 +239,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
                       </div>
                     );
                   })}
-                  
+
                   {monthCampaigns.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground text-sm">
                       No campaigns scheduled

@@ -2,8 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { X, Warning, AlertTriangle } from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "@phosphor-icons/react";
 
 interface Campaign {
   id: string;
@@ -40,7 +41,6 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
     "Q4 - April", "Q4 - May", "Q4 - June"
   ];
 
-  // Filter campaigns
   const filteredCampaigns = useMemo(() => {
     return campaigns.filter(campaign => {
       if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
@@ -49,11 +49,9 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
     });
   }, [campaigns, regionFilter, quarterFilter]);
 
-  // Calculate budget usage by owner
   const budgetAnalysis = useMemo(() => {
     const ownerBudgets = new Map();
-    
-    // Initialize with budget allocations
+
     Object.entries(BUDGET_ALLOCATIONS).forEach(([owner, allocation]) => {
       ownerBudgets.set(owner, {
         owner,
@@ -66,7 +64,6 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
       });
     });
 
-    // Calculate spending by owner (not region)
     filteredCampaigns.forEach(campaign => {
       const owner = campaign.owner;
       if (ownerBudgets.has(owner)) {
@@ -102,7 +99,7 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
   const getBudgetStatus = (forecastedSpend: number, actualSpend: number, budget: number) => {
     const forecastedOverage = forecastedSpend - budget;
     const actualOverage = actualSpend - budget;
-    
+
     if (actualOverage > 500) return { type: 'critical', message: 'Actual spend exceeds budget' };
     if (forecastedOverage > 500) return { type: 'warning', message: 'Forecasted spend exceeds budget' };
     return { type: 'good', message: 'Within budget' };
@@ -131,7 +128,7 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Quarter</label>
               <Select value={quarterFilter} onValueChange={setQuarterFilter}>
@@ -148,10 +145,11 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
             </div>
 
             <div className="flex items-end">
-              <button 
+              <button
                 onClick={clearFilters}
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 flex items-center gap-1"
               >
+                <X className="h-4 w-4" />
                 Clear Filters
               </button>
             </div>
@@ -165,11 +163,19 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
           const forecastedPercentage = getUsagePercentage(budget.forecastedSpend, budget.assignedBudget);
           const actualPercentage = getUsagePercentage(budget.actualSpend, budget.assignedBudget);
           const status = getBudgetStatus(budget.forecastedSpend, budget.actualSpend, budget.assignedBudget);
-          
+
           return (
-            <Card key={budget.owner} className="relative">
-              <CardHeader>
-                <CardTitle className="text-lg">{budget.region}</CardTitle>
+            <Card key={budget.owner} className={
+              status.type === 'critical' ? 'border border-red-500' :
+              status.type === 'warning' ? 'border border-yellow-500' : ''
+            }>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">{budget.region}</CardTitle>
+                  {status.type !== 'good' && (
+                    <Warning className="h-5 w-5 text-red-600" />
+                  )}
+                </div>
                 <div className="text-sm text-muted-foreground">{budget.owner}</div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -178,17 +184,17 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
                     <span>Assigned Budget</span>
                     <span className="font-semibold">{formatCurrency(budget.assignedBudget)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span>Forecasted Spend</span>
                     <span>{formatCurrency(budget.forecastedSpend)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span>Actual Spend</span>
                     <span>{formatCurrency(budget.actualSpend)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span>Campaigns</span>
                     <span>{budget.campaignCount}</span>
@@ -203,25 +209,25 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
                       <span>{forecastedPercentage.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-2">
-                      <div 
+                      <div
                         className={`h-2 rounded-full ${
-                          forecastedPercentage > 100 ? 'bg-destructive' : 
+                          forecastedPercentage > 100 ? 'bg-destructive' :
                           forecastedPercentage > 90 ? 'bg-yellow-500' : 'bg-primary'
                         }`}
                         style={{ width: `${Math.min(forecastedPercentage, 100)}%` }}
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-xs mb-1">
                       <span>Actual Usage</span>
                       <span>{actualPercentage.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-2">
-                      <div 
+                      <div
                         className={`h-2 rounded-full ${
-                          actualPercentage > 100 ? 'bg-destructive' : 
+                          actualPercentage > 100 ? 'bg-destructive' :
                           actualPercentage > 90 ? 'bg-yellow-500' : 'bg-green-500'
                         }`}
                         style={{ width: `${Math.min(actualPercentage, 100)}%` }}
@@ -270,21 +276,21 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
               </div>
               <div className="text-sm text-muted-foreground">Total Assigned</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold">
                 {formatCurrency(budgetAnalysis.reduce((sum, b) => sum + b.forecastedSpend, 0))}
               </div>
               <div className="text-sm text-muted-foreground">Total Forecasted</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold">
                 {formatCurrency(budgetAnalysis.reduce((sum, b) => sum + b.actualSpend, 0))}
               </div>
               <div className="text-sm text-muted-foreground">Total Actual</div>
             </div>
-            
+
             <div className="text-center">
               <div className="text-2xl font-bold">
                 {budgetAnalysis.reduce((sum, b) => sum + b.campaignCount, 0)}
