@@ -29,8 +29,13 @@ export default function App() {
   const [campaigns, setCampaigns] = useState(() => {
     try {
       const saved = localStorage.getItem('campaignData');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      return [];
+    } catch (error) {
+      console.warn('Failed to load campaign data:', error);
       return [];
     }
   });
