@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Building2, Warning } from "@phosphor-icons/react";
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 
 interface BudgetManagementProps {
   campaigns: Campaign[];

@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Target, X } from "@phosphor-icons/react";
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 
 interface ExecutionTrackingProps {
   campaigns: Campaign[];

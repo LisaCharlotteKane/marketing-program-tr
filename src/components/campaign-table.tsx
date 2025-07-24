@@ -8,45 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, TrashSimple, Calculator } from "@phosphor-icons/react";
+import { Plus, Trash, Calculator } from "@phosphor-icons/react";
 import { toast } from "sonner";
-
-// Campaign type interface
-export interface Campaign {
-  id: string;
-  campaignName: string;
-  campaignType: string;
-  strategicPillars: string[];
-  revenuePlay: string;
-  fiscalYear: string;
-  quarterMonth: string;
-  region: string;
-  country: string;
-  owner: string;
-  description: string;
-  forecastedCost: number | string;
-  expectedLeads: number | string;
-  
-  // Calculated fields
-  mql: number;
-  sql: number;
-  opportunities: number;
-  pipelineForecast: number;
-  
-  // Execution tracking fields
-  status: string;
-  poRaised: boolean;
-  campaignCode: string;
-  issueLink: string;
-  actualCost: number | string;
-  actualLeads: number | string;
-  actualMQLs: number | string;
-}
-
-interface CampaignTableProps {
-  campaigns: Campaign[];
-  setCampaigns: (campaigns: Campaign[]) => void;
-}
+import { Campaign, CampaignTableProps } from "@/types/campaign";
 
 export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
   const [regionFilter, setRegionFilter] = useState<string>("");
@@ -54,25 +18,24 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
 
   // Campaign form state
   const [newCampaign, setNewCampaign] = useState<Partial<Campaign>>({
-    campaignName: "",
+    description: "",
     campaignType: "",
-    strategicPillars: [],
+    strategicPillar: [],
     revenuePlay: "",
-    fiscalYear: "FY26",
-    quarterMonth: "",
-    region: "",
+    fy: "FY26",
+    quarterMonth: "Q1 - July",
+    region: "JP & Korea",
     country: "",
     owner: "",
-    description: "",
-    forecastedCost: "",
-    expectedLeads: "",
+    forecastedCost: 0,
+    expectedLeads: 0,
     status: "Planning",
     poRaised: false,
     campaignCode: "",
     issueLink: "",
-    actualCost: "",
-    actualLeads: "",
-    actualMQLs: ""
+    actualCost: 0,
+    actualLeads: 0,
+    actualMQLs: 0
   });
 
   // Options
@@ -140,17 +103,17 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
 
   // Handle strategic pillar toggle
   const togglePillar = (pillar: string) => {
-    const current = newCampaign.strategicPillars || [];
+    const current = newCampaign.strategicPillar || [];
     const updated = current.includes(pillar) 
       ? current.filter(p => p !== pillar)
       : [...current, pillar];
     
-    setNewCampaign(prev => ({ ...prev, strategicPillars: updated }));
+    setNewCampaign(prev => ({ ...prev, strategicPillar: updated }));
   };
 
   // Add new campaign
   const addCampaign = () => {
-    if (!newCampaign.campaignName || !newCampaign.campaignType || !newCampaign.owner) {
+    if (!newCampaign.description || !newCampaign.campaignType || !newCampaign.owner) {
       toast.error("Please fill in required fields");
       return;
     }
@@ -159,16 +122,15 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
     
     const campaign: Campaign = {
       id: Date.now().toString(),
-      campaignName: newCampaign.campaignName || "",
+      description: newCampaign.description || "",
       campaignType: newCampaign.campaignType || "",
-      strategicPillars: newCampaign.strategicPillars || [],
+      strategicPillar: newCampaign.strategicPillar || [],
       revenuePlay: newCampaign.revenuePlay || "",
-      fiscalYear: newCampaign.fiscalYear || "FY26",
-      quarterMonth: newCampaign.quarterMonth || "",
-      region: newCampaign.region || "",
+      fy: newCampaign.fy || "FY26",
+      quarterMonth: newCampaign.quarterMonth || "Q1 - July",
+      region: newCampaign.region || "JP & Korea",
       country: newCampaign.country || "",
       owner: newCampaign.owner || "",
-      description: newCampaign.description || "",
       forecastedCost: parseFloat(newCampaign.forecastedCost?.toString() || "0") || 0,
       expectedLeads: parseFloat(newCampaign.expectedLeads?.toString() || "0") || 0,
       ...metrics,
@@ -185,25 +147,24 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
     
     // Reset form
     setNewCampaign({
-      campaignName: "",
+      description: "",
       campaignType: "",
-      strategicPillars: [],
+      strategicPillar: [],
       revenuePlay: "",
-      fiscalYear: "FY26",
-      quarterMonth: "",
-      region: "",
+      fy: "FY26",
+      quarterMonth: "Q1 - July",
+      region: "JP & Korea",
       country: "",
       owner: "",
-      description: "",
-      forecastedCost: "",
-      expectedLeads: "",
+      forecastedCost: 0,
+      expectedLeads: 0,
       status: "Planning",
       poRaised: false,
       campaignCode: "",
       issueLink: "",
-      actualCost: "",
-      actualLeads: "",
-      actualMQLs: ""
+      actualCost: 0,
+      actualLeads: 0,
+      actualMQLs: 0
     });
 
     toast.success("Campaign added successfully");
@@ -296,12 +257,12 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="campaignName">Campaign Name *</Label>
+              <Label htmlFor="description">Campaign Description *</Label>
               <Input
-                id="campaignName"
-                value={newCampaign.campaignName || ""}
-                onChange={(e) => setNewCampaign(prev => ({ ...prev, campaignName: e.target.value }))}
-                placeholder="Enter campaign name"
+                id="description"
+                value={newCampaign.description || ""}
+                onChange={(e) => setNewCampaign(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter campaign description"
               />
             </div>
 
@@ -391,6 +352,23 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="fy">Fiscal Year</Label>
+              <Select 
+                value={newCampaign.fy || ""} 
+                onValueChange={(value) => setNewCampaign(prev => ({ ...prev, fy: value }))}
+              >
+                <SelectTrigger id="fy">
+                  <SelectValue placeholder="Select fiscal year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {fiscalYears.map(fy => (
+                    <SelectItem key={fy} value={fy}>{fy}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="forecastedCost">Forecasted Cost ($)</Label>
               <Input
                 id="forecastedCost"
@@ -423,7 +401,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                 <div key={pillar} className="flex items-center space-x-2">
                   <Checkbox 
                     id={pillar}
-                    checked={(newCampaign.strategicPillars || []).includes(pillar)}
+                    checked={(newCampaign.strategicPillar || []).includes(pillar)}
                     onCheckedChange={() => togglePillar(pillar)}
                   />
                   <Label htmlFor={pillar} className="text-sm">{pillar}</Label>
@@ -487,12 +465,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                     <TableRow key={campaign.id}>
                       <TableCell className="font-medium">
                         <div>
-                          <div>{campaign.campaignName}</div>
-                          {campaign.description && (
-                            <div className="text-xs text-muted-foreground truncate max-w-xs">
-                              {campaign.description}
-                            </div>
-                          )}
+                          <div>{campaign.description}</div>
                         </div>
                       </TableCell>
                       <TableCell className="text-sm">{campaign.campaignType}</TableCell>
@@ -519,7 +492,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                           onClick={() => removeCampaign(campaign.id)}
                           className="text-destructive hover:text-destructive"
                         >
-                          <TrashSimple className="h-4 w-4" />
+                          <Trash className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>

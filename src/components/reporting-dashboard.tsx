@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartBar, Download } from "@phosphor-icons/react";
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 
 interface ReportingDashboardProps {
   campaigns: Campaign[];

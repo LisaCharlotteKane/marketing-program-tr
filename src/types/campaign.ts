@@ -3,17 +3,20 @@
  */
 export interface Campaign {
   id: string;
+  campaignName?: string;
   description: string;
   campaignType: string;
+  strategicPillars?: string[];
   strategicPillar: string[];
   revenuePlay: string;
   fy: string;
+  fiscalYear?: string;
   quarterMonth: string;
   region: string;
   country: string;
   owner: string;
-  forecastedCost: number;
-  expectedLeads: number;
+  forecastedCost: number | string;
+  expectedLeads: number | string;
   mql: number;
   sql: number;
   opportunities: number;
@@ -21,11 +24,12 @@ export interface Campaign {
   // Optional execution tracking fields
   status?: string;
   poRaised?: boolean;
+  campaignCode?: string;
   salesforceCampaignCode?: string;
   issueLink?: string;
-  actualCost?: number;
-  actualLeads?: number;
-  actualMQLs?: number;
+  actualCost?: number | string;
+  actualLeads?: number | string;
+  actualMQLs?: number | string;
 }
 
 /**
