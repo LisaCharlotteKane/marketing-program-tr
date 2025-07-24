@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
-import { Calculator, ChartBarHorizontal, Target, Calendar, Buildings, Gear } from "@phosphor-icons/react";
+import { Calculator, ChartBarHorizontal, Target, Calendar, Building, Gear } from "@phosphor-icons/react";
 import { CampaignTable } from "@/components/campaign-table";
 import { ExecutionTracking } from "@/components/execution-tracking";
 import { ReportingDashboard } from "@/components/reporting-dashboard";
@@ -149,7 +149,7 @@ export default function App() {
                 Calendar
               </TabsTrigger>
               <TabsTrigger value="budget" className="flex items-center gap-2">
-                <Buildings className="h-4 w-4" />
+                <Building size={32} />
                 Budget
               </TabsTrigger>
             </TabsList>
