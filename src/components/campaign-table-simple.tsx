@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2 } from "@phosphor-icons/react";
+import { Plus, Trash } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 interface Campaign {
@@ -105,7 +105,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
             {selectedCampaigns.size} selected
           </div>
           <Button variant="destructive" onClick={deleteSelectedCampaigns} className="flex items-center gap-2">
-            <Trash2 className="h-4 w-4" /> Delete Selected
+            <Trash className="h-4 w-4" /> Delete Selected
           </Button>
         </div>
       )}
