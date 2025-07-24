@@ -4,8 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Toaster } from "sonner";
 import { Calculator, BarChart3, Target, Calendar, Building2 } from "@phosphor-icons/react";
-import { SimpleCampaignForm } from "@/components/simple-campaign-form";
-import { SimpleCampaignList } from "@/components/simple-campaign-list";
+import { CampaignTable } from "@/components/campaign-table";
+import { ExecutionTracking } from "@/components/execution-tracking";
+import { ReportingDashboard } from "@/components/reporting-dashboard";
+import { CampaignCalendarView } from "@/components/campaign-calendar-view";
+import { BudgetManagement } from "@/components/budget-management";
 
 export default function App() {
   const [campaigns, setCampaigns] = useKV('campaignData', [], { scope: 'global' });
@@ -69,8 +72,7 @@ export default function App() {
                 </div>
               </div>
               
-              <SimpleCampaignForm campaigns={campaigns} setCampaigns={setCampaigns} />
-              <SimpleCampaignList campaigns={campaigns} />
+              <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
               
               <Card className="bg-muted/50">
                 <CardHeader>
@@ -112,17 +114,7 @@ export default function App() {
                 </p>
               </div>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>Execution Tracking</CardTitle>
-                  <CardDescription>Loading execution tracking features...</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Loading execution tracking...</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
             </div>
           </TabsContent>
 
@@ -135,17 +127,7 @@ export default function App() {
                 </p>
               </div>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>Reporting Dashboard</CardTitle>
-                  <CardDescription>Loading reporting features...</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Loading reporting dashboard...</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <ReportingDashboard campaigns={campaigns} />
             </div>
           </TabsContent>
 
@@ -158,17 +140,7 @@ export default function App() {
                 </p>
               </div>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>Campaign Calendar</CardTitle>
-                  <CardDescription>Loading calendar view...</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Loading calendar view...</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <CampaignCalendarView campaigns={campaigns} />
             </div>
           </TabsContent>
 
@@ -181,17 +153,7 @@ export default function App() {
                 </p>
               </div>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle>Budget Management</CardTitle>
-                  <CardDescription>Loading budget management features...</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">Loading budget management...</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <BudgetManagement campaigns={campaigns} />
             </div>
           </TabsContent>
         </Tabs>
