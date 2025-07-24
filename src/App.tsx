@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Toaster } from "sonner";
-import { Calculator, BarChart3, Target, Calendar, Building2 } from "@phosphor-icons/react";
+import { Calculator, ChartBar, Target, Calendar, Buildings } from "@phosphor-icons/react";
 import { CampaignTable } from "@/components/campaign-table-simple";
 import { ExecutionTracking } from "@/components/execution-tracking-simple";
 import { ReportingDashboard } from "@/components/reporting-dashboard-simple";
@@ -64,7 +64,7 @@ export default function App() {
               Execution
             </TabsTrigger>
             <TabsTrigger value="reporting" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
+              <ChartBar className="h-4 w-4" />
               Reporting
             </TabsTrigger>
             <TabsTrigger value="calendar" className="flex items-center gap-2">
@@ -72,7 +72,7 @@ export default function App() {
               Calendar
             </TabsTrigger>
             <TabsTrigger value="budget" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
+              <Buildings className="h-4 w-4" />
               Budget
             </TabsTrigger>
           </TabsList>
