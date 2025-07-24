@@ -1,18 +1,33 @@
-import React, { useState } from 'react';
-import { useKV } from '@github/spark/hooks';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Toaster } from "sonner";
 import { Calculator, BarChart3, Target, Calendar, Building2 } from "@phosphor-icons/react";
-import { CampaignTable } from "@/components/campaign-table";
-import { ExecutionTracking } from "@/components/execution-tracking";
-import { ReportingDashboard } from "@/components/reporting-dashboard";
-import { CampaignCalendarView } from "@/components/campaign-calendar-view";
-import { BudgetManagement } from "@/components/budget-management";
+import { CampaignTable } from "@/components/campaign-table-simple";
+import { ExecutionTracking } from "@/components/execution-tracking-simple";
+import { ReportingDashboard } from "@/components/reporting-dashboard-simple";
+import { CampaignCalendarView } from "@/components/campaign-calendar-view-simple";
+import { BudgetManagement } from "@/components/budget-management-simple";
 
 export default function App() {
-  // Use global scope for shared campaign data across users
-  const [campaigns, setCampaigns] = useKV('campaignData', [], { scope: 'global' });
+  // Use localStorage for campaign data persistence
+  const [campaigns, setCampaigns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('campaignData');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Auto-save campaigns to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('campaignData', JSON.stringify(campaigns));
+    } catch (error) {
+      console.warn('Failed to save campaigns to localStorage:', error);
+    }
+  }, [campaigns]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
