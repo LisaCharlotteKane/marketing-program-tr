@@ -1,40 +1,14 @@
 import React, { useState } from 'react';
+import { useKV } from '@github/spark/hooks';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Toaster } from "sonner";
 import { Calculator, BarChart3, Target, Calendar, Building2 } from "@phosphor-icons/react";
-import { CampaignTable } from "@/components/campaign-table";
-import { ExecutionTracking } from "@/components/execution-tracking";
-import { ReportingDashboard } from "@/components/reporting-dashboard";
-import { CampaignCalendarView } from "@/components/campaign-calendar-view";
-import { BudgetManagement } from "@/components/budget-management";
-
-// Simple storage hook using localStorage
-function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
-    }
-  });
-
-  const setValue = (value: T) => {
-    try {
-      setStoredValue(value);
-      window.localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.warn(`Error setting localStorage key "${key}":`, error);
-    }
-  };
-
-  return [storedValue, setValue];
-}
+import { SimpleCampaignForm } from "@/components/simple-campaign-form";
+import { SimpleCampaignList } from "@/components/simple-campaign-list";
 
 export default function App() {
-  const [campaigns, setCampaigns] = useLocalStorage('campaignData', []);
+  const [campaigns, setCampaigns] = useKV('campaignData', [], { scope: 'global' });
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -95,7 +69,8 @@ export default function App() {
                 </div>
               </div>
               
-              <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
+              <SimpleCampaignForm campaigns={campaigns} setCampaigns={setCampaigns} />
+              <SimpleCampaignList campaigns={campaigns} />
               
               <Card className="bg-muted/50">
                 <CardHeader>
@@ -137,7 +112,17 @@ export default function App() {
                 </p>
               </div>
               
-              <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Execution Tracking</CardTitle>
+                  <CardDescription>Loading execution tracking features...</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading execution tracking...</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -150,7 +135,17 @@ export default function App() {
                 </p>
               </div>
               
-              <ReportingDashboard campaigns={campaigns} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reporting Dashboard</CardTitle>
+                  <CardDescription>Loading reporting features...</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading reporting dashboard...</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -163,7 +158,17 @@ export default function App() {
                 </p>
               </div>
               
-              <CampaignCalendarView campaigns={campaigns} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Campaign Calendar</CardTitle>
+                  <CardDescription>Loading calendar view...</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading calendar view...</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
@@ -176,7 +181,17 @@ export default function App() {
                 </p>
               </div>
               
-              <BudgetManagement campaigns={campaigns} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Budget Management</CardTitle>
+                  <CardDescription>Loading budget management features...</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Loading budget management...</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>
