@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Toaster } from "sonner";
+import { Calculator, BarChart3, Target, Calendar, Building2 } from "@phosphor-icons/react";
+import { CampaignTable } from "@/components/campaign-table";
+import { ExecutionTracking } from "@/components/execution-tracking";
+import { ReportingDashboard } from "@/components/reporting-dashboard";
+import { CampaignCalendarView } from "@/components/campaign-calendar-view";
+import { BudgetManagement } from "@/components/budget-management";
 
 // Simple storage hook using localStorage
 function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
@@ -33,51 +40,146 @@ export default function App() {
     <div className="min-h-screen flex flex-col bg-background">
       <Toaster position="top-right" richColors />
       
-      <header className="border-b shadow-sm">
-        <div className="container mx-auto p-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold">Marketing Campaign Planner</h1>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            Storage: {Array.isArray(campaigns) ? campaigns.length : 0} campaigns
+      <header className="border-b shadow-sm bg-card">
+        <div className="container mx-auto p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Target className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">Marketing Campaign Planner</h1>
+                <p className="text-sm text-muted-foreground">APAC Marketing Operations</p>
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
+              {Array.isArray(campaigns) ? campaigns.length : 0} campaigns
+            </div>
           </div>
         </div>
       </header>
       
       <main className="flex-1 container mx-auto p-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Marketing Campaign Planner</CardTitle>
-            <CardDescription>
-              Plan and track your marketing campaigns across APAC regions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <p className="text-muted-foreground">
-                The application is being rebuilt. This minimal version shows that the core system is working.
-              </p>
-              <div className="p-4 bg-muted rounded-lg">
-                <h3 className="font-medium mb-2">System Status:</h3>
-                <ul className="space-y-1 text-sm">
-                  <li>✓ React app is running</li>
-                  <li>✓ Storage system is working</li>
-                  <li>✓ UI components are loaded</li>
-                  <li>⏳ Full campaign features being restored...</li>
-                </ul>
-              </div>
-              
-              {Array.isArray(campaigns) && campaigns.length > 0 && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h3 className="font-medium mb-2 text-green-800">Found Existing Campaign Data:</h3>
-                  <p className="text-sm text-green-700">
-                    {campaigns.length} campaign(s) are saved in storage and will be restored when the full app is rebuilt.
+        <Tabs defaultValue="planning" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsTrigger value="planning" className="flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
+              Planning
+            </TabsTrigger>
+            <TabsTrigger value="execution" className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              Execution
+            </TabsTrigger>
+            <TabsTrigger value="reporting" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Reporting
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Calendar
+            </TabsTrigger>
+            <TabsTrigger value="budget" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Budget
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="planning">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">Campaign Planning</h2>
+                  <p className="text-muted-foreground">
+                    Plan and forecast marketing campaign performance across APAC regions
                   </p>
                 </div>
-              )}
+              </div>
+              
+              <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
+              
+              <Card className="bg-muted/50">
+                <CardHeader>
+                  <CardTitle className="text-lg">Auto-Calculated Metrics</CardTitle>
+                  <CardDescription>
+                    Based on "Expected Leads," we automatically calculate performance forecasts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                    <div className="space-y-1">
+                      <div className="font-medium">MQL Forecast</div>
+                      <div className="text-muted-foreground">10% of Expected Leads</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="font-medium">SQL Forecast</div>
+                      <div className="text-muted-foreground">6% of Expected Leads</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="font-medium"># Opportunities</div>
+                      <div className="text-muted-foreground">80% of SQL Forecast</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="font-medium">Pipeline Forecast</div>
+                      <div className="text-muted-foreground"># Opportunities × $50K</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
+          </TabsContent>
+
+          <TabsContent value="execution">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Execution Tracking</h2>
+                <p className="text-muted-foreground">
+                  Update campaign status and track actual performance metrics
+                </p>
+              </div>
+              
+              <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reporting">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Campaign Performance</h2>
+                <p className="text-muted-foreground">
+                  Analyze forecasted vs actual performance across regions and campaigns
+                </p>
+              </div>
+              
+              <ReportingDashboard campaigns={campaigns} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="calendar">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Campaign Calendar</h2>
+                <p className="text-muted-foreground">
+                  Visual timeline of all campaigns organized by fiscal year and quarter
+                </p>
+              </div>
+              
+              <CampaignCalendarView campaigns={campaigns} />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="budget">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Budget Management</h2>
+                <p className="text-muted-foreground">
+                  Track budget allocation and spending across regions and campaign owners
+                </p>
+              </div>
+              
+              <BudgetManagement campaigns={campaigns} />
+            </div>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
