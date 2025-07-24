@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FilterX } from "@phosphor-icons/react";
+import { X } from "@phosphor-icons/react";
 
 interface Campaign {
   id: string;
@@ -226,7 +226,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
               onClick={clearFilters}
               className="flex items-center gap-2"
             >
-              <FilterX className="h-4 w-4" />
+              <X className="h-4 w-4" />
               Clear
             </Button>
           </div>

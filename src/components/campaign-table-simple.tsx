@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2 } from "@phosphor-icons/react";
+import { Plus, Trash } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 interface Campaign {
@@ -354,7 +354,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                       onClick={() => deleteCampaign(campaign.id)}
                       className="text-destructive hover:text-destructive"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash className="h-4 w-4" />
                     </Button>
                   </div>
                   

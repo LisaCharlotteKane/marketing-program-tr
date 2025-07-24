@@ -19,6 +19,9 @@ export function clearProblematicCookies() {
         cookieName.includes('campaign') ||
         cookieName.includes('github-auth') ||
         cookieName.includes('session-data') ||
+        cookieName.includes('sidebar_state') ||
+        cookieName.includes('ui_') ||
+        cookieName.includes('app_') ||
         cookieName.length > 50 // Very long cookie names
       ) {
         // Clear the cookie by setting it to expire in the past
@@ -52,7 +55,10 @@ export function clearAllAppData() {
         key.includes('spark') ||
         key.includes('kv') ||
         key.includes('auth') ||
-        key.includes('github')
+        key.includes('github') ||
+        key.includes('sidebar_state') ||
+        key.includes('ui_') ||
+        key.includes('app_')
       ) {
         localStorage.removeItem(key);
       }
@@ -66,7 +72,10 @@ export function clearAllAppData() {
         key.includes('spark') ||
         key.includes('kv') ||
         key.includes('auth') ||
-        key.includes('github')
+        key.includes('github') ||
+        key.includes('sidebar_state') ||
+        key.includes('ui_') ||
+        key.includes('app_')
       ) {
         sessionStorage.removeItem(key);
       }

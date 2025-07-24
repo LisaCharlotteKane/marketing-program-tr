@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { FilterX, AlertTriangle } from "@phosphor-icons/react";
+import { X, Warning } from "@phosphor-icons/react";
 
 interface Campaign {
   id: string;
@@ -143,7 +143,7 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
                 onClick={clearFilters}
                 className="flex items-center gap-2 w-full"
               >
-                <FilterX className="h-4 w-4" />
+                <X className="h-4 w-4" />
                 Clear Filters
               </Button>
             </div>
@@ -163,7 +163,7 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{usage.region}</CardTitle>
                   {usage.forecastedOverage > 500 && (
-                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                    <Warning className="h-5 w-5 text-red-600" />
                   )}
                 </div>
                 <div className="text-sm text-muted-foreground">{usage.owner}</div>

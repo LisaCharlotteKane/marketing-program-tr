@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Trash2, RefreshCw, Info } from "@phosphor-icons/react";
+import { Trash, ArrowClockwise, Info } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { clearAllAppData, resetAppStorage } from "@/lib/cookie-cleanup";
 import { cleanupStorage, getStorageInfo } from "@/lib/storage-cleanup";
@@ -83,7 +83,7 @@ export function StorageCleanupPanel() {
     <Card className="w-full max-w-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Trash2 className="h-5 w-5" />
+          <Trash className="h-5 w-5" />
           Storage Management
         </CardTitle>
       </CardHeader>
@@ -128,7 +128,7 @@ export function StorageCleanupPanel() {
               disabled={isLoading}
               variant="outline"
             >
-              {isLoading ? <RefreshCw className="h-4 w-4 animate-spin" /> : 'Clean Up'}
+              {isLoading ? <ArrowClockwise className="h-4 w-4 animate-spin" /> : 'Clean Up'}
             </Button>
           </div>
 
@@ -171,7 +171,7 @@ export function StorageCleanupPanel() {
           size="sm"
           className="w-full"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <ArrowClockwise className="h-4 w-4 mr-2" />
           Refresh Storage Info
         </Button>
       </CardContent>

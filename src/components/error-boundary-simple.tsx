@@ -2,7 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, RefreshCw } from "@phosphor-icons/react";
+import { Warning, ArrowClockwise } from "@phosphor-icons/react";
 
 interface Props {
   children: ReactNode;
@@ -49,13 +49,13 @@ export class ErrorBoundary extends Component<Props, State> {
           <Card className="w-full max-w-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
-                <AlertTriangle className="h-5 w-5" />
+                <Warning className="h-5 w-5" />
                 Application Error
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert>
-                <AlertTriangle className="h-4 w-4" />
+                <Warning className="h-4 w-4" />
                 <AlertDescription>
                   The app encountered an error and needs to be restarted. 
                   This might be related to corrupted data or storage issues.
@@ -75,7 +75,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   className="w-full"
                   variant="default"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <ArrowClockwise className="h-4 w-4 mr-2" />
                   Reset App & Clear Data
                 </Button>
                 

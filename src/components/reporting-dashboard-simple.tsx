@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { FilterX } from "@phosphor-icons/react";
+import { X } from "@phosphor-icons/react";
 
 interface Campaign {
   id: string;
@@ -182,7 +182,7 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
                 onClick={clearFilters}
                 className="flex items-center gap-2 w-full"
               >
-                <FilterX className="h-4 w-4" />
+                <X className="h-4 w-4" />
                 Clear Filters
               </Button>
             </div>
