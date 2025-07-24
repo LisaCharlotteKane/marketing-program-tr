@@ -1,171 +1,192 @@
 /**
- * Storage cleanup utility to prevent HTTP 431 errors
- * This removes large or problematic data that could cause header size issues
+ * Storage cleanup utilities to prevent excessive data accumulation
  */
 
-export function cleanupStorage() {
+const MAX_STORAGE_SIZE = 50000; // 50KB limit
+const MAX_CAMPAIGN_COUNT = 50; // Limit campaigns to prevent bloat
+
+export function initStorageCleanup() {
   try {
-    // List of localStorage keys that might grow large
-    const potentiallyLargeKeys = [
-      'campaignData',
-      'assignedBudgets', 
-      'kvStore',
-      'sharedCampaigns',
-      'userData'
+    // Clean up localStorage
+    cleanupLocalStorage();
+    
+    // Clean up sessionStorage
+    cleanupSessionStorage();
+    
+    // Set up periodic cleanup
+    setInterval(cleanupLocalStorage, 60000); // Every minute
+    
+    console.log('Storage cleanup initialized');
+  } catch (error) {
+    console.warn('Storage cleanup initialization failed:', error);
+  }
+}
+
+function cleanupLocalStorage() {
+  try {
+    const problematicKeys = [
+      'spark-kv-campaignData',
+      'github-auth-token',
+      'kvStore-cache',
+      'campaign-sync-data',
+      'persistentCampaigns',
+      'spark-user-session',
+      'github-session',
+      'auth-state'
     ];
-
-    let totalCleaned = 0;
-    let issuesFound = [];
-
-    potentiallyLargeKeys.forEach(key => {
-      try {
-        const item = localStorage.getItem(key);
-        if (item) {
-          const sizeKB = (item.length / 1024);
-          
-          if (sizeKB > 50) { // If larger than 50KB
-            issuesFound.push(`${key}: ${sizeKB.toFixed(1)}KB`);
-            
-            // For campaignData, keep only essential recent data
-            if (key === 'campaignData') {
-              try {
-                const parsed = JSON.parse(item);
-                if (Array.isArray(parsed) && parsed.length > 50) {
-                  // Keep only first 50 campaigns
-                  const reduced = parsed.slice(0, 50).map(campaign => ({
-                    id: campaign.id,
-                    campaignName: campaign.campaignName || '',
-                    campaignType: campaign.campaignType || '',
-                    region: campaign.region || '',
-                    owner: campaign.owner || '',
-                    forecastedCost: campaign.forecastedCost || 0,
-                    expectedLeads: campaign.expectedLeads || 0,
-                    status: campaign.status || 'Planning'
-                  }));
-                  
-                  localStorage.setItem(key, JSON.stringify(reduced));
-                  totalCleaned += (item.length - JSON.stringify(reduced).length) / 1024;
-                  console.log(`Reduced ${key} from ${parsed.length} to ${reduced.length} campaigns`);
-                }
-              } catch (parseError) {
-                // If can't parse, remove entirely
-                localStorage.removeItem(key);
-                totalCleaned += sizeKB;
-                console.log(`Removed unparseable ${key}`);
-              }
-            } else {
-              // For other large items, remove entirely
-              localStorage.removeItem(key);
-              totalCleaned += sizeKB;
-              console.log(`Removed large ${key} (${sizeKB.toFixed(1)}KB)`);
-            }
-          }
-        }
-      } catch (error) {
-        console.warn(`Error cleaning ${key}:`, error);
+    
+    // Remove problematic keys
+    problematicKeys.forEach(key => {
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+        console.log(`Removed problematic localStorage key: ${key}`);
       }
     });
-
-    // Clean up any session storage that might be problematic
-    try {
-      if (sessionStorage.length > 0) {
-        const sessionKeys = Object.keys(sessionStorage);
-        sessionKeys.forEach(key => {
-          const item = sessionStorage.getItem(key);
-          if (item && item.length > 10000) { // 10KB limit for session
-            sessionStorage.removeItem(key);
-            console.log(`Removed large sessionStorage item: ${key}`);
+    
+    // Check and limit campaign data
+    const campaignData = localStorage.getItem('campaignData');
+    if (campaignData) {
+      if (campaignData.length > MAX_STORAGE_SIZE) {
+        console.warn('Large campaign data detected, reducing size...');
+        try {
+          const parsed = JSON.parse(campaignData);
+          if (Array.isArray(parsed) && parsed.length > MAX_CAMPAIGN_COUNT) {
+            const reduced = parsed.slice(0, MAX_CAMPAIGN_COUNT);
+            localStorage.setItem('campaignData', JSON.stringify(reduced));
+            console.log(`Reduced campaigns from ${parsed.length} to ${reduced.length}`);
           }
-        });
+        } catch (parseError) {
+          console.warn('Failed to parse campaign data, removing:', parseError);
+          localStorage.removeItem('campaignData');
+        }
       }
-    } catch (error) {
-      console.warn('Error cleaning sessionStorage:', error);
     }
-
-    if (issuesFound.length > 0) {
-      console.log('Storage cleanup completed:');
-      console.log('Large items found:', issuesFound);
-      console.log(`Total cleaned: ${totalCleaned.toFixed(1)}KB`);
-      return { 
-        cleaned: true, 
-        totalCleaned: totalCleaned.toFixed(1), 
-        issues: issuesFound 
-      };
+    
+    // Check total localStorage usage
+    let totalSize = 0;
+    for (let key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        totalSize += localStorage[key].length;
+      }
     }
-
-    return { cleaned: false, message: 'No large storage items found' };
+    
+    if (totalSize > 500000) { // 500KB
+      console.warn('localStorage usage is high, performing aggressive cleanup');
+      aggressiveCleanup();
+    }
+    
   } catch (error) {
-    console.error('Storage cleanup failed:', error);
-    return { error: true, message: error.message };
+    console.warn('localStorage cleanup failed:', error);
   }
 }
 
-export function getStorageInfo() {
+function cleanupSessionStorage() {
   try {
-    const info = {
-      localStorage: {
-        used: 0,
-        items: []
-      },
-      sessionStorage: {
-        used: 0,
-        items: []
+    const problematicKeys = [
+      'spark-temp-data',
+      'github-temp-auth',
+      'large-session-data'
+    ];
+    
+    problematicKeys.forEach(key => {
+      if (sessionStorage.getItem(key)) {
+        sessionStorage.removeItem(key);
+        console.log(`Removed problematic sessionStorage key: ${key}`);
       }
-    };
-
-    // Check localStorage
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        const item = localStorage.getItem(key);
-        const size = item ? item.length : 0;
-        info.localStorage.used += size;
-        info.localStorage.items.push({
-          key,
-          sizeKB: (size / 1024).toFixed(1)
-        });
-      }
-    }
-
-    // Check sessionStorage
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i);
-      if (key) {
-        const item = sessionStorage.getItem(key);
-        const size = item ? item.length : 0;
-        info.sessionStorage.used += size;
-        info.sessionStorage.items.push({
-          key,
-          sizeKB: (size / 1024).toFixed(1)
-        });
-      }
-    }
-
-    info.localStorage.usedKB = (info.localStorage.used / 1024).toFixed(1);
-    info.sessionStorage.usedKB = (info.sessionStorage.used / 1024).toFixed(1);
-
-    return info;
+    });
   } catch (error) {
-    console.error('Error getting storage info:', error);
-    return null;
+    console.warn('sessionStorage cleanup failed:', error);
   }
 }
 
-// Run cleanup on module load
-export function initStorageCleanup() {
-  // Run cleanup immediately
-  const result = cleanupStorage();
-  
-  if (result.cleaned) {
-    console.log(`✅ Storage cleanup completed - freed ${result.totalCleaned}KB`);
-  }
-
-  // Set up periodic cleanup every 10 minutes
-  setInterval(() => {
-    const info = getStorageInfo();
-    if (info && parseFloat(info.localStorage.usedKB) > 100) { // If >100KB
-      console.log('Large localStorage detected, running cleanup...');
-      cleanupStorage();
+function aggressiveCleanup() {
+  try {
+    // Keep only essential data
+    const campaignData = localStorage.getItem('campaignData');
+    
+    // Clear everything
+    localStorage.clear();
+    
+    // Restore only campaign data (limited)
+    if (campaignData) {
+      try {
+        const parsed = JSON.parse(campaignData);
+        if (Array.isArray(parsed)) {
+          const limited = parsed.slice(0, 20); // Keep only 20 campaigns
+          localStorage.setItem('campaignData', JSON.stringify(limited));
+        }
+      } catch {
+        // If parsing fails, start fresh
+        localStorage.setItem('campaignData', JSON.stringify([]));
+      }
     }
-  }, 600000); // 10 minutes
+    
+    console.log('Aggressive cleanup completed');
+  } catch (error) {
+    console.warn('Aggressive cleanup failed:', error);
+  }
+}
+
+export function getStorageUsage() {
+  try {
+    let totalLocalStorage = 0;
+    let totalSessionStorage = 0;
+    
+    for (let key in localStorage) {
+      if (localStorage.hasOwnProperty(key)) {
+        totalLocalStorage += localStorage[key].length;
+      }
+    }
+    
+    for (let key in sessionStorage) {
+      if (sessionStorage.hasOwnProperty(key)) {
+        totalSessionStorage += sessionStorage[key].length;
+      }
+    }
+    
+    return {
+      localStorage: totalLocalStorage,
+      sessionStorage: totalSessionStorage,
+      total: totalLocalStorage + totalSessionStorage
+    };
+  } catch (error) {
+    console.warn('Failed to calculate storage usage:', error);
+    return { localStorage: 0, sessionStorage: 0, total: 0 };
+  }
+}
+
+export function emergencyCleanup() {
+  try {
+    // Emergency: clear everything except essential campaign data
+    const campaigns = localStorage.getItem('campaignData');
+    
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Restore minimal campaign data
+    if (campaigns) {
+      try {
+        const parsed = JSON.parse(campaigns);
+        if (Array.isArray(parsed)) {
+          const minimal = parsed.slice(0, 10).map(campaign => ({
+            id: campaign.id,
+            description: campaign.description,
+            region: campaign.region,
+            owner: campaign.owner,
+            forecastedCost: campaign.forecastedCost || 0,
+            expectedLeads: campaign.expectedLeads || 0
+          }));
+          localStorage.setItem('campaignData', JSON.stringify(minimal));
+        }
+      } catch {
+        localStorage.setItem('campaignData', JSON.stringify([]));
+      }
+    }
+    
+    console.log('Emergency cleanup completed');
+    return true;
+  } catch (error) {
+    console.error('Emergency cleanup failed:', error);
+    return false;
+  }
 }

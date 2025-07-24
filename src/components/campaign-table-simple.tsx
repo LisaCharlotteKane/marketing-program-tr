@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2 } from "@phosphor-icons/react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Trash2, Upload, Download } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 interface Campaign {
   id: string;
-  campaignName: string;
+  description: string;
   campaignType: string;
   strategicPillar: string[];
   revenuePlay: string;
@@ -19,7 +19,6 @@ interface Campaign {
   region: string;
   country: string;
   owner: string;
-  description: string;
   forecastedCost: number;
   expectedLeads: number;
   mql: number;
@@ -30,28 +29,17 @@ interface Campaign {
 
 interface CampaignTableProps {
   campaigns: Campaign[];
-  setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>>;
+  setCampaigns: (campaigns: Campaign[]) => void;
 }
 
 export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
-  const [newCampaign, setNewCampaign] = useState<Partial<Campaign>>({
-    campaignName: '',
-    campaignType: '',
-    strategicPillar: [],
-    revenuePlay: '',
-    fy: '',
-    quarterMonth: '',
-    region: '',
-    country: '',
-    owner: '',
-    description: '',
-    forecastedCost: 0,
-    expectedLeads: 0,
-  });
+  const [regionFilter, setRegionFilter] = useState<string>('all');
+  const [quarterFilter, setQuarterFilter] = useState<string>('all');
 
+  // Options for dropdowns
   const campaignTypes = [
     "In-Account Events (1:1)",
-    "Exec Engagement Programs", 
+    "Exec Engagement Programs",
     "CxO Events (1:Few)",
     "Localized Events",
     "Localized Programs",
@@ -68,7 +56,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
 
   const strategicPillars = [
     "Account Growth and Product Adoption",
-    "Pipeline Acceleration & Executive Engagement", 
+    "Pipeline Acceleration & Executive Engagement",
     "Brand Awareness & Top of Funnel Demand Generation",
     "New Logo Acquisition"
   ];
@@ -79,46 +67,37 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
     "All"
   ];
 
-  const owners = [
-    "Giorgia Parham",
-    "Tomoko Tanaka", 
-    "Beverly Leung",
-    "Shruti Narang"
+  const fiscalYears = ["FY25", "FY26"];
+  
+  const quarters = [
+    "Q1 - July", "Q1 - August", "Q1 - September",
+    "Q2 - October", "Q2 - November", "Q2 - December",
+    "Q3 - January", "Q3 - February", "Q3 - March",
+    "Q4 - April", "Q4 - May", "Q4 - June"
   ];
 
-  const regions = [
-    "JP & Korea",
-    "South APAC",
-    "SAARC", 
-    "Digital",
-    "X APAC English",
-    "X APAC Non English"
-  ];
-
+  const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
+  
   const countries = [
     "Afghanistan", "Australia", "Bangladesh", "Bhutan", "Brunei", "Cambodia",
     "China", "Hong Kong", "India", "Indonesia", "Japan", "Laos", "Malaysia",
     "Maldives", "Myanmar", "Nepal", "New Zealand", "Pakistan", "Philippines",
     "Singapore", "South Korea", "Sri Lanka", "Taiwan", "Thailand", "Vietnam",
-    "X Apac", "ASEAN", "GCR"
+    "X APAC English", "X APAC Non English", "X South APAC", "X SAARC", "ASEAN", "GCR"
   ];
 
-  const quarters = [
-    "Q1 - July", "Q1 - August", "Q1 - September",
-    "Q2 - October", "Q2 - November", "Q2 - December", 
-    "Q3 - January", "Q3 - February", "Q3 - March",
-    "Q4 - April", "Q4 - May", "Q4 - June"
-  ];
+  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
 
-  const calculateMetrics = (expectedLeads: number, campaignType: string, forecastedCost: number) => {
+  // Calculate metrics for a campaign
+  const calculateMetrics = (expectedLeads: number, forecastedCost: number, campaignType: string) => {
     if (campaignType === "In-Account Events (1:1)" && (!expectedLeads || expectedLeads === 0)) {
-      // Special ROI logic for in-account events with no leads
-      const pipeline = forecastedCost * 20;
+      // Special ROI logic for 1:1 events
+      const pipelineForecast = forecastedCost * 20;
       return {
         mql: 0,
         sql: 0,
         opportunities: 0,
-        pipelineForecast: pipeline
+        pipelineForecast
       };
     }
 
@@ -130,156 +109,118 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
     return { mql, sql, opportunities, pipelineForecast };
   };
 
+  // Add new campaign
   const addCampaign = () => {
-    if (!newCampaign.campaignName || !newCampaign.campaignType || !newCampaign.owner) {
-      toast.error("Please fill in required fields");
-      return;
-    }
-
-    const metrics = calculateMetrics(
-      newCampaign.expectedLeads || 0,
-      newCampaign.campaignType || '',
-      newCampaign.forecastedCost || 0
-    );
-
-    const campaign: Campaign = {
-      id: crypto.randomUUID(),
-      campaignName: newCampaign.campaignName || '',
-      campaignType: newCampaign.campaignType || '',
-      strategicPillar: newCampaign.strategicPillar || [],
-      revenuePlay: newCampaign.revenuePlay || '',
-      fy: newCampaign.fy || 'FY25',
-      quarterMonth: newCampaign.quarterMonth || '',
-      region: newCampaign.region || '',
-      country: newCampaign.country || '',
-      owner: newCampaign.owner || '',
-      description: newCampaign.description || '',
-      forecastedCost: newCampaign.forecastedCost || 0,
-      expectedLeads: newCampaign.expectedLeads || 0,
-      ...metrics
-    };
-
-    setCampaigns(prev => [...prev, campaign]);
-    setNewCampaign({
-      campaignName: '',
-      campaignType: '',
+    const newCampaign: Campaign = {
+      id: `camp_${Date.now()}`,
+      description: "",
+      campaignType: "",
       strategicPillar: [],
-      revenuePlay: '',
-      fy: '',
-      quarterMonth: '',
-      region: '',
-      country: '',
-      owner: '',
-      description: '',
+      revenuePlay: "",
+      fy: "FY25",
+      quarterMonth: "",
+      region: "",
+      country: "",
+      owner: "",
       forecastedCost: 0,
       expectedLeads: 0,
-    });
+      mql: 0,
+      sql: 0,
+      opportunities: 0,
+      pipelineForecast: 0
+    };
 
-    toast.success("Campaign added successfully");
+    setCampaigns([...campaigns, newCampaign]);
   };
 
-  const deleteCampaign = (id: string) => {
-    setCampaigns(prev => prev.filter(c => c.id !== id));
-    toast.success("Campaign deleted");
+  // Update campaign
+  const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
+    setCampaigns(campaigns.map(campaign => {
+      if (campaign.id === id) {
+        const updated = { ...campaign, [field]: value };
+        
+        // Recalculate metrics if relevant fields changed
+        if (field === 'expectedLeads' || field === 'forecastedCost' || field === 'campaignType') {
+          const metrics = calculateMetrics(
+            field === 'expectedLeads' ? Number(value) : updated.expectedLeads,
+            field === 'forecastedCost' ? Number(value) : updated.forecastedCost,
+            field === 'campaignType' ? value : updated.campaignType
+          );
+          Object.assign(updated, metrics);
+        }
+        
+        return updated;
+      }
+      return campaign;
+    }));
+  };
+
+  // Delete campaigns
+  const [selectedCampaigns, setSelectedCampaigns] = useState<Set<string>>(new Set());
+  
+  const toggleCampaignSelection = (id: string) => {
+    const newSelection = new Set(selectedCampaigns);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
+    } else {
+      newSelection.add(id);
+    }
+    setSelectedCampaigns(newSelection);
+  };
+
+  const deleteSelectedCampaigns = () => {
+    setCampaigns(campaigns.filter(campaign => !selectedCampaigns.has(campaign.id)));
+    setSelectedCampaigns(new Set());
+    toast.success(`Deleted ${selectedCampaigns.size} campaign(s)`);
+  };
+
+  // Filter campaigns
+  const filteredCampaigns = useMemo(() => {
+    return campaigns.filter(campaign => {
+      if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
+      if (quarterFilter !== 'all' && campaign.quarterMonth !== quarterFilter) return false;
+      return true;
+    });
+  }, [campaigns, regionFilter, quarterFilter]);
+
+  // Clear filters
+  const clearFilters = () => {
+    setRegionFilter('all');
+    setQuarterFilter('all');
   };
 
   return (
-    <div className="space-y-6">
-      {/* Add Campaign Form */}
+    <div className="space-y-4">
+      {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Add New Campaign</CardTitle>
+          <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="campaignName">Campaign Name *</Label>
-              <Input
-                id="campaignName"
-                value={newCampaign.campaignName || ''}
-                onChange={(e) => setNewCampaign(prev => ({ ...prev, campaignName: e.target.value }))}
-                placeholder="Enter campaign name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="campaignType">Campaign Type *</Label>
-              <Select 
-                value={newCampaign.campaignType || ''} 
-                onValueChange={(value) => setNewCampaign(prev => ({ ...prev, campaignType: value }))}
-              >
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium">Region</label>
+              <Select value={regionFilter} onValueChange={setRegionFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {campaignTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="owner">Owner *</Label>
-              <Select 
-                value={newCampaign.owner || ''} 
-                onValueChange={(value) => setNewCampaign(prev => ({ ...prev, owner: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select owner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {owners.map(owner => (
-                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="region">Region</Label>
-              <Select 
-                value={newCampaign.region || ''} 
-                onValueChange={(value) => setNewCampaign(prev => ({ ...prev, region: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select region" />
-                </SelectTrigger>
-                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="country">Country</Label>
-              <Select 
-                value={newCampaign.country || ''} 
-                onValueChange={(value) => setNewCampaign(prev => ({ ...prev, country: value }))}
-              >
+            
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-sm font-medium">Quarter/Month</label>
+              <Select value={quarterFilter} onValueChange={setQuarterFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select country" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {countries.map(country => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="quarterMonth">Quarter/Month</Label>
-              <Select 
-                value={newCampaign.quarterMonth || ''} 
-                onValueChange={(value) => setNewCampaign(prev => ({ ...prev, quarterMonth: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select quarter" />
-                </SelectTrigger>
-                <SelectContent>
+                  <SelectItem value="all">All Quarters</SelectItem>
                   {quarters.map(quarter => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
@@ -287,106 +228,255 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="forecastedCost">Forecasted Cost ($)</Label>
-              <Input
-                id="forecastedCost"
-                type="number"
-                value={newCampaign.forecastedCost || ''}
-                onChange={(e) => setNewCampaign(prev => ({ ...prev, forecastedCost: parseFloat(e.target.value) || 0 }))}
-                placeholder="0"
-              />
+            <div className="flex items-end gap-2">
+              <Button onClick={clearFilters} variant="outline">
+                Clear Filters
+              </Button>
+              <Button onClick={addCampaign} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Campaign
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="expectedLeads">Expected Leads</Label>
-              <Input
-                id="expectedLeads"
-                type="number"
-                value={newCampaign.expectedLeads || ''}
-                onChange={(e) => setNewCampaign(prev => ({ ...prev, expectedLeads: parseInt(e.target.value) || 0 }))}
-                placeholder="0"
-              />
-            </div>
-
-            <div className="space-y-2 md:col-span-2 lg:col-span-3">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={newCampaign.description || ''}
-                onChange={(e) => setNewCampaign(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Campaign description"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end mt-4">
-            <Button onClick={addCampaign} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Campaign
-            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Campaigns List */}
+      {/* Delete selected button */}
+      {selectedCampaigns.size > 0 && (
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            {selectedCampaigns.size} campaign(s) selected
+          </div>
+          <Button 
+            onClick={deleteSelectedCampaigns} 
+            variant="destructive"
+            className="flex items-center gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      {/* Campaigns Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Campaigns ({campaigns.length})</CardTitle>
+          <CardTitle>Campaigns ({filteredCampaigns.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {campaigns.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No campaigns added yet. Add your first campaign above.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {campaigns.map((campaign) => (
-                <div key={campaign.id} className="border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold">{campaign.campaignName}</h3>
-                      <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteCampaign(campaign.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">{campaign.campaignType}</Badge>
-                    <Badge variant="outline">{campaign.owner}</Badge>
-                    <Badge variant="outline">{campaign.region}</Badge>
-                    <Badge variant="outline">{campaign.quarterMonth}</Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <div className="font-medium">Forecasted Cost</div>
-                      <div className="text-muted-foreground">${campaign.forecastedCost.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Expected Leads</div>
-                      <div className="text-muted-foreground">{campaign.expectedLeads}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium">MQLs</div>
-                      <div className="text-muted-foreground">{campaign.mql}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Pipeline Forecast</div>
-                      <div className="text-muted-foreground">${campaign.pipelineForecast.toLocaleString()}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">
+                    <input
+                      type="checkbox"
+                      checked={selectedCampaigns.size === filteredCampaigns.length && filteredCampaigns.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCampaigns(new Set(filteredCampaigns.map(c => c.id)));
+                        } else {
+                          setSelectedCampaigns(new Set());
+                        }
+                      }}
+                    />
+                  </TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Campaign Type</TableHead>
+                  <TableHead>Strategic Pillar</TableHead>
+                  <TableHead>Revenue Play</TableHead>
+                  <TableHead>FY</TableHead>
+                  <TableHead>Quarter/Month</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Country</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Forecasted Cost</TableHead>
+                  <TableHead>Expected Leads</TableHead>
+                  <TableHead>MQL</TableHead>
+                  <TableHead>SQL</TableHead>
+                  <TableHead>Opportunities</TableHead>
+                  <TableHead>Pipeline Forecast</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCampaigns.map((campaign) => (
+                  <TableRow key={campaign.id}>
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={selectedCampaigns.has(campaign.id)}
+                        onChange={() => toggleCampaignSelection(campaign.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        value={campaign.description}
+                        onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
+                        placeholder="Campaign description"
+                        className="min-w-[200px]"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={campaign.campaignType}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}
+                      >
+                        <SelectTrigger className="min-w-[150px]">
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {campaignTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <div className="min-w-[150px]">
+                        {strategicPillars.map(pillar => (
+                          <label key={pillar} className="flex items-center space-x-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={campaign.strategicPillar.includes(pillar)}
+                              onChange={(e) => {
+                                const newPillars = e.target.checked
+                                  ? [...campaign.strategicPillar, pillar]
+                                  : campaign.strategicPillar.filter(p => p !== pillar);
+                                updateCampaign(campaign.id, 'strategicPillar', newPillars);
+                              }}
+                            />
+                            <span>{pillar}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={campaign.revenuePlay}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'revenuePlay', value)}
+                      >
+                        <SelectTrigger className="min-w-[150px]">
+                          <SelectValue placeholder="Select revenue play" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {revenuePlays.map(play => (
+                            <SelectItem key={play} value={play}>{play}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={campaign.fy}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'fy', value)}
+                      >
+                        <SelectTrigger className="min-w-[80px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {fiscalYears.map(fy => (
+                            <SelectItem key={fy} value={fy}>{fy}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={campaign.quarterMonth}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'quarterMonth', value)}
+                      >
+                        <SelectTrigger className="min-w-[120px]">
+                          <SelectValue placeholder="Select quarter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {quarters.map(quarter => (
+                            <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={campaign.region}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'region', value)}
+                      >
+                        <SelectTrigger className="min-w-[120px]">
+                          <SelectValue placeholder="Select region" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {regions.map(region => (
+                            <SelectItem key={region} value={region}>{region}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={campaign.country}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'country', value)}
+                      >
+                        <SelectTrigger className="min-w-[120px]">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countries.map(country => (
+                            <SelectItem key={country} value={country}>{country}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={campaign.owner}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'owner', value)}
+                      >
+                        <SelectTrigger className="min-w-[120px]">
+                          <SelectValue placeholder="Select owner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {owners.map(owner => (
+                            <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={campaign.forecastedCost}
+                        onChange={(e) => updateCampaign(campaign.id, 'forecastedCost', Number(e.target.value))}
+                        placeholder="0"
+                        className="min-w-[100px]"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={campaign.expectedLeads}
+                        onChange={(e) => updateCampaign(campaign.id, 'expectedLeads', Number(e.target.value))}
+                        placeholder="0"
+                        className="min-w-[100px]"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{campaign.mql}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{campaign.sql}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{campaign.opportunities}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        ${campaign.pipelineForecast.toLocaleString()}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FilterX } from "@phosphor-icons/react";
-import { toast } from "sonner";
 
 interface Campaign {
   id: string;
-  campaignName: string;
+  description: string;
   campaignType: string;
   strategicPillar: string[];
   revenuePlay: string;
@@ -19,7 +18,6 @@ interface Campaign {
   region: string;
   country: string;
   owner: string;
-  description: string;
   forecastedCost: number;
   expectedLeads: number;
   status?: string;
@@ -28,77 +26,64 @@ interface Campaign {
   issueLink?: string;
   actualCost?: number;
   actualLeads?: number;
-  actualMqls?: number;
+  actualMQLs?: number;
 }
 
 interface ExecutionTrackingProps {
   campaigns: Campaign[];
-  setCampaigns: React.Dispatch<React.SetStateAction<Campaign[]>>;
+  setCampaigns: (campaigns: Campaign[]) => void;
 }
 
 export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTrackingProps) {
-  const [filters, setFilters] = useState({
-    region: '',
-    owner: '',
-    quarter: '',
-    status: ''
-  });
+  const [regionFilter, setRegionFilter] = useState<string>('all');
+  const [ownerFilter, setOwnerFilter] = useState<string>('all');
+  const [quarterFilter, setQuarterFilter] = useState<string>('all');
 
-  const statuses = ["Planning", "On Track", "Shipped", "Cancelled"];
-  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
   const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
+  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
   const quarters = [
     "Q1 - July", "Q1 - August", "Q1 - September",
-    "Q2 - October", "Q2 - November", "Q2 - December", 
+    "Q2 - October", "Q2 - November", "Q2 - December",
     "Q3 - January", "Q3 - February", "Q3 - March",
     "Q4 - April", "Q4 - May", "Q4 - June"
   ];
+  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
 
-  // Filter campaigns based on selected filters
-  const filteredCampaigns = campaigns.filter(campaign => {
-    return (
-      (!filters.region || campaign.region === filters.region) &&
-      (!filters.owner || campaign.owner === filters.owner) &&
-      (!filters.quarter || campaign.quarterMonth === filters.quarter) &&
-      (!filters.status || campaign.status === filters.status)
-    );
-  });
+  // Filter campaigns
+  const filteredCampaigns = useMemo(() => {
+    return campaigns.filter(campaign => {
+      if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
+      if (ownerFilter !== 'all' && campaign.owner !== ownerFilter) return false;
+      if (quarterFilter !== 'all' && campaign.quarterMonth !== quarterFilter) return false;
+      return true;
+    });
+  }, [campaigns, regionFilter, ownerFilter, quarterFilter]);
 
-  const updateCampaign = (campaignId: string, field: string, value: any) => {
-    setCampaigns(prev => prev.map(campaign => 
-      campaign.id === campaignId 
-        ? { ...campaign, [field]: value }
-        : campaign
+  // Update campaign execution data
+  const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
+    setCampaigns(campaigns.map(campaign => 
+      campaign.id === id ? { ...campaign, [field]: value } : campaign
     ));
-    toast.success("Campaign updated");
   };
 
   const clearFilters = () => {
-    setFilters({
-      region: '',
-      owner: '',
-      quarter: '',
-      status: ''
-    });
+    setRegionFilter('all');
+    setOwnerFilter('all');
+    setQuarterFilter('all');
   };
 
-  const getStatusBadge = (status?: string) => {
-    switch (status) {
-      case "Planning":
-        return <Badge variant="secondary">Planning</Badge>;
-      case "On Track":
-        return <Badge className="bg-green-100 text-green-800">On Track</Badge>;
-      case "Shipped":
-        return <Badge className="bg-blue-100 text-blue-800">Shipped</Badge>;
-      case "Cancelled":
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">Not Set</Badge>;
-    }
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      'Planning': 'secondary',
+      'On Track': 'default',
+      'Shipped': 'default',
+      'Cancelled': 'destructive'
+    };
+    return variants[status as keyof typeof variants] || 'secondary';
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -106,29 +91,29 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label>Region</Label>
-              <Select value={filters.region} onValueChange={(value) => setFilters(prev => ({ ...prev, region: value }))}>
+            <div>
+              <label className="text-sm font-medium">Region</label>
+              <Select value={regionFilter} onValueChange={setRegionFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Regions" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label>Owner</Label>
-              <Select value={filters.owner} onValueChange={(value) => setFilters(prev => ({ ...prev, owner: value }))}>
+            
+            <div>
+              <label className="text-sm font-medium">Owner</label>
+              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Owners" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Owners</SelectItem>
+                  <SelectItem value="all">All Owners</SelectItem>
                   {owners.map(owner => (
                     <SelectItem key={owner} value={owner}>{owner}</SelectItem>
                   ))}
@@ -136,14 +121,14 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Quarter</Label>
-              <Select value={filters.quarter} onValueChange={(value) => setFilters(prev => ({ ...prev, quarter: value }))}>
+            <div>
+              <label className="text-sm font-medium">Quarter</label>
+              <Select value={quarterFilter} onValueChange={setQuarterFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Quarters" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Quarters</SelectItem>
+                  <SelectItem value="all">All Quarters</SelectItem>
                   {quarters.map(quarter => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
@@ -151,12 +136,8 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
               </Select>
             </div>
 
-            <div className="space-y-2 flex items-end">
-              <Button 
-                variant="outline" 
-                onClick={clearFilters}
-                className="flex items-center gap-2 w-full"
-              >
+            <div className="flex items-end">
+              <Button onClick={clearFilters} variant="outline" className="flex items-center gap-2">
                 <FilterX className="h-4 w-4" />
                 Clear Filters
               </Button>
@@ -168,126 +149,113 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
       {/* Execution Tracking Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Execution Tracking ({filteredCampaigns.length} campaigns)</CardTitle>
+          <CardTitle>Campaign Execution Tracking ({filteredCampaigns.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredCampaigns.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No campaigns match the selected filters.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredCampaigns.map((campaign) => (
-                <div key={campaign.id} className="border rounded-lg p-4 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold">{campaign.campaignName}</h3>
-                      <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                      <div className="flex gap-2 mt-2">
-                        <Badge variant="outline">{campaign.owner}</Badge>
-                        <Badge variant="outline">{campaign.region}</Badge>
-                        <Badge variant="outline">{campaign.quarterMonth}</Badge>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Campaign Name</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>PO Raised?</TableHead>
+                  <TableHead>Issue Link</TableHead>
+                  <TableHead>Actual Cost</TableHead>
+                  <TableHead>Actual Leads</TableHead>
+                  <TableHead>Actual MQLs</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCampaigns.map((campaign) => (
+                  <TableRow key={campaign.id}>
+                    <TableCell className="max-w-xs">
+                      <div className="font-medium truncate" title={campaign.description}>
+                        {campaign.description || "Untitled Campaign"}
                       </div>
-                    </div>
-                    {getStatusBadge(campaign.status)}
-                  </div>
-
-                  {/* Execution Fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Status</Label>
-                      <Select 
-                        value={campaign.status || ''} 
+                      <div className="text-sm text-muted-foreground">
+                        {campaign.campaignType}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{campaign.region}</Badge>
+                    </TableCell>
+                    <TableCell>{campaign.owner}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={campaign.status || 'Planning'}
                         onValueChange={(value) => updateCampaign(campaign.id, 'status', value)}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {statuses.map(status => (
+                          {statusOptions.map(status => (
                             <SelectItem key={status} value={status}>{status}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>PO Raised?</Label>
-                      <Select 
-                        value={campaign.poRaised ? 'yes' : 'no'} 
-                        onValueChange={(value) => updateCampaign(campaign.id, 'poRaised', value === 'yes')}
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={campaign.poRaised ? 'Yes' : 'No'}
+                        onValueChange={(value) => updateCampaign(campaign.id, 'poRaised', value === 'Yes')}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
+                        <SelectTrigger className="w-[80px]">
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
+                          <SelectItem value="Yes">Yes</SelectItem>
+                          <SelectItem value="No">No</SelectItem>
                         </SelectContent>
                       </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Issue Link</Label>
+                    </TableCell>
+                    <TableCell>
                       <Input
+                        type="url"
                         value={campaign.issueLink || ''}
                         onChange={(e) => updateCampaign(campaign.id, 'issueLink', e.target.value)}
                         placeholder="https://..."
+                        className="min-w-[150px]"
                       />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Actual Cost ($)</Label>
+                    </TableCell>
+                    <TableCell>
                       <Input
                         type="number"
                         value={campaign.actualCost || ''}
-                        onChange={(e) => updateCampaign(campaign.id, 'actualCost', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updateCampaign(campaign.id, 'actualCost', Number(e.target.value))}
                         placeholder="0"
+                        className="min-w-[100px]"
                       />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Actual Leads</Label>
+                    </TableCell>
+                    <TableCell>
                       <Input
                         type="number"
                         value={campaign.actualLeads || ''}
-                        onChange={(e) => updateCampaign(campaign.id, 'actualLeads', parseInt(e.target.value) || 0)}
+                        onChange={(e) => updateCampaign(campaign.id, 'actualLeads', Number(e.target.value))}
                         placeholder="0"
+                        className="min-w-[100px]"
                       />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Actual MQLs</Label>
+                    </TableCell>
+                    <TableCell>
                       <Input
                         type="number"
-                        value={campaign.actualMqls || ''}
-                        onChange={(e) => updateCampaign(campaign.id, 'actualMqls', parseInt(e.target.value) || 0)}
+                        value={campaign.actualMQLs || ''}
+                        onChange={(e) => updateCampaign(campaign.id, 'actualMQLs', Number(e.target.value))}
                         placeholder="0"
+                        className="min-w-[100px]"
                       />
-                    </div>
-                  </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-                  {/* Performance Summary */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
-                    <div>
-                      <div className="text-sm font-medium">Forecasted Cost</div>
-                      <div className="text-sm text-muted-foreground">${campaign.forecastedCost.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Actual Cost</div>
-                      <div className="text-sm text-muted-foreground">${(campaign.actualCost || 0).toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Expected Leads</div>
-                      <div className="text-sm text-muted-foreground">{campaign.expectedLeads}</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Actual Leads</div>
-                      <div className="text-sm text-muted-foreground">{campaign.actualLeads || 0}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+          {filteredCampaigns.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No campaigns found matching the current filters.
             </div>
           )}
         </CardContent>

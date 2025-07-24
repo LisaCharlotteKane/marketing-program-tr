@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { FilterX } from "@phosphor-icons/react";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface Campaign {
   id: string;
-  campaignName: string;
+  description: string;
   campaignType: string;
   strategicPillar: string[];
   revenuePlay: string;
@@ -15,17 +15,15 @@ interface Campaign {
   region: string;
   country: string;
   owner: string;
-  description: string;
   forecastedCost: number;
   expectedLeads: number;
   mql: number;
   sql: number;
   opportunities: number;
   pipelineForecast: number;
-  status?: string;
   actualCost?: number;
   actualLeads?: number;
-  actualMqls?: number;
+  actualMQLs?: number;
 }
 
 interface ReportingDashboardProps {
@@ -33,97 +31,83 @@ interface ReportingDashboardProps {
 }
 
 export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
-  const [filters, setFilters] = useState({
-    region: '',
-    owner: '',
-    quarter: '',
-    campaignType: ''
-  });
+  const [regionFilter, setRegionFilter] = useState<string>('all');
+  const [ownerFilter, setOwnerFilter] = useState<string>('all');
+  const [quarterFilter, setQuarterFilter] = useState<string>('all');
 
-  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
   const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
+  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
   const quarters = [
     "Q1 - July", "Q1 - August", "Q1 - September",
-    "Q2 - October", "Q2 - November", "Q2 - December", 
+    "Q2 - October", "Q2 - November", "Q2 - December",
     "Q3 - January", "Q3 - February", "Q3 - March",
     "Q4 - April", "Q4 - May", "Q4 - June"
   ];
 
-  const campaignTypes = [
-    "In-Account Events (1:1)",
-    "Exec Engagement Programs", 
-    "CxO Events (1:Few)",
-    "Localized Events",
-    "Localized Programs",
-    "Lunch & Learns and Workshops (1:Few)",
-    "Microsoft",
-    "Partners",
-    "Webinars",
-    "3P Sponsored Events",
-    "Flagship Events (Galaxy, Universe Recaps) (1:Many)",
-    "Targeted Paid Ads & Content Syndication",
-    "User Groups",
-    "Contractor/Infrastructure"
-  ];
-
   // Filter campaigns
-  const filteredCampaigns = campaigns.filter(campaign => {
-    return (
-      (!filters.region || campaign.region === filters.region) &&
-      (!filters.owner || campaign.owner === filters.owner) &&
-      (!filters.quarter || campaign.quarterMonth === filters.quarter) &&
-      (!filters.campaignType || campaign.campaignType === filters.campaignType)
-    );
-  });
-
-  // Calculate totals
-  const totals = filteredCampaigns.reduce((acc, campaign) => {
-    acc.forecastedCost += campaign.forecastedCost || 0;
-    acc.actualCost += campaign.actualCost || 0;
-    acc.expectedLeads += campaign.expectedLeads || 0;
-    acc.actualLeads += campaign.actualLeads || 0;
-    acc.forecastedMqls += campaign.mql || 0;
-    acc.actualMqls += campaign.actualMqls || 0;
-    acc.pipelineForecast += campaign.pipelineForecast || 0;
-    return acc;
-  }, {
-    forecastedCost: 0,
-    actualCost: 0,
-    expectedLeads: 0,
-    actualLeads: 0,
-    forecastedMqls: 0,
-    actualMqls: 0,
-    pipelineForecast: 0
-  });
-
-  // Calculate metrics by region
-  const regionMetrics = regions.reduce((acc, region) => {
-    const regionCampaigns = filteredCampaigns.filter(c => c.region === region);
-    acc[region] = regionCampaigns.reduce((regionAcc, campaign) => {
-      regionAcc.forecastedCost += campaign.forecastedCost || 0;
-      regionAcc.actualCost += campaign.actualCost || 0;
-      regionAcc.expectedLeads += campaign.expectedLeads || 0;
-      regionAcc.actualLeads += campaign.actualLeads || 0;
-      regionAcc.pipelineForecast += campaign.pipelineForecast || 0;
-      return regionAcc;
-    }, {
-      forecastedCost: 0,
-      actualCost: 0,
-      expectedLeads: 0,
-      actualLeads: 0,
-      pipelineForecast: 0
+  const filteredCampaigns = useMemo(() => {
+    return campaigns.filter(campaign => {
+      if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
+      if (ownerFilter !== 'all' && campaign.owner !== ownerFilter) return false;
+      if (quarterFilter !== 'all' && campaign.quarterMonth !== quarterFilter) return false;
+      return true;
     });
-    return acc;
-  }, {} as Record<string, any>);
+  }, [campaigns, regionFilter, ownerFilter, quarterFilter]);
 
-  const clearFilters = () => {
-    setFilters({
-      region: '',
-      owner: '',
-      quarter: '',
-      campaignType: ''
+  // Calculate summary metrics
+  const summaryMetrics = useMemo(() => {
+    const totalForecastedCost = filteredCampaigns.reduce((sum, c) => sum + (c.forecastedCost || 0), 0);
+    const totalActualCost = filteredCampaigns.reduce((sum, c) => sum + (c.actualCost || 0), 0);
+    const totalForecastedLeads = filteredCampaigns.reduce((sum, c) => sum + (c.expectedLeads || 0), 0);
+    const totalActualLeads = filteredCampaigns.reduce((sum, c) => sum + (c.actualLeads || 0), 0);
+    const totalForecastedMQLs = filteredCampaigns.reduce((sum, c) => sum + (c.mql || 0), 0);
+    const totalActualMQLs = filteredCampaigns.reduce((sum, c) => sum + (c.actualMQLs || 0), 0);
+    const totalForecastedPipeline = filteredCampaigns.reduce((sum, c) => sum + (c.pipelineForecast || 0), 0);
+
+    return {
+      totalForecastedCost,
+      totalActualCost,
+      totalForecastedLeads,
+      totalActualLeads,
+      totalForecastedMQLs,
+      totalActualMQLs,
+      totalForecastedPipeline
+    };
+  }, [filteredCampaigns]);
+
+  // Regional performance data
+  const regionalData = useMemo(() => {
+    const regionMap = new Map();
+    
+    filteredCampaigns.forEach(campaign => {
+      const region = campaign.region;
+      if (!regionMap.has(region)) {
+        regionMap.set(region, {
+          region,
+          forecastedCost: 0,
+          actualCost: 0,
+          forecastedLeads: 0,
+          actualLeads: 0,
+          forecastedMQLs: 0,
+          actualMQLs: 0,
+          forecastedPipeline: 0,
+          campaignCount: 0
+        });
+      }
+      
+      const data = regionMap.get(region);
+      data.forecastedCost += campaign.forecastedCost || 0;
+      data.actualCost += campaign.actualCost || 0;
+      data.forecastedLeads += campaign.expectedLeads || 0;
+      data.actualLeads += campaign.actualLeads || 0;
+      data.forecastedMQLs += campaign.mql || 0;
+      data.actualMQLs += campaign.actualMQLs || 0;
+      data.forecastedPipeline += campaign.pipelineForecast || 0;
+      data.campaignCount += 1;
     });
-  };
+    
+    return Array.from(regionMap.values());
+  }, [filteredCampaigns]);
 
   return (
     <div className="space-y-6">
@@ -133,28 +117,30 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Select value={filters.region} onValueChange={(value) => setFilters(prev => ({ ...prev, region: value }))}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium">Region</label>
+              <Select value={regionFilter} onValueChange={setRegionFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Regions" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Select value={filters.owner} onValueChange={(value) => setFilters(prev => ({ ...prev, owner: value }))}>
+            
+            <div>
+              <label className="text-sm font-medium">Owner</label>
+              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Owners" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Owners</SelectItem>
+                  <SelectItem value="all">All Owners</SelectItem>
                   {owners.map(owner => (
                     <SelectItem key={owner} value={owner}>{owner}</SelectItem>
                   ))}
@@ -162,73 +148,66 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Select value={filters.quarter} onValueChange={(value) => setFilters(prev => ({ ...prev, quarter: value }))}>
+            <div>
+              <label className="text-sm font-medium">Quarter</label>
+              <Select value={quarterFilter} onValueChange={setQuarterFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Quarters" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Quarters</SelectItem>
+                  <SelectItem value="all">All Quarters</SelectItem>
                   {quarters.map(quarter => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Button 
-                variant="outline" 
-                onClick={clearFilters}
-                className="flex items-center gap-2 w-full"
-              >
-                <FilterX className="h-4 w-4" />
-                Clear Filters
-              </Button>
-            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Summary Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Forecasted Spend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totals.forecastedCost.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Actual Spend</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totals.actualCost.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Pipeline Forecast</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totals.pipelineForecast.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Campaign ROI</CardTitle>
+          <CardHeader>
+            <CardTitle className="text-sm">Forecasted Spend</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {totals.forecastedCost > 0 
-                ? `${Math.round((totals.pipelineForecast / totals.forecastedCost) * 100)}%`
-                : '0%'
-              }
+              ${summaryMetrics.totalForecastedCost.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Actual Spend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${summaryMetrics.totalActualCost.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Forecasted Pipeline</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${summaryMetrics.totalForecastedPipeline.toLocaleString()}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Campaign Count</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {filteredCampaigns.length}
             </div>
           </CardContent>
         </Card>
@@ -240,94 +219,92 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
           <CardTitle>Regional Performance</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {regions.map(region => {
-              const metrics = regionMetrics[region];
-              if (!metrics || metrics.forecastedCost === 0) return null;
-              
-              return (
-                <div key={region} className="border rounded-lg p-4">
-                  <h3 className="font-semibold mb-3">{region}</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <div className="font-medium">Forecasted Cost</div>
-                      <div className="text-muted-foreground">${metrics.forecastedCost.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Actual Cost</div>
-                      <div className="text-muted-foreground">${metrics.actualCost.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Expected Leads</div>
-                      <div className="text-muted-foreground">{metrics.expectedLeads.toLocaleString()}</div>
-                    </div>
-                    <div>
-                      <div className="font-medium">Pipeline Forecast</div>
-                      <div className="text-muted-foreground">${metrics.pipelineForecast.toLocaleString()}</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Campaigns</TableHead>
+                  <TableHead>Forecasted Cost</TableHead>
+                  <TableHead>Actual Cost</TableHead>
+                  <TableHead>Forecasted Leads</TableHead>
+                  <TableHead>Actual Leads</TableHead>
+                  <TableHead>Forecasted MQLs</TableHead>
+                  <TableHead>Actual MQLs</TableHead>
+                  <TableHead>Forecasted Pipeline</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {regionalData.map((region) => (
+                  <TableRow key={region.region}>
+                    <TableCell>
+                      <Badge variant="outline">{region.region}</Badge>
+                    </TableCell>
+                    <TableCell>{region.campaignCount}</TableCell>
+                    <TableCell>${region.forecastedCost.toLocaleString()}</TableCell>
+                    <TableCell>${region.actualCost.toLocaleString()}</TableCell>
+                    <TableCell>{region.forecastedLeads.toLocaleString()}</TableCell>
+                    <TableCell>{region.actualLeads.toLocaleString()}</TableCell>
+                    <TableCell>{region.forecastedMQLs.toLocaleString()}</TableCell>
+                    <TableCell>{region.actualMQLs.toLocaleString()}</TableCell>
+                    <TableCell>${region.forecastedPipeline.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Campaign Performance: Forecasted */}
+      {/* Campaign Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Campaign Performance: Forecasted</CardTitle>
+          <CardTitle>Campaign Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-primary">{totals.expectedLeads.toLocaleString()}</div>
-              <div className="text-muted-foreground">Forecasted Leads</div>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-primary">{totals.forecastedMqls.toLocaleString()}</div>
-              <div className="text-muted-foreground">Forecasted MQLs</div>
-            </div>
-            <div className="text-center p-4 border rounded-lg">
-              <div className="text-2xl font-bold text-primary">${totals.pipelineForecast.toLocaleString()}</div>
-              <div className="text-muted-foreground">Forecasted Pipeline</div>
-            </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Campaign</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Forecasted Cost</TableHead>
+                  <TableHead>Actual Cost</TableHead>
+                  <TableHead>Forecasted Leads</TableHead>
+                  <TableHead>Actual Leads</TableHead>
+                  <TableHead>Pipeline Forecast</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCampaigns.map((campaign) => (
+                  <TableRow key={campaign.id}>
+                    <TableCell className="max-w-xs">
+                      <div className="font-medium truncate" title={campaign.description}>
+                        {campaign.description || "Untitled Campaign"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {campaign.campaignType}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{campaign.region}</Badge>
+                    </TableCell>
+                    <TableCell>{campaign.owner}</TableCell>
+                    <TableCell>${(campaign.forecastedCost || 0).toLocaleString()}</TableCell>
+                    <TableCell>${(campaign.actualCost || 0).toLocaleString()}</TableCell>
+                    <TableCell>{(campaign.expectedLeads || 0).toLocaleString()}</TableCell>
+                    <TableCell>{(campaign.actualLeads || 0).toLocaleString()}</TableCell>
+                    <TableCell>${(campaign.pipelineForecast || 0).toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Filtered Campaigns Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Campaign Data ({filteredCampaigns.length} campaigns)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredCampaigns.length === 0 ? (
+          {filteredCampaigns.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              No campaigns match the selected filters.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredCampaigns.map((campaign) => (
-                <div key={campaign.id} className="border rounded-lg p-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h4 className="font-medium">{campaign.campaignName}</h4>
-                      <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                    </div>
-                    <div className="text-right text-sm">
-                      <div className="font-medium">${campaign.forecastedCost.toLocaleString()}</div>
-                      <div className="text-muted-foreground">Forecasted</div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-muted-foreground">
-                    <div>Owner: {campaign.owner}</div>
-                    <div>Region: {campaign.region}</div>
-                    <div>Quarter: {campaign.quarterMonth}</div>
-                    <div>Pipeline: ${campaign.pipelineForecast.toLocaleString()}</div>
-                  </div>
-                </div>
-              ))}
+              No campaigns found matching the current filters.
             </div>
           )}
         </CardContent>
