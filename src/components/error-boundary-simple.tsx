@@ -4,45 +4,35 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Warning, ArrowClockwise } from "@phosphor-icons/react";
 
-interface Props {
-  children: ReactNode;
-}
-
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
-  error?: Error;
+  error: Error | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  public state: State = {
-    hasError: false
-  };
+export class ErrorBoundary extends React.Component<
+  React.PropsWithChildren<{}>,
+  ErrorBoundaryState
+> {
+  constructor(props: React.PropsWithChildren<{}>) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
-  public static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('App Error:', error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
   }
 
-  private handleReset = () => {
-    // Clear potentially problematic data
-    try {
-      localStorage.removeItem('campaignData');
-      sessionStorage.clear();
-    } catch (error) {
-      console.warn('Could not clear storage:', error);
-    }
-    
-    // Reset error state
-    this.setState({ hasError: false, error: undefined });
-    
-    // Reload the page
+  handleReset = () => {
+    localStorage.clear();
+    sessionStorage.clear();
     window.location.reload();
   };
 
-  public render() {
+  render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -61,7 +51,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   This might be related to corrupted data or storage issues.
                 </AlertDescription>
               </Alert>
-              
+
               {this.state.error && (
                 <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
                   <strong>Error details:</strong><br />
@@ -78,7 +68,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   <ArrowClockwise className="h-4 w-4 mr-2" />
                   Reset App & Clear Data
                 </Button>
-                
+
                 <Button 
                   onClick={() => window.location.reload()} 
                   className="w-full"

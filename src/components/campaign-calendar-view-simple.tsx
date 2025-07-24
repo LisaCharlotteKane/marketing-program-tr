@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { X } from "@phosphor-icons/react";
 
 interface Campaign {
   id: string;
-  campaignName: string;
+  description: string;
   campaignType: string;
   strategicPillar: string[];
   revenuePlay: string;
@@ -16,7 +16,6 @@ interface Campaign {
   region: string;
   country: string;
   owner: string;
-  description: string;
   forecastedCost: number;
   expectedLeads: number;
   status?: string;
@@ -26,130 +25,72 @@ interface CampaignCalendarViewProps {
   campaigns: Campaign[];
 }
 
+const REGION_COLORS = {
+  "JP & Korea": "bg-blue-100 text-blue-800 border-blue-200",
+  "South APAC": "bg-green-100 text-green-800 border-green-200",
+  "SAARC": "bg-orange-100 text-orange-800 border-orange-200",
+  "Digital": "bg-purple-100 text-purple-800 border-purple-200",
+  "X APAC English": "bg-cyan-100 text-cyan-800 border-cyan-200",
+  "X APAC Non English": "bg-pink-100 text-pink-800 border-pink-200"
+};
+
+const STATUS_COLORS = {
+  "Planning": "bg-gray-100 text-gray-800",
+  "On Track": "bg-green-100 text-green-800",
+  "Shipped": "bg-blue-100 text-blue-800",
+  "Cancelled": "bg-red-100 text-red-800"
+};
+
+const MONTHS = [
+  "July", "August", "September", "October", "November", "December",
+  "January", "February", "March", "April", "May", "June"
+];
+
 export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
-  const [filters, setFilters] = useState({
-    region: '',
-    owner: '',
-    campaignType: '',
-    revenuePlay: '',
-    status: ''
-  });
+  const [regionFilter, setRegionFilter] = useState<string>('all');
+  const [ownerFilter, setOwnerFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
   const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
-  const campaignTypes = [
-    "In-Account Events (1:1)",
-    "Exec Engagement Programs", 
-    "CxO Events (1:Few)",
-    "Localized Events",
-    "Localized Programs",
-    "Lunch & Learns and Workshops (1:Few)",
-    "Microsoft",
-    "Partners",
-    "Webinars",
-    "3P Sponsored Events",
-    "Flagship Events (Galaxy, Universe Recaps) (1:Many)",
-    "Targeted Paid Ads & Content Syndication",
-    "User Groups",
-    "Contractor/Infrastructure"
-  ];
-
-  const revenuePlays = [
-    "Accelerate developer productivity with Copilot in VS Code and GitHub",
-    "Secure all developer workloads with the power of AI",
-    "All"
-  ];
-
+  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
+  const types = [...new Set(campaigns.map(c => c.campaignType).filter(Boolean))];
   const statuses = ["Planning", "On Track", "Shipped", "Cancelled"];
 
-  // Fiscal year months mapping
-  const fiscalMonths = [
-    { month: "July", quarter: "Q1", order: 1 },
-    { month: "August", quarter: "Q1", order: 2 },
-    { month: "September", quarter: "Q1", order: 3 },
-    { month: "October", quarter: "Q2", order: 4 },
-    { month: "November", quarter: "Q2", order: 5 },
-    { month: "December", quarter: "Q2", order: 6 },
-    { month: "January", quarter: "Q3", order: 7 },
-    { month: "February", quarter: "Q3", order: 8 },
-    { month: "March", quarter: "Q3", order: 9 },
-    { month: "April", quarter: "Q4", order: 10 },
-    { month: "May", quarter: "Q4", order: 11 },
-    { month: "June", quarter: "Q4", order: 12 },
-  ];
-
-  // Filter campaigns (exclude Contractor/Infrastructure from calendar)
-  const filteredCampaigns = campaigns.filter(campaign => {
-    // Exclude contractor campaigns from calendar display
-    if (campaign.campaignType === "Contractor/Infrastructure" || 
-        campaign.campaignType === "Contractor") {
-      return false;
-    }
-
-    return (
-      (!filters.region || campaign.region === filters.region) &&
-      (!filters.owner || campaign.owner === filters.owner) &&
-      (!filters.campaignType || campaign.campaignType === filters.campaignType) &&
-      (!filters.revenuePlay || campaign.revenuePlay === filters.revenuePlay) &&
-      (!filters.status || campaign.status === filters.status)
-    );
-  });
-
-  // Parse quarter-month to extract month
   const getMonthFromQuarter = (quarterMonth: string): string => {
     if (!quarterMonth) return '';
-    const parts = quarterMonth.split(' - ');
-    return parts.length > 1 ? parts[1] : '';
+    const match = quarterMonth.match(/- (.+)$/);
+    return match ? match[1] : '';
   };
 
-  // Group campaigns by month
-  const campaignsByMonth = fiscalMonths.reduce((acc, { month }) => {
-    acc[month] = filteredCampaigns.filter(campaign => 
-      getMonthFromQuarter(campaign.quarterMonth) === month
-    );
-    return acc;
-  }, {} as Record<string, Campaign[]>);
+  const filteredCampaigns = useMemo(() => {
+    return campaigns.filter(campaign => {
+      if (campaign.campaignType === "Contractor/Infrastructure" || campaign.campaignType === "Contractor") return false;
+      if (regionFilter !== 'all' && campaign.region !== regionFilter) return false;
+      if (ownerFilter !== 'all' && campaign.owner !== ownerFilter) return false;
+      if (typeFilter !== 'all' && campaign.campaignType !== typeFilter) return false;
+      if (statusFilter !== 'all' && (campaign.status || 'Planning') !== statusFilter) return false;
+      return true;
+    });
+  }, [campaigns, regionFilter, ownerFilter, typeFilter, statusFilter]);
 
-  // Get region color
-  const getRegionColor = (region: string) => {
-    switch (region) {
-      case "JP & Korea":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "South APAC":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "SAARC":
-        return "bg-orange-100 text-orange-800 border-orange-200";
-      case "Digital":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  // Get status color
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case "Planning":
-        return "bg-gray-100 text-gray-800";
-      case "On Track":
-        return "bg-green-100 text-green-800";
-      case "Shipped":
-        return "bg-blue-100 text-blue-800";
-      case "Cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const campaignsByMonth = useMemo(() => {
+    const monthMap = new Map<string, Campaign[]>();
+    MONTHS.forEach(month => monthMap.set(month, []));
+    filteredCampaigns.forEach(campaign => {
+      const month = getMonthFromQuarter(campaign.quarterMonth);
+      if (month && monthMap.has(month)) {
+        monthMap.get(month)!.push(campaign);
+      }
+    });
+    return monthMap;
+  }, [filteredCampaigns]);
 
   const clearFilters = () => {
-    setFilters({
-      region: '',
-      owner: '',
-      campaignType: '',
-      revenuePlay: '',
-      status: ''
-    });
+    setRegionFilter('all');
+    setOwnerFilter('all');
+    setTypeFilter('all');
+    setStatusFilter('all');
   };
 
   return (
@@ -160,75 +101,77 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Select value={filters.region} onValueChange={(value) => setFilters(prev => ({ ...prev, region: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Regions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Regions</SelectItem>
-                {regions.map(region => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label className="text-sm font-medium">Region</label>
+              <Select value={regionFilter} onValueChange={setRegionFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  {regions.map(region => (
+                    <SelectItem key={region} value={region}>{region}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={filters.owner} onValueChange={(value) => setFilters(prev => ({ ...prev, owner: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Owners" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Owners</SelectItem>
-                {owners.map(owner => (
-                  <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div>
+              <label className="text-sm font-medium">Owner</label>
+              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Owners</SelectItem>
+                  {owners.map(owner => (
+                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={filters.campaignType} onValueChange={(value) => setFilters(prev => ({ ...prev, campaignType: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Types</SelectItem>
-                {campaignTypes.map(type => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div>
+              <label className="text-sm font-medium">Type</label>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {types.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={filters.revenuePlay} onValueChange={(value) => setFilters(prev => ({ ...prev, revenuePlay: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Revenue Plays" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Revenue Plays</SelectItem>
-                {revenuePlays.map(play => (
-                  <SelectItem key={play} value={play}>{play}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div>
+              <label className="text-sm font-medium">Status</label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {statuses.map(status => (
+                    <SelectItem key={status} value={status}>{status}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
-                {statuses.map(status => (
-                  <SelectItem key={status} value={status}>{status}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Button 
-              variant="outline" 
-              onClick={clearFilters}
-              className="flex items-center gap-2"
-            >
-              <X className="h-4 w-4" />
-              Clear
-            </Button>
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                onClick={clearFilters}
+                className="flex items-center gap-2 w-full"
+              >
+                <X className="h-4 w-4" />
+                Clear Filters
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -240,10 +183,10 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {regions.map(region => (
-              <Badge key={region} className={getRegionColor(region)}>
+            {Object.entries(REGION_COLORS).map(([region, colorClass]) => (
+              <div key={region} className={`px-3 py-1 rounded-md border text-sm ${colorClass}`}>
                 {region}
-              </Badge>
+              </div>
             ))}
           </div>
         </CardContent>
@@ -251,87 +194,63 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
 
       {/* Calendar Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {fiscalMonths.map(({ month, quarter }) => (
-          <Card key={month} className="h-fit">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">
-                {month}
-                <span className="text-sm font-normal text-muted-foreground ml-2">
-                  {quarter}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {campaignsByMonth[month].length === 0 ? (
-                <div className="text-sm text-muted-foreground text-center py-4">
-                  No campaigns
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {campaignsByMonth[month].map((campaign) => (
-                    <div
-                      key={campaign.id}
-                      className={`p-3 rounded-lg border text-sm ${getRegionColor(campaign.region)}`}
-                    >
-                      <div className="font-medium mb-1 line-clamp-2">
-                        {campaign.description || campaign.campaignName}
-                      </div>
-                      <div className="text-xs space-y-1">
-                        <div>
-                          <span className="font-medium">Country:</span> {campaign.country}
-                        </div>
-                        <div>
-                          <span className="font-medium">Owner:</span> {campaign.owner}
-                        </div>
-                        {campaign.status && (
-                          <div className="mt-2">
-                            <Badge size="sm" className={getStatusColor(campaign.status)}>
-                              {campaign.status}
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        {MONTHS.map(month => {
+          const monthCampaigns = campaignsByMonth.get(month) || [];
 
-      {/* Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Calendar Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="text-center">
-              <div className="text-2xl font-bold">{filteredCampaigns.length}</div>
-              <div className="text-muted-foreground">Total Campaigns</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">
-                {Object.values(campaignsByMonth).filter(campaigns => campaigns.length > 0).length}
-              </div>
-              <div className="text-muted-foreground">Active Months</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">
-                ${filteredCampaigns.reduce((sum, c) => sum + (c.forecastedCost || 0), 0).toLocaleString()}
-              </div>
-              <div className="text-muted-foreground">Total Budget</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold">
-                {filteredCampaigns.reduce((sum, c) => sum + (c.expectedLeads || 0), 0).toLocaleString()}
-              </div>
-              <div className="text-muted-foreground">Total Leads</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          return (
+            <Card key={month} className="min-h-[300px]">
+              <CardHeader>
+                <CardTitle className="text-lg">{month}</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  {monthCampaigns.length} campaign(s)
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {monthCampaigns.map(campaign => {
+                    const regionColor = REGION_COLORS[campaign.region as keyof typeof REGION_COLORS] || "bg-gray-100 text-gray-800 border-gray-200";
+                    const statusColor = STATUS_COLORS[(campaign.status || 'Planning') as keyof typeof STATUS_COLORS] || "bg-gray-100 text-gray-800";
+
+                    return (
+                      <div
+                        key={campaign.id}
+                        className={`p-3 rounded-lg border ${regionColor} space-y-2`}
+                      >
+                        <div className="font-medium text-sm leading-tight">
+                          {campaign.description || "Untitled Campaign"}
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="text-xs opacity-80">{campaign.country}</div>
+                          <div className="text-xs font-medium">{campaign.owner}</div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs ${statusColor}`}
+                          >
+                            {campaign.status || 'Planning'}
+                          </Badge>
+                          <div className="text-xs font-medium">
+                            ${(campaign.forecastedCost || 0).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {monthCampaigns.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                      No campaigns scheduled
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
