@@ -116,8 +116,8 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
 
   // Add new campaign
   const addCampaign = () => {
-    if (!newCampaign.description || !newCampaign.campaignType || !newCampaign.owner) {
-      toast.error("Please fill in required fields");
+    if (!newCampaign.campaignType || !newCampaign.owner) {
+      toast.error("Please fill in required fields: Campaign Type and Owner");
       return;
     }
 
@@ -125,7 +125,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
     
     const campaign: Campaign = {
       id: Date.now().toString(),
-      description: newCampaign.description || "",
+      description: newCampaign.description || `${newCampaign.campaignType} Campaign`,
       campaignType: newCampaign.campaignType || "",
       strategicPillar: newCampaign.strategicPillar || [],
       revenuePlay: newCampaign.revenuePlay || "",
@@ -279,12 +279,12 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="description">Campaign Description *</Label>
+              <Label htmlFor="description">Campaign Description</Label>
               <Input
                 id="description"
                 value={newCampaign.description || ""}
                 onChange={(e) => setNewCampaign(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter campaign description"
+                placeholder="Enter campaign description (optional)"
               />
             </div>
 
