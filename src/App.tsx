@@ -3,8 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Calculator, ChartBarHorizontal, Target, Calendar, Buildings, Gear } from "@phosphor-icons/react";
+import { Calculator, ChartBarHorizontal, Target, Calendar, Buildings, Gear, Warning } from "@phosphor-icons/react";
 import { CampaignTable } from "@/components/campaign-table";
 import { ExecutionTracking } from "@/components/execution-tracking";
 import { ReportingDashboard } from "@/components/reporting-dashboard";
@@ -21,10 +22,29 @@ export default function App() {
   
   // Local state for UI management
   const [isLoading, setIsLoading] = useState(true);
+  const [storageWarning, setStorageWarning] = useState(false);
   
   useEffect(() => {
     // Simple initialization - localStorage handles persistence
     setIsLoading(false);
+    
+    // Check storage size on load
+    const checkStorageSize = () => {
+      try {
+        let totalSize = 0;
+        for (let key in localStorage) {
+          if (localStorage.hasOwnProperty(key)) {
+            totalSize += new Blob([localStorage[key]]).size;
+          }
+        }
+        // Warn if storage is over 4MB
+        setStorageWarning(totalSize > 4 * 1024 * 1024);
+      } catch (error) {
+        console.warn('Could not check storage size:', error);
+      }
+    };
+    
+    checkStorageSize();
   }, []);
 
   return (
@@ -34,6 +54,18 @@ export default function App() {
 
         <header className="border-b shadow-sm bg-card">
           <div className="container mx-auto p-4">
+            {storageWarning && (
+              <Alert variant="destructive" className="mb-4">
+                <Warning className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Storage Warning:</strong> Your browser storage is large and may cause deployment issues. 
+                  <Button variant="link" size="sm" className="ml-2 p-0 h-auto text-destructive underline">
+                    Open Settings to clear storage
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+            
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -51,6 +83,11 @@ export default function App() {
                 <div className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full border border-blue-200">
                   ✓ Local Storage
                 </div>
+                {storageWarning && (
+                  <div className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded-full border border-red-200">
+                    ⚠ Storage Full
+                  </div>
+                )}
 
                 <Dialog>
                   <DialogTrigger asChild>
@@ -59,7 +96,7 @@ export default function App() {
                       <span className="hidden sm:inline">Settings</span>
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
+                  <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>App Settings & Storage Management</DialogTitle>
                     </DialogHeader>
