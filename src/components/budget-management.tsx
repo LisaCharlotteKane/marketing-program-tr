@@ -67,8 +67,8 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
   });
 
   const clearFilters = () => {
-    setRegionFilter("");
-    setQuarterFilter("");
+    setRegionFilter("all");
+    setQuarterFilter("all");
   };
 
   return (

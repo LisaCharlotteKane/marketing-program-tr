@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Calculator, ChartBarHorizontal, Target, Calendar, Buildings, Gear, Warning } from "@phosphor-icons/react";
+import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning } from "@phosphor-icons/react";
 import { CampaignTable } from "@/components/campaign-table";
 import { ExecutionTracking } from "@/components/execution-tracking";
 import { ReportingDashboard } from "@/components/reporting-dashboard";
@@ -128,7 +128,7 @@ export default function App() {
                 Calendar
               </TabsTrigger>
               <TabsTrigger value="budget" className="flex items-center gap-2">
-                <Buildings className="h-4 w-4" />
+                <BuildingOffice className="h-4 w-4" />
                 Budget
               </TabsTrigger>
             </TabsList>

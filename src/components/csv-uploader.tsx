@@ -20,9 +20,9 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
   // Required fields to validate in CSV
   const requiredFields = [
     "Campaign Type", 
-    "Strategic Pillars", 
+    "Strategic Pillar", 
     "Revenue Play", 
-    "Fiscal Year", 
+    "FY", 
     "Quarter/Month", 
     "Region", 
     "Country", 
@@ -33,27 +33,26 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
   const headerMap: Record<string, keyof Campaign> = {
     "Campaign Name": "campaignName",
     "Campaign Type": "campaignType",
-    "Strategic Pillars": "strategicPillars",
+    "Strategic Pillar": "strategicPillar",
     "Revenue Play": "revenuePlay",
-    "Fiscal Year": "fiscalYear",
+    "FY": "fy",
     "Quarter/Month": "quarterMonth",
     "Region": "region",
     "Country": "country",
-    "Impacted Regions": "impactedRegions",
     "Owner": "owner",
     "Description": "description",
     "Forecasted Cost": "forecastedCost",
-    "Forecasted Leads": "expectedLeads"
+    "Expected Leads": "expectedLeads"
   };
 
   // Generate template CSV for download
   const generateTemplateCSV = () => {
     try {
       // Create template CSV content
-      const csvContent = `Campaign Name,Campaign Type,Strategic Pillars,Revenue Play,Fiscal Year,Quarter/Month,Region,Country,Owner,Description,Forecasted Cost,Forecasted Leads,Impacted Regions
-Q1 Enterprise Workshop,In-Account Events (1:1),"Account Growth and Product Adoption,Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY24,Q2 - November,JP & Korea,Japan,Tomoko Tanaka,Enterprise customer workshop,15000,50,"South APAC,SAARC"
-Developer Meetup,Localized Events,Brand Awareness & Top of Funnel Demand Generation,Secure all developer workloads with the power of AI,FY24,Q3 - January,SAARC,India,Shruti Narang,Developer community meetup,8000,100,
-Cross-region Webinar,Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital Motions,X Apac,Giorgia Parham,Cross-regional webinar series,5000,150,"JP & Korea,South APAC,SAARC"`;
+      const csvContent = `Campaign Name,Campaign Type,Strategic Pillar,Revenue Play,FY,Quarter/Month,Region,Country,Owner,Description,Forecasted Cost,Expected Leads
+Q1 Enterprise Workshop,In-Account Events (1:1),"Account Growth and Product Adoption,Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY26,Q2 - November,JP & Korea,Japan,Tomoko Tanaka,Enterprise customer workshop,15000,50
+Developer Meetup,Localized Events,Brand Awareness & Top of Funnel Demand Generation,Secure all developer workloads with the power of AI,FY26,Q3 - January,SAARC,India,Shruti Narang,Developer community meetup,8000,100
+Cross-region Webinar,Webinars,New Logo Acquisition,All,FY26,Q4 - April,Digital,X APAC,Giorgia Parham,Cross-regional webinar series,5000,150`;
 
       // Create blob and download link
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -138,26 +137,26 @@ Cross-region Webinar,Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital M
               const campaign: Campaign = {
                 id: Math.random().toString(36).substring(2, 9),
                 campaignName: "",
+                description: "",
                 campaignType: "",
-                strategicPillars: [],
+                strategicPillar: [],
                 revenuePlay: "",
-                fiscalYear: "",
+                fy: "",
                 quarterMonth: "",
                 region: "",
                 country: "",
                 owner: "",
-                description: "",
-                forecastedCost: "",
-                expectedLeads: "",
-                impactedRegions: [],
+                forecastedCost: 0,
+                expectedLeads: 0,
                 // Initialize execution tracking fields
                 status: "Planning",
                 poRaised: false,
                 campaignCode: "",
+                salesforceCampaignCode: "",
                 issueLink: "",
-                actualCost: "",
-                actualLeads: "",
-                actualMQLs: "",
+                actualCost: 0,
+                actualLeads: 0,
+                actualMQLs: 0,
                 // Initialize calculated fields
                 mql: 0,
                 sql: 0,
@@ -169,16 +168,17 @@ Cross-region Webinar,Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital M
               Object.entries(headerMap).forEach(([csvHeader, campaignField]) => {
                 if (row[csvHeader] !== undefined) {
                   // Handle special field types
-                  if (campaignField === "strategicPillars" || campaignField === "impactedRegions") {
+                  if (campaignField === "strategicPillar") {
                     // Parse comma-separated values into arrays
                     campaign[campaignField] = row[csvHeader]
                       ? row[csvHeader].split(",").map((item: string) => item.trim())
                       : [];
                   } 
                   else if (campaignField === "forecastedCost" || campaignField === "expectedLeads") {
-                    // Parse numeric values
-                    const numValue = parseFloat(row[csvHeader]);
-                    campaign[campaignField] = !isNaN(numValue) ? numValue : "";
+                    // Parse numeric values, removing any currency symbols and commas
+                    const cleanValue = row[csvHeader].toString().replace(/[$,]/g, '');
+                    const numValue = parseFloat(cleanValue);
+                    campaign[campaignField] = !isNaN(numValue) ? numValue : 0;
                   } 
                   else {
                     // Handle string values
@@ -216,7 +216,7 @@ Cross-region Webinar,Webinars,New Logo Acquisition,All,FY24,Q4 - April,Digital M
                 errors.push(`Row ${index + 2}: Missing values for ${missingFields.join(", ")}`);
               } else {
                 // Validate region
-                const validRegions = ["JP & Korea", "South APAC", "SAARC", "Digital Motions", "X APAC Non English", "X APAC English"];
+                const validRegions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC Non English", "X APAC English"];
                 if (!validRegions.includes(campaign.region)) {
                   errors.push(`Row ${index + 2}: Invalid region "${campaign.region}".`);
                 } else {
