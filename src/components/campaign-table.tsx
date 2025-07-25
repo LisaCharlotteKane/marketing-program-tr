@@ -8,9 +8,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash, Calculator } from "@phosphor-icons/react";
+import { Plus, Trash, Calculator, FilterX } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Campaign, CampaignTableProps } from "@/types/campaign";
+import { CSVUploader } from "@/components/csv-uploader";
 
 export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
   // Ensure campaigns is always an array
@@ -244,10 +245,29 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                 }}
                 className="w-full"
               >
+                <FilterX className="h-4 w-4 mr-2" />
                 Clear Filters
               </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* CSV Upload */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bulk Import</CardTitle>
+          <CardDescription>
+            Upload a CSV file to import multiple campaigns at once
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <CSVUploader 
+            onCampaignsImported={(newCampaigns) => {
+              setCampaigns([...safeCampaigns, ...newCampaigns]);
+              toast.success(`Imported ${newCampaigns.length} campaigns successfully`);
+            }}
+          />
         </CardContent>
       </Card>
 

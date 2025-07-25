@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Toaster } from "sonner";
-import { Calculator, ChartBarHorizontal, Target, Calendar, Building, Gear } from "@phosphor-icons/react";
+import { Calculator, ChartBarHorizontal, Target, Calendar, Buildings, Gear } from "@phosphor-icons/react";
 import { CampaignTable } from "@/components/campaign-table";
 import { ExecutionTracking } from "@/components/execution-tracking";
 import { ReportingDashboard } from "@/components/reporting-dashboard";
@@ -12,70 +12,19 @@ import { CampaignCalendarView } from "@/components/campaign-calendar-view";
 import { BudgetManagement } from "@/components/budget-management";
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
-import { initStorageCleanup } from "@/lib/storage-cleanup";
-import { clearProblematicCookies } from "@/lib/cookie-cleanup";
+import { useKV } from '@github/spark/hooks';
 import { Campaign } from "@/types/campaign";
 
 export default function App() {
+  // Use shared storage for campaigns data - this enables sharing across users
+  const [campaigns, setCampaigns] = useKV<Campaign[]>('campaignData', [], { scope: 'global' });
+  
+  // Local state for UI management
+  const [isLoading, setIsLoading] = useState(true);
+  
   useEffect(() => {
-    clearProblematicCookies();
-    initStorageCleanup();
-  }, []);
-
-  const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
-    try {
-      const saved = localStorage.getItem('campaignData');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) ? parsed : [];
-      }
-      return [];
-    } catch (error) {
-      console.warn('Failed to load campaign data:', error);
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      try {
-        localStorage.setItem('campaignData', JSON.stringify(campaigns));
-      } catch (error) {
-        console.warn('Failed to save campaigns to localStorage:', error);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [campaigns]);
-
-  useEffect(() => {
-    try {
-      const problematicKeys = [
-        'spark-kv-campaignData',
-        'github-auth-token',
-        'kvStore-cache',
-        'campaign-sync-data',
-        'persistentCampaigns'
-      ];
-
-      problematicKeys.forEach(key => {
-        localStorage.removeItem(key);
-        sessionStorage.removeItem(key);
-      });
-
-      const campaignData = localStorage.getItem('campaignData');
-      if (campaignData && campaignData.length > 100000) {
-        console.warn('Large campaign data detected, reducing size...');
-        const parsed = JSON.parse(campaignData);
-        if (Array.isArray(parsed) && parsed.length > 100) {
-          const reduced = parsed.slice(0, 100);
-          localStorage.setItem('campaignData', JSON.stringify(reduced));
-          setCampaigns(reduced);
-        }
-      }
-    } catch (error) {
-      console.warn('Storage cleanup failed:', error);
-    }
+    // Simple initialization - KV storage handles persistence automatically
+    setIsLoading(false);
   }, []);
 
   return (
@@ -97,7 +46,10 @@ export default function App() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                  {Array.isArray(campaigns) ? campaigns.length : 0} campaigns
+                  {Array.isArray(campaigns) ? campaigns.length : 0} campaigns (shared)
+                </div>
+                <div className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">
+                  ✓ Shared Storage
                 </div>
 
                 <Dialog>
@@ -139,7 +91,7 @@ export default function App() {
                 Calendar
               </TabsTrigger>
               <TabsTrigger value="budget" className="flex items-center gap-2">
-                <Building className="h-4 w-4" />
+                <Buildings className="h-4 w-4" />
                 Budget
               </TabsTrigger>
             </TabsList>

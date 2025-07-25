@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, Warning, CheckCircle, Download } from "@phosphor-icons/react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Papa from "papaparse";
-import { Campaign } from "./campaign-table";
+import { Campaign } from "@/types/campaign";
 
 interface CSVUploaderProps {
   onCampaignsImported: (campaigns: Campaign[]) => void;
