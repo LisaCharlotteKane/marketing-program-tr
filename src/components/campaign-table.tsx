@@ -403,7 +403,10 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="expectedLeads">Expected Leads</Label>
+              <Label htmlFor="expectedLeads" className="flex items-center gap-2">
+                Expected Leads
+                <Calculator className="h-4 w-4 text-muted-foreground" />
+              </Label>
               <Input
                 id="expectedLeads"
                 type="number"
@@ -414,6 +417,42 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
               />
             </div>
           </div>
+
+          {/* Live Metrics Calculation */}
+          {newCampaign.expectedLeads && Number(newCampaign.expectedLeads) > 0 && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">Calculated Metrics Preview</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-muted/30 rounded-lg border">
+                {(() => {
+                  const metrics = calculateMetrics(newCampaign.expectedLeads || 0);
+                  return (
+                    <>
+                      <div className="text-center space-y-1">
+                        <div className="text-lg font-bold text-blue-600">{metrics.mql}</div>
+                        <div className="text-xs text-muted-foreground">MQL Forecast</div>
+                        <div className="text-xs text-muted-foreground">(10%)</div>
+                      </div>
+                      <div className="text-center space-y-1">
+                        <div className="text-lg font-bold text-green-600">{metrics.sql}</div>
+                        <div className="text-xs text-muted-foreground">SQL Forecast</div>
+                        <div className="text-xs text-muted-foreground">(6%)</div>
+                      </div>
+                      <div className="text-center space-y-1">
+                        <div className="text-lg font-bold text-purple-600">{metrics.opportunities}</div>
+                        <div className="text-xs text-muted-foreground">Opportunities</div>
+                        <div className="text-xs text-muted-foreground">(80% of SQL)</div>
+                      </div>
+                      <div className="text-center space-y-1">
+                        <div className="text-lg font-bold text-orange-600">${metrics.pipelineForecast.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">Pipeline Forecast</div>
+                        <div className="text-xs text-muted-foreground">(Opps × $50K)</div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
 
           {/* Strategic Pillars */}
           <div className="space-y-2">
@@ -477,6 +516,9 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                   <TableHead>Quarter</TableHead>
                   <TableHead>Cost</TableHead>
                   <TableHead>Leads</TableHead>
+                  <TableHead>MQL</TableHead>
+                  <TableHead>SQL</TableHead>
+                  <TableHead>Opps</TableHead>
                   <TableHead>Pipeline</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -484,7 +526,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
               <TableBody>
                 {filteredCampaigns.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                       No campaigns found. Add your first campaign above.
                     </TableCell>
                   </TableRow>
@@ -510,7 +552,16 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                       <TableCell className="text-sm font-mono">
                         {typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads.toLocaleString() : campaign.expectedLeads}
                       </TableCell>
-                      <TableCell className="text-sm font-mono">
+                      <TableCell className="text-sm font-mono text-blue-600">
+                        {campaign.mql}
+                      </TableCell>
+                      <TableCell className="text-sm font-mono text-green-600">
+                        {campaign.sql}
+                      </TableCell>
+                      <TableCell className="text-sm font-mono text-purple-600">
+                        {campaign.opportunities}
+                      </TableCell>
+                      <TableCell className="text-sm font-mono text-orange-600">
                         ${campaign.pipelineForecast.toLocaleString()}
                       </TableCell>
                       <TableCell>
