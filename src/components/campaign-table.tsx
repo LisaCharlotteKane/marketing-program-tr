@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash, Calculator, FunnelSimpleX } from "@phosphor-icons/react";
+import { Plus, Trash, Calculator, FunnelX } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Campaign, CampaignTableProps } from "@/types/campaign";
 import { CSVUploader } from "@/components/csv-uploader";
@@ -245,7 +245,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                 }}
                 className="w-full"
               >
-                <FunnelSimpleX className="h-4 w-4 mr-2" />
+                <FunnelX className="h-4 w-4 mr-2" />
                 Clear Filters
               </Button>
             </div>

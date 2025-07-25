@@ -5,7 +5,7 @@
  */
 
 // Campaign data type import
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 import { RegionalBudgets } from "@/hooks/useRegionalBudgets";
 
 // Base configuration

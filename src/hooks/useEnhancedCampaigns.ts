@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 import { useKV } from "@github/spark/hooks";
 
 interface SaveStatus {

@@ -115,7 +115,7 @@ export function useAutoSaveStatus() {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [lastSaved]);
+  }, []);
   
   /**
    * Format the "last saved" time in a human-readable format

@@ -20,7 +20,7 @@ import {
   Cell
 } from "recharts";
 import { ChartBar, ChartLine, ChartPie, Table, TrendUp, X } from "@phosphor-icons/react";
-import { Campaign } from "./campaign-table";
+import { Campaign } from "@/types/campaign";
 import { toast } from "sonner";
 import { ClearFiltersButton } from "./clear-filters-button";
 import { normalizeRegionName, isContractorCampaign } from "@/lib/utils";

@@ -9,7 +9,7 @@
  * even if localStorage fails or is cleared.
  */
 
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 
 // Default storage key
 const DEFAULT_STORAGE_KEY = 'campaignData';

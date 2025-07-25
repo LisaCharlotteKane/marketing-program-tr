@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Campaign } from '@/components/campaign-table';
+import { Campaign } from '@/types/campaign';
 
 /**
  * Hook to persist campaign data in localStorage with auto-save functionality

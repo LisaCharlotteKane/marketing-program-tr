@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { saveCampaignsToGitHub } from '@/services/github-api';
-import { Campaign } from '@/components/campaign-table';
+import { Campaign } from '@/types/campaign';
 
 interface AutoSaveConfig {
   token?: string;
@@ -87,7 +87,7 @@ export function useAutoSave(campaigns: Campaign[], config: AutoSaveConfig = {}) 
         setIsSaving(false);
       }
     }, delay);
-  }, [campaigns, token, owner, repo, path, enabled, delay, canSave]);
+  }, [campaigns, token, owner, repo, path, enabled, delay]);
 
   return {
     lastSaved,
