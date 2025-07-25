@@ -33,18 +33,18 @@ export function StorageCleanupPanel() {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              This app now uses GitHub Spark's shared storage system. Campaign data is automatically 
-              synchronized across all users and persisted globally.
+              This app uses browser localStorage to persist campaign data. Data is saved locally 
+              and will persist across sessions on this device.
             </AlertDescription>
           </Alert>
 
           <div className="space-y-2">
             <div className="text-sm font-medium">Current Setup:</div>
             <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-              <li>• Campaign data is stored in GitHub Spark KV store (global scope)</li>
-              <li>• All users can see and edit the same campaigns</li>
-              <li>• Data persists automatically without manual save</li>
-              <li>• No localStorage dependency for critical data</li>
+              <li>• Campaign data is stored in browser localStorage</li>
+              <li>• Data persists across browser sessions</li>
+              <li>• Each user has their own local data store</li>
+              <li>• Data is automatically saved when changed</li>
             </ul>
           </div>
         </CardContent>
@@ -81,7 +81,7 @@ export function StorageCleanupPanel() {
             <li>Try refreshing the page</li>
             <li>Clear browser storage using the button above</li>
             <li>Use an incognito/private browsing window</li>
-            <li>Check if other users can see your campaign data</li>
+            <li>Check browser console for error messages</li>
           </ol>
         </CardContent>
       </Card>

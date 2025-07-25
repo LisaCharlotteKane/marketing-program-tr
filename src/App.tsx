@@ -12,18 +12,18 @@ import { CampaignCalendarView } from "@/components/campaign-calendar-view";
 import { BudgetManagement } from "@/components/budget-management";
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
-import { useKV } from '@github/spark/hooks';
+import { useKV } from '@/hooks/useKVStorage';
 import { Campaign } from "@/types/campaign";
 
 export default function App() {
   // Use shared storage for campaigns data - this enables sharing across users
-  const [campaigns, setCampaigns] = useKV<Campaign[]>('campaignData', [], { scope: 'global' });
+  const [campaigns, setCampaigns] = useKV<Campaign[]>('campaignData', []);
   
   // Local state for UI management
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Simple initialization - KV storage handles persistence automatically
+    // Simple initialization - localStorage handles persistence
     setIsLoading(false);
   }, []);
 
@@ -46,10 +46,10 @@ export default function App() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                  {Array.isArray(campaigns) ? campaigns.length : 0} campaigns (shared)
+                  {Array.isArray(campaigns) ? campaigns.length : 0} campaigns (local)
                 </div>
-                <div className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">
-                  ✓ Shared Storage
+                <div className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full border border-blue-200">
+                  ✓ Local Storage
                 </div>
 
                 <Dialog>

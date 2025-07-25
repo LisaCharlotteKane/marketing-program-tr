@@ -1,11 +1,11 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useKV } from '@github/spark/hooks';
+import { useKV } from '@/hooks/useKVStorage';
 import { Campaign } from "@/types/campaign";
 
 export function StorageStatus() {
-  const [campaigns] = useKV<Campaign[]>('campaignData', [], { scope: 'global' });
+  const [campaigns] = useKV<Campaign[]>('campaignData', []);
   
   return (
     <Card className="w-full">
@@ -31,11 +31,11 @@ export function StorageStatus() {
           <div className="flex justify-between items-center">
             <span className="text-sm">Storage Type:</span>
             <Badge variant="outline">
-              GitHub Spark KV (Global)
+              Browser Storage (Local)
             </Badge>
           </div>
           <div className="text-xs text-muted-foreground mt-4">
-            All users can see and edit the same campaign data. Changes are automatically synchronized.
+            Campaign data is stored locally in your browser. Data persists across sessions but is not shared with other users.
           </div>
         </div>
       </CardContent>
