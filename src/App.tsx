@@ -16,16 +16,11 @@ import { initStorageCleanup } from "@/lib/storage-cleanup";
 import { clearProblematicCookies } from "@/lib/cookie-cleanup";
 
 export default function App() {
-  // Initialize storage cleanup on app start
   useEffect(() => {
-    // Clear problematic cookies first
     clearProblematicCookies();
-    
-    // Then initialize storage cleanup
     initStorageCleanup();
   }, []);
 
-  // Simple localStorage-only data persistence to avoid KV store complexity
   const [campaigns, setCampaigns] = useState(() => {
     try {
       const saved = localStorage.getItem('campaignData');
@@ -40,7 +35,6 @@ export default function App() {
     }
   });
 
-  // Debounced auto-save to localStorage only
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
@@ -48,16 +42,13 @@ export default function App() {
       } catch (error) {
         console.warn('Failed to save campaigns to localStorage:', error);
       }
-    }, 1000); // 1 second debounce
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [campaigns]);
 
-  // Clear any existing KV store data on mount to prevent header issues
   useEffect(() => {
-    // Clear any potential problematic storage
     try {
-      // Remove any problematic keys that might be causing large headers
       const problematicKeys = [
         'spark-kv-campaignData',
         'github-auth-token',
@@ -65,19 +56,17 @@ export default function App() {
         'campaign-sync-data',
         'persistentCampaigns'
       ];
-      
+
       problematicKeys.forEach(key => {
         localStorage.removeItem(key);
         sessionStorage.removeItem(key);
       });
 
-      // Clean up any excessively large campaignData
       const campaignData = localStorage.getItem('campaignData');
-      if (campaignData && campaignData.length > 100000) { // >100KB
+      if (campaignData && campaignData.length > 100000) {
         console.warn('Large campaign data detected, reducing size...');
         const parsed = JSON.parse(campaignData);
         if (Array.isArray(parsed) && parsed.length > 100) {
-          // Keep only first 100 campaigns
           const reduced = parsed.slice(0, 100);
           localStorage.setItem('campaignData', JSON.stringify(reduced));
           setCampaigns(reduced);
@@ -92,7 +81,7 @@ export default function App() {
     <ErrorBoundary>
       <div className="min-h-screen flex flex-col bg-background">
         <Toaster position="top-right" richColors />
-        
+
         <header className="border-b shadow-sm bg-card">
           <div className="container mx-auto p-4">
             <div className="flex items-center justify-between">
@@ -109,7 +98,7 @@ export default function App() {
                 <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
                   {Array.isArray(campaigns) ? campaigns.length : 0} campaigns
                 </div>
-                
+
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button variant="ghost" size="sm" className="flex items-center gap-2">
@@ -128,7 +117,7 @@ export default function App() {
             </div>
           </div>
         </header>
-        
+
         <main className="flex-1 container mx-auto p-4">
           <Tabs defaultValue="planning" className="w-full">
             <TabsList className="grid w-full grid-cols-5 mb-6">
@@ -149,7 +138,7 @@ export default function App() {
                 Calendar
               </TabsTrigger>
               <TabsTrigger value="budget" className="flex items-center gap-2">
-                <Building size={32} />
+                <Building className="h-4 w-4" />
                 Budget
               </TabsTrigger>
             </TabsList>
@@ -164,9 +153,9 @@ export default function App() {
                     </p>
                   </div>
                 </div>
-                
+
                 <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
-                
+
                 <Card className="bg-muted/50">
                   <CardHeader>
                     <CardTitle className="text-lg">Auto-Calculated Metrics</CardTitle>
@@ -206,7 +195,7 @@ export default function App() {
                     Update campaign status and track actual performance metrics
                   </p>
                 </div>
-                
+
                 <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
               </div>
             </TabsContent>
@@ -219,7 +208,7 @@ export default function App() {
                     Analyze forecasted vs actual performance across regions and campaigns
                   </p>
                 </div>
-                
+
                 <ReportingDashboard campaigns={campaigns} />
               </div>
             </TabsContent>
@@ -232,7 +221,7 @@ export default function App() {
                     Visual timeline of all campaigns organized by fiscal year and quarter
                   </p>
                 </div>
-                
+
                 <CampaignCalendarView campaigns={campaigns} />
               </div>
             </TabsContent>
@@ -245,7 +234,7 @@ export default function App() {
                     Track budget allocation and spending across regions and campaign owners
                   </p>
                 </div>
-                
+
                 <BudgetManagement campaigns={campaigns} />
               </div>
             </TabsContent>
