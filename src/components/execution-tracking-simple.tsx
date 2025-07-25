@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FilterX } from "@phosphor-icons/react";
+import { FunnelSimpleX } from "@phosphor-icons/react";
 import { Campaign, CampaignTableProps } from "@/types/campaign";
 
 interface ExecutionTrackingProps {
@@ -107,7 +107,7 @@ export function ExecutionTracking({ campaigns = [], setCampaigns }: ExecutionTra
             </div>
             <div className="flex items-end">
               <Button onClick={clearFilters} variant="outline" className="flex items-center gap-2 w-full">
-                <FilterX className="h-4 w-4" />
+                <FunnelSimpleX className="h-4 w-4" />
                 Clear Filters
               </Button>
             </div>
