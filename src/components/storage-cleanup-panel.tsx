@@ -135,25 +135,24 @@ export function StorageCleanupPanel() {
             <div className="text-center p-4 bg-muted rounded-lg">
               <div className="text-2xl font-bold">{formatBytes(storageStats.totalSize)}</div>
               <div className="text-sm text-muted-foreground">Total Storage Used</div>
-            </div>
             <div className="text-center p-4 bg-muted rounded-lg">
-              <div className="text-2xl font-bold">{storageStats.itemCount}</div>
+            <div className="text-center p-4 bg-muted rounded-lg">
               <div className="text-sm text-muted-foreground">Storage Items</div>
             </div>
+            </div>t-center p-4 bg-muted rounded-lg">
             <div className="text-center p-4 bg-muted rounded-lg">
               <div className="text-2xl font-bold">
-                {(() => {
                   const campaignItem = storageStats.items.find(item => item.key === 'campaignData');
                   return campaignItem ? formatBytes(campaignItem.size) : '0 Bytes';
                 })()}
               </div>
+              </div>-muted-foreground">Campaign Data</div>
               <div className="text-sm text-muted-foreground">Campaign Data</div>
             </div>
           </div>
-
-          {recommendations.length > 0 && (
+ (
             <div className="space-y-2">
-              <div className="text-sm font-medium">Recommendations:</div>
+            <div className="space-y-2">
               <ul className="space-y-1">
                 {recommendations.map((rec, index) => (
                   <li key={index} className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
@@ -167,13 +166,14 @@ export function StorageCleanupPanel() {
           {storageStats.items.length > 0 && (
             <div className="space-y-2">
               <div className="text-sm font-medium">Storage Breakdown:</div>
-              <div className="max-h-40 overflow-y-auto space-y-1">
+              <div className="text-sm font-medium">Storage Breakdown:</div>
                 {storageStats.items.slice(0, 15).map((item, index) => (
                   <div key={index} className="flex justify-between items-center text-xs bg-muted/50 p-2 rounded">
+                  <div key={index} className="flex justify-between items-center text-xs bg-muted/50 p-2 rounded">
                     <span className="truncate flex-1 mr-2">{item.key}</span>
-                    <Badge variant="outline" className="text-xs mr-2">
                       {item.type === 'localStorage' ? 'Local' : 'Session'}
                     </Badge>
+                    <span className="font-mono">{formatBytes(item.size)}</span>
                     <span className="font-mono">{formatBytes(item.size)}</span>
                     <Button 
                       size="sm" 
@@ -191,13 +191,13 @@ export function StorageCleanupPanel() {
         </CardContent>
       </Card>
 
-      <Card>
         <CardHeader>
+          <CardTitle className="flex items-center gap-2">
           <CardTitle className="flex items-center gap-2">
             <Trash className="h-5 w-5" />
             Storage Cleanup Actions
           </CardTitle>
-        </CardHeader>
+        <CardContent className="space-y-4">
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Button 
@@ -231,16 +231,15 @@ export function StorageCleanupPanel() {
         <CardHeader>
           <CardTitle>Prevention & Best Practices</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>To prevent HTTP 431 errors and storage issues:</p>
-          <ul className="list-disc list-inside space-y-1 ml-2">
+          <p>To prevent HTTP 431 errors and storage issues:</p>
+            <li>Export campaign data to CSV regularly</li>
             <li>Export campaign data to CSV regularly</li>
             <li>Monitor storage size using this panel</li>
             <li>Clear browser storage monthly</li>
             <li>Avoid storing extremely large datasets</li>
             <li>Use incognito mode for testing large imports</li>
             <li>Clear storage before major data imports</li>
-          </ul>
         </CardContent>
       </Card>
     </div>
