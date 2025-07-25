@@ -88,8 +88,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
     "Afghanistan", "ASEAN", "Australia", "Bangladesh", "Bhutan", "Brunei", "Cambodia", "China", 
     "GCR", "Hong Kong", "India", "Indonesia", "Japan", "Laos", "Malaysia", "Maldives", 
     "Myanmar", "Nepal", "New Zealand", "Pakistan", "Philippines", "Singapore", "South Korea", 
-    "Sri Lanka", "Taiwan", "Thailand", "Vietnam", "X APAC English", "X APAC Non English", 
-    "X South APAC", "X SAARC"
+    "Sri Lanka", "Taiwan", "Thailand", "Vietnam", "X South APAC", "X SAARC"
   ].sort();
 
   const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];

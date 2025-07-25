@@ -63,7 +63,7 @@ export function StorageCleanupPanel() {
   const handleClearOldData = () => {
     try {
       // Clear common legacy keys that might cause issues
-      const cleared = clearStorageByPattern(/^(temp|cache|old|backup|legacy)/i);
+      const cleared = clearStorageByPattern('temp,cache,old,backup,legacy');
       refreshStorageStats();
       toast.success(`Cleared ${cleared} legacy storage items`);
     } catch (error) {
@@ -75,8 +75,9 @@ export function StorageCleanupPanel() {
     return <div className="p-4">Loading storage analysis...</div>;
   }
 
-  const recommendations = getStorageRecommendations();
-  const isHealthy = !storageStats.isNearLimit && !storageStats.isOverLimit;
+  const recommendations: string[] = [];
+  const isHealthy = !storageStats.isNearLimit;
+  const isOverLimit = storageStats.totalSize > 10000000; // 10MB threshold
 
   return (
     <div className="space-y-4">
@@ -101,7 +102,7 @@ export function StorageCleanupPanel() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {storageStats.isOverLimit && (
+          {isOverLimit && (
             <Alert variant="destructive">
               <Warning className="h-4 w-4" />
               <AlertDescription>
@@ -111,7 +112,7 @@ export function StorageCleanupPanel() {
             </Alert>
           )}
 
-          {storageStats.isNearLimit && !storageStats.isOverLimit && (
+          {storageStats.isNearLimit && !isOverLimit && (
             <Alert>
               <Warning className="h-4 w-4" />
               <AlertDescription>
@@ -135,24 +136,25 @@ export function StorageCleanupPanel() {
             <div className="text-center p-4 bg-muted rounded-lg">
               <div className="text-2xl font-bold">{formatBytes(storageStats.totalSize)}</div>
               <div className="text-sm text-muted-foreground">Total Storage Used</div>
+            </div>
             <div className="text-center p-4 bg-muted rounded-lg">
-            <div className="text-center p-4 bg-muted rounded-lg">
+              <div className="text-2xl font-bold">{(storageStats as any).items?.length || 0}</div>
               <div className="text-sm text-muted-foreground">Storage Items</div>
             </div>
-            </div>t-center p-4 bg-muted rounded-lg">
             <div className="text-center p-4 bg-muted rounded-lg">
               <div className="text-2xl font-bold">
-                  const campaignItem = storageStats.items.find(item => item.key === 'campaignData');
+                {(() => {
+                  const items = (storageStats as any).items;
+                  const campaignItem = items?.find((item: any) => item.key === 'campaignData');
                   return campaignItem ? formatBytes(campaignItem.size) : '0 Bytes';
                 })()}
               </div>
-              </div>-muted-foreground">Campaign Data</div>
               <div className="text-sm text-muted-foreground">Campaign Data</div>
             </div>
           </div>
- (
+          {recommendations.length > 0 && (
             <div className="space-y-2">
-            <div className="space-y-2">
+              <div className="text-sm font-medium">Recommendations:</div>
               <ul className="space-y-1">
                 {recommendations.map((rec, index) => (
                   <li key={index} className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
@@ -163,23 +165,22 @@ export function StorageCleanupPanel() {
             </div>
           )}
 
-          {storageStats.items.length > 0 && (
+          {(storageStats as any).items && (storageStats as any).items.length > 0 && (
             <div className="space-y-2">
               <div className="text-sm font-medium">Storage Breakdown:</div>
-              <div className="text-sm font-medium">Storage Breakdown:</div>
-                {storageStats.items.slice(0, 15).map((item, index) => (
-                  <div key={index} className="flex justify-between items-center text-xs bg-muted/50 p-2 rounded">
+              <div className="space-y-1">
+                {(storageStats as any).items.slice(0, 15).map((item: any, index: number) => (
                   <div key={index} className="flex justify-between items-center text-xs bg-muted/50 p-2 rounded">
                     <span className="truncate flex-1 mr-2">{item.key}</span>
+                    <Badge variant="outline" className="text-xs mr-2">
                       {item.type === 'localStorage' ? 'Local' : 'Session'}
                     </Badge>
-                    <span className="font-mono">{formatBytes(item.size)}</span>
-                    <span className="font-mono">{formatBytes(item.size)}</span>
+                    <span className="font-mono mr-2">{formatBytes(item.size)}</span>
                     <Button 
                       size="sm" 
                       variant="ghost" 
                       onClick={() => handleClearSpecificKey(item.key)}
-                      className="ml-2 h-6 w-6 p-0"
+                      className="h-6 w-6 p-0"
                     >
                       <Trash className="h-3 w-3" />
                     </Button>
@@ -191,18 +192,18 @@ export function StorageCleanupPanel() {
         </CardContent>
       </Card>
 
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
           <CardTitle className="flex items-center gap-2">
             <Trash className="h-5 w-5" />
             Storage Cleanup Actions
           </CardTitle>
-        <CardContent className="space-y-4">
+        </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Button 
               onClick={handleClearAllStorage} 
-              variant={storageStats.isOverLimit ? "destructive" : "outline"}
+              variant={isOverLimit ? "destructive" : "outline"}
               className="w-full"
             >
               <Trash className="h-4 w-4 mr-2" />
@@ -231,15 +232,16 @@ export function StorageCleanupPanel() {
         <CardHeader>
           <CardTitle>Prevention & Best Practices</CardTitle>
         </CardHeader>
+        <CardContent>
           <p>To prevent HTTP 431 errors and storage issues:</p>
-          <p>To prevent HTTP 431 errors and storage issues:</p>
-            <li>Export campaign data to CSV regularly</li>
+          <ul className="list-disc list-inside space-y-1 text-sm mt-2">
             <li>Export campaign data to CSV regularly</li>
             <li>Monitor storage size using this panel</li>
             <li>Clear browser storage monthly</li>
             <li>Avoid storing extremely large datasets</li>
             <li>Use incognito mode for testing large imports</li>
             <li>Clear storage before major data imports</li>
+          </ul>
         </CardContent>
       </Card>
     </div>
