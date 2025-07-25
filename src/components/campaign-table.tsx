@@ -17,8 +17,8 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
   // Ensure campaigns is always an array
   const safeCampaigns = Array.isArray(campaigns) ? campaigns : [];
   
-  const [regionFilter, setRegionFilter] = useState<string>("");
-  const [quarterFilter, setQuarterFilter] = useState<string>("");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [quarterFilter, setQuarterFilter] = useState<string>("all");
 
   // Campaign form state
   const [newCampaign, setNewCampaign] = useState<Partial<Campaign>>({
@@ -182,8 +182,8 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
 
   // Filter campaigns
   const filteredCampaigns = safeCampaigns.filter(campaign => {
-    if (regionFilter && campaign.region !== regionFilter) return false;
-    if (quarterFilter && campaign.quarterMonth !== quarterFilter) return false;
+    if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
+    if (quarterFilter !== "all" && campaign.quarterMonth !== quarterFilter) return false;
     return true;
   });
 
@@ -213,7 +213,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
@@ -228,7 +228,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                   <SelectValue placeholder="All Quarters" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Quarters</SelectItem>
+                  <SelectItem value="all">All Quarters</SelectItem>
                   {quarters.map(quarter => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
@@ -240,8 +240,8 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
               <Button 
                 variant="outline" 
                 onClick={() => {
-                  setRegionFilter("");
-                  setQuarterFilter("");
+                  setRegionFilter("all");
+                  setQuarterFilter("all");
                 }}
                 className="w-full"
               >

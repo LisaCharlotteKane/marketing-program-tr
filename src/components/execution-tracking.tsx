@@ -19,9 +19,9 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
   // Ensure campaigns is always an array
   const safeCampaigns = Array.isArray(campaigns) ? campaigns : [];
   
-  const [regionFilter, setRegionFilter] = useState<string>("");
-  const [ownerFilter, setOwnerFilter] = useState<string>("");
-  const [quarterFilter, setQuarterFilter] = useState<string>("");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [quarterFilter, setQuarterFilter] = useState<string>("all");
 
   const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
   const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
@@ -35,9 +35,9 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
 
   // Filter campaigns
   const filteredCampaigns = safeCampaigns.filter(campaign => {
-    if (regionFilter && campaign.region !== regionFilter) return false;
-    if (ownerFilter && campaign.owner !== ownerFilter) return false;
-    if (quarterFilter && campaign.quarterMonth !== quarterFilter) return false;
+    if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
+    if (ownerFilter !== "all" && campaign.owner !== ownerFilter) return false;
+    if (quarterFilter !== "all" && campaign.quarterMonth !== quarterFilter) return false;
     return true;
   });
 
@@ -49,9 +49,9 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
   };
 
   const clearFilters = () => {
-    setRegionFilter("");
-    setOwnerFilter("");
-    setQuarterFilter("");
+    setRegionFilter("all");
+    setOwnerFilter("all");
+    setQuarterFilter("all");
   };
 
   const getStatusColor = (status: string) => {
@@ -83,7 +83,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
@@ -98,7 +98,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                   <SelectValue placeholder="All Owners" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Owners</SelectItem>
+                  <SelectItem value="all">All Owners</SelectItem>
                   {owners.map(owner => (
                     <SelectItem key={owner} value={owner}>{owner}</SelectItem>
                   ))}
@@ -113,7 +113,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                   <SelectValue placeholder="All Quarters" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Quarters</SelectItem>
+                  <SelectItem value="all">All Quarters</SelectItem>
                   {quarters.map(quarter => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}

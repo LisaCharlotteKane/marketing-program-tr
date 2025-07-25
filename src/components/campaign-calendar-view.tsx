@@ -12,10 +12,10 @@ interface CampaignCalendarViewProps {
 }
 
 export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
-  const [regionFilter, setRegionFilter] = useState<string>("");
-  const [ownerFilter, setOwnerFilter] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
   const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
@@ -43,10 +43,10 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
     if (campaign.campaignType?.includes("Contractor") || campaign.campaignType?.includes("Infrastructure")) {
       return false;
     }
-    if (regionFilter && campaign.region !== regionFilter) return false;
-    if (ownerFilter && campaign.owner !== ownerFilter) return false;
-    if (typeFilter && campaign.campaignType !== typeFilter) return false;
-    if (statusFilter && campaign.status !== statusFilter) return false;
+    if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
+    if (ownerFilter !== "all" && campaign.owner !== ownerFilter) return false;
+    if (typeFilter !== "all" && campaign.campaignType !== typeFilter) return false;
+    if (statusFilter !== "all" && campaign.status !== statusFilter) return false;
     return true;
   });
 
@@ -84,10 +84,10 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
   };
 
   const clearFilters = () => {
-    setRegionFilter("");
-    setOwnerFilter("");
-    setTypeFilter("");
-    setStatusFilter("");
+    setRegionFilter("all");
+    setOwnerFilter("all");
+    setTypeFilter("all");
+    setStatusFilter("all");
   };
 
   return (
@@ -109,7 +109,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
@@ -124,7 +124,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
                   <SelectValue placeholder="All Owners" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Owners</SelectItem>
+                  <SelectItem value="all">All Owners</SelectItem>
                   {owners.map(owner => (
                     <SelectItem key={owner} value={owner}>{owner}</SelectItem>
                   ))}
@@ -139,7 +139,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
                   <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   {campaignTypes.map(type => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
@@ -154,7 +154,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
                   <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   {statusOptions.map(status => (
                     <SelectItem key={status} value={status}>{status}</SelectItem>
                   ))}

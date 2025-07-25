@@ -14,9 +14,9 @@ interface ReportingDashboardProps {
 }
 
 export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
-  const [regionFilter, setRegionFilter] = useState<string>("");
-  const [quarterFilter, setQuarterFilter] = useState<string>("");
-  const [ownerFilter, setOwnerFilter] = useState<string>("");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [quarterFilter, setQuarterFilter] = useState<string>("all");
+  const [ownerFilter, setOwnerFilter] = useState<string>("all");
 
   const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
   const quarters = [
@@ -29,9 +29,9 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
 
   // Filter campaigns
   const filteredCampaigns = campaigns.filter(campaign => {
-    if (regionFilter && campaign.region !== regionFilter) return false;
-    if (quarterFilter && campaign.quarterMonth !== quarterFilter) return false;
-    if (ownerFilter && campaign.owner !== ownerFilter) return false;
+    if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
+    if (quarterFilter !== "all" && campaign.quarterMonth !== quarterFilter) return false;
+    if (ownerFilter !== "all" && campaign.owner !== ownerFilter) return false;
     return true;
   });
 
@@ -74,9 +74,9 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
   }).filter(d => d.forecastedPipeline > 0 || d.forecastedLeads > 0);
 
   const clearFilters = () => {
-    setRegionFilter("");
-    setQuarterFilter("");
-    setOwnerFilter("");
+    setRegionFilter("all");
+    setQuarterFilter("all");
+    setOwnerFilter("all");
   };
 
   return (
@@ -98,7 +98,7 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
@@ -113,7 +113,7 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
                   <SelectValue placeholder="All Quarters" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Quarters</SelectItem>
+                  <SelectItem value="all">All Quarters</SelectItem>
                   {quarters.map(quarter => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
@@ -128,7 +128,7 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
                   <SelectValue placeholder="All Owners" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Owners</SelectItem>
+                  <SelectItem value="all">All Owners</SelectItem>
                   {owners.map(owner => (
                     <SelectItem key={owner} value={owner}>{owner}</SelectItem>
                   ))}

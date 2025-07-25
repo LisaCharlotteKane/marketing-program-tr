@@ -13,8 +13,8 @@ interface BudgetManagementProps {
 }
 
 export function BudgetManagement({ campaigns }: BudgetManagementProps) {
-  const [regionFilter, setRegionFilter] = useState<string>("");
-  const [quarterFilter, setQuarterFilter] = useState<string>("");
+  const [regionFilter, setRegionFilter] = useState<string>("all");
+  const [quarterFilter, setQuarterFilter] = useState<string>("all");
 
   const regions = ["JP & Korea", "South APAC", "SAARC", "Digital"];
   const quarters = [
@@ -36,8 +36,8 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
   const budgetSummary = Object.entries(budgetAllocations).map(([owner, allocation]) => {
     const ownerCampaigns = campaigns.filter(campaign => {
       const matchesOwner = campaign.owner === owner;
-      const matchesRegion = !regionFilter || allocation.region === regionFilter;
-      const matchesQuarter = !quarterFilter || campaign.quarterMonth === quarterFilter;
+      const matchesRegion = regionFilter === "all" || allocation.region === regionFilter;
+      const matchesQuarter = quarterFilter === "all" || campaign.quarterMonth === quarterFilter;
       return matchesOwner && matchesRegion && matchesQuarter;
     });
 
@@ -90,7 +90,7 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
                   <SelectValue placeholder="All Regions" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Regions</SelectItem>
+                  <SelectItem value="all">All Regions</SelectItem>
                   {regions.map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
@@ -105,7 +105,7 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
                   <SelectValue placeholder="All Quarters" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Quarters</SelectItem>
+                  <SelectItem value="all">All Quarters</SelectItem>
                   {quarters.map(quarter => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
