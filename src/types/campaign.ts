@@ -6,7 +6,6 @@ export interface Campaign {
   campaignName?: string;
   description: string;
   campaignType: string;
-  strategicPillars?: string[];
   strategicPillar: string[];
   revenuePlay: string;
   fy: string;

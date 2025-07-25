@@ -13,6 +13,9 @@ import { toast } from "sonner";
 import { Campaign, CampaignTableProps } from "@/types/campaign";
 
 export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
+  // Ensure campaigns is always an array
+  const safeCampaigns = Array.isArray(campaigns) ? campaigns : [];
+  
   const [regionFilter, setRegionFilter] = useState<string>("");
   const [quarterFilter, setQuarterFilter] = useState<string>("");
 
@@ -143,7 +146,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
       actualMQLs: parseFloat(newCampaign.actualMQLs?.toString() || "0") || 0
     };
 
-    setCampaigns([...campaigns, campaign]);
+    setCampaigns([...safeCampaigns, campaign]);
     
     // Reset form
     setNewCampaign({
@@ -172,12 +175,12 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
 
   // Remove campaign
   const removeCampaign = (id: string) => {
-    setCampaigns(campaigns.filter(c => c.id !== id));
+    setCampaigns(safeCampaigns.filter(c => c.id !== id));
     toast.success("Campaign removed");
   };
 
   // Filter campaigns
-  const filteredCampaigns = campaigns.filter(campaign => {
+  const filteredCampaigns = safeCampaigns.filter(campaign => {
     if (regionFilter && campaign.region !== regionFilter) return false;
     if (quarterFilter && campaign.quarterMonth !== quarterFilter) return false;
     return true;
@@ -410,16 +413,22 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
             </div>
           </div>
 
-          {/* Description */}
+          {/* Revenue Play */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={newCampaign.description || ""}
-              onChange={(e) => setNewCampaign(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="Campaign description..."
-              rows={3}
-            />
+            <Label htmlFor="revenuePlay">Revenue Play</Label>
+            <Select 
+              value={newCampaign.revenuePlay || ""} 
+              onValueChange={(value) => setNewCampaign(prev => ({ ...prev, revenuePlay: value }))}
+            >
+              <SelectTrigger id="revenuePlay">
+                <SelectValue placeholder="Select revenue play" />
+              </SelectTrigger>
+              <SelectContent>
+                {revenuePlayOptions.map(play => (
+                  <SelectItem key={play} value={play}>{play}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Button onClick={addCampaign} className="w-full">

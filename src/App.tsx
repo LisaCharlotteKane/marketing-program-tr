@@ -14,6 +14,7 @@ import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
 import { initStorageCleanup } from "@/lib/storage-cleanup";
 import { clearProblematicCookies } from "@/lib/cookie-cleanup";
+import { Campaign } from "@/types/campaign";
 
 export default function App() {
   useEffect(() => {
@@ -21,7 +22,7 @@ export default function App() {
     initStorageCleanup();
   }, []);
 
-  const [campaigns, setCampaigns] = useState(() => {
+  const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
     try {
       const saved = localStorage.getItem('campaignData');
       if (saved) {
@@ -154,7 +155,9 @@ export default function App() {
                   </div>
                 </div>
 
-                <CampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
+                <ErrorBoundary>
+                  <CampaignTable campaigns={campaigns || []} setCampaigns={setCampaigns} />
+                </ErrorBoundary>
 
                 <Card className="bg-muted/50">
                   <CardHeader>
@@ -196,7 +199,9 @@ export default function App() {
                   </p>
                 </div>
 
-                <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
+                <ErrorBoundary>
+                  <ExecutionTracking campaigns={campaigns || []} setCampaigns={setCampaigns} />
+                </ErrorBoundary>
               </div>
             </TabsContent>
 
@@ -209,7 +214,9 @@ export default function App() {
                   </p>
                 </div>
 
-                <ReportingDashboard campaigns={campaigns} />
+                <ErrorBoundary>
+                  <ReportingDashboard campaigns={campaigns || []} />
+                </ErrorBoundary>
               </div>
             </TabsContent>
 
@@ -222,7 +229,9 @@ export default function App() {
                   </p>
                 </div>
 
-                <CampaignCalendarView campaigns={campaigns} />
+                <ErrorBoundary>
+                  <CampaignCalendarView campaigns={campaigns || []} />
+                </ErrorBoundary>
               </div>
             </TabsContent>
 
@@ -235,7 +244,9 @@ export default function App() {
                   </p>
                 </div>
 
-                <BudgetManagement campaigns={campaigns} />
+                <ErrorBoundary>
+                  <BudgetManagement campaigns={campaigns || []} />
+                </ErrorBoundary>
               </div>
             </TabsContent>
           </Tabs>

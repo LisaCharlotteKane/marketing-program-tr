@@ -16,6 +16,9 @@ interface ExecutionTrackingProps {
 }
 
 export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTrackingProps) {
+  // Ensure campaigns is always an array
+  const safeCampaigns = Array.isArray(campaigns) ? campaigns : [];
+  
   const [regionFilter, setRegionFilter] = useState<string>("");
   const [ownerFilter, setOwnerFilter] = useState<string>("");
   const [quarterFilter, setQuarterFilter] = useState<string>("");
@@ -31,7 +34,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
   const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
 
   // Filter campaigns
-  const filteredCampaigns = campaigns.filter(campaign => {
+  const filteredCampaigns = safeCampaigns.filter(campaign => {
     if (regionFilter && campaign.region !== regionFilter) return false;
     if (ownerFilter && campaign.owner !== ownerFilter) return false;
     if (quarterFilter && campaign.quarterMonth !== quarterFilter) return false;
@@ -40,7 +43,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
 
   // Update campaign field
   const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
-    setCampaigns(campaigns.map(campaign => 
+    setCampaigns(safeCampaigns.map(campaign => 
       campaign.id === id ? { ...campaign, [field]: value } : campaign
     ));
   };
