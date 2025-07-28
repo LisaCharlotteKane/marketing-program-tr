@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning } from "@phosphor-icons/react";
+import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, BarChart3 } from "@phosphor-icons/react";
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
+import { CampaignManager } from "@/components/campaign-manager";
 import { Campaign } from "@/types/campaign";
 
 // Stable localStorage hook with error handling
@@ -44,84 +45,44 @@ function useLocalStorage<T>(key: string, defaultValue: T) {
 }
 
 // Simple campaign table component
-function SimpleCampaignTable({ campaigns, setCampaigns }: { campaigns: Campaign[], setCampaigns: (campaigns: Campaign[]) => void }) {
-  const [newDescription, setNewDescription] = useState('');
+function QuickStatsCard({ campaigns }: { campaigns: Campaign[] }) {
+  const totals = campaigns.reduce((acc, campaign) => {
+    acc.forecastedCost += Number(campaign.forecastedCost) || 0;
+    acc.expectedLeads += Number(campaign.expectedLeads) || 0;
+    acc.pipelineForecast += campaign.pipelineForecast || 0;
+    return acc;
+  }, {
+    forecastedCost: 0,
+    expectedLeads: 0,
+    pipelineForecast: 0
+  });
 
-  const addCampaign = () => {
-    if (!newDescription.trim()) return;
-    
-    const newCampaign: Campaign = {
-      id: `campaign-${Date.now()}`,
-      description: newDescription,
-      campaignType: 'Localized Events',
-      strategicPillar: ['Brand Awareness & Top of Funnel Demand Generation'],
-      revenuePlay: 'All',
-      fy: 'FY26',
-      quarterMonth: 'Q1 - July',
-      region: 'JP & Korea',
-      country: 'Japan',
-      owner: 'Tomoko Tanaka',
-      forecastedCost: 0,
-      expectedLeads: 0,
-      mql: 0,
-      sql: 0,
-      opportunities: 0,
-      pipelineForecast: 0,
-      status: 'Planning'
-    };
-
-    setCampaigns([...campaigns, newCampaign]);
-    setNewDescription('');
-  };
-
-  const deleteCampaign = (id: string) => {
-    setCampaigns(campaigns.filter(c => c.id !== id));
-  };
+  const roi = totals.forecastedCost > 0 ? (totals.pipelineForecast / totals.forecastedCost) : 0;
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
-        <CardHeader>
-          <CardTitle>Add New Campaign</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-              placeholder="Campaign description"
-              className="flex-1 px-3 py-2 border rounded"
-            />
-            <Button onClick={addCampaign}>Add Campaign</Button>
-          </div>
+        <CardContent className="p-4">
+          <div className="text-2xl font-bold text-primary">{campaigns.length}</div>
+          <div className="text-sm text-muted-foreground">Total Campaigns</div>
         </CardContent>
       </Card>
-
       <Card>
-        <CardHeader>
-          <CardTitle>Campaigns ({campaigns.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {campaigns.map((campaign) => (
-              <div key={campaign.id} className="flex items-center justify-between p-2 border rounded">
-                <span>{campaign.description}</span>
-                <Button 
-                  size="sm" 
-                  variant="destructive" 
-                  onClick={() => deleteCampaign(campaign.id)}
-                >
-                  Delete
-                </Button>
-              </div>
-            ))}
-            {campaigns.length === 0 && (
-              <div className="text-center text-muted-foreground py-8">
-                No campaigns yet. Add your first campaign above.
-              </div>
-            )}
-          </div>
+        <CardContent className="p-4">
+          <div className="text-2xl font-bold text-green-600">${totals.forecastedCost.toLocaleString()}</div>
+          <div className="text-sm text-muted-foreground">Forecasted Spend</div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4">
+          <div className="text-2xl font-bold text-blue-600">${totals.pipelineForecast.toLocaleString()}</div>
+          <div className="text-sm text-muted-foreground">Pipeline Forecast</div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4">
+          <div className="text-2xl font-bold text-purple-600">{roi.toFixed(1)}x</div>
+          <div className="text-sm text-muted-foreground">ROI Multiple</div>
         </CardContent>
       </Card>
     </div>
@@ -225,10 +186,18 @@ export default function App() {
 
         <main className="flex-1 container mx-auto p-4">
           <Tabs defaultValue="planning" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="planning" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 Campaign Planning
+              </TabsTrigger>
+              <TabsTrigger value="reporting" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Reporting
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Calendar
               </TabsTrigger>
               <TabsTrigger value="status" className="flex items-center gap-2">
                 <Target className="h-4 w-4" />
@@ -241,91 +210,57 @@ export default function App() {
                 <div>
                   <h2 className="text-2xl font-bold tracking-tight">Campaign Planning</h2>
                   <p className="text-muted-foreground">
-                    Plan and manage marketing campaigns with fixed storage functionality
+                    Plan and manage marketing campaigns with ROI calculations
                   </p>
                 </div>
 
-                <ErrorBoundary>
-                  <SimpleCampaignTable campaigns={campaigns} setCampaigns={setCampaigns} />
-                </ErrorBoundary>
+                <QuickStatsCard campaigns={campaigns} />
 
-                <Card className="bg-muted/50">
-                  <CardHeader>
-                    <CardTitle className="text-lg">Storage Status</CardTitle>
-                    <CardDescription>
-                      Your data is being saved automatically to browser storage
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div className="space-y-1">
-                        <div className="font-medium">Campaigns Stored</div>
-                        <div className="text-2xl font-bold text-primary">{campaigns.length}</div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="font-medium">Storage Size</div>
-                        <div className="text-2xl font-bold text-primary">
-                          {(() => {
-                            try {
-                              const size = new Blob([JSON.stringify(campaigns)]).size;
-                              return size < 1024 ? `${size}B` : `${Math.round(size / 1024)}KB`;
-                            } catch {
-                              return 'Error';
-                            }
-                          })()}
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="font-medium">Auto-Save</div>
-                        <div className="text-2xl font-bold text-green-600">✓</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <ErrorBoundary>
+                  <CampaignManager campaigns={campaigns} setCampaigns={setCampaigns} />
+                </ErrorBoundary>
               </div>
             </TabsContent>
 
-            <TabsContent value="status">
+            <TabsContent value="reporting">
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-2xl font-bold tracking-tight">System Status</h2>
+                  <h2 className="text-2xl font-bold tracking-tight">Campaign Reporting</h2>
                   <p className="text-muted-foreground">
-                    Check storage health and manage browser data
+                    View performance metrics and analytics
                   </p>
                 </div>
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>System Health</CardTitle>
+                    <CardTitle>Coming Soon</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Alert>
-                      <Target className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>All Systems Operational:</strong> Storage issues have been resolved. 
-                        The app now uses a stable localStorage implementation with proper error handling.
-                      </AlertDescription>
-                    </Alert>
+                    <p className="text-muted-foreground">
+                      Advanced reporting features including charts, filters, and export capabilities will be available here.
+                    </p>
                   </CardContent>
                 </Card>
-
-                <ErrorBoundary>
-                  <StorageCleanupPanel />
-                </ErrorBoundary>
               </div>
             </TabsContent>
-          </Tabs>
-        </main>
-      </div>
-    </ErrorBoundary>
-  );
-}
 
-                      <div className="space-y-1">
-                        <div className="font-medium">Auto-Save</div>
-                        <div className="text-2xl font-bold text-green-600">✓</div>
-                      </div>
-                    </div>
+            <TabsContent value="calendar">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">Campaign Calendar</h2>
+                  <p className="text-muted-foreground">
+                    View campaigns organized by fiscal year timeline
+                  </p>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Coming Soon</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">
+                      Calendar view showing campaigns by month and quarter will be available here.
+                    </p>
                   </CardContent>
                 </Card>
               </div>
