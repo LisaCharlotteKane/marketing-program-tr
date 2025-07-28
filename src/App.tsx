@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, ChartBar } from "@phosphor-icons/react";
+import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, ChartBar, ClipboardList } from "@phosphor-icons/react";
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
 import { CampaignManager } from "@/components/campaign-manager";
+import { ExecutionTracking } from "@/components/execution-tracking-simple";
 import { Campaign } from "@/types/campaign";
 
 // Stable localStorage hook with error handling
@@ -186,10 +187,14 @@ export default function App() {
 
         <main className="flex-1 container mx-auto p-4">
           <Tabs defaultValue="planning" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
               <TabsTrigger value="planning" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 Campaign Planning
+              </TabsTrigger>
+              <TabsTrigger value="execution" className="flex items-center gap-2">
+                <ClipboardList className="h-4 w-4" />
+                Execution Tracking
               </TabsTrigger>
               <TabsTrigger value="reporting" className="flex items-center gap-2">
                 <ChartBar className="h-4 w-4" />
@@ -218,6 +223,21 @@ export default function App() {
 
                 <ErrorBoundary>
                   <CampaignManager campaigns={campaigns} setCampaigns={setCampaigns} />
+                </ErrorBoundary>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="execution">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">Execution Tracking</h2>
+                  <p className="text-muted-foreground">
+                    Track campaign execution status, costs, and performance metrics
+                  </p>
+                </div>
+
+                <ErrorBoundary>
+                  <ExecutionTracking campaigns={campaigns} setCampaigns={setCampaigns} />
                 </ErrorBoundary>
               </div>
             </TabsContent>

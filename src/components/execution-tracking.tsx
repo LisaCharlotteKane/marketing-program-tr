@@ -166,7 +166,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
                     <TableRow key={campaign.id}>
                       <TableCell className="font-medium">
                         <div>
-                          <div>{campaign.campaignName}</div>
+                          <div>{campaign.campaignName || campaign.description}</div>
                           <div className="text-xs text-muted-foreground">{campaign.campaignType}</div>
                         </div>
                       </TableCell>
