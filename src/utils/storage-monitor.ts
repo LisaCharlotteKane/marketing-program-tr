@@ -2,15 +2,16 @@ export interface StorageStats {
   localStorage: {
     size: number;
     itemCount: number;
-    items: { key: string; size: number }[];
+    items: { key: string; size: number; type: string }[];
   };
   totalSize: number;
   isNearLimit: boolean;
   recommendations: string[];
+  items?: { key: string; size: number; type: string }[];
 }
 
 export function getStorageStats(): StorageStats {
-  const localStorageItems: { key: string; size: number }[] = [];
+  const localStorageItems: { key: string; size: number; type: string }[] = [];
   let totalLocalSize = 0;
 
   try {
@@ -18,7 +19,7 @@ export function getStorageStats(): StorageStats {
       if (localStorage.hasOwnProperty(key)) {
         const value = localStorage[key];
         const size = new Blob([value]).size;
-        localStorageItems.push({ key, size });
+        localStorageItems.push({ key, size, type: 'localStorage' });
         totalLocalSize += size;
       }
     }
@@ -26,15 +27,18 @@ export function getStorageStats(): StorageStats {
     console.warn('Could not analyze localStorage:', error);
   }
 
+  const sortedItems = localStorageItems.sort((a, b) => b.size - a.size);
+
   return {
     localStorage: {
       size: totalLocalSize,
       itemCount: localStorageItems.length,
-      items: localStorageItems.sort((a, b) => b.size - a.size)
+      items: sortedItems
     },
     totalSize: totalLocalSize,
     isNearLimit: totalLocalSize > 4 * 1024 * 1024, // 4MB threshold
-    recommendations: getStorageRecommendations(totalLocalSize, localStorageItems)
+    recommendations: getStorageRecommendations(totalLocalSize, localStorageItems),
+    items: sortedItems // Add items at top level for compatibility
   };
 }
 
@@ -77,11 +81,17 @@ export function clearAllStorage(): void {
   });
 }
 
-export function clearStorageByPattern(pattern: string): void {
+export function clearStorageByPattern(pattern: string): number {
+  const patterns = pattern.split(',').map(p => p.trim().toLowerCase());
   const keys = Object.keys(localStorage);
+  let cleared = 0;
+  
   keys.forEach(key => {
-    if (key.includes(pattern)) {
+    if (patterns.some(p => key.toLowerCase().includes(p))) {
       localStorage.removeItem(key);
+      cleared++;
     }
   });
+  
+  return cleared;
 }

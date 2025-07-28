@@ -13,10 +13,12 @@ import {
   clearStorageByPattern,
   type StorageStats 
 } from "@/utils/storage-monitor";
+import { StorageDebug } from "@/components/storage-debug";
 
 export function StorageCleanupPanel() {
   const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     refreshStorageStats();
@@ -226,6 +228,27 @@ export function StorageCleanupPanel() {
             <strong>Clear Legacy:</strong> Removes old/temporary data that may be causing conflicts.
           </p>
         </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            Advanced Debug Information
+            <Button 
+              onClick={() => setShowDebug(!showDebug)} 
+              variant="ghost" 
+              size="sm"
+            >
+              <Info className="h-4 w-4 mr-2" />
+              {showDebug ? 'Hide' : 'Show'} Debug
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        {showDebug && (
+          <CardContent>
+            <StorageDebug />
+          </CardContent>
+        )}
       </Card>
 
       <Card>
