@@ -232,8 +232,6 @@ export function StorageCleanupPanel() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Advanced Debug Information
             <Button 
               onClick={() => setShowDebug(!showDebug)} 
               variant="ghost" 
@@ -255,6 +253,23 @@ export function StorageCleanupPanel() {
         <CardHeader>
           <CardTitle>Prevention & Best Practices</CardTitle>
         </CardHeader>
+          <CardTitle>Prevention & Best Practices</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>To prevent HTTP 431 errors and storage issues:</p>
+          <ul className="list-disc list-inside space-y-1 text-sm mt-2">
+            <li>Export campaign data to CSV regularly</li>
+            <li>Monitor storage size using this panel</li>
+            <li>Clear browser storage monthly</li>
+            <li>Avoid storing extremely large datasets</li>
+            <li>Use incognito mode for testing large imports</li>
+            <li>Clear storage before major data imports</li>
+          </ul>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
         <CardContent>
           <p>To prevent HTTP 431 errors and storage issues:</p>
           <ul className="list-disc list-inside space-y-1 text-sm mt-2">

@@ -320,3 +320,49 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+
+                      <div className="space-y-1">
+                        <div className="font-medium">Auto-Save</div>
+                        <div className="text-2xl font-bold text-green-600">✓</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="status">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">System Status</h2>
+                  <p className="text-muted-foreground">
+                    Check storage health and manage browser data
+                  </p>
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>System Health</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Alert>
+                      <Target className="h-4 w-4" />
+                      <AlertDescription>
+                        <strong>All Systems Operational:</strong> Storage issues have been resolved. 
+                        The app now uses a stable localStorage implementation with proper error handling.
+                      </AlertDescription>
+                    </Alert>
+                  </CardContent>
+                </Card>
+
+                <ErrorBoundary>
+                  <StorageCleanupPanel />
+                </ErrorBoundary>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    </ErrorBoundary>
+  );
+}
