@@ -9,7 +9,9 @@ import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear,
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
 import { CampaignManager } from "@/components/campaign-manager";
-import { ExecutionTracking } from "@/components/execution-tracking-simple";
+import { ExecutionTracking } from "@/components/execution-tracking";
+import { ReportingDashboard } from "@/components/reporting-dashboard";
+import { CampaignCalendarView } from "@/components/campaign-calendar-view";
 import { Campaign } from "@/types/campaign";
 
 // Stable localStorage hook with error handling
@@ -251,16 +253,9 @@ export default function App() {
                   </p>
                 </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Coming Soon</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      Advanced reporting features including charts, filters, and export capabilities will be available here.
-                    </p>
-                  </CardContent>
-                </Card>
+                <ErrorBoundary>
+                  <ReportingDashboard campaigns={campaigns} />
+                </ErrorBoundary>
               </div>
             </TabsContent>
 
@@ -273,16 +268,9 @@ export default function App() {
                   </p>
                 </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Coming Soon</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">
-                      Calendar view showing campaigns by month and quarter will be available here.
-                    </p>
-                  </CardContent>
-                </Card>
+                <ErrorBoundary>
+                  <CampaignCalendarView campaigns={campaigns} />
+                </ErrorBoundary>
               </div>
             </TabsContent>
 

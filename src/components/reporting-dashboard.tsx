@@ -234,7 +234,7 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
                 ) : (
                   filteredCampaigns.map((campaign) => (
                     <TableRow key={campaign.id}>
-                      <TableCell className="font-medium">{campaign.campaignName}</TableCell>
+                      <TableCell className="font-medium">{campaign.description || campaign.campaignName || "Untitled Campaign"}</TableCell>
                       <TableCell>{campaign.owner}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">

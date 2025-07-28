@@ -134,8 +134,8 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     // MQLs = 10% of Expected Leads  
     const mql = Math.round(leads * 0.1);
     
-    // SQLs = 6% of MQLs (not 6% of leads)
-    const sql = Math.round(mql * 0.06);
+    // SQLs = 6% of Expected Leads (not MQLs)
+    const sql = Math.round(leads * 0.06);
     
     // Opportunities = 80% of SQLs
     const opportunities = Math.round(sql * 0.8);
@@ -174,7 +174,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
       issueLink: '',
       actualCost: '0',
       actualLeads: '0',
-      actualMqls: '0'
+      actualMQLs: '0'
     };
 
     setCampaigns([...campaigns, campaign]);
@@ -337,7 +337,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
         issueLink: '',
         actualCost: '0',
         actualLeads: '0',
-        actualMqls: '0'
+        actualMQLs: '0'
       };
     });
 
@@ -631,7 +631,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               <h4 className="font-medium mb-2">Standard Calculation:</h4>
               <ul className="space-y-1 text-muted-foreground">
                 <li>• MQL Forecast = 10% of Expected Leads</li>
-                <li>• SQL Forecast = 6% of MQLs</li>
+                <li>• SQL Forecast = 6% of Expected Leads</li>
                 <li>• Opportunities = 80% of SQLs</li>
                 <li>• Pipeline Forecast = Opportunities × $50K</li>
               </ul>
