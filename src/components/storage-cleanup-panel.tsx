@@ -1,269 +1,227 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Trash, ArrowClockwise, Info, Warning, CheckCircle } from "@phosphor-icons/react";
-import { toast } from "sonner";
-import { 
-  getStorageStats, 
-  formatBytes, 
-  clearAllStorage, 
-  getStorageRecommendations,
-  clearStorageByPattern,
-  type StorageStats 
-} from "@/utils/storage-monitor";
-import { StorageDebug } from "@/components/storage-debug";
+import { Badge } from "@/components/ui/badge";
+import { Trash, Info, Warning, CheckCircle } from "@phosphor-icons/react";
 
 export function StorageCleanupPanel() {
-  const [storageStats, setStorageStats] = useState<StorageStats | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [showDebug, setShowDebug] = useState(false);
+  const [storageInfo, setStorageInfo] = useState<any>(null);
+  const [isClearing, setIsClearing] = useState(false);
 
-  useEffect(() => {
-    refreshStorageStats();
+  React.useEffect(() => {
+    analyzeStorage();
   }, []);
 
-  const refreshStorageStats = () => {
-    setRefreshing(true);
+  const analyzeStorage = () => {
     try {
-      const stats = getStorageStats();
-      setStorageStats(stats);
+      let totalSize = 0;
+      const items: any[] = [];
+      
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key)) {
+          const value = localStorage[key];
+          const size = new Blob([value]).size;
+          totalSize += size;
+          items.push({ key, size, preview: value.substring(0, 100) });
+        }
+      }
+
+      setStorageInfo({
+        totalSize,
+        itemCount: items.length,
+        items: items.sort((a, b) => b.size - a.size)
+      });
     } catch (error) {
-      console.error('Error getting storage stats:', error);
-      toast.error('Failed to analyze storage');
+      console.error('Error analyzing storage:', error);
+    }
+  };
+
+  const clearAllStorage = async () => {
+    setIsClearing(true);
+    try {
+      localStorage.clear();
+      await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay for UX
+      analyzeStorage();
+    } catch (error) {
+      console.error('Error clearing storage:', error);
     } finally {
-      setRefreshing(false);
+      setIsClearing(false);
     }
   };
 
-  const handleClearAllStorage = () => {
-    try {
-      clearAllStorage();
-      toast.success("All browser storage and cookies cleared");
-      setTimeout(() => {
-        refreshStorageStats();
-        // Force page reload to reset application state
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
-      toast.error("Failed to clear storage");
-    }
-  };
-
-  const handleClearSpecificKey = (key: string) => {
+  const clearItem = (key: string) => {
     try {
       localStorage.removeItem(key);
-      sessionStorage.removeItem(key);
-      refreshStorageStats();
-      toast.success(`Cleared ${key}`);
+      analyzeStorage();
     } catch (error) {
-      toast.error(`Failed to clear ${key}`);
+      console.error('Error removing item:', error);
     }
   };
 
-  const handleClearOldData = () => {
-    try {
-      // Clear common legacy keys that might cause issues
-      const cleared = clearStorageByPattern('temp,cache,old,backup,legacy');
-      refreshStorageStats();
-      toast.success(`Cleared ${cleared} legacy storage items`);
-    } catch (error) {
-      toast.error("Failed to clear legacy data");
+  const formatSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const getStorageStatus = () => {
+    if (!storageInfo) return { status: 'unknown', message: 'Analyzing...', color: 'gray' };
+    
+    if (storageInfo.totalSize > 4 * 1024 * 1024) { // 4MB
+      return { 
+        status: 'critical', 
+        message: 'Storage is very large and may cause issues', 
+        color: 'red' 
+      };
+    } else if (storageInfo.totalSize > 1 * 1024 * 1024) { // 1MB
+      return { 
+        status: 'warning', 
+        message: 'Storage is getting large', 
+        color: 'yellow' 
+      };
+    } else {
+      return { 
+        status: 'healthy', 
+        message: 'Storage size is normal', 
+        color: 'green' 
+      };
     }
   };
 
-  if (!storageStats) {
-    return <div className="p-4">Loading storage analysis...</div>;
-  }
-
-  const recommendations: string[] = [];
-  const isHealthy = !storageStats.isNearLimit;
-  const isOverLimit = storageStats.totalSize > 10000000; // 10MB threshold
+  const storageStatus = getStorageStatus();
 
   return (
-    <div className="space-y-4">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {isHealthy ? (
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            ) : (
-              <Warning className="h-5 w-5 text-orange-600" />
-            )}
-            Storage Health Analysis
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={refreshStorageStats}
-              disabled={refreshing}
-              className="ml-auto"
-            >
-              <ArrowClockwise className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isOverLimit && (
-            <Alert variant="destructive">
-              <Warning className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Critical:</strong> Storage is {formatBytes(storageStats.totalSize)} 
-                and may cause HTTP 431 errors or deployment failures. Clear storage immediately.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {storageStats.isNearLimit && !isOverLimit && (
-            <Alert>
-              <Warning className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Warning:</strong> Storage is {formatBytes(storageStats.totalSize)} 
-                and approaching limits. Consider clearing data to prevent issues.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {isHealthy && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                Storage is healthy at {formatBytes(storageStats.totalSize)}. 
-                No immediate action required.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-muted rounded-lg">
-              <div className="text-2xl font-bold">{formatBytes(storageStats.totalSize)}</div>
-              <div className="text-sm text-muted-foreground">Total Storage Used</div>
-            </div>
-            <div className="text-center p-4 bg-muted rounded-lg">
-              <div className="text-2xl font-bold">{(storageStats as any).items?.length || 0}</div>
-              <div className="text-sm text-muted-foreground">Storage Items</div>
-            </div>
-            <div className="text-center p-4 bg-muted rounded-lg">
-              <div className="text-2xl font-bold">
-                {(() => {
-                  const items = (storageStats as any).items;
-                  const campaignItem = items?.find((item: any) => item.key === 'campaignData');
-                  return campaignItem ? formatBytes(campaignItem.size) : '0 Bytes';
-                })()}
-              </div>
-              <div className="text-sm text-muted-foreground">Campaign Data</div>
-            </div>
-          </div>
-          {recommendations.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Recommendations:</div>
-              <ul className="space-y-1">
-                {recommendations.map((rec, index) => (
-                  <li key={index} className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                    {rec}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {(storageStats as any).items && (storageStats as any).items.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Storage Breakdown:</div>
-              <div className="space-y-1">
-                {(storageStats as any).items.slice(0, 15).map((item: any, index: number) => (
-                  <div key={index} className="flex justify-between items-center text-xs bg-muted/50 p-2 rounded">
-                    <span className="truncate flex-1 mr-2">{item.key}</span>
-                    <Badge variant="outline" className="text-xs mr-2">
-                      {item.type === 'localStorage' ? 'Local' : 'Session'}
-                    </Badge>
-                    <span className="font-mono mr-2">{formatBytes(item.size)}</span>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleClearSpecificKey(item.key)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Trash className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
+    <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Trash className="h-5 w-5" />
-            Storage Cleanup Actions
+            <Info className="h-5 w-5" />
+            Storage Analysis
           </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Button 
-              onClick={handleClearAllStorage} 
-              variant={isOverLimit ? "destructive" : "outline"}
-              className="w-full"
-            >
-              <Trash className="h-4 w-4 mr-2" />
-              Clear All Storage & Cookies
-            </Button>
-            
-            <Button 
-              onClick={handleClearOldData}
-              variant="outline" 
-              className="w-full"
-            >
-              <ArrowClockwise className="h-4 w-4 mr-2" />
-              Clear Legacy Data
-            </Button>
-          </div>
-          
-          <p className="text-xs text-muted-foreground">
-            <strong>Clear All:</strong> Removes all localStorage, sessionStorage, and cookies. 
-            Recommended for HTTP 431 errors.<br/>
-            <strong>Clear Legacy:</strong> Removes old/temporary data that may be causing conflicts.
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <Button 
-              onClick={() => setShowDebug(!showDebug)} 
-              variant="ghost" 
-              size="sm"
-            >
-              <Info className="h-4 w-4 mr-2" />
-              {showDebug ? 'Hide' : 'Show'} Debug
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        {showDebug && (
-          <CardContent>
-            <StorageDebug />
-          </CardContent>
-        )}
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Prevention & Best Practices</CardTitle>
         </CardHeader>
         <CardContent>
-          <p>To prevent HTTP 431 errors and storage issues:</p>
-          <ul className="list-disc list-inside space-y-1 text-sm mt-2">
-            <li>Export campaign data to CSV regularly</li>
-            <li>Monitor storage size using this panel</li>
-            <li>Clear browser storage monthly</li>
-            <li>Avoid storing extremely large datasets</li>
-            <li>Use incognito mode for testing large imports</li>
-            <li>Clear storage before major data imports</li>
-          </ul>
+          {storageInfo ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{formatSize(storageInfo.totalSize)}</div>
+                  <div className="text-sm text-muted-foreground">Total Size</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{storageInfo.itemCount}</div>
+                  <div className="text-sm text-muted-foreground">Items Stored</div>
+                </div>
+                <div className="text-center">
+                  <Badge 
+                    variant={storageStatus.color === 'green' ? 'default' : 'destructive'}
+                    className="text-sm"
+                  >
+                    {storageStatus.status === 'healthy' && <CheckCircle className="h-3 w-3 mr-1" />}
+                    {storageStatus.status === 'warning' && <Warning className="h-3 w-3 mr-1" />}
+                    {storageStatus.status === 'critical' && <Warning className="h-3 w-3 mr-1" />}
+                    {storageStatus.message}
+                  </Badge>
+                </div>
+              </div>
+
+              <Alert variant={storageStatus.color === 'red' ? 'destructive' : 'default'}>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  {storageStatus.color === 'red' && (
+                    <>
+                      <strong>Action Required:</strong> Your browser storage is very large ({formatSize(storageInfo.totalSize)}). 
+                      This may cause the app to fail with "HTTP 431 Request Header Fields Too Large" errors.
+                    </>
+                  )}
+                  {storageStatus.color === 'yellow' && (
+                    <>
+                      <strong>Notice:</strong> Storage size is {formatSize(storageInfo.totalSize)}. 
+                      Consider clearing old data if you experience issues.
+                    </>
+                  )}
+                  {storageStatus.color === 'green' && (
+                    <>
+                      <strong>Good:</strong> Storage size is healthy at {formatSize(storageInfo.totalSize)}.
+                    </>
+                  )}
+                </AlertDescription>
+              </Alert>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+              <p className="text-muted-foreground">Analyzing storage...</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {storageInfo && storageInfo.items.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Trash className="h-5 w-5" />
+                Storage Items
+              </span>
+              <Button 
+                variant="destructive" 
+                onClick={clearAllStorage}
+                disabled={isClearing}
+                className="flex items-center gap-2"
+              >
+                <Trash className="h-4 w-4" />
+                {isClearing ? 'Clearing...' : 'Clear All Storage'}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {storageInfo.items.map((item: any, index: number) => (
+                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                        {item.key}
+                      </code>
+                      <Badge variant="secondary">
+                        {formatSize(item.size)}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1 truncate">
+                      {item.preview}...
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => clearItem(item.key)}
+                    className="flex items-center gap-1 text-destructive hover:text-destructive"
+                  >
+                    <Trash className="h-3 w-3" />
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Storage Best Practices</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>• <strong>Browser Storage Limits:</strong> Most browsers limit localStorage to 5-10MB total</p>
+            <p>• <strong>HTTP 431 Errors:</strong> Large storage can cause "Request Header Fields Too Large" errors</p>
+            <p>• <strong>Performance:</strong> Large storage can slow down app startup and saving</p>
+            <p>• <strong>Recommendation:</strong> Keep storage under 1MB for optimal performance</p>
+          </div>
         </CardContent>
       </Card>
     </div>

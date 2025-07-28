@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, BarChart3 } from "@phosphor-icons/react";
+import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, ChartBar } from "@phosphor-icons/react";
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
 import { CampaignManager } from "@/components/campaign-manager";
@@ -192,7 +192,7 @@ export default function App() {
                 Campaign Planning
               </TabsTrigger>
               <TabsTrigger value="reporting" className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
+                <ChartBar className="h-4 w-4" />
                 Reporting
               </TabsTrigger>
               <TabsTrigger value="calendar" className="flex items-center gap-2">

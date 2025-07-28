@@ -2,92 +2,142 @@
 
 ## Core Purpose & Success
 
-**Mission Statement**: Create a comprehensive marketing campaign planning and tracking tool for APAC marketing operations that enables teams to plan, execute, and measure campaign performance while managing budgets effectively.
+**Mission Statement**: A comprehensive marketing campaign planning and tracking tool for APAC marketing operations that streamlines campaign creation, budget management, and ROI calculation.
 
 **Success Indicators**: 
-- Teams can plan campaigns with accurate ROI forecasting
-- Budget allocation and tracking prevents overspend
-- Real-time execution tracking improves campaign delivery
-- Performance reporting enables data-driven decisions
+- Reduced time to plan campaigns (from hours to minutes)
+- Accurate budget tracking and ROI forecasting
+- Centralized campaign data accessible by all team members
+- Improved visibility into pipeline forecasts and performance metrics
 
-**Experience Qualities**: Professional, efficient, comprehensive
+**Experience Qualities**: Professional, Efficient, Reliable
 
 ## Project Classification & Approach
 
-**Complexity Level**: Complex Application (advanced functionality, multiple features, data persistence)
+**Complexity Level**: Light Application (multiple features with basic state management)
 
-**Primary User Activity**: Creating, Acting, and Interacting - users create campaign plans, execute campaigns, and analyze performance
+**Primary User Activity**: Creating and Managing (campaign planning, execution tracking, budget oversight)
+
+## Core Problem Analysis
+
+APAC marketing teams need a unified tool to:
+- Plan marketing campaigns with consistent ROI calculations
+- Track budget allocation across regions and owners
+- Monitor campaign execution status and actual performance
+- Generate reports and forecasts for leadership
 
 ## Essential Features
 
-### Campaign Planning
-- **What it does**: Allows users to create detailed campaign plans with forecasting
-- **Why it matters**: Enables proactive planning and resource allocation
-- **Success criteria**: Users can create campaigns with all required fields and see auto-calculated metrics
+### 1. Campaign Planning
+- **Functionality**: Form-based campaign creation with auto-calculated ROI metrics
+- **Purpose**: Standardize campaign planning process and ensure consistent calculations
+- **Success Criteria**: Users can create campaigns in under 2 minutes with accurate forecasts
 
-### Execution Tracking  
-- **What it does**: Tracks campaign status and actual performance against forecasts
-- **Why it matters**: Ensures campaigns stay on track and enables performance measurement
-- **Success criteria**: Users can update campaign status and track actual vs forecasted metrics
+### 2. Budget Management
+- **Functionality**: Owner-based budget allocation and tracking with visual indicators
+- **Purpose**: Prevent budget overruns and provide real-time spend visibility
+- **Success Criteria**: Budget warnings appear when 90% utilized, overruns clearly flagged
 
-### Budget Management
-- **What it does**: Manages budget allocation per owner and tracks spending against budgets
-- **Why it matters**: Prevents budget overruns and ensures financial accountability
-- **Success criteria**: Clear visibility into budget usage with alerts for overruns
+### 3. Data Import/Export
+- **Functionality**: CSV import for bulk campaign creation and export for reporting
+- **Purpose**: Enable data migration and external reporting workflows
+- **Success Criteria**: Support for 100+ campaign imports with validation
 
-### Reporting Dashboard
-- **What it does**: Provides comprehensive reporting and analytics on campaign performance
-- **Why it matters**: Enables data-driven decision making and performance optimization
-- **Success criteria**: Users can filter data and see meaningful performance insights
-
-### Calendar View
-- **What it does**: Visual timeline view of campaigns organized by fiscal year months
-- **Why it matters**: Helps with scheduling and resource planning
-- **Success criteria**: Clear visual representation of campaign timing and conflicts
+### 4. Storage Management
+- **Functionality**: Browser storage optimization and cleanup tools
+- **Purpose**: Prevent HTTP 431 errors and ensure app stability
+- **Success Criteria**: App maintains performance with 100+ campaigns stored
 
 ## Design Direction
 
 ### Visual Tone & Identity
-- **Emotional Response**: Professional confidence and operational efficiency
-- **Design Personality**: Clean, corporate, data-focused with subtle modern touches
-- **Visual Metaphors**: Clean business interfaces like financial dashboards
-- **Simplicity Spectrum**: Minimal interface that prioritizes function and data clarity
+**Emotional Response**: Professional confidence and operational efficiency
+**Design Personality**: Clean, systematic, trustworthy - like enterprise productivity tools
+**Visual Metaphors**: Dashboard controls, financial planning interfaces
+**Simplicity Spectrum**: Minimal but comprehensive - hide complexity behind intuitive interfaces
 
 ### Color Strategy
-- **Color Scheme Type**: Professional business palette with accent colors for data visualization
-- **Primary Color**: Blue (#3b82f6) - represents trust and reliability
-- **Secondary Colors**: Grays for backgrounds and text
-- **Accent Color**: Blue variants for interactive elements
-- **Color Psychology**: Blues convey professionalism and trust, grays provide neutral backdrop
-- **Color Accessibility**: WCAG AA compliant contrast ratios maintained throughout
+**Color Scheme Type**: Professional blue-based palette with semantic colors
+**Primary Color**: Blue (#3b82f6) - conveys trust and professionalism
+**Secondary Colors**: Gray (#f3f4f6) for backgrounds, Green for success states
+**Accent Color**: Blue variants for CTAs and active states
+**Semantic Colors**: Red for warnings/errors, Green for success, Orange for alerts
 
 ### Typography System
-- **Font Pairing Strategy**: Single clean sans-serif (Inter) for all text
-- **Typographic Hierarchy**: Clear distinction between headers, body text, and data
-- **Font Personality**: Modern, readable, professional
-- **Readability Focus**: Optimal spacing for data-heavy interfaces
-- **Which fonts**: Inter from Google Fonts
-- **Legibility Check**: Yes, Inter is highly legible at all sizes
+**Font Pairing Strategy**: Single family (Inter) with weight variations for hierarchy
+**Typographic Hierarchy**: Clear distinction between headings, body text, and data
+**Font Personality**: Modern, readable, professional
+**Which fonts**: Inter (Google Fonts) for all text
+**Legibility Check**: Excellent readability across all screen sizes
 
 ### Visual Hierarchy & Layout
-- **Attention Direction**: Tab navigation guides users through workflow stages
-- **White Space Philosophy**: Generous spacing prevents information overload
-- **Grid System**: Card-based layout with consistent spacing
-- **Responsive Approach**: Mobile-friendly responsive grid system
-- **Content Density**: Balanced - enough information without overwhelming
+**Attention Direction**: Card-based layout guides users through logical workflow
+**White Space Philosophy**: Generous spacing prevents cognitive overload
+**Grid System**: Responsive grid adapts to screen size while maintaining alignment
+**Content Density**: Balanced - enough information without overwhelming
 
 ### UI Elements & Component Selection
-- **Component Usage**: ShadCN components for consistency and accessibility
-- **Component States**: Clear hover, active, and disabled states
-- **Icon Selection**: Phosphor icons for clear, consistent iconography
-- **Spacing System**: Tailwind's spacing scale for consistency
+**Component Usage**: 
+- Cards for content grouping
+- Tables for data display
+- Forms for input collection
+- Dialogs for confirmations and detailed views
+- Badges for status indicators
+
+**Component States**: 
+- Clear hover, focus, and active states
+- Loading states for async operations
+- Error states with recovery guidance
+
+### Accessibility & Readability
+**Contrast Goal**: WCAG AA compliance maintained throughout
+**Keyboard Navigation**: Full keyboard accessibility for all interactions
+**Screen Reader Support**: Proper ARIA labels and semantic HTML
 
 ## Implementation Considerations
 
-**Scalability Needs**: Data persistence with localStorage, expandable to backend storage
-**Testing Focus**: Budget calculations, ROI metrics, data filtering
-**Critical Questions**: How will data be shared between team members?
+### Technical Architecture
+- React with TypeScript for type safety
+- Local storage for data persistence (with cleanup tools)
+- Shadcn/ui for consistent component library
+- Phosphor Icons for visual consistency
+
+### Data Management
+- Campaign data stored as JSON in localStorage
+- Budget calculations performed client-side
+- CSV import/export for data portability
+- Error boundaries for graceful failure handling
+
+### Performance
+- Optimized for 100+ campaigns
+- Storage monitoring and cleanup tools
+- Lazy loading for large datasets
+- Efficient re-rendering patterns
+
+## Edge Cases & Problem Scenarios
+
+### Storage Limitations
+- **Problem**: Browser localStorage limits (5-10MB)
+- **Solution**: Storage monitoring with cleanup tools and warnings
+
+### Data Validation
+- **Problem**: Invalid CSV imports or corrupt data
+- **Solution**: Comprehensive validation with clear error messages
+
+### Budget Overruns
+- **Problem**: Campaigns exceeding allocated budgets
+- **Solution**: Visual warnings but allow creation for planning purposes
+
+### Concurrent Usage
+- **Problem**: Multiple users making changes simultaneously
+- **Solution**: Current localStorage approach - future enhancement for real-time sync
 
 ## Reflection
 
-This approach creates a comprehensive tool that addresses the complete campaign lifecycle from planning through execution to analysis, with built-in budget controls that are essential for marketing operations.
+This solution uniquely combines:
+- Automated ROI calculations with industry-standard conversion rates
+- Owner-based budget tracking separate from regional reporting
+- Comprehensive data management with import/export capabilities
+- Built-in storage optimization to prevent common browser issues
+
+The tool transforms ad-hoc campaign planning into a standardized, trackable process that provides immediate value to marketing operations teams while scaling to enterprise requirements.
