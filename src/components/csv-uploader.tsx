@@ -187,17 +187,38 @@ Cross-region Webinar,Webinars,New Logo Acquisition,All,FY26,Q4 - April,Digital,X
                 }
               });
               
-              // Calculate derived metrics if expected leads is available
-              if (typeof campaign.expectedLeads === 'number') {
-                const mqlValue = Math.round(campaign.expectedLeads * 0.1); // 10% of leads
-                const sqlValue = Math.round(campaign.expectedLeads * 0.06); // 6% of leads
-                const oppsValue = Math.round(sqlValue * 0.8); // 80% of SQLs
-                const pipelineValue = oppsValue * 50000; // $50K per opportunity
+              // Calculate derived metrics if expected leads is available  
+              if (typeof campaign.expectedLeads === 'number' && typeof campaign.forecastedCost === 'number') {
+                // Special logic for In-Account programs
+                const isInAccountEvent = campaign.campaignType?.includes("In-Account") || 
+                                       campaign.campaignType?.includes("In Account") ||
+                                       campaign.campaignType === "In-Account Events (1:1)";
+                
+                if (isInAccountEvent && campaign.expectedLeads === 0) {
+                  // 20:1 ROI assumption for In-Account programs with no leads
+                  campaign.mql = 0;
+                  campaign.sql = 0;
+                  campaign.opportunities = 0;
+                  campaign.pipelineForecast = campaign.forecastedCost * 20;
+                } else {
+                  // Standard calculation flow:
+                  // MQLs = 10% of Expected Leads
+                  const mqlValue = Math.round(campaign.expectedLeads * 0.1);
+                  
+                  // SQLs = 6% of MQLs (not 6% of leads)
+                  const sqlValue = Math.round(mqlValue * 0.06);
+                  
+                  // Opportunities = 80% of SQLs  
+                  const oppsValue = Math.round(sqlValue * 0.8);
+                  
+                  // Pipeline = Opportunities × $50K
+                  const pipelineValue = oppsValue * 50000;
 
-                campaign.mql = mqlValue;
-                campaign.sql = sqlValue;
-                campaign.opportunities = oppsValue;
-                campaign.pipelineForecast = pipelineValue;
+                  campaign.mql = mqlValue;
+                  campaign.sql = sqlValue;
+                  campaign.opportunities = oppsValue;
+                  campaign.pipelineForecast = pipelineValue;
+                }
               }
 
               // Validate required fields

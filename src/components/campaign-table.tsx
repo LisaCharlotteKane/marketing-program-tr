@@ -94,10 +94,22 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
   const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
 
   // Calculate derived metrics
-  const calculateMetrics = (expectedLeads: number | string) => {
+  const calculateMetrics = (expectedLeads: number | string, forecastedCost?: number | string, campaignType?: string) => {
     const leads = typeof expectedLeads === 'number' ? expectedLeads : parseFloat(expectedLeads.toString()) || 0;
+    const cost = typeof forecastedCost === 'number' ? forecastedCost : parseFloat(forecastedCost?.toString() || "0") || 0;
+    
+    // Check for In-Account programs (various naming variations)
+    const isInAccountEvent = campaignType?.includes("In-Account") || 
+                           campaignType?.includes("In Account") ||
+                           campaignType === "In-Account Events (1:1)";
+    
+    if (isInAccountEvent && leads === 0) {
+      // Special 20:1 ROI calculation for In-Account Events without leads
+      return { mql: 0, sql: 0, opportunities: 0, pipelineForecast: cost * 20 };
+    }
+    
     const mql = Math.round(leads * 0.1);
-    const sql = Math.round(leads * 0.06);
+    const sql = Math.round(mql * 0.06); // 6% of MQLs, not leads
     const opportunities = Math.round(sql * 0.8);
     const pipelineForecast = opportunities * 50000;
     
@@ -121,7 +133,11 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
       return;
     }
 
-    const metrics = calculateMetrics(newCampaign.expectedLeads || 0);
+    const metrics = calculateMetrics(
+      newCampaign.expectedLeads || 0,
+      newCampaign.forecastedCost || 0,
+      newCampaign.campaignType
+    );
     
     const campaign: Campaign = {
       id: Date.now().toString(),
@@ -424,7 +440,11 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
               <Label className="text-sm font-medium text-muted-foreground">Calculated Metrics Preview</Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-muted/30 rounded-lg border">
                 {(() => {
-                  const metrics = calculateMetrics(newCampaign.expectedLeads || 0);
+                  const metrics = calculateMetrics(
+                    newCampaign.expectedLeads || 0,
+                    newCampaign.forecastedCost || 0,
+                    newCampaign.campaignType
+                  );
                   return (
                     <>
                       <div className="text-center space-y-1">

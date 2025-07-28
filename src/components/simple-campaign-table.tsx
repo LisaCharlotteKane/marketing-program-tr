@@ -67,9 +67,19 @@ export function SimpleCampaignTable({ campaigns, setCampaigns }: SimpleCampaignT
     toast.success("Campaign deleted");
   };
 
-  const calculateMetrics = (expectedLeads: number, forecastedCost: number) => {
+  const calculateMetrics = (expectedLeads: number, forecastedCost: number, campaignType?: string) => {
+    // Check for In-Account programs (various naming variations)
+    const isInAccountEvent = campaignType?.includes("In-Account") || 
+                           campaignType?.includes("In Account") ||
+                           campaignType === "In-Account Events (1:1)";
+    
+    if (isInAccountEvent && expectedLeads === 0) {
+      // Special 20:1 ROI calculation for In-Account Events without leads
+      return { mql: 0, sql: 0, opportunities: 0, pipeline: forecastedCost * 20 };
+    }
+    
     const mql = Math.round(expectedLeads * 0.1);
-    const sql = Math.round(expectedLeads * 0.06);
+    const sql = Math.round(mql * 0.06); // 6% of MQLs, not leads
     const opportunities = Math.round(sql * 0.8);
     const pipeline = opportunities * 50000;
     return { mql, sql, opportunities, pipeline };
@@ -180,7 +190,7 @@ export function SimpleCampaignTable({ campaigns, setCampaigns }: SimpleCampaignT
             </TableHeader>
             <TableBody>
               {campaigns.map((campaign) => {
-                const metrics = calculateMetrics(campaign.expectedLeads, campaign.forecastedCost);
+                const metrics = calculateMetrics(campaign.expectedLeads, campaign.forecastedCost, campaign.campaignType);
                 return (
                   <TableRow key={campaign.id}>
                     <TableCell className="font-medium">{campaign.campaignName}</TableCell>
@@ -236,13 +246,13 @@ export function SimpleCampaignTable({ campaigns, setCampaigns }: SimpleCampaignT
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
-                  {campaigns.reduce((sum, c) => sum + calculateMetrics(c.expectedLeads, c.forecastedCost).mql, 0)}
+                  {campaigns.reduce((sum, c) => sum + calculateMetrics(c.expectedLeads, c.forecastedCost, c.campaignType).mql, 0)}
                 </div>
                 <div className="text-sm text-muted-foreground">Total MQLs</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
-                  ${campaigns.reduce((sum, c) => sum + calculateMetrics(c.expectedLeads, c.forecastedCost).pipeline, 0).toLocaleString()}
+                  ${campaigns.reduce((sum, c) => sum + calculateMetrics(c.expectedLeads, c.forecastedCost, c.campaignType).pipeline, 0).toLocaleString()}
                 </div>
                 <div className="text-sm text-muted-foreground">Total Pipeline</div>
               </div>

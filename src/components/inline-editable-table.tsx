@@ -51,10 +51,22 @@ export function InlineEditableTable({ campaigns, setCampaigns }: CampaignTablePr
   ];
 
   // Calculate derived metrics
-  const calculateMetrics = (expectedLeads: number | string) => {
+  const calculateMetrics = (expectedLeads: number | string, forecastedCost?: number | string, campaignType?: string) => {
     const leads = typeof expectedLeads === 'number' ? expectedLeads : parseFloat(expectedLeads.toString()) || 0;
+    const cost = typeof forecastedCost === 'number' ? forecastedCost : parseFloat(forecastedCost?.toString() || "0") || 0;
+    
+    // Check for In-Account programs (various naming variations)
+    const isInAccountEvent = campaignType?.includes("In-Account") || 
+                           campaignType?.includes("In Account") ||
+                           campaignType === "In-Account Events (1:1)";
+    
+    if (isInAccountEvent && leads === 0) {
+      // Special 20:1 ROI calculation for In-Account Events without leads
+      return { mql: 0, sql: 0, opportunities: 0, pipelineForecast: cost * 20 };
+    }
+    
     const mql = Math.round(leads * 0.1);
-    const sql = Math.round(leads * 0.06);
+    const sql = Math.round(mql * 0.06); // 6% of MQLs, not leads
     const opportunities = Math.round(sql * 0.8);
     const pipelineForecast = opportunities * 50000;
     
@@ -102,9 +114,13 @@ export function InlineEditableTable({ campaigns, setCampaigns }: CampaignTablePr
       if (campaign.id === id) {
         const updatedCampaign = { ...campaign, [field]: newValue };
         
-        // Auto-calculate metrics if expectedLeads changed
-        if (field === 'expectedLeads') {
-          const metrics = calculateMetrics(newValue);
+        // Auto-calculate metrics if expectedLeads or forecastedCost changed
+        if (field === 'expectedLeads' || field === 'forecastedCost') {
+          const metrics = calculateMetrics(
+            field === 'expectedLeads' ? newValue : campaign.expectedLeads, 
+            field === 'forecastedCost' ? newValue : campaign.forecastedCost,
+            campaign.campaignType
+          );
           Object.assign(updatedCampaign, metrics);
         }
 

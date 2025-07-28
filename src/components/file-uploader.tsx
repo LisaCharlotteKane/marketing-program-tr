@@ -157,12 +157,16 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
             if ((typeof campaign.forecastedCost === 'number' && !isNaN(campaign.forecastedCost)) || 
                 (typeof campaign.expectedLeads === 'number' && !isNaN(campaign.expectedLeads))) {
               
-              // Special logic for "In-Account Events (1:1)" campaigns
-              if (campaign.campaignType === "In-Account Events (1:1)") {
+              // Check for In-Account programs (various naming variations)
+              const isInAccountEvent = campaign.campaignType?.includes("In-Account") || 
+                                     campaign.campaignType?.includes("In Account") ||
+                                     campaign.campaignType === "In-Account Events (1:1)";
+              
+              if (isInAccountEvent) {
                 if (typeof campaign.expectedLeads === 'number' && campaign.expectedLeads > 0) {
                   // Standard calculation if leads are provided
                   campaign.mql = Math.round(campaign.expectedLeads * 0.1);
-                  campaign.sql = Math.round(campaign.expectedLeads * 0.06);
+                  campaign.sql = Math.round(campaign.mql * 0.06); // 6% of MQLs, not leads
                   campaign.opportunities = Math.round(campaign.sql * 0.8);
                   campaign.pipelineForecast = campaign.opportunities * 50000;
                 } else if (typeof campaign.forecastedCost === 'number' && campaign.forecastedCost > 0) {
@@ -175,7 +179,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
               } else if (typeof campaign.expectedLeads === 'number' && campaign.expectedLeads > 0) {
                 // Standard calculation for all other campaign types
                 campaign.mql = Math.round(campaign.expectedLeads * 0.1);
-                campaign.sql = Math.round(campaign.expectedLeads * 0.06);
+                campaign.sql = Math.round(campaign.mql * 0.06); // 6% of MQLs, not leads
                 campaign.opportunities = Math.round(campaign.sql * 0.8);
                 campaign.pipelineForecast = campaign.opportunities * 50000;
               }

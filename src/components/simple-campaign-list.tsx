@@ -93,10 +93,28 @@ export function SimpleCampaignList({ campaigns }: SimpleCampaignListProps) {
             </TableHeader>
             <TableBody>
               {campaigns.map((campaign) => {
-                const mql = Math.round((campaign.expectedLeads || 0) * 0.1);
-                const sql = Math.round((campaign.expectedLeads || 0) * 0.06);
-                const opportunities = Math.round(sql * 0.8);
-                const pipeline = opportunities * 50000;
+                const expectedLeads = campaign.expectedLeads || 0;
+                const forecastedCost = Number(campaign.forecastedCost) || 0;
+                
+                // Check for In-Account programs (various naming variations)
+                const isInAccountEvent = campaign.campaignType?.includes("In-Account") || 
+                                       campaign.campaignType?.includes("In Account") ||
+                                       campaign.campaignType === "In-Account Events (1:1)";
+                
+                let mql, sql, opportunities, pipeline;
+                
+                if (isInAccountEvent && expectedLeads === 0) {
+                  // Special 20:1 ROI calculation for In-Account Events without leads
+                  mql = 0;
+                  sql = 0;
+                  opportunities = 0;
+                  pipeline = forecastedCost * 20;
+                } else {
+                  mql = Math.round(expectedLeads * 0.1);
+                  sql = Math.round(mql * 0.06); // 6% of MQLs, not leads
+                  opportunities = Math.round(sql * 0.8);
+                  pipeline = opportunities * 50000;
+                }
 
                 return (
                   <TableRow key={campaign.id}>

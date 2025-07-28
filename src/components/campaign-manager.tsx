@@ -114,8 +114,12 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     const leads = Number(campaign.expectedLeads) || 0;
     const cost = Number(campaign.forecastedCost) || 0;
     
-    // Special logic for In-Account Events (1:1)
-    if (campaign.campaignType === "In-Account Events (1:1)" && leads === 0) {
+    // Special logic for In-Account Events (1:1) - check for various naming variations
+    const isInAccountEvent = campaign.campaignType?.includes("In-Account") || 
+                           campaign.campaignType?.includes("In Account") ||
+                           campaign.campaignType === "In-Account Events (1:1)";
+    
+    if (isInAccountEvent && leads === 0) {
       const pipeline = cost * 20;
       return {
         mql: 0,
@@ -125,9 +129,18 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
       };
     }
     
+    // Standard calculation flow:
+    // Expected Leads (user input)
+    // MQLs = 10% of Expected Leads  
     const mql = Math.round(leads * 0.1);
-    const sql = Math.round(leads * 0.06);
+    
+    // SQLs = 6% of MQLs (not 6% of leads)
+    const sql = Math.round(mql * 0.06);
+    
+    // Opportunities = 80% of SQLs
     const opportunities = Math.round(sql * 0.8);
+    
+    // Pipeline = Opportunities × $50K
     const pipelineForecast = opportunities * 50000;
     
     return { mql, sql, opportunities, pipelineForecast };
@@ -618,16 +631,17 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               <h4 className="font-medium mb-2">Standard Calculation:</h4>
               <ul className="space-y-1 text-muted-foreground">
                 <li>• MQL Forecast = 10% of Expected Leads</li>
-                <li>• SQL Forecast = 6% of Expected Leads</li>
-                <li>• Opportunities = 80% of SQL</li>
+                <li>• SQL Forecast = 6% of MQLs</li>
+                <li>• Opportunities = 80% of SQLs</li>
                 <li>• Pipeline Forecast = Opportunities × $50K</li>
               </ul>
             </div>
             <div>
               <h4 className="font-medium mb-2">Special Case:</h4>
               <ul className="space-y-1 text-muted-foreground">
-                <li>• In-Account Events (1:1) with no leads:</li>
-                <li>• Pipeline = Cost × 20 (20:1 ROI assumption)</li>
+                <li>• In-Account Programs with no lead numbers:</li>
+                <li>• Pipeline = Campaign Cost × 20 (20:1 ROI)</li>
+                <li>• MQLs, SQLs, Opportunities = 0</li>
               </ul>
             </div>
           </div>

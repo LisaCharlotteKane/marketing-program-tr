@@ -183,11 +183,30 @@ export const calculateSummaryMetrics = (campaigns) => {
     // Add actual cost
     metrics.totalActualSpend += campaign.actualCost || 0;
     
-    // Calculate and add pipeline forecast based on expected leads
-    const mql = Math.round((campaign.expectedLeads || 0) * 0.1); // 10%
-    const sql = Math.round((campaign.expectedLeads || 0) * 0.06); // 6%
-    const opps = Math.round(sql * 0.8); // 80% of SQLs
-    const pipeline = opps * 50000; // $50K per opportunity
+    // Calculate and add pipeline forecast based on expected leads or special logic
+    const expectedLeads = campaign.expectedLeads || 0;
+    const forecastedCost = campaign.forecastedCost || 0;
+    
+    // Check for In-Account programs (various naming variations)
+    const isInAccountEvent = campaign.campaignType?.includes("In-Account") || 
+                           campaign.campaignType?.includes("In Account") ||
+                           campaign.campaignType === "In-Account Events (1:1)";
+    
+    let mql, sql, opps, pipeline;
+    
+    if (isInAccountEvent && expectedLeads === 0) {
+      // Special 20:1 ROI calculation for In-Account Events without leads
+      mql = 0;
+      sql = 0;
+      opps = 0;
+      pipeline = forecastedCost * 20;
+    } else {
+      // Standard calculation
+      mql = Math.round(expectedLeads * 0.1); // 10% of leads
+      sql = Math.round(mql * 0.06); // 6% of MQLs, not leads
+      opps = Math.round(sql * 0.8); // 80% of SQLs
+      pipeline = opps * 50000; // $50K per opportunity
+    }
     
     metrics.totalPipelineForecast += pipeline;
     metrics.totalMQLs += mql;
@@ -241,7 +260,7 @@ export const prepareLeadsComparisonData = (campaigns) => {
   const totalActualLeads = campaigns.reduce((sum, campaign) => sum + (campaign.actualLeads || 0), 0);
   const totalExpectedMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of expected leads
   const totalActualMQLs = campaigns.reduce((sum, campaign) => sum + (campaign.actualMQLs || 0), 0);
-  const totalExpectedSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of expected leads
+  const totalExpectedSQLs = Math.round(totalExpectedMQLs * 0.06); // 6% of expected MQLs, not leads
   const totalActualSQLs = campaigns.reduce((sum, campaign) => sum + (campaign.actualSQLs || 0), 0);
   
   return [

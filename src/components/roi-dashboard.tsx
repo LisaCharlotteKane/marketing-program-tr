@@ -113,7 +113,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
 
     // Calculate forecasted metrics
     const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of leads
-    const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of leads
+    const totalSQLs = Math.round(totalMQLs * 0.06); // 6% of MQLs
     const totalOpportunities = Math.round(totalSQLs * 0.8); // 80% of SQLs
     
     // Calculate pipeline with special logic for In-Account Events
@@ -123,7 +123,12 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
       const forecastedCost = typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : 0;
       const expectedLeads = typeof campaign.expectedLeads === 'number' ? campaign.expectedLeads : 0;
       
-      if (campaign.campaignType === "In-Account Events (1:1)" && 
+      // Check for In-Account programs (various naming variations)
+      const isInAccountEvent = campaign.campaignType?.includes("In-Account") || 
+                             campaign.campaignType?.includes("In Account") ||
+                             campaign.campaignType === "In-Account Events (1:1)";
+      
+      if (isInAccountEvent && 
           (!expectedLeads || expectedLeads <= 0) && 
           forecastedCost > 0) {
         // Special 20:1 ROI calculation for In-Account Events without leads
@@ -131,7 +136,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
       } else if (expectedLeads > 0) {
         // Standard calculation based on leads
         const mqlValue = Math.round(expectedLeads * 0.1);
-        const sqlValue = Math.round(expectedLeads * 0.06);
+        const sqlValue = Math.round(mqlValue * 0.06); // 6% of MQLs, not leads
         const oppsValue = Math.round(sqlValue * 0.8);
         totalPipelineForecast += oppsValue * 50000;
       }
@@ -581,7 +586,12 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
                     // Calculate pipeline value with special logic for In-Account Events
                     let pipelineValue = 0;
                     
-                    if (campaign.campaignType === "In-Account Events (1:1)" && 
+                    // Check for In-Account programs (various naming variations)
+                    const isInAccountEvent = campaign.campaignType?.includes("In-Account") || 
+                                           campaign.campaignType?.includes("In Account") ||
+                                           campaign.campaignType === "In-Account Events (1:1)";
+                    
+                    if (isInAccountEvent && 
                         (!expectedLeads || expectedLeads <= 0) && 
                         forecastedCost > 0) {
                       // Special 20:1 ROI calculation for In-Account Events without leads
@@ -589,7 +599,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
                     } else {
                       // Standard calculation
                       const expectedMQLs = Math.round(expectedLeads * 0.1);
-                      const expectedSQLs = Math.round(expectedLeads * 0.06);
+                      const expectedSQLs = Math.round(expectedMQLs * 0.06); // 6% of MQLs, not leads
                       const expectedOpps = Math.round(expectedSQLs * 0.8);
                       pipelineValue = expectedOpps * 50000;
                     }
