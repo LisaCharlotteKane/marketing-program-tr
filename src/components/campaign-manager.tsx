@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Plus, 
   Trash, 
@@ -20,7 +21,9 @@ import {
   Target,
   Funnel,
   X,
-  Edit
+  Edit,
+  Copy,
+  Save
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Campaign } from "@/types/campaign";
@@ -37,8 +40,10 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [editingPillars, setEditingPillars] = useState<{campaignId: string; pillars: string[]} | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string[]}>({});
+  const [isAddingNew, setIsAddingNew] = useState(false);
 
-  // Form state for new campaign
+  // New campaign row for inline editing
   const [newCampaign, setNewCampaign] = useState<Partial<Campaign>>({
     campaignType: '',
     strategicPillar: [],
@@ -111,47 +116,31 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     "Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"
   ];
 
-  // Calculate metrics for a campaign
-  const calculateMetrics = (campaign: Partial<Campaign>) => {
-    const leads = Number(campaign.expectedLeads) || 0;
-    const cost = Number(campaign.forecastedCost) || 0;
+  // Validate campaign
+  const validateCampaign = (campaign: Partial<Campaign>, id?: string): string[] => {
+    const errors: string[] = [];
     
-    // Special logic for In-Account Events (1:1) - check for various naming variations
-    const isInAccountEvent = campaign.campaignType?.includes("In-Account") || 
-                           campaign.campaignType?.includes("In Account") ||
-                           campaign.campaignType === "In-Account Events (1:1)";
+    if (!campaign.campaignType?.trim()) errors.push("Campaign Type is required");
+    if (!campaign.region?.trim()) errors.push("Region is required"); 
+    if (!campaign.owner?.trim()) errors.push("Owner is required");
     
-    if (isInAccountEvent && leads === 0) {
-      const pipeline = cost * 20;
-      return {
-        mql: 0,
-        sql: 0,
-        opportunities: 0,
-        pipelineForecast: pipeline
-      };
+    if (campaign.forecastedCost && isNaN(Number(campaign.forecastedCost))) {
+      errors.push("Forecasted Cost must be a valid number");
     }
     
-    // Standard calculation flow:
-    // Expected Leads (user input)
-    // MQLs = 10% of Expected Leads  
-    const mql = Math.round(leads * 0.1);
+    if (campaign.expectedLeads && isNaN(Number(campaign.expectedLeads))) {
+      errors.push("Forecasted Leads must be a valid number");
+    }
     
-    // SQLs = 6% of Expected Leads (not MQLs)
-    const sql = Math.round(leads * 0.06);
-    
-    // Opportunities = 80% of SQLs
-    const opportunities = Math.round(sql * 0.8);
-    
-    // Pipeline = Opportunities × $50K
-    const pipelineForecast = opportunities * 50000;
-    
-    return { mql, sql, opportunities, pipelineForecast };
+    return errors;
   };
 
-  // Add new campaign
-  const addCampaign = () => {
-    if (!newCampaign.campaignType || !newCampaign.region || !newCampaign.owner) {
-      toast.error("Please fill in required fields");
+  // Add new campaign inline
+  const addNewCampaign = () => {
+    const errors = validateCampaign(newCampaign);
+    if (errors.length > 0) {
+      setValidationErrors({...validationErrors, 'new': errors});
+      toast.error("Please fix validation errors");
       return;
     }
 
@@ -193,14 +182,78 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
       forecastedCost: '',
       expectedLeads: ''
     });
+    setIsAddingNew(false);
+    setValidationErrors({...validationErrors, 'new': []});
     toast.success("Campaign added successfully");
   };
 
-  // Update campaign
+  // Cancel new campaign
+  const cancelNewCampaign = () => {
+    setNewCampaign({
+      campaignType: '',
+      strategicPillar: [],
+      revenuePlay: '',
+      fy: 'FY25',
+      quarterMonth: '',
+      region: '',
+      country: '',
+      owner: '',
+      description: '',
+      forecastedCost: '',
+      expectedLeads: ''
+    });
+    setIsAddingNew(false);
+    setValidationErrors({...validationErrors, 'new': []});
+  };
+  const calculateMetrics = (campaign: Partial<Campaign>) => {
+    const leads = Number(campaign.expectedLeads) || 0;
+    const cost = Number(campaign.forecastedCost) || 0;
+    
+    // Special logic for In-Account Events (1:1) - check for various naming variations
+    const isInAccountEvent = campaign.campaignType?.includes("In-Account") || 
+                           campaign.campaignType?.includes("In Account") ||
+                           campaign.campaignType === "In-Account Events (1:1)";
+    
+    if (isInAccountEvent && leads === 0) {
+      const pipeline = cost * 20;
+      return {
+        mql: 0,
+        sql: 0,
+        opportunities: 0,
+        pipelineForecast: pipeline
+      };
+    }
+    
+    // Standard calculation flow:
+    // Expected Leads (user input)
+    // MQLs = 10% of Expected Leads  
+    const mql = Math.round(leads * 0.1);
+    
+    // SQLs = 6% of Expected Leads (not MQLs)
+    const sql = Math.round(leads * 0.06);
+    
+    // Opportunities = 80% of SQLs
+    const opportunities = Math.round(sql * 0.8);
+    
+    // Pipeline = Opportunities × $50K
+    const pipelineForecast = opportunities * 50000;
+    
+    return { mql, sql, opportunities, pipelineForecast };
+  };
+
+  // Update campaign with validation
   const updateCampaign = (id: string, field: string, value: any) => {
     setCampaigns(campaigns.map(campaign => {
       if (campaign.id === id) {
         const updated = { ...campaign, [field]: value };
+        
+        // Validate the updated campaign
+        const errors = validateCampaign(updated, id);
+        if (errors.length > 0) {
+          setValidationErrors({...validationErrors, [id]: errors});
+        } else {
+          setValidationErrors({...validationErrors, [id]: []});
+        }
         
         // Recalculate metrics if cost or leads changed
         if (field === 'forecastedCost' || field === 'expectedLeads') {
@@ -212,6 +265,19 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
       }
       return campaign;
     }));
+  };
+
+  // Duplicate campaign
+  const duplicateCampaign = (campaignToDuplicate: Campaign) => {
+    const newId = Date.now().toString();
+    const duplicated: Campaign = {
+      ...campaignToDuplicate,
+      id: newId,
+      description: `${campaignToDuplicate.description} (Copy)`
+    };
+    
+    setCampaigns([...campaigns, duplicated]);
+    toast.success("Campaign duplicated successfully");
   };
 
   // Delete selected campaigns
@@ -373,181 +439,6 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
 
   return (
     <div className="space-y-6">
-      {/* Add New Campaign Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Add New Campaign
-          </CardTitle>
-          <CardDescription>
-            Enter campaign details and automatically calculate ROI metrics
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div>
-              <Label htmlFor="campaignType">Campaign Type *</Label>
-              <Select value={newCampaign.campaignType} onValueChange={(value) => setNewCampaign({...newCampaign, campaignType: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {campaignTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="strategicPillar">Strategic Pillar</Label>
-              <div className="space-y-2">
-                {strategicPillars.map(pillar => (
-                  <div key={pillar} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`new-${pillar}`}
-                      checked={newCampaign.strategicPillar?.includes(pillar) || false}
-                      onCheckedChange={(checked) => {
-                        const current = newCampaign.strategicPillar || [];
-                        const updated = checked 
-                          ? [...current, pillar]
-                          : current.filter(p => p !== pillar);
-                        setNewCampaign({...newCampaign, strategicPillar: updated});
-                      }}
-                    />
-                    <Label htmlFor={`new-${pillar}`} className="text-sm">
-                      {pillar}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="revenuePlay">Revenue Play</Label>
-              <Select value={newCampaign.revenuePlay} onValueChange={(value) => setNewCampaign({...newCampaign, revenuePlay: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select revenue play" />
-                </SelectTrigger>
-                <SelectContent>
-                  {revenuePlays.map(play => (
-                    <SelectItem key={play} value={play}>{play}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="fy">FY</Label>
-              <Select value={newCampaign.fy} onValueChange={(value) => setNewCampaign({...newCampaign, fy: value})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {fiscalYears.map(fy => (
-                    <SelectItem key={fy} value={fy}>{fy}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="quarterMonth">Quarter/Month</Label>
-              <Select value={newCampaign.quarterMonth} onValueChange={(value) => setNewCampaign({...newCampaign, quarterMonth: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select quarter" />
-                </SelectTrigger>
-                <SelectContent>
-                  {quarters.map(quarter => (
-                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="region">Region *</Label>
-              <Select value={newCampaign.region} onValueChange={(value) => setNewCampaign({...newCampaign, region: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select region" />
-                </SelectTrigger>
-                <SelectContent>
-                  {regions.map(region => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="country">Country</Label>
-              <Select value={newCampaign.country} onValueChange={(value) => setNewCampaign({...newCampaign, country: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map(country => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="owner">Owner *</Label>
-              <Select value={newCampaign.owner} onValueChange={(value) => setNewCampaign({...newCampaign, owner: value})}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select owner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {owners.map(owner => (
-                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="forecastedCost">Forecasted Cost ($)</Label>
-              <Input
-                type="number"
-                value={newCampaign.forecastedCost}
-                onChange={(e) => setNewCampaign({...newCampaign, forecastedCost: e.target.value})}
-                placeholder="0"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="expectedLeads">Forecasted Leads</Label>
-              <Input
-                type="number"
-                value={newCampaign.expectedLeads}
-                onChange={(e) => setNewCampaign({...newCampaign, expectedLeads: e.target.value})}
-                placeholder="0"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                value={newCampaign.description}
-                onChange={(e) => setNewCampaign({...newCampaign, description: e.target.value})}
-                placeholder="Campaign description..."
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end mt-4">
-            <Button onClick={addCampaign} className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Add Campaign
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Filters and Actions */}
       <Card>
         <CardHeader>
@@ -555,6 +446,9 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
             <Target className="h-5 w-5" />
             Campaign Management
           </CardTitle>
+          <CardDescription>
+            Add, edit, and manage marketing campaigns with inline editing
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -594,6 +488,15 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <Button 
+              onClick={() => setIsAddingNew(true)} 
+              className="flex items-center gap-2"
+              disabled={isAddingNew}
+            >
+              <Plus className="h-4 w-4" />
+              Add New Campaign
+            </Button>
+
             <Button onClick={exportToCSV} variant="outline" className="flex items-center gap-2">
               <Download className="h-4 w-4" />
               Export CSV
@@ -629,7 +532,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <div className="min-w-[1400px]"> {/* Ensure minimum width for all columns */}
+            <div className="min-w-[1600px]"> {/* Ensure minimum width for all columns */}
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -645,238 +548,519 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                         }}
                       />
                     </TableHead>
-                    <TableHead className="min-w-[200px]">Campaign Type</TableHead>
+                    <TableHead className="min-w-[200px]">Campaign Type *</TableHead>
                     <TableHead className="min-w-[200px]">Strategic Pillar</TableHead>
                     <TableHead className="min-w-[150px]">Revenue Play</TableHead>
                     <TableHead className="min-w-[80px]">FY</TableHead>
                     <TableHead className="min-w-[120px]">Quarter/Month</TableHead>
-                    <TableHead className="min-w-[120px]">Region</TableHead>
+                    <TableHead className="min-w-[120px]">Region *</TableHead>
                     <TableHead className="min-w-[120px]">Country</TableHead>
-                    <TableHead className="min-w-[120px]">Owner</TableHead>
+                    <TableHead className="min-w-[120px]">Owner *</TableHead>
                     <TableHead className="min-w-[200px]">Description</TableHead>
                     <TableHead className="min-w-[120px]">Forecasted Cost</TableHead>
                     <TableHead className="min-w-[120px]">Forecasted Leads</TableHead>
+                    <TableHead className="min-w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-              <TableBody>
-                {filteredCampaigns.map((campaign) => (
-                  <TableRow key={campaign.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedCampaigns.includes(campaign.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedCampaigns([...selectedCampaigns, campaign.id]);
-                          } else {
-                            setSelectedCampaigns(selectedCampaigns.filter(id => id !== campaign.id));
-                          }
-                        }}
-                      />
-                    </TableCell>
-                    
-                    {/* Campaign Type */}
-                    <TableCell>
-                      <Select value={campaign.campaignType} onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}>
-                        <SelectTrigger className="w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {campaignTypes.map(type => (
-                            <SelectItem key={type} value={type}>{type}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                <TableBody>
+                  {/* New Campaign Row */}
+                  {isAddingNew && (
+                    <TableRow className="bg-blue-50">
+                      <TableCell>
+                        <div className="w-4 h-4 flex items-center justify-center">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                        </div>
+                      </TableCell>
+                      
+                      {/* Campaign Type */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Select value={newCampaign.campaignType} onValueChange={(value) => setNewCampaign({...newCampaign, campaignType: value})}>
+                            <SelectTrigger className="w-48">
+                              <SelectValue placeholder="Select type..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {campaignTypes.map(type => (
+                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {validationErrors['new']?.some(e => e.includes('Campaign Type')) && (
+                            <p className="text-xs text-red-500">Required</p>
+                          )}
+                        </div>
+                      </TableCell>
 
-                    {/* Strategic Pillar */}
-                    <TableCell>
-                      <div className="max-w-48">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1">
-                            {Array.isArray(campaign.strategicPillar) && campaign.strategicPillar.length > 0 ? (
-                              <div className="flex flex-wrap gap-1">
-                                {campaign.strategicPillar.map((pillar, index) => (
-                                  <Badge key={index} variant="secondary" className="text-xs">
-                                    {pillar.substring(0, 15)}{pillar.length > 15 ? '...' : ''}
-                                  </Badge>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">None selected</span>
-                            )}
-                          </div>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => openPillarEditor(campaign.id, campaign.strategicPillar || [])}
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Edit Strategic Pillars</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <p className="text-sm text-muted-foreground">
-                                  Select one or more strategic pillars for this campaign:
-                                </p>
-                                <div className="space-y-2">
-                                  {strategicPillars.map(pillar => (
-                                    <div key={pillar} className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id={pillar}
-                                        checked={editingPillars?.pillars.includes(pillar) || false}
-                                        onCheckedChange={() => togglePillar(pillar)}
-                                      />
-                                      <Label htmlFor={pillar} className="text-sm">
-                                        {pillar}
-                                      </Label>
-                                    </div>
+                      {/* Strategic Pillar */}
+                      <TableCell>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="w-48 justify-start text-left">
+                              {newCampaign.strategicPillar && newCampaign.strategicPillar.length > 0 
+                                ? `${newCampaign.strategicPillar.length} selected`
+                                : "Select pillars..."
+                              }
+                              <Edit className="h-3 w-3 ml-auto" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Select Strategic Pillars</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-2">
+                              {strategicPillars.map(pillar => (
+                                <div key={pillar} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`new-${pillar}`}
+                                    checked={newCampaign.strategicPillar?.includes(pillar) || false}
+                                    onCheckedChange={(checked) => {
+                                      const current = newCampaign.strategicPillar || [];
+                                      const updated = checked 
+                                        ? [...current, pillar]
+                                        : current.filter(p => p !== pillar);
+                                      setNewCampaign({...newCampaign, strategicPillar: updated});
+                                    }}
+                                  />
+                                  <Label htmlFor={`new-${pillar}`} className="text-sm">
+                                    {pillar}
+                                  </Label>
+                                </div>
+                              ))}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </TableCell>
+
+                      {/* Revenue Play */}
+                      <TableCell>
+                        <Select value={newCampaign.revenuePlay} onValueChange={(value) => setNewCampaign({...newCampaign, revenuePlay: value})}>
+                          <SelectTrigger className="w-40">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {revenuePlays.map(play => (
+                              <SelectItem key={play} value={play}>{play}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* FY */}
+                      <TableCell>
+                        <Select value={newCampaign.fy} onValueChange={(value) => setNewCampaign({...newCampaign, fy: value})}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fiscalYears.map(fy => (
+                              <SelectItem key={fy} value={fy}>{fy}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Quarter/Month */}
+                      <TableCell>
+                        <Select value={newCampaign.quarterMonth} onValueChange={(value) => setNewCampaign({...newCampaign, quarterMonth: value})}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {quarters.map(quarter => (
+                              <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Region */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Select value={newCampaign.region} onValueChange={(value) => setNewCampaign({...newCampaign, region: value})}>
+                            <SelectTrigger className="w-36">
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {regions.map(region => (
+                                <SelectItem key={region} value={region}>{region}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {validationErrors['new']?.some(e => e.includes('Region')) && (
+                            <p className="text-xs text-red-500">Required</p>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Country */}
+                      <TableCell>
+                        <Select value={newCampaign.country} onValueChange={(value) => setNewCampaign({...newCampaign, country: value})}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries.map(country => (
+                              <SelectItem key={country} value={country}>{country}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+
+                      {/* Owner */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Select value={newCampaign.owner} onValueChange={(value) => setNewCampaign({...newCampaign, owner: value})}>
+                            <SelectTrigger className="w-36">
+                              <SelectValue placeholder="Select..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {owners.map(owner => (
+                                <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {validationErrors['new']?.some(e => e.includes('Owner')) && (
+                            <p className="text-xs text-red-500">Required</p>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Description */}
+                      <TableCell>
+                        <Input
+                          value={newCampaign.description}
+                          onChange={(e) => setNewCampaign({...newCampaign, description: e.target.value})}
+                          placeholder="Campaign description..."
+                          className="min-w-48"
+                        />
+                      </TableCell>
+
+                      {/* Forecasted Cost */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Input
+                            type="number"
+                            value={newCampaign.forecastedCost}
+                            onChange={(e) => setNewCampaign({...newCampaign, forecastedCost: e.target.value})}
+                            className="w-24"
+                            placeholder="0"
+                          />
+                          {validationErrors['new']?.some(e => e.includes('Forecasted Cost')) && (
+                            <p className="text-xs text-red-500">Invalid</p>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Forecasted Leads */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Input
+                            type="number"
+                            value={newCampaign.expectedLeads}
+                            onChange={(e) => setNewCampaign({...newCampaign, expectedLeads: e.target.value})}
+                            className="w-24"
+                            placeholder="0"
+                          />
+                          {validationErrors['new']?.some(e => e.includes('Forecasted Leads')) && (
+                            <p className="text-xs text-red-500">Invalid</p>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" onClick={addNewCampaign} className="h-8 w-8 p-0">
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={cancelNewCampaign} className="h-8 w-8 p-0">
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {/* Existing Campaign Rows */}
+                  {filteredCampaigns.map((campaign) => (
+                    <TableRow key={campaign.id} className={validationErrors[campaign.id]?.length > 0 ? "bg-red-50" : ""}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedCampaigns.includes(campaign.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedCampaigns([...selectedCampaigns, campaign.id]);
+                            } else {
+                              setSelectedCampaigns(selectedCampaigns.filter(id => id !== campaign.id));
+                            }
+                          }}
+                        />
+                      </TableCell>
+                      
+                      {/* Campaign Type */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Select value={campaign.campaignType} onValueChange={(value) => updateCampaign(campaign.id, 'campaignType', value)}>
+                            <SelectTrigger className="w-48">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {campaignTypes.map(type => (
+                                <SelectItem key={type} value={type}>{type}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {validationErrors[campaign.id]?.some(e => e.includes('Campaign Type')) && (
+                            <p className="text-xs text-red-500">Required</p>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Strategic Pillar */}
+                      <TableCell>
+                        <div className="max-w-48">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                              {Array.isArray(campaign.strategicPillar) && campaign.strategicPillar.length > 0 ? (
+                                <div className="flex flex-wrap gap-1">
+                                  {campaign.strategicPillar.map((pillar, index) => (
+                                    <Badge key={index} variant="secondary" className="text-xs">
+                                      {pillar.substring(0, 15)}{pillar.length > 15 ? '...' : ''}
+                                    </Badge>
                                   ))}
                                 </div>
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => setEditingPillars(null)}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button onClick={savePillars}>
-                                    Save
-                                  </Button>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">None selected</span>
+                              )}
+                            </div>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => openPillarEditor(campaign.id, campaign.strategicPillar || [])}
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Edit Strategic Pillars</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <p className="text-sm text-muted-foreground">
+                                    Select one or more strategic pillars for this campaign:
+                                  </p>
+                                  <div className="space-y-2">
+                                    {strategicPillars.map(pillar => (
+                                      <div key={pillar} className="flex items-center space-x-2">
+                                        <Checkbox
+                                          id={pillar}
+                                          checked={editingPillars?.pillars.includes(pillar) || false}
+                                          onCheckedChange={() => togglePillar(pillar)}
+                                        />
+                                        <Label htmlFor={pillar} className="text-sm">
+                                          {pillar}
+                                        </Label>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="flex justify-end gap-2">
+                                    <Button
+                                      variant="outline"
+                                      onClick={() => setEditingPillars(null)}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button onClick={savePillars}>
+                                      Save
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
+                      </TableCell>
 
-                    {/* Revenue Play */}
-                    <TableCell>
-                      <Select value={campaign.revenuePlay} onValueChange={(value) => updateCampaign(campaign.id, 'revenuePlay', value)}>
-                        <SelectTrigger className="w-40">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {revenuePlays.map(play => (
-                            <SelectItem key={play} value={play}>{play}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                      {/* Revenue Play */}
+                      <TableCell>
+                        <Select value={campaign.revenuePlay} onValueChange={(value) => updateCampaign(campaign.id, 'revenuePlay', value)}>
+                          <SelectTrigger className="w-40">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {revenuePlays.map(play => (
+                              <SelectItem key={play} value={play}>{play}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
 
-                    {/* FY */}
-                    <TableCell>
-                      <Select value={campaign.fy} onValueChange={(value) => updateCampaign(campaign.id, 'fy', value)}>
-                        <SelectTrigger className="w-24">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fiscalYears.map(fy => (
-                            <SelectItem key={fy} value={fy}>{fy}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                      {/* FY */}
+                      <TableCell>
+                        <Select value={campaign.fy} onValueChange={(value) => updateCampaign(campaign.id, 'fy', value)}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {fiscalYears.map(fy => (
+                              <SelectItem key={fy} value={fy}>{fy}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
 
-                    {/* Quarter/Month */}
-                    <TableCell>
-                      <Select value={campaign.quarterMonth} onValueChange={(value) => updateCampaign(campaign.id, 'quarterMonth', value)}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {quarters.map(quarter => (
-                            <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                      {/* Quarter/Month */}
+                      <TableCell>
+                        <Select value={campaign.quarterMonth} onValueChange={(value) => updateCampaign(campaign.id, 'quarterMonth', value)}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {quarters.map(quarter => (
+                              <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
 
-                    {/* Region */}
-                    <TableCell>
-                      <Select value={campaign.region} onValueChange={(value) => updateCampaign(campaign.id, 'region', value)}>
-                        <SelectTrigger className="w-36">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {regions.map(region => (
-                            <SelectItem key={region} value={region}>{region}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                      {/* Region */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Select value={campaign.region} onValueChange={(value) => updateCampaign(campaign.id, 'region', value)}>
+                            <SelectTrigger className="w-36">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {regions.map(region => (
+                                <SelectItem key={region} value={region}>{region}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {validationErrors[campaign.id]?.some(e => e.includes('Region')) && (
+                            <p className="text-xs text-red-500">Required</p>
+                          )}
+                        </div>
+                      </TableCell>
 
-                    {/* Country */}
-                    <TableCell>
-                      <Select value={campaign.country} onValueChange={(value) => updateCampaign(campaign.id, 'country', value)}>
-                        <SelectTrigger className="w-32">
-                          <SelectValue placeholder="Select..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {countries.map(country => (
-                            <SelectItem key={country} value={country}>{country}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                      {/* Country */}
+                      <TableCell>
+                        <Select value={campaign.country} onValueChange={(value) => updateCampaign(campaign.id, 'country', value)}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Select..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries.map(country => (
+                              <SelectItem key={country} value={country}>{country}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
 
-                    {/* Owner */}
-                    <TableCell>
-                      <Select value={campaign.owner} onValueChange={(value) => updateCampaign(campaign.id, 'owner', value)}>
-                        <SelectTrigger className="w-36">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {owners.map(owner => (
-                            <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
+                      {/* Owner */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Select value={campaign.owner} onValueChange={(value) => updateCampaign(campaign.id, 'owner', value)}>
+                            <SelectTrigger className="w-36">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {owners.map(owner => (
+                                <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {validationErrors[campaign.id]?.some(e => e.includes('Owner')) && (
+                            <p className="text-xs text-red-500">Required</p>
+                          )}
+                        </div>
+                      </TableCell>
 
-                    {/* Description */}
-                    <TableCell>
-                      <Input
-                        value={campaign.description}
-                        onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
-                        placeholder="Campaign description..."
-                        className="min-w-48"
-                      />
-                    </TableCell>
+                      {/* Description */}
+                      <TableCell>
+                        <Input
+                          value={campaign.description}
+                          onChange={(e) => updateCampaign(campaign.id, 'description', e.target.value)}
+                          placeholder="Campaign description..."
+                          className="min-w-48"
+                        />
+                      </TableCell>
 
-                    {/* Forecasted Cost */}
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={campaign.forecastedCost}
-                        onChange={(e) => updateCampaign(campaign.id, 'forecastedCost', e.target.value)}
-                        className="w-24"
-                        placeholder="0"
-                      />
-                    </TableCell>
+                      {/* Forecasted Cost */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Input
+                            type="number"
+                            value={campaign.forecastedCost}
+                            onChange={(e) => updateCampaign(campaign.id, 'forecastedCost', e.target.value)}
+                            className="w-24"
+                            placeholder="0"
+                          />
+                          {validationErrors[campaign.id]?.some(e => e.includes('Forecasted Cost')) && (
+                            <p className="text-xs text-red-500">Invalid</p>
+                          )}
+                        </div>
+                      </TableCell>
 
-                    {/* Forecasted Leads */}
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={campaign.expectedLeads}
-                        onChange={(e) => updateCampaign(campaign.id, 'expectedLeads', e.target.value)}
-                        className="w-24"
-                        placeholder="0"
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      {/* Forecasted Leads */}
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Input
+                            type="number"
+                            value={campaign.expectedLeads}
+                            onChange={(e) => updateCampaign(campaign.id, 'expectedLeads', e.target.value)}
+                            className="w-24"
+                            placeholder="0"
+                          />
+                          {validationErrors[campaign.id]?.some(e => e.includes('Forecasted Leads')) && (
+                            <p className="text-xs text-red-500">Invalid</p>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => duplicateCampaign(campaign)}
+                            className="h-8 w-8 p-0"
+                            title="Duplicate"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => {
+                              setCampaigns(campaigns.filter(c => c.id !== campaign.id));
+                              toast.success("Campaign deleted");
+                            }}
+                            className="h-8 w-8 p-0 text-red-500"
+                            title="Delete"
+                          >
+                            <Trash className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </div>
+
+          {/* Show validation errors if any */}
+          {Object.keys(validationErrors).some(key => validationErrors[key]?.length > 0) && (
+            <Alert className="mt-4">
+              <AlertDescription>
+                <strong>Validation Errors Found:</strong> Please fix the highlighted fields to ensure data accuracy.
+              </AlertDescription>
+            </Alert>
+          )}
         </CardContent>
       </Card>
 
@@ -925,7 +1109,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               <table className="w-full border border-border">
                 <thead>
                   <tr className="bg-muted">
-                    <th className="border border-border p-2 text-left">Region</th>
+                    <th className="border border-border p-2 text-left">Campaign Type</th>
                     <th className="border border-border p-2 text-left">Strategic Pillar</th>
                     <th className="border border-border p-2 text-left">Region</th>
                     <th className="border border-border p-2 text-left">Owner</th>
@@ -935,14 +1119,15 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                 </thead>
                 <tbody>
                   {previewData.slice(0, 10).map((row, index) => (
-                      <td className="border border-border p-2">{row['Strategic Pillar']}</td>
+                    <tr key={index}>
                       <td className="border border-border p-2">{row['Campaign Type']}</td>
-                      <td className="border border-border p-2">{row['Owner']}</td>
+                      <td className="border border-border p-2">{row['Strategic Pillar']}</td>
                       <td className="border border-border p-2">{row['Region']}</td>
-                      <td className="border border-border p-2">{row['Forecasted Leads'] || row['Expected Leads']}</td>
+                      <td className="border border-border p-2">{row['Owner']}</td>
                       <td className="border border-border p-2">{row['Forecasted Cost']}</td>
-                  ))}
+                      <td className="border border-border p-2">{row['Forecasted Leads'] || row['Expected Leads']}</td>
                     </tr>
+                  ))}
                   ))}
                 </tbody>
               </table>
