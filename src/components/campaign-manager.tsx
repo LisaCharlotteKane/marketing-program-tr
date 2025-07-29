@@ -925,7 +925,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               <table className="w-full border border-border">
                 <thead>
                   <tr className="bg-muted">
-                    <th className="border border-border p-2 text-left">Campaign Type</th>
+                    <th className="border border-border p-2 text-left">Region</th>
                     <th className="border border-border p-2 text-left">Strategic Pillar</th>
                     <th className="border border-border p-2 text-left">Region</th>
                     <th className="border border-border p-2 text-left">Owner</th>
@@ -935,13 +935,13 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                 </thead>
                 <tbody>
                   {previewData.slice(0, 10).map((row, index) => (
-                    <tr key={index}>
-                      <td className="border border-border p-2">{row['Campaign Type']}</td>
                       <td className="border border-border p-2">{row['Strategic Pillar']}</td>
-                      <td className="border border-border p-2">{row['Region']}</td>
+                      <td className="border border-border p-2">{row['Campaign Type']}</td>
                       <td className="border border-border p-2">{row['Owner']}</td>
-                      <td className="border border-border p-2">{row['Forecasted Cost']}</td>
+                      <td className="border border-border p-2">{row['Region']}</td>
                       <td className="border border-border p-2">{row['Forecasted Leads'] || row['Expected Leads']}</td>
+                      <td className="border border-border p-2">{row['Forecasted Cost']}</td>
+                  ))}
                     </tr>
                   ))}
                 </tbody>
