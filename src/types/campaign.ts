@@ -23,4 +23,4 @@ export interface Campaign {
   actualCost?: string;
   actualLeads?: string;
   actualMQLs?: string;
-}}
+}
