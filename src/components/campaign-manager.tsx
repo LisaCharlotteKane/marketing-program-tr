@@ -229,8 +229,8 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     // MQLs = 10% of Expected Leads  
     const mql = Math.round(leads * 0.1);
     
-    // SQLs = 6% of Expected Leads (not MQLs)
-    const sql = Math.round(leads * 0.06);
+    // SQLs = 6% of MQLs
+    const sql = Math.round(mql * 0.06);
     
     // Opportunities = 80% of SQLs
     const opportunities = Math.round(sql * 0.8);
@@ -559,6 +559,9 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                     <TableHead className="min-w-[200px]">Description</TableHead>
                     <TableHead className="min-w-[120px]">Forecasted Cost</TableHead>
                     <TableHead className="min-w-[120px]">Forecasted Leads</TableHead>
+                    <TableHead className="min-w-[100px]">Forecasted MQLs</TableHead>
+                    <TableHead className="min-w-[100px]">Forecasted SQLs</TableHead>
+                    <TableHead className="min-w-[120px]">Forecasted Pipeline</TableHead>
                     <TableHead className="min-w-[80px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -764,6 +767,51 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                           {validationErrors['new']?.some(e => e.includes('Forecasted Leads')) && (
                             <p className="text-xs text-red-500">Invalid</p>
                           )}
+                        </div>
+                      </TableCell>
+
+                      {/* Forecasted MQLs (Auto-calculated) */}
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded text-center w-20">
+                          {(() => {
+                            const leads = Number(newCampaign.expectedLeads) || 0;
+                            const campaignType = newCampaign.campaignType || '';
+                            if (campaignType.includes('In-Account') && leads === 0) return '0';
+                            return Math.round(leads * 0.1);
+                          })()}
+                        </div>
+                      </TableCell>
+
+                      {/* Forecasted SQLs (Auto-calculated) */}
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded text-center w-20">
+                          {(() => {
+                            const leads = Number(newCampaign.expectedLeads) || 0;
+                            const campaignType = newCampaign.campaignType || '';
+                            if (campaignType.includes('In-Account') && leads === 0) return '0';
+                            const mqls = Math.round(leads * 0.1);
+                            return Math.round(mqls * 0.06);
+                          })()}
+                        </div>
+                      </TableCell>
+
+                      {/* Forecasted Pipeline (Auto-calculated) */}
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded text-center w-24">
+                          ${(() => {
+                            const leads = Number(newCampaign.expectedLeads) || 0;
+                            const cost = Number(newCampaign.forecastedCost) || 0;
+                            const campaignType = newCampaign.campaignType || '';
+                            
+                            if (campaignType.includes('In-Account') && leads === 0) {
+                              return (cost * 20).toLocaleString();
+                            }
+                            
+                            const mqls = Math.round(leads * 0.1);
+                            const sqls = Math.round(mqls * 0.06);
+                            const opportunities = Math.round(sqls * 0.8);
+                            return (opportunities * 50000).toLocaleString();
+                          })()}
                         </div>
                       </TableCell>
 
@@ -1020,6 +1068,27 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                         </div>
                       </TableCell>
 
+                      {/* Forecasted MQLs (Auto-calculated) */}
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded text-center w-20">
+                          {campaign.mql || 0}
+                        </div>
+                      </TableCell>
+
+                      {/* Forecasted SQLs (Auto-calculated) */}
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded text-center w-20">
+                          {campaign.sql || 0}
+                        </div>
+                      </TableCell>
+
+                      {/* Forecasted Pipeline (Auto-calculated) */}
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded text-center w-24">
+                          ${(campaign.pipelineForecast || 0).toLocaleString()}
+                        </div>
+                      </TableCell>
+
                       {/* Actions */}
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -1078,7 +1147,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               <h4 className="font-medium mb-2">Standard Calculation:</h4>
               <ul className="space-y-1 text-muted-foreground">
                 <li>• MQL Forecast = 10% of Expected Leads</li>
-                <li>• SQL Forecast = 6% of Expected Leads</li>
+                <li>• SQL Forecast = 6% of MQLs</li>
                 <li>• Opportunities = 80% of SQLs</li>
                 <li>• Pipeline Forecast = Opportunities × $50K</li>
               </ul>
