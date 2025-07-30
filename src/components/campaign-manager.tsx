@@ -21,9 +21,9 @@ import {
   Target,
   Funnel,
   X,
-  Edit,
+  PencilSimple,
   Copy,
-  Save
+  FloppyDisk
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Campaign } from "@/types/campaign";
@@ -600,7 +600,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                                 ? `${newCampaign.strategicPillar.length} selected`
                                 : "Select pillars..."
                               }
-                              <Edit className="h-3 w-3 ml-auto" />
+                              <PencilSimple className="h-3 w-3 ml-auto" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
@@ -771,7 +771,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Button size="sm" onClick={addNewCampaign} className="h-8 w-8 p-0">
-                            <Save className="h-3 w-3" />
+                            <FloppyDisk className="h-3 w-3" />
                           </Button>
                           <Button size="sm" variant="ghost" onClick={cancelNewCampaign} className="h-8 w-8 p-0">
                             <X className="h-3 w-3" />
@@ -841,7 +841,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                                   className="h-6 w-6 p-0"
                                   onClick={() => openPillarEditor(campaign.id, campaign.strategicPillar || [])}
                                 >
-                                  <Edit className="h-3 w-3" />
+                                  <PencilSimple className="h-3 w-3" />
                                 </Button>
                               </DialogTrigger>
                               <DialogContent>
