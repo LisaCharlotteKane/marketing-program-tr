@@ -6,49 +6,38 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, X } from "@phosphor-icons/react";
 import { Campaign } from "@/types/campaign";
+import { 
+  MultiSelectFilters, 
+  getStandardFilterConfigs, 
+  applyFilters 
+} from "@/components/multi-select-filters";
 
 interface CampaignCalendarViewProps {
   campaigns: Campaign[];
 }
 
 export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
-  const [regionFilter, setRegionFilter] = useState<string>("all");
-  const [ownerFilter, setOwnerFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [filters, setFilters] = useState<Record<string, string[]>>({
+    owner: [],
+    campaignType: [],
+    strategicPillar: [],
+    revenuePlay: [],
+    quarterMonth: [],
+    region: [],
+    country: [],
+    status: []
+  });
 
-  const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
-  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
-  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
-
-  const campaignTypes = [
-    "In-Account Events (1:1)",
-    "Exec Engagement Programs", 
-    "CxO Events (1:Few)",
-    "Localized Events",
-    "Localized Programs",
-    "Lunch & Learns and Workshops (1:Few)",
-    "Microsoft",
-    "Partners",
-    "Webinars",
-    "3P Sponsored Events",
-    "Flagship Events (Galaxy, Universe Recaps) (1:Many)",
-    "Targeted Paid Ads & Content Syndication",
-    "User Groups",
-    "Contractor/Infrastructure"
-  ];
-
-  // Filter campaigns (exclude Contractor/Infrastructure from calendar)
-  const filteredCampaigns = campaigns.filter(campaign => {
+  // Filter campaigns (exclude Contractor/Infrastructure from calendar) and apply multi-select filters
+  const filteredCampaigns = applyFilters(campaigns, filters).filter(campaign => {
     if (campaign.campaignType?.includes("Contractor") || campaign.campaignType?.includes("Infrastructure")) {
       return false;
     }
-    if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
-    if (ownerFilter !== "all" && campaign.owner !== ownerFilter) return false;
-    if (typeFilter !== "all" && campaign.campaignType !== typeFilter) return false;
-    if (statusFilter !== "all" && campaign.status !== statusFilter) return false;
     return true;
   });
+
+  // Get filter configurations
+  const filterConfigs = getStandardFilterConfigs(campaigns);
 
   const months = [
     "July", "August", "September", "October", "November", "December",
@@ -83,94 +72,16 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
     }
   };
 
-  const clearFilters = () => {
-    setRegionFilter("all");
-    setOwnerFilter("all");
-    setTypeFilter("all");
-    setStatusFilter("all");
-  };
-
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Calendar Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="space-y-2">
-              <Label>Region</Label>
-              <Select value={regionFilter} onValueChange={setRegionFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  {regions.map(region => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Owner</Label>
-              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Owners" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Owners</SelectItem>
-                  {owners.map(owner => (
-                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Campaign Type</Label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Types" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {campaignTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {statusOptions.map(status => (
-                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-end">
-              <Button variant="outline" onClick={clearFilters} className="w-full">
-                <X className="h-4 w-4 mr-2" />
-                Clear
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Multi-Select Filters */}
+      <MultiSelectFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        filterConfigs={filterConfigs}
+        title="Calendar Filters"
+        icon={<Calendar className="h-5 w-5" />}
+      />
 
       {/* Legend */}
       <Card>
@@ -179,7 +90,7 @@ export function CampaignCalendarView({ campaigns }: CampaignCalendarViewProps) {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            {regions.map(region => (
+            {["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"].map(region => (
               <Badge key={region} className={getRegionColor(region)}>
                 {region}
               </Badge>

@@ -9,6 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Target, X } from "@phosphor-icons/react";
 import { Campaign } from "@/types/campaign";
+import { 
+  MultiSelectFilters, 
+  getStandardFilterConfigs, 
+  applyFilters 
+} from "@/components/multi-select-filters";
 
 interface ExecutionTrackingProps {
   campaigns: Campaign[];
@@ -19,27 +24,22 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
   // Ensure campaigns is always an array
   const safeCampaigns = Array.isArray(campaigns) ? campaigns : [];
   
-  const [regionFilter, setRegionFilter] = useState<string>("all");
-  const [ownerFilter, setOwnerFilter] = useState<string>("all");
-  const [quarterFilter, setQuarterFilter] = useState<string>("all");
-
-  const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
-  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
-  const quarters = [
-    "Q1 - July", "Q1 - August", "Q1 - September",
-    "Q2 - October", "Q2 - November", "Q2 - December", 
-    "Q3 - January", "Q3 - February", "Q3 - March",
-    "Q4 - April", "Q4 - May", "Q4 - June"
-  ];
-  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
-
-  // Filter campaigns
-  const filteredCampaigns = safeCampaigns.filter(campaign => {
-    if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
-    if (ownerFilter !== "all" && campaign.owner !== ownerFilter) return false;
-    if (quarterFilter !== "all" && campaign.quarterMonth !== quarterFilter) return false;
-    return true;
+  const [filters, setFilters] = useState<Record<string, string[]>>({
+    owner: [],
+    campaignType: [],
+    strategicPillar: [],
+    revenuePlay: [],
+    quarterMonth: [],
+    region: [],
+    country: [],
+    status: []
   });
+
+  // Filter campaigns using multi-select filters
+  const filteredCampaigns = applyFilters(safeCampaigns, filters);
+
+  // Get filter configurations
+  const filterConfigs = getStandardFilterConfigs(safeCampaigns);
 
   // Update campaign field
   const updateCampaign = (id: string, field: keyof Campaign, value: any) => {
@@ -48,11 +48,7 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
     ));
   };
 
-  const clearFilters = () => {
-    setRegionFilter("all");
-    setOwnerFilter("all");
-    setQuarterFilter("all");
-  };
+  const statusOptions = ["Planning", "On Track", "Shipped", "Cancelled"];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -66,70 +62,14 @@ export function ExecutionTracking({ campaigns, setCampaigns }: ExecutionTracking
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Execution Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label>Region</Label>
-              <Select value={regionFilter} onValueChange={setRegionFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  {regions.map(region => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Owner</Label>
-              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Owners" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Owners</SelectItem>
-                  {owners.map(owner => (
-                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Quarter</Label>
-              <Select value={quarterFilter} onValueChange={setQuarterFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Quarters" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Quarters</SelectItem>
-                  {quarters.map(quarter => (
-                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-end">
-              <Button variant="outline" onClick={clearFilters} className="w-full">
-                <X className="h-4 w-4 mr-2" />
-                Clear Filters
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Multi-Select Filters */}
+      <MultiSelectFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        filterConfigs={filterConfigs}
+        title="Execution Tracking Filters"
+        icon={<Target className="h-5 w-5" />}
+      />
 
       {/* Execution Tracking Table */}
       <Card>

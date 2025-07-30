@@ -27,6 +27,11 @@ import {
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Campaign } from "@/types/campaign";
+import { 
+  MultiSelectFilters, 
+  getStandardFilterConfigs, 
+  applyFilters 
+} from "@/components/multi-select-filters";
 
 interface CampaignManagerProps {
   campaigns: Campaign[];
@@ -35,8 +40,16 @@ interface CampaignManagerProps {
 
 export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProps) {
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
-  const [regionFilter, setRegionFilter] = useState("all");
-  const [quarterFilter, setQuarterFilter] = useState("all");
+  const [filters, setFilters] = useState<Record<string, string[]>>({
+    owner: [],
+    campaignType: [],
+    strategicPillar: [],
+    revenuePlay: [],
+    quarterMonth: [],
+    region: [],
+    country: [],
+    status: []
+  });
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState<any[]>([]);
   const [editingPillars, setEditingPillars] = useState<{campaignId: string; pillars: string[]} | null>(null);
@@ -311,18 +324,11 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     toast.success(`Deleted ${selectedCampaigns.length} campaign(s)`);
   };
 
-  // Filter campaigns
-  const filteredCampaigns = campaigns.filter(campaign => {
-    if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
-    if (quarterFilter !== "all" && campaign.quarterMonth !== quarterFilter) return false;
-    return true;
-  });
+  // Filter campaigns using multi-select filters
+  const filteredCampaigns = applyFilters(campaigns, filters);
 
-  // Clear filters
-  const clearFilters = () => {
-    setRegionFilter("all");
-    setQuarterFilter("all");
-  };
+  // Get filter configurations
+  const filterConfigs = getStandardFilterConfigs(campaigns);
 
   // CSV Export
   const exportToCSV = () => {
@@ -458,11 +464,20 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
 
   return (
     <div className="space-y-6">
-      {/* Filters and Actions */}
+      {/* Multi-Select Filters */}
+      <MultiSelectFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        filterConfigs={filterConfigs}
+        title="Campaign Filters"
+        icon={<Target className="h-5 w-5" />}
+      />
+
+      {/* Actions */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
+            <Calculator className="h-5 w-5" />
             Campaign Management
           </CardTitle>
           <CardDescription>
@@ -470,42 +485,6 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap items-center gap-4 mb-4">
-            <div className="flex items-center gap-2">
-              <Funnel className="h-4 w-4" />
-              <Label>Filters:</Label>
-            </div>
-            
-            <Select value={regionFilter} onValueChange={setRegionFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Regions</SelectItem>
-                {regions.map(region => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={quarterFilter} onValueChange={setQuarterFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Quarters</SelectItem>
-                {quarters.map(quarter => (
-                  <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Button variant="outline" onClick={clearFilters} className="flex items-center gap-2">
-              <X className="h-4 w-4" />
-              Clear Filters
-            </Button>
-          </div>
-
           <div className="flex flex-wrap items-center gap-2">
             <Button 
               onClick={() => setIsAddingNew(true)} 

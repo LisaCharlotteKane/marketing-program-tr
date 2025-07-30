@@ -8,32 +8,33 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartBar, Download } from "@phosphor-icons/react";
 import { Campaign } from "@/types/campaign";
+import { 
+  MultiSelectFilters, 
+  getStandardFilterConfigs, 
+  applyFilters 
+} from "@/components/multi-select-filters";
 
 interface ReportingDashboardProps {
   campaigns: Campaign[];
 }
 
 export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
-  const [regionFilter, setRegionFilter] = useState<string>("all");
-  const [quarterFilter, setQuarterFilter] = useState<string>("all");
-  const [ownerFilter, setOwnerFilter] = useState<string>("all");
-
-  const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
-  const quarters = [
-    "Q1 - July", "Q1 - August", "Q1 - September",
-    "Q2 - October", "Q2 - November", "Q2 - December", 
-    "Q3 - January", "Q3 - February", "Q3 - March",
-    "Q4 - April", "Q4 - May", "Q4 - June"
-  ];
-  const owners = ["Giorgia Parham", "Tomoko Tanaka", "Beverly Leung", "Shruti Narang"];
-
-  // Filter campaigns
-  const filteredCampaigns = campaigns.filter(campaign => {
-    if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
-    if (quarterFilter !== "all" && campaign.quarterMonth !== quarterFilter) return false;
-    if (ownerFilter !== "all" && campaign.owner !== ownerFilter) return false;
-    return true;
+  const [filters, setFilters] = useState<Record<string, string[]>>({
+    owner: [],
+    campaignType: [],
+    strategicPillar: [],
+    revenuePlay: [],
+    quarterMonth: [],
+    region: [],
+    country: [],
+    status: []
   });
+
+  // Filter campaigns using multi-select filters
+  const filteredCampaigns = applyFilters(campaigns, filters);
+
+  // Get filter configurations
+  const filterConfigs = getStandardFilterConfigs(campaigns);
 
   // Calculate metrics
   const totalForecastedSpend = filteredCampaigns.reduce((sum, campaign) => {
@@ -57,6 +58,7 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
   const totalSQLs = filteredCampaigns.reduce((sum, campaign) => sum + campaign.sql, 0);
 
   // Prepare chart data
+  const regions = ["JP & Korea", "South APAC", "SAARC", "Digital", "X APAC English", "X APAC Non English"];
   const chartData = regions.map(region => {
     const regionCampaigns = filteredCampaigns.filter(c => c.region === region);
     const forecastedPipeline = regionCampaigns.reduce((sum, c) => sum + c.pipelineForecast, 0);
@@ -73,77 +75,16 @@ export function ReportingDashboard({ campaigns }: ReportingDashboardProps) {
     };
   }).filter(d => d.forecastedPipeline > 0 || d.forecastedLeads > 0);
 
-  const clearFilters = () => {
-    setRegionFilter("all");
-    setQuarterFilter("all");
-    setOwnerFilter("all");
-  };
-
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ChartBar className="h-5 w-5" />
-            Report Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label>Region</Label>
-              <Select value={regionFilter} onValueChange={setRegionFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Regions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  {regions.map(region => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Quarter</Label>
-              <Select value={quarterFilter} onValueChange={setQuarterFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Quarters" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Quarters</SelectItem>
-                  {quarters.map(quarter => (
-                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Owner</Label>
-              <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Owners" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Owners</SelectItem>
-                  {owners.map(owner => (
-                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-end">
-              <Button variant="outline" onClick={clearFilters} className="w-full">
-                Clear Filters
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Multi-Select Filters */}
+      <MultiSelectFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        filterConfigs={filterConfigs}
+        title="Reporting Filters"
+        icon={<ChartBar className="h-5 w-5" />}
+      />
 
       {/* Summary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
