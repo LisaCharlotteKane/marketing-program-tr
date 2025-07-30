@@ -9,7 +9,7 @@ import {
   PopoverContent, 
   PopoverTrigger 
 } from "@/components/ui/popover";
-import { Funnel, X, ChevronDown } from "@phosphor-icons/react";
+import { Funnel, X, CaretDown } from "@phosphor-icons/react";
 
 export interface FilterOption {
   value: string;
@@ -122,7 +122,7 @@ export function MultiSelectFilters({
                           : `${selectedValues.length} selected`
                         }
                       </span>
-                      <ChevronDown className="h-4 w-4 opacity-50" />
+                      <CaretDown className="h-4 w-4 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64 p-0" align="start">
