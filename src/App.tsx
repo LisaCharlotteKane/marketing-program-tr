@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, ChartBar, ClipboardText } from "@phosphor-icons/react";
+import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, ChartBar, ClipboardText, Funnel, X, PencilSimple, Copy, FloppyDisk } from "@phosphor-icons/react";
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
 import { CampaignManager } from "@/components/campaign-manager";
