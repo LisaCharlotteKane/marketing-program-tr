@@ -100,7 +100,7 @@ export function MultiSelectFilters({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-8 gap-4">
           {filterConfigs.map((config) => {
             const selectedValues = filters[config.key] || [];
             
@@ -214,6 +214,20 @@ export const getStandardFilterConfigs = (campaigns: any[]): FilterConfig[] => [
     ]
   },
   {
+    key: "region",
+    label: "Region",
+    options: [
+      { value: "JP & Korea", label: "JP & Korea" },
+      { value: "South APAC", label: "South APAC" },
+      { value: "SAARC", label: "SAARC" },
+      { value: "Digital", label: "Digital" },
+      { value: "X APAC English", label: "X APAC English" },
+      { value: "X APAC Non English", label: "X APAC Non English" },
+      { value: "X South APAC", label: "X South APAC" },
+      { value: "X SAARC", label: "X SAARC" }
+    ]
+  },
+  {
     key: "campaignType",
     label: "Campaign Type",
     options: [
@@ -253,6 +267,14 @@ export const getStandardFilterConfigs = (campaigns: any[]): FilterConfig[] => [
     ]
   },
   {
+    key: "fy",
+    label: "Fiscal Year",
+    options: [
+      { value: "FY25", label: "FY25" },
+      { value: "FY26", label: "FY26" }
+    ]
+  },
+  {
     key: "quarterMonth",
     label: "Quarter/Month",
     options: [
@@ -271,23 +293,42 @@ export const getStandardFilterConfigs = (campaigns: any[]): FilterConfig[] => [
     ]
   },
   {
-    key: "region",
-    label: "Region",
+    key: "country",
+    label: "Country",
     options: [
-      { value: "JP & Korea", label: "JP & Korea" },
-      { value: "South APAC", label: "South APAC" },
-      { value: "SAARC", label: "SAARC" },
-      { value: "Digital", label: "Digital" },
+      { value: "Afghanistan", label: "Afghanistan" },
+      { value: "ASEAN", label: "ASEAN" },
+      { value: "Australia", label: "Australia" },
+      { value: "Bangladesh", label: "Bangladesh" },
+      { value: "Bhutan", label: "Bhutan" },
+      { value: "Brunei", label: "Brunei" },
+      { value: "Cambodia", label: "Cambodia" },
+      { value: "China", label: "China" },
+      { value: "GCR", label: "GCR" },
+      { value: "Hong Kong", label: "Hong Kong" },
+      { value: "India", label: "India" },
+      { value: "Indonesia", label: "Indonesia" },
+      { value: "Japan", label: "Japan" },
+      { value: "Laos", label: "Laos" },
+      { value: "Malaysia", label: "Malaysia" },
+      { value: "Maldives", label: "Maldives" },
+      { value: "Myanmar", label: "Myanmar" },
+      { value: "Nepal", label: "Nepal" },
+      { value: "New Zealand", label: "New Zealand" },
+      { value: "Pakistan", label: "Pakistan" },
+      { value: "Philippines", label: "Philippines" },
+      { value: "Singapore", label: "Singapore" },
+      { value: "South Korea", label: "South Korea" },
+      { value: "Sri Lanka", label: "Sri Lanka" },
+      { value: "Taiwan", label: "Taiwan" },
+      { value: "Thailand", label: "Thailand" },
+      { value: "Vietnam", label: "Vietnam" },
+      { value: "X Apac", label: "X Apac" },
       { value: "X APAC English", label: "X APAC English" },
       { value: "X APAC Non English", label: "X APAC Non English" },
       { value: "X South APAC", label: "X South APAC" },
       { value: "X SAARC", label: "X SAARC" }
     ]
-  },
-  {
-    key: "country",
-    label: "Country",
-    options: createFilterOptions(campaigns, "country")
   },
   {
     key: "status",

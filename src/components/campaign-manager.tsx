@@ -45,6 +45,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     campaignType: [],
     strategicPillar: [],
     revenuePlay: [],
+    fy: [],
     quarterMonth: [],
     region: [],
     country: [],
