@@ -1128,7 +1128,6 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                       <td className="border border-border p-2">{row['Forecasted Leads'] || row['Expected Leads']}</td>
                     </tr>
                   ))}
-                  ))}
                 </tbody>
               </table>
               {previewData.length > 10 && (
