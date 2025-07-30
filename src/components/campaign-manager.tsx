@@ -56,22 +56,31 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string[]}>({});
   const [isAddingNew, setIsAddingNew] = useState(false);
 
-  // Recalculate all campaign metrics on component mount to ensure they use the latest calculation logic
+  // Migrate strategic pillars to arrays and recalculate metrics on component mount
   useEffect(() => {
-    const needsRecalculation = campaigns.some(campaign => {
+    const needsMigrationOrRecalc = campaigns.some(campaign => {
       const expectedMetrics = calculateMetrics(campaign);
-      return campaign.mql !== expectedMetrics.mql || 
+      return typeof campaign.strategicPillar === 'string' || 
+             campaign.mql !== expectedMetrics.mql || 
              campaign.sql !== expectedMetrics.sql || 
              campaign.opportunities !== expectedMetrics.opportunities || 
              campaign.pipelineForecast !== expectedMetrics.pipelineForecast;
     });
 
-    if (needsRecalculation) {
-      const recalculatedCampaigns = campaigns.map(campaign => ({
-        ...campaign,
-        ...calculateMetrics(campaign)
-      }));
-      setCampaigns(recalculatedCampaigns);
+    if (needsMigrationOrRecalc) {
+      const migratedCampaigns = campaigns.map(campaign => {
+        // Migrate strategic pillar to array if it's still a string
+        const migratedPillar = typeof campaign.strategicPillar === 'string' 
+          ? campaign.strategicPillar ? [campaign.strategicPillar] : []
+          : campaign.strategicPillar || [];
+        
+        return {
+          ...campaign,
+          strategicPillar: migratedPillar,
+          ...calculateMetrics(campaign)
+        };
+      });
+      setCampaigns(migratedCampaigns);
     }
   }, []); // Only run once on mount
 
@@ -522,6 +531,12 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                 Delete Selected ({selectedCampaigns.length})
               </Button>
             )}
+            
+            <div className="ml-auto">
+              <Badge variant="secondary" className="text-xs">
+                ✨ Multiple Strategic Pillars Supported
+              </Badge>
+            </div>
           </div>
         </CardContent>
       </Card>

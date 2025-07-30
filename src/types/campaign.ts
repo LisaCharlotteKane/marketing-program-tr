@@ -1,7 +1,7 @@
 export interface Campaign {
   id: string;
   campaignType: string;
-  strategicPillar: string | string[];
+  strategicPillar: string[];
   revenuePlay: string;
   fy: string;
   quarterMonth: string;
