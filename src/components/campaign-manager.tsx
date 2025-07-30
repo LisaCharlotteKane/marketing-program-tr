@@ -423,7 +423,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
       return {
         id: Date.now().toString() + Math.random(),
         campaignType: row['Campaign Type'] || '',
-        strategicPillar: row['Strategic Pillar'] ? row['Strategic Pillar'].split(';').map((s: string) => s.trim()) : [],
+        strategicPillar: row['Strategic Pillar'] ? row['Strategic Pillar'].split(/[,;]/).map((s: string) => s.trim()).filter(Boolean) : [],
         revenuePlay: row['Revenue Play'] || '',
         fy: row['FY'] || 'FY25',
         quarterMonth: row['Quarter/Month'] || '',

@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 import { OWNER_TO_REGION_MAP } from "@/hooks/useRegionalBudgets";
 import { getOwnerInfo, getBudgetByRegion } from "@/services/budget-service";
 
@@ -51,13 +51,13 @@ export function validateCampaign(campaign: Partial<Campaign>, rowIndex: number):
   }
   
   // Validate strategic pillars
-  if (campaign.strategicPillars && Array.isArray(campaign.strategicPillars)) {
+  if (campaign.strategicPillar && Array.isArray(campaign.strategicPillar)) {
     // Check if it's empty
-    if (campaign.strategicPillars.length === 0) {
+    if (campaign.strategicPillar.length === 0) {
       errors.push(`Row ${rowIndex}: No Strategic Pillars provided. At least one is recommended.`);
     } else {
       // Check if all pillars are valid
-      const invalidPillars = campaign.strategicPillars.filter(pillar => !validPillars.includes(pillar));
+      const invalidPillars = campaign.strategicPillar.filter(pillar => !validPillars.includes(pillar));
       if (invalidPillars.length > 0) {
         errors.push(`Row ${rowIndex}: Some Strategic Pillars may be invalid: ${invalidPillars.join(", ")}. 
         Valid options are: ${validPillars.join(", ")}`);
@@ -287,15 +287,18 @@ export function processCsvData(csvData: string): {
       // Process strategic pillars with error handling
       let strategicPillars: string[] = [];
       try {
-        console.log(`strategicPillars raw value: "${row.strategicPillars}"`);
-        if (row.strategicPillars) {
+        // Try different column name variations
+        const strategicPillarValue = row.strategicPillar || row.strategicPillars || row['Strategic Pillar'] || row['Strategic Pillars'];
+        console.log(`strategicPillar raw value: "${strategicPillarValue}"`);
+        
+        if (strategicPillarValue) {
           // Check if it's already an array (from previous parsing)
-          if (Array.isArray(row.strategicPillars)) {
-            strategicPillars = row.strategicPillars.filter(Boolean);
+          if (Array.isArray(strategicPillarValue)) {
+            strategicPillars = strategicPillarValue.filter(Boolean);
           } else {
-            // Parse from comma-separated string
-            strategicPillars = row.strategicPillars
-              .split(",")
+            // Parse from comma-separated or semicolon-separated string
+            strategicPillars = strategicPillarValue
+              .split(/[,;]/)
               .map((p: string) => p.trim())
               .filter(Boolean);
           }
@@ -449,9 +452,9 @@ export function processCsvData(csvData: string): {
         id: campaignId,
         campaignName: row.campaignName?.toString().trim() || "",
         campaignType: row.campaignType?.toString().trim() || "",
-        strategicPillars: strategicPillars,
+        strategicPillar: strategicPillars,
         revenuePlay: row.revenuePlay?.toString().trim() || "",
-        fiscalYear: row.fiscalYear?.toString().trim() || "",
+        fy: row.fy?.toString().trim() || row.fiscalYear?.toString().trim() || row.FY?.toString().trim() || "",
         quarterMonth: quarterMonth,
         region: row.region?.toString().trim() || "",
         country: row.country?.toString().trim() || "",
@@ -462,7 +465,7 @@ export function processCsvData(csvData: string): {
         impactedRegions: impactedRegions,
         status: row.status?.toString().trim() || "Planning",
         poRaised: poRaised,
-        campaignCode: row.campaignCode?.toString().trim() || "",
+        salesforceCampaignCode: row.salesforceCampaignCode?.toString().trim() || row.campaignCode?.toString().trim() || "",
         issueLink: row.issueLink?.toString().trim() || "",
         actualCost: actualCost,
         actualLeads: actualLeads,
@@ -482,7 +485,7 @@ export function processCsvData(csvData: string): {
         forecastedCostType: typeof campaign.forecastedCost,
         expectedLeads: campaign.expectedLeads,
         expectedLeadsType: typeof campaign.expectedLeads,
-        strategicPillars: campaign.strategicPillars
+        strategicPillars: campaign.strategicPillar
       });
       
       // Validate the campaign
@@ -574,9 +577,9 @@ export function exportCampaignsToCsv(campaigns: Campaign[]): string {
     id: c.id,
     campaignName: c.campaignName || "",
     campaignType: c.campaignType || "",
-    strategicPillars: Array.isArray(c.strategicPillars) ? c.strategicPillars.join(", ") : "",
+    strategicPillars: Array.isArray(c.strategicPillar) ? c.strategicPillar.join(", ") : "",
     revenuePlay: c.revenuePlay || "",
-    fiscalYear: c.fiscalYear || "",
+    fiscalYear: c.fy || "",
     quarterMonth: c.quarterMonth || "",
     region: c.region || "",
     country: c.country || "",
@@ -587,7 +590,7 @@ export function exportCampaignsToCsv(campaigns: Campaign[]): string {
     impactedRegions: Array.isArray(c.impactedRegions) ? c.impactedRegions.join(", ") : "",
     status: c.status || "Planning",
     poRaised: c.poRaised ? "true" : "false",
-    campaignCode: c.campaignCode || "",
+    campaignCode: c.salesforceCampaignCode || "",
     issueLink: c.issueLink || "",
     actualCost: typeof c.actualCost === 'number' ? c.actualCost : "",
     actualLeads: typeof c.actualLeads === 'number' ? c.actualLeads : "",

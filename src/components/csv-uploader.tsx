@@ -50,9 +50,9 @@ export const CSVUploader = ({ onCampaignsImported }: CSVUploaderProps) => {
     try {
       // Create template CSV content
       const csvContent = `Campaign Name,Campaign Type,Strategic Pillar,Revenue Play,FY,Quarter/Month,Region,Country,Owner,Description,Forecasted Cost,Expected Leads
-Q1 Enterprise Workshop,In-Account Events (1:1),"Account Growth and Product Adoption,Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY26,Q2 - November,JP & Korea,Japan,Tomoko Tanaka,Enterprise customer workshop,15000,50
+Q1 Enterprise Workshop,In-Account Events (1:1),"Account Growth and Product Adoption; Pipeline Acceleration & Executive Engagement",Accelerate developer productivity with Copilot in VS Code and GitHub,FY26,Q2 - November,JP & Korea,Japan,Tomoko Tanaka,Enterprise customer workshop,15000,50
 Developer Meetup,Localized Events,Brand Awareness & Top of Funnel Demand Generation,Secure all developer workloads with the power of AI,FY26,Q3 - January,SAARC,India,Shruti Narang,Developer community meetup,8000,100
-Cross-region Webinar,Webinars,New Logo Acquisition,All,FY26,Q4 - April,Digital,X APAC,Giorgia Parham,Cross-regional webinar series,5000,150`;
+Cross-region Webinar,Webinars,"New Logo Acquisition; Brand Awareness & Top of Funnel Demand Generation",All,FY26,Q4 - April,Digital,X APAC,Giorgia Parham,Cross-regional webinar series,5000,150`;
 
       // Create blob and download link
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -169,9 +169,9 @@ Cross-region Webinar,Webinars,New Logo Acquisition,All,FY26,Q4 - April,Digital,X
                 if (row[csvHeader] !== undefined) {
                   // Handle special field types
                   if (campaignField === "strategicPillar") {
-                    // Parse comma-separated values into arrays
+                    // Parse comma-separated or semicolon-separated values into arrays
                     campaign[campaignField] = row[csvHeader]
-                      ? row[csvHeader].split(",").map((item: string) => item.trim())
+                      ? row[csvHeader].split(/[,;]/).map((item: string) => item.trim()).filter(Boolean)
                       : [];
                   } 
                   else if (campaignField === "forecastedCost" || campaignField === "expectedLeads") {
