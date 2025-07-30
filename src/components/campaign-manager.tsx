@@ -1316,47 +1316,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
         </CardContent>
       </Card>
 
-      {/* Enhanced CSV Import Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Enhanced CSV Import
-          </CardTitle>
-          <CardDescription>
-            Improved data capture with smart field mapping and validation
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            <div>
-              <h4 className="font-medium mb-2">✅ Smart Field Mapping:</h4>
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• Automatically detects column headers</li>
-                <li>• Maps multiple header variations (e.g., "Cost" = "Forecasted Cost")</li>
-                <li>• Handles currency symbols and number formatting</li>
-                <li>• Supports multi-select Strategic Pillars (comma/semicolon separated)</li>
-                <li>• Validates required fields during import</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">🔧 Supported Header Variations:</h4>
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• <strong>Cost:</strong> "Forecasted Cost", "Cost", "Budget", "Spend"</li>
-                <li>• <strong>Leads:</strong> "Forecasted Leads", "Expected Leads", "Lead Target"</li>
-                <li>• <strong>Owner:</strong> "Owner", "Campaign Owner", "Manager"</li>
-                <li>• <strong>Region:</strong> "Region", "Area", "Territory"</li>
-                <li>• And many more...</li>
-              </ul>
-            </div>
-          </div>
-          <Alert className="mt-4">
-            <AlertDescription>
-              💡 <strong>Tip:</strong> Download the template CSV for the best import experience, or upload any CSV with similar headers - the system will intelligently map your data!
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+      {/* Auto-Calculated Metrics Description */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
