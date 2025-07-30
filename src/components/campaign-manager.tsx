@@ -26,6 +26,7 @@ import {
   FloppyDisk
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import Papa from "papaparse";
 import { Campaign } from "@/types/campaign";
 import { 
   MultiSelectFilters, 
@@ -340,8 +341,55 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
   // Get filter configurations
   const filterConfigs = getStandardFilterConfigs(campaigns);
 
-  // CSV Export
-  const exportToCSV = () => {
+  // CSV Template Download
+  const downloadTemplate = () => {
+    const headers = [
+      'Campaign Type', 'Strategic Pillar', 'Revenue Play', 'FY', 'Quarter/Month',
+      'Region', 'Country', 'Owner', 'Description', 'Forecasted Cost', 'Forecasted Leads'
+    ];
+    
+    const sampleData = [
+      [
+        'Webinars',
+        'Brand Awareness & Top of Funnel Demand Generation',
+        'Accelerate developer productivity with Copilot in VS Code and GitHub',
+        'FY25',
+        'Q1 - July',
+        'JP & Korea',
+        'Japan',
+        'Tomoko Tanaka',
+        'Developer productivity webinar series',
+        '15000',
+        '500'
+      ],
+      [
+        'In-Account Events (1:1)',
+        'Account Growth and Product Adoption',
+        'Secure all developer workloads with the power of AI',
+        'FY25',
+        'Q2 - October',
+        'South APAC',
+        'Australia',
+        'Beverly Leung',
+        'Executive briefing on AI security',
+        '25000',
+        '0'
+      ]
+    ];
+
+    const csvContent = [headers, ...sampleData]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'campaign-template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Template downloaded successfully");
+  };
     const headers = [
       'Campaign Type', 'Strategic Pillar', 'Revenue Play', 'FY', 'Quarter/Month',
       'Region', 'Country', 'Owner', 'Description', 'Forecasted Cost', 'Forecasted Leads',
@@ -380,74 +428,190 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     toast.success("CSV exported successfully");
   };
 
-  // CSV Import
+  // Enhanced CSV Import with PapaParse
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const csv = e.target?.result as string;
-        const lines = csv.split('\n');
-        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-        
-        const data = lines.slice(1)
-          .filter(line => line.trim())
-          .map(line => {
-            const values = line.split(',').map(v => v.replace(/"/g, '').trim());
-            return headers.reduce((obj, header, index) => {
-              obj[header] = values[index] || '';
-              return obj;
-            }, {} as any);
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      transform: (value, field) => {
+        // Clean up values
+        return typeof value === 'string' ? value.trim() : value;
+      },
+      complete: (results) => {
+        try {
+          if (results.errors.length > 0) {
+            console.warn('CSV parsing warnings:', results.errors);
+            // Show non-critical errors as warnings
+            const criticalErrors = results.errors.filter(error => error.type === 'Delimiter');
+            if (criticalErrors.length > 0) {
+              toast.error("Critical CSV parsing errors detected");
+              return;
+            }
+          }
+
+          const data = results.data as any[];
+          console.log('PapaParse results:', { data, meta: results.meta });
+          
+          if (data.length === 0) {
+            toast.error("No data found in CSV file");
+            return;
+          }
+
+          // Filter out completely empty rows
+          const validData = data.filter(row => {
+            return Object.values(row).some(value => value && value.toString().trim());
           });
 
-        setPreviewData(data);
-        setShowPreview(true);
-      } catch (error) {
-        toast.error("Error reading CSV file");
+          console.log(`Loaded ${validData.length} valid rows from ${data.length} total rows`);
+          setPreviewData(validData);
+          setShowPreview(true);
+          toast.success(`Loaded ${validData.length} rows for preview`);
+        } catch (error) {
+          console.error('CSV processing error:', error);
+          toast.error("Error processing CSV file: " + (error as Error).message);
+        }
+      },
+      error: (error) => {
+        console.error('PapaParse error:', error);
+        toast.error("Error reading CSV file: " + error.message);
       }
-    };
-    reader.readAsText(file);
+    });
   };
 
-  // Import from preview
+  // Sanitize numerical values
+  const sanitizeNumber = (value: string): string => {
+    if (!value) return '0';
+    // Remove currency symbols, commas, and other non-numeric characters except decimal points
+    const cleaned = value.toString().replace(/[^0-9.-]/g, '');
+    return cleaned || '0';
+  };
+  // Import from preview with enhanced field mapping and validation
   const importFromPreview = () => {
-    const newCampaigns = previewData.map(row => {
-      const metrics = calculateMetrics({
-        forecastedCost: row['Forecasted Cost'],
-        expectedLeads: row['Forecasted Leads'] || row['Expected Leads'], // Handle both naming conventions
-        campaignType: row['Campaign Type']
-      });
+    const successfulImports: any[] = [];
+    const failedImports: any[] = [];
 
-      return {
-        id: Date.now().toString() + Math.random(),
-        campaignType: row['Campaign Type'] || '',
-        strategicPillar: row['Strategic Pillar'] ? row['Strategic Pillar'].split(/[,;]/).map((s: string) => s.trim()).filter(Boolean) : [],
-        revenuePlay: row['Revenue Play'] || '',
-        fy: row['FY'] || 'FY25',
-        quarterMonth: row['Quarter/Month'] || '',
-        region: row['Region'] || '',
-        country: row['Country'] || '',
-        owner: row['Owner'] || '',
-        description: row['Description'] || '',
-        forecastedCost: row['Forecasted Cost'] || '0',
-        expectedLeads: row['Forecasted Leads'] || row['Expected Leads'] || '0',
-        ...metrics,
-        status: 'Planning',
-        poRaised: false,
-        salesforceCampaignCode: '',
-        issueLink: '',
-        actualCost: '0',
-        actualLeads: '0',
-        actualMQLs: '0'
-      };
+    previewData.forEach((row, index) => {
+      try {
+        // Enhanced field mapping with multiple possible header names
+        const getFieldValue = (possibleNames: string[]): string => {
+          for (const name of possibleNames) {
+            if (row[name] && row[name].toString().trim()) {
+              return row[name].toString().trim();
+            }
+          }
+          return '';
+        };
+
+        // Sanitize cost and leads values
+        const rawCost = getFieldValue(['Forecasted Cost', 'Cost', 'Budget', 'Spend', 'Amount']);
+        const rawLeads = getFieldValue(['Forecasted Leads', 'Expected Leads', 'Leads', 'Lead Target', 'Target Leads']);
+        
+        const forecastedCost = sanitizeNumber(rawCost);
+        const expectedLeads = sanitizeNumber(rawLeads);
+
+        const campaignType = getFieldValue(['Campaign Type', 'Type', 'Campaign', 'Program Type']);
+        
+        // Validate required fields
+        if (!campaignType) {
+          throw new Error(`Row ${index + 1}: Campaign Type is required`);
+        }
+
+        const region = getFieldValue(['Region', 'Area', 'Territory']);
+        const owner = getFieldValue(['Owner', 'Campaign Owner', 'Manager', 'Lead']);
+        
+        if (!region) {
+          throw new Error(`Row ${index + 1}: Region is required`);
+        }
+        
+        if (!owner) {
+          throw new Error(`Row ${index + 1}: Owner is required`);
+        }
+
+        console.log(`Campaign ${index + 1} mapping:`, {
+          rawCost,
+          rawLeads,
+          forecastedCost,
+          expectedLeads,
+          campaignType,
+          region,
+          owner
+        });
+
+        const metrics = calculateMetrics({
+          forecastedCost,
+          expectedLeads,
+          campaignType
+        });
+
+        // Handle Strategic Pillar as multiple selections
+        const strategicPillarRaw = getFieldValue(['Strategic Pillar', 'Strategic Pillars', 'Pillar', 'Strategy']);
+        const strategicPillar = strategicPillarRaw ? 
+          strategicPillarRaw.split(/[,;|]/).map((s: string) => s.trim()).filter(Boolean) : [];
+
+        // Handle Quarter/Month field with regex parsing
+        const quarterMonthRaw = getFieldValue(['Quarter/Month', 'Quarter', 'Month', 'Q/M', 'Period']);
+        let quarterMonth = quarterMonthRaw;
+        
+        // Try to parse quarter-month patterns
+        if (quarterMonthRaw) {
+          const match = quarterMonthRaw.match(/(Q[1-4])\s*[-\s]*\s*(\w+)/i);
+          if (match) {
+            const quarter = match[1].toUpperCase();
+            const month = match[2];
+            quarterMonth = `${quarter} - ${month}`;
+          }
+        }
+
+        const newCampaign = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          campaignType,
+          strategicPillar,
+          revenuePlay: getFieldValue(['Revenue Play', 'Revenue', 'Play', 'Focus Area']),
+          fy: getFieldValue(['FY', 'Fiscal Year', 'Year']) || 'FY25',
+          quarterMonth,
+          region,
+          country: getFieldValue(['Country', 'Location', 'Market']),
+          owner,
+          description: getFieldValue(['Description', 'Details', 'Campaign Description', 'Notes']),
+          forecastedCost,
+          expectedLeads,
+          ...metrics,
+          status: getFieldValue(['Status', 'Campaign Status']) || 'Planning',
+          poRaised: false,
+          salesforceCampaignCode: getFieldValue(['Salesforce Campaign Code', 'SFDC Code', 'Campaign Code']),
+          issueLink: getFieldValue(['Issue Link', 'Link', 'URL', 'Reference']),
+          actualCost: sanitizeNumber(getFieldValue(['Actual Cost', 'Actual Spend', 'Real Cost'])),
+          actualLeads: sanitizeNumber(getFieldValue(['Actual Leads', 'Real Leads', 'Generated Leads'])),
+          actualMQLs: sanitizeNumber(getFieldValue(['Actual MQLs', 'Real MQLs', 'Generated MQLs']))
+        };
+
+        console.log(`Final campaign ${index + 1}:`, newCampaign);
+        successfulImports.push(newCampaign);
+        
+      } catch (error) {
+        console.error(`Failed to import row ${index + 1}:`, error);
+        failedImports.push({ row: index + 1, error: (error as Error).message, data: row });
+      }
     });
 
-    setCampaigns([...campaigns, ...newCampaigns]);
+    // Update campaigns with successful imports
+    if (successfulImports.length > 0) {
+      setCampaigns([...campaigns, ...successfulImports]);
+    }
+
+    // Show results
+    if (failedImports.length > 0) {
+      console.warn('Failed imports:', failedImports);
+      toast.error(`Imported ${successfulImports.length} campaigns successfully, ${failedImports.length} failed. Check console for details.`);
+    } else {
+      toast.success(`Successfully imported all ${successfulImports.length} campaigns with complete data capture`);
+    }
+
     setShowPreview(false);
     setPreviewData([]);
-    toast.success(`Imported ${newCampaigns.length} campaigns`);
   };
 
   // Handle Strategic Pillar editing
@@ -510,6 +674,11 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               Export CSV
             </Button>
 
+            <Button onClick={downloadTemplate} variant="outline" className="flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              Download Template
+            </Button>
+
             <div>
               <input
                 type="file"
@@ -535,7 +704,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
             
             <div className="ml-auto">
               <Badge variant="secondary" className="text-xs">
-                ✨ Multiple Strategic Pillars Supported
+                ✨ Enhanced CSV Import
               </Badge>
             </div>
           </div>
@@ -1147,7 +1316,47 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
         </CardContent>
       </Card>
 
-      {/* Auto-Calculated Metrics Description */}
+      {/* Enhanced CSV Import Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5" />
+            Enhanced CSV Import
+          </CardTitle>
+          <CardDescription>
+            Improved data capture with smart field mapping and validation
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <h4 className="font-medium mb-2">✅ Smart Field Mapping:</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Automatically detects column headers</li>
+                <li>• Maps multiple header variations (e.g., "Cost" = "Forecasted Cost")</li>
+                <li>• Handles currency symbols and number formatting</li>
+                <li>• Supports multi-select Strategic Pillars (comma/semicolon separated)</li>
+                <li>• Validates required fields during import</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">🔧 Supported Header Variations:</h4>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• <strong>Cost:</strong> "Forecasted Cost", "Cost", "Budget", "Spend"</li>
+                <li>• <strong>Leads:</strong> "Forecasted Leads", "Expected Leads", "Lead Target"</li>
+                <li>• <strong>Owner:</strong> "Owner", "Campaign Owner", "Manager"</li>
+                <li>• <strong>Region:</strong> "Region", "Area", "Territory"</li>
+                <li>• And many more...</li>
+              </ul>
+            </div>
+          </div>
+          <Alert className="mt-4">
+            <AlertDescription>
+              💡 <strong>Tip:</strong> Download the template CSV for the best import experience, or upload any CSV with similar headers - the system will intelligently map your data!
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -1180,52 +1389,117 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
 
       {/* CSV Preview Dialog */}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Preview CSV Import</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Review the data below before importing {previewData.length} campaigns:
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Review the data below before importing {previewData.length} campaigns:
+              </p>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  All columns detected: {previewData.length > 0 ? Object.keys(previewData[0]).length : 0}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  ✅ Enhanced mapping
+                </Badge>
+              </div>
+            </div>
+            
+            {/* Show detected headers */}
+            {previewData.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-sm font-medium mb-2">Detected CSV Headers:</h4>
+                <div className="flex flex-wrap gap-1">
+                  {Object.keys(previewData[0]).map((header, index) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {header}
+                    </Badge>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 The system will automatically map these headers to campaign fields using smart matching
+                </p>
+              </div>
+            )}
+
             <div className="overflow-x-auto max-h-96">
-              <table className="w-full border border-border">
+              <table className="w-full border border-border text-xs">
                 <thead>
                   <tr className="bg-muted">
-                    <th className="border border-border p-2 text-left">Campaign Type</th>
-                    <th className="border border-border p-2 text-left">Strategic Pillar</th>
-                    <th className="border border-border p-2 text-left">Region</th>
-                    <th className="border border-border p-2 text-left">Owner</th>
-                    <th className="border border-border p-2 text-left">Cost</th>
-                    <th className="border border-border p-2 text-left">Leads</th>
+                    <th className="border border-border p-2 text-left min-w-32">Campaign Type</th>
+                    <th className="border border-border p-2 text-left min-w-32">Strategic Pillar</th>
+                    <th className="border border-border p-2 text-left min-w-24">Region</th>
+                    <th className="border border-border p-2 text-left min-w-24">Owner</th>
+                    <th className="border border-border p-2 text-left min-w-24">Cost</th>
+                    <th className="border border-border p-2 text-left min-w-24">Leads</th>
+                    <th className="border border-border p-2 text-left min-w-24">Quarter/Month</th>
+                    <th className="border border-border p-2 text-left min-w-32">Description</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {previewData.slice(0, 10).map((row, index) => (
-                    <tr key={index}>
-                      <td className="border border-border p-2">{row['Campaign Type']}</td>
-                      <td className="border border-border p-2">{row['Strategic Pillar']}</td>
-                      <td className="border border-border p-2">{row['Region']}</td>
-                      <td className="border border-border p-2">{row['Owner']}</td>
-                      <td className="border border-border p-2">{row['Forecasted Cost']}</td>
-                      <td className="border border-border p-2">{row['Forecasted Leads'] || row['Expected Leads']}</td>
-                    </tr>
-                  ))}
+                  {previewData.slice(0, 15).map((row, index) => {
+                    // Helper function to get field values with fallbacks
+                    const getFieldValue = (possibleNames: string[]) => {
+                      for (const name of possibleNames) {
+                        if (row[name] && row[name].trim()) {
+                          return row[name].trim();
+                        }
+                      }
+                      return '-';
+                    };
+
+                    return (
+                      <tr key={index} className={index % 2 === 0 ? "bg-muted/20" : ""}>
+                        <td className="border border-border p-2">
+                          {getFieldValue(['Campaign Type', 'Type', 'Campaign', 'Program Type'])}
+                        </td>
+                        <td className="border border-border p-2">
+                          {getFieldValue(['Strategic Pillar', 'Strategic Pillars', 'Pillar', 'Strategy'])}
+                        </td>
+                        <td className="border border-border p-2">
+                          {getFieldValue(['Region', 'Area', 'Territory'])}
+                        </td>
+                        <td className="border border-border p-2">
+                          {getFieldValue(['Owner', 'Campaign Owner', 'Manager', 'Lead'])}
+                        </td>
+                        <td className="border border-border p-2 font-mono">
+                          {getFieldValue(['Forecasted Cost', 'Cost', 'Budget', 'Spend'])}
+                        </td>
+                        <td className="border border-border p-2 font-mono">
+                          {getFieldValue(['Forecasted Leads', 'Expected Leads', 'Leads', 'Lead Target'])}
+                        </td>
+                        <td className="border border-border p-2">
+                          {getFieldValue(['Quarter/Month', 'Quarter', 'Month', 'Q/M', 'Period'])}
+                        </td>
+                        <td className="border border-border p-2 max-w-48 truncate">
+                          {getFieldValue(['Description', 'Details', 'Campaign Description', 'Notes'])}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-              {previewData.length > 10 && (
+              {previewData.length > 15 && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  ... and {previewData.length - 10} more rows
+                  ... and {previewData.length - 15} more rows
                 </p>
               )}
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowPreview(false)}>
-                Cancel
-              </Button>
-              <Button onClick={importFromPreview}>
-                Import {previewData.length} Campaigns
-              </Button>
+            <div className="flex justify-between items-center">
+              <div className="text-xs text-muted-foreground">
+                💡 The import will automatically map column headers to campaign fields
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowPreview(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={importFromPreview}>
+                  Import {previewData.length} Campaigns
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
