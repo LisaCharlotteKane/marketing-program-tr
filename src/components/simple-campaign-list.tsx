@@ -39,7 +39,7 @@ export function SimpleCampaignList({ campaigns }: SimpleCampaignListProps) {
   const totalCost = campaigns.reduce((sum, campaign) => sum + (campaign.forecastedCost || 0), 0);
   const totalLeads = campaigns.reduce((sum, campaign) => sum + (campaign.expectedLeads || 0), 0);
   const totalMQLs = Math.round(totalLeads * 0.1);
-  const totalSQLs = Math.round(totalLeads * 0.06);
+  const totalSQLs = Math.round(totalMQLs * 0.06); // 6% of MQLs, not leads
   const totalOpportunities = Math.round(totalSQLs * 0.8);
   const totalPipeline = totalOpportunities * 50000;
 

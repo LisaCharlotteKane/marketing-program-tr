@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +42,25 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
   const [editingPillars, setEditingPillars] = useState<{campaignId: string; pillars: string[]} | null>(null);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string[]}>({});
   const [isAddingNew, setIsAddingNew] = useState(false);
+
+  // Recalculate all campaign metrics on component mount to ensure they use the latest calculation logic
+  useEffect(() => {
+    const needsRecalculation = campaigns.some(campaign => {
+      const expectedMetrics = calculateMetrics(campaign);
+      return campaign.mql !== expectedMetrics.mql || 
+             campaign.sql !== expectedMetrics.sql || 
+             campaign.opportunities !== expectedMetrics.opportunities || 
+             campaign.pipelineForecast !== expectedMetrics.pipelineForecast;
+    });
+
+    if (needsRecalculation) {
+      const recalculatedCampaigns = campaigns.map(campaign => ({
+        ...campaign,
+        ...calculateMetrics(campaign)
+      }));
+      setCampaigns(recalculatedCampaigns);
+    }
+  }, []); // Only run once on mount
 
   // New campaign row for inline editing
   const [newCampaign, setNewCampaign] = useState<Partial<Campaign>>({
@@ -224,18 +243,18 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
       };
     }
     
-    // Standard calculation flow:
+    // Updated calculation flow per requirements:
     // Expected Leads (user input)
-    // MQLs = 10% of Expected Leads  
+    // MQL Forecast = 10% of Expected Leads  
     const mql = Math.round(leads * 0.1);
     
-    // SQLs = 6% of MQLs
+    // SQL Forecast = 6% of MQL Forecast (not 6% of Expected Leads)
     const sql = Math.round(mql * 0.06);
     
-    // Opportunities = 80% of SQLs
+    // # Opportunities = 80% of SQL Forecast
     const opportunities = Math.round(sql * 0.8);
     
-    // Pipeline = Opportunities × $50K
+    // Pipeline Forecast = # Opportunities × $50K
     const pipelineForecast = opportunities * 50000;
     
     return { mql, sql, opportunities, pipelineForecast };
@@ -1147,9 +1166,9 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               <h4 className="font-medium mb-2">Standard Calculation:</h4>
               <ul className="space-y-1 text-muted-foreground">
                 <li>• MQL Forecast = 10% of Expected Leads</li>
-                <li>• SQL Forecast = 6% of Expected Leads</li>
-                <li>• Opportunities = 80% of SQLs</li>
-                <li>• Pipeline Forecast = Opportunities × $50K</li>
+                <li>• SQL Forecast = 6% of MQL Forecast</li>
+                <li>• # Opportunities = 80% of SQL Forecast</li>
+                <li>• Pipeline Forecast = # Opportunities × $50K</li>
               </ul>
             </div>
             <div>
