@@ -1147,7 +1147,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               <h4 className="font-medium mb-2">Standard Calculation:</h4>
               <ul className="space-y-1 text-muted-foreground">
                 <li>• MQL Forecast = 10% of Expected Leads</li>
-                <li>• SQL Forecast = 6% of MQLs</li>
+                <li>• SQL Forecast = 6% of Expected Leads</li>
                 <li>• Opportunities = 80% of SQLs</li>
                 <li>• Pipeline Forecast = Opportunities × $50K</li>
               </ul>
