@@ -436,6 +436,9 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     const file = event.target.files?.[0];
     if (!file) return;
 
+    console.log('File selected:', file.name, file.size, file.type);
+    toast.info(`Reading file: ${file.name}...`);
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
@@ -444,6 +447,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
         return typeof value === 'string' ? value.trim() : value;
       },
       complete: (results) => {
+        console.log('Papa.parse complete callback triggered');
         try {
           if (results.errors.length > 0) {
             console.warn('CSV parsing warnings:', results.errors);
@@ -456,7 +460,11 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
           }
 
           const data = results.data as any[];
-          console.log('PapaParse results:', { data, meta: results.meta });
+          console.log('PapaParse results:', { 
+            dataLength: data.length, 
+            firstRow: data[0], 
+            meta: results.meta 
+          });
           
           if (data.length === 0) {
             toast.error("No data found in CSV file");
@@ -469,8 +477,16 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
           });
 
           console.log(`Loaded ${validData.length} valid rows from ${data.length} total rows`);
+          console.log('Setting preview data and showing preview...');
+          
           setPreviewData(validData);
-          setShowPreview(true);
+          
+          // Add a small delay to ensure state updates
+          setTimeout(() => {
+            setShowPreview(true);
+            console.log('Preview should now be visible');
+          }, 100);
+          
           toast.success(`Loaded ${validData.length} rows for preview`);
         } catch (error) {
           console.error('CSV processing error:', error);
@@ -709,6 +725,18 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               <Badge variant="secondary" className="text-xs">
                 ✨ Enhanced CSV Import
               </Badge>
+              <Button 
+                onClick={() => {
+                  console.log('Test button clicked - setting preview');
+                  setPreviewData([{ 'Campaign Type': 'Test', 'Owner': 'Test Owner' }]);
+                  setShowPreview(true);
+                }} 
+                variant="outline" 
+                size="sm" 
+                className="ml-2"
+              >
+                Test Preview
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -1308,6 +1336,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
       </Card>
 
       {/* CSV Preview Dialog */}
+      {console.log('Dialog render - showPreview:', showPreview, 'previewData length:', previewData.length)}
       <Dialog open={showPreview} onOpenChange={setShowPreview}>
         <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
