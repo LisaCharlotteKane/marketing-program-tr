@@ -13,9 +13,17 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: './',
+  base: process.env.NODE_ENV === 'production' ? './' : '/',
   build: {
-    outDir: process.env.OUTPUT_DIR || 'dist'
+    outDir: process.env.OUTPUT_DIR || 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-select', '@radix-ui/react-tabs']
+        }
+      }
+    }
   },
   server: {
     port: 5000,

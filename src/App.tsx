@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
 import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, ChartBar, ClipboardText, Funnel, X, PencilSimple, Copy, FloppyDisk } from "@phosphor-icons/react";
-import { useKV } from "@github/spark/hooks";
+import { useKV } from "@/hooks/useKV";
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { SharedStorageStatus } from "@/components/shared-storage-status";
 import { DataSyncStatus } from "@/components/data-sync-status";
