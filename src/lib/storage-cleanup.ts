@@ -30,7 +30,6 @@ function cleanupLocalStorage() {
       'kvStore-cache',
       'campaign-sync-data',
       'persistentCampaigns',
-      'spark-user-session',
       'github-session',
       'auth-state'
     ];

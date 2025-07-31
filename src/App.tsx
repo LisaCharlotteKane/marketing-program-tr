@@ -8,6 +8,8 @@ import { Toaster } from "sonner";
 import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, ChartBar, ClipboardText, Funnel, X, PencilSimple, Copy, FloppyDisk } from "@phosphor-icons/react";
 import { useKV } from "@github/spark/hooks";
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
+import { SharedStorageStatus } from "@/components/shared-storage-status";
+import { DataSyncStatus } from "@/components/data-sync-status";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
 import { CampaignManager } from "@/components/campaign-manager";
 import { ExecutionTracking } from "@/components/execution-tracking";
@@ -61,8 +63,8 @@ function QuickStatsCard({ campaigns }: { campaigns: Campaign[] }) {
 }
 
 export default function App() {
-  // Use shared KV storage instead of localStorage for cross-user data sharing
-  const [campaigns, setCampaigns] = useKV<Campaign[]>('shared-campaign-data', []);
+  // Use shared KV storage with global scope for cross-user data sharing
+  const [campaigns, setCampaigns] = useKV<Campaign[]>('shared-campaign-data', [], { scope: 'global' });
   const [storageWarning, setStorageWarning] = useState(false);
 
   useEffect(() => {
@@ -120,11 +122,12 @@ export default function App() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
+                <DataSyncStatus campaigns={campaigns} />
                 <div className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
                   {campaigns.length} campaigns
                 </div>
                 <div className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">
-                  ✓ Shared Storage Active
+                  ✓ Global Shared Access
                 </div>
                 {storageWarning && (
                   <div className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded-full border border-red-200">
@@ -247,6 +250,8 @@ export default function App() {
                   </p>
                 </div>
 
+                <SharedStorageStatus campaigns={campaigns} />
+
                 <Card>
                   <CardHeader>
                     <CardTitle>System Health</CardTitle>
@@ -255,8 +260,9 @@ export default function App() {
                     <Alert>
                       <Target className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>Shared Storage Active:</strong> Campaign data is now shared across all logged-in users. 
-                        All team members can view and collaborate on the same campaign data in real-time.
+                        <strong>Global Shared Storage Active:</strong> Campaign data is now shared globally across all logged-in users. 
+                        All team members can view, edit, and collaborate on the same campaign data in real-time. 
+                        No user restrictions - everyone has full access to all campaigns.
                       </AlertDescription>
                     </Alert>
                   </CardContent>
