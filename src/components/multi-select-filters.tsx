@@ -150,7 +150,7 @@ export function MultiSelectFilters({
                         >
                           <Checkbox 
                             checked={selectedValues.includes(option.value)}
-                            onChange={() => toggleFilterValue(config.key, option.value)}
+                            onCheckedChange={() => toggleFilterValue(config.key, option.value)}
                           />
                           <label className="text-sm cursor-pointer flex-1">
                             {option.label}

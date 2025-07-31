@@ -272,8 +272,8 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     // MQL Forecast = 10% of Expected Leads  
     const mql = Math.round(leads * 0.1);
     
-    // SQL Forecast = 6% of Expected Leads (corrected calculation)
-    const sql = Math.round(leads * 0.06);
+    // SQL Forecast = 6% of MQL Forecast (updated calculation)
+    const sql = Math.round(mql * 0.06);
     
     // # Opportunities = 80% of SQL Forecast
     const opportunities = Math.round(sql * 0.8);
@@ -390,6 +390,9 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     URL.revokeObjectURL(url);
     toast.success("Template downloaded successfully");
   };
+
+  // Export to CSV
+  const exportToCSV = () => {
     const headers = [
       'Campaign Type', 'Strategic Pillar', 'Revenue Play', 'FY', 'Quarter/Month',
       'Region', 'Country', 'Owner', 'Description', 'Forecasted Cost', 'Forecasted Leads',
@@ -972,7 +975,8 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                             const leads = Number(newCampaign.expectedLeads) || 0;
                             const campaignType = newCampaign.campaignType || '';
                             if (campaignType.includes('In-Account') && leads === 0) return '0';
-                            return Math.round(leads * 0.06);
+                            const mql = Math.round(leads * 0.1);
+                            return Math.round(mql * 0.06);
                           })()}
                         </div>
                       </TableCell>
@@ -990,7 +994,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                             }
                             
                             const mqls = Math.round(leads * 0.1);
-                            const sqls = Math.round(leads * 0.06);
+                            const sqls = Math.round(mqls * 0.06);
                             const opportunities = Math.round(sqls * 0.8);
                             return (opportunities * 50000).toLocaleString();
                           })()}
@@ -1329,7 +1333,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
               <h4 className="font-medium mb-2">Standard Calculation:</h4>
               <ul className="space-y-1 text-muted-foreground">
                 <li>• MQL Forecast = 10% of Expected Leads</li>
-                <li>• SQL Forecast = 6% of Expected Leads</li>
+                <li>• SQL Forecast = 6% of MQL Forecast</li>
                 <li>• # Opportunities = 80% of SQL Forecast</li>
                 <li>• Pipeline Forecast = # Opportunities × $50K</li>
               </ul>
