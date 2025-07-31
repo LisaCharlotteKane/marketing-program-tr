@@ -15,6 +15,7 @@ import { CampaignManager } from "@/components/campaign-manager";
 import { ExecutionTracking } from "@/components/execution-tracking";
 import { ReportingDashboard } from "@/components/reporting-dashboard";
 import { CampaignCalendarView } from "@/components/campaign-calendar-view";
+import { BudgetManagement } from "@/components/budget-management";
 import { Campaign } from "@/types/campaign";
 
 // Simple campaign table component
@@ -156,7 +157,7 @@ export default function App() {
 
         <main className="flex-1 container mx-auto p-4">
           <Tabs defaultValue="planning" className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsList className="grid w-full grid-cols-6 mb-6">
               <TabsTrigger value="planning" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 Campaign Planning
@@ -168,6 +169,10 @@ export default function App() {
               <TabsTrigger value="reporting" className="flex items-center gap-2">
                 <ChartBar className="h-4 w-4" />
                 Reporting
+              </TabsTrigger>
+              <TabsTrigger value="budget" className="flex items-center gap-2">
+                <BuildingOffice className="h-4 w-4" />
+                Budget Management
               </TabsTrigger>
               <TabsTrigger value="calendar" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
@@ -222,6 +227,21 @@ export default function App() {
 
                 <ErrorBoundary>
                   <ReportingDashboard campaigns={campaigns} />
+                </ErrorBoundary>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="budget">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight">Budget Management</h2>
+                  <p className="text-muted-foreground">
+                    Track regional budget allocations and spending across campaigns
+                  </p>
+                </div>
+
+                <ErrorBoundary>
+                  <BudgetManagement campaigns={campaigns} />
                 </ErrorBoundary>
               </div>
             </TabsContent>

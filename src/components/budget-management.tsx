@@ -1,10 +1,8 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useMemo } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BuildingOffice, Warning } from "@phosphor-icons/react";
 import { Campaign } from "@/types/campaign";
 
@@ -12,64 +10,79 @@ interface BudgetManagementProps {
   campaigns: Campaign[];
 }
 
+interface BudgetPoolData {
+  owner: string;
+  assigned: number;
+  used: number;
+  remaining: number;
+  overage: number;
+  campaigns: Campaign[];
+}
+
 export function BudgetManagement({ campaigns }: BudgetManagementProps) {
   const [regionFilter, setRegionFilter] = useState<string>("all");
   const [quarterFilter, setQuarterFilter] = useState<string>("all");
 
-  const regions = ["JP & Korea", "South APAC", "SAARC", "Digital"];
-  const quarters = [
-    "Q1 - July", "Q1 - August", "Q1 - September",
-    "Q2 - October", "Q2 - November", "Q2 - December", 
-    "Q3 - January", "Q3 - February", "Q3 - March",
-    "Q4 - April", "Q4 - May", "Q4 - June"
-  ];
-
-  // Budget allocations by owner
-  const budgetAllocations = {
-    "Tomoko Tanaka": { region: "JP & Korea", budget: 358000 },
-    "Beverly Leung": { region: "South APAC", budget: 385500 },
-    "Shruti Narang": { region: "SAARC", budget: 265000 },
-    "Giorgia Parham": { region: "Digital", budget: 68000 }
+  // Fixed budget allocations by owner
+  const budgetPoolByOwner = {
+    "Tomoko Tanaka": 358000,
+    "Beverly Leung": 385500,
+    "Shruti Narang": 265000,
+    "Giorgia Parham": 68000,
   };
 
-  // Calculate budget utilization by owner
-  const budgetSummary = Object.entries(budgetAllocations).map(([owner, allocation]) => {
-    const ownerCampaigns = campaigns.filter(campaign => {
-      const matchesOwner = campaign.owner === owner;
-      const matchesRegion = regionFilter === "all" || allocation.region === regionFilter;
-      const matchesQuarter = quarterFilter === "all" || campaign.quarterMonth === quarterFilter;
-      return matchesOwner && matchesRegion && matchesQuarter;
+  const ownerToRegion = {
+    "Tomoko Tanaka": "JP & Korea",
+    "Beverly Leung": "South APAC", 
+    "Shruti Narang": "SAARC",
+    "Giorgia Parham": "Digital",
+  };
+
+  // Get unique regions and quarters for filters
+  const regions = ["all", ...Array.from(new Set(campaigns.map(c => c.region).filter(Boolean)))];
+  const quarters = ["all", ...Array.from(new Set(campaigns.map(c => c.quarterMonth).filter(Boolean)))];
+
+  // Calculate budget data for each owner
+  const budgetData = useMemo(() => {
+    const data: Record<string, BudgetPoolData> = {};
+
+    Object.entries(budgetPoolByOwner).forEach(([owner, assigned]) => {
+      // Get campaigns owned by this person
+      let ownerCampaigns = campaigns.filter(c => c.owner === owner);
+
+      // Apply filters
+      if (regionFilter !== "all") {
+        ownerCampaigns = ownerCampaigns.filter(c => c.region === regionFilter);
+      }
+      if (quarterFilter !== "all") {
+        ownerCampaigns = ownerCampaigns.filter(c => c.quarterMonth === quarterFilter);
+      }
+
+      // Calculate totals
+      const used = ownerCampaigns.reduce((sum, campaign) => {
+        const cost = Number(campaign.forecastedCost) || 0;
+        return sum + cost;
+      }, 0);
+
+      const remaining = assigned - used;
+      const overage = remaining < 0 ? Math.abs(remaining) : 0;
+
+      data[owner] = {
+        owner,
+        assigned,
+        used,
+        remaining: Math.max(0, remaining),
+        overage,
+        campaigns: ownerCampaigns
+      };
     });
 
-    const totalForecasted = ownerCampaigns.reduce((sum, campaign) => {
-      return sum + (typeof campaign.forecastedCost === 'number' ? campaign.forecastedCost : parseFloat(campaign.forecastedCost.toString()) || 0);
-    }, 0);
+    return data;
+  }, [campaigns, regionFilter, quarterFilter]);
 
-    const totalActual = ownerCampaigns.reduce((sum, campaign) => {
-      return sum + (typeof campaign.actualCost === 'number' ? campaign.actualCost : parseFloat(campaign.actualCost.toString()) || 0);
-    }, 0);
-
-    const forecastedPercent = (totalForecasted / allocation.budget) * 100;
-    const actualPercent = (totalActual / allocation.budget) * 100;
-
-    return {
-      owner,
-      region: allocation.region,
-      assignedBudget: allocation.budget,
-      totalForecasted,
-      totalActual,
-      forecastedPercent,
-      actualPercent,
-      forecastedOverage: Math.max(0, totalForecasted - allocation.budget),
-      actualOverage: Math.max(0, totalActual - allocation.budget),
-      campaignCount: ownerCampaigns.length
-    };
-  });
-
-  const clearFilters = () => {
-    setRegionFilter("all");
-    setQuarterFilter("all");
-  };
+  const totalBudget = Object.values(budgetPoolByOwner).reduce((sum, budget) => sum + budget, 0);
+  const totalUsed = Object.values(budgetData).reduce((sum, data) => sum + data.used, 0);
+  const totalRemaining = totalBudget - totalUsed;
 
   return (
     <div className="space-y-6">
@@ -82,186 +95,138 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex gap-4">
             <div className="space-y-2">
-              <Label>Region</Label>
+              <label className="text-sm font-medium">Region</label>
               <Select value={regionFilter} onValueChange={setRegionFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Regions" />
+                <SelectTrigger className="w-48">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Regions</SelectItem>
-                  {regions.map(region => (
+                  {regions.filter(r => r !== "all").map(region => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
-              <Label>Quarter</Label>
+              <label className="text-sm font-medium">Quarter</label>
               <Select value={quarterFilter} onValueChange={setQuarterFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All Quarters" />
+                <SelectTrigger className="w-48">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Quarters</SelectItem>
-                  {quarters.map(quarter => (
+                  {quarters.filter(q => q !== "all").map(quarter => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+          </div>
+        </CardContent>
+      </Card>
 
-            <div className="flex items-end">
-              <Button 
-                variant="outline"
-                onClick={clearFilters}
-                className="w-full"
-              >
-                Clear Filters
-              </Button>
+      {/* Overall Budget Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Overall Budget Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">${totalBudget.toLocaleString()}</div>
+              <div className="text-sm text-muted-foreground">Total Assigned</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">${totalUsed.toLocaleString()}</div>
+              <div className="text-sm text-muted-foreground">Total Used</div>
+            </div>
+            <div className="text-center">
+              <div className={`text-2xl font-bold ${totalRemaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                ${Math.abs(totalRemaining).toLocaleString()}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {totalRemaining >= 0 ? 'Remaining' : 'Over Budget'}
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Budget Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {budgetSummary.map((budget) => (
-          <Card key={budget.owner} className="relative">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">{budget.region}</CardTitle>
-              <CardDescription className="text-xs">{budget.owner}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span>Assigned Budget</span>
-                  <span className="font-mono">${budget.assignedBudget.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span>Forecasted</span>
-                  <span className="font-mono">${budget.totalForecasted.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span>Actual</span>
-                  <span className="font-mono">${budget.totalActual.toLocaleString()}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span>Forecasted Usage</span>
-                    <span>{Math.round(budget.forecastedPercent)}%</span>
+      {/* Individual Budget Pools */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {Object.values(budgetData).map((data) => {
+          const utilizationPercent = (data.used / data.assigned) * 100;
+          const region = ownerToRegion[data.owner as keyof typeof ownerToRegion];
+          
+          return (
+            <Card key={data.owner} className="space-y-4">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <div>
+                    <div className="text-lg font-semibold">{region}</div>
+                    <div className="text-sm text-muted-foreground">{data.owner}</div>
                   </div>
-                  <Progress 
-                    value={Math.min(budget.forecastedPercent, 100)} 
-                    className={budget.forecastedPercent > 100 ? "bg-red-100" : ""}
+                  <Badge variant={data.overage > 0 ? "destructive" : "secondary"}>
+                    {utilizationPercent.toFixed(1)}% used
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Budget breakdown */}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Assigned Budget:</span>
+                    <span className="font-medium">${data.assigned.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Used:</span>
+                    <span className="font-medium text-orange-600">${data.used.toLocaleString()}</span>
+                  </div>
+                  {data.overage > 0 ? (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Over Budget:</span>
+                      <span className="font-medium text-red-600">${data.overage.toLocaleString()}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Remaining:</span>
+                      <span className="font-medium text-green-600">${data.remaining.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full ${
+                      data.overage > 0 ? 'bg-red-500' : 'bg-blue-500'
+                    }`}
+                    style={{ width: `${Math.min(utilizationPercent, 100)}%` }}
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span>Actual Usage</span>
-                    <span>{Math.round(budget.actualPercent)}%</span>
-                  </div>
-                  <Progress 
-                    value={Math.min(budget.actualPercent, 100)} 
-                    className={budget.actualPercent > 100 ? "bg-red-100" : ""}
-                  />
+                {/* Warning for overage */}
+                {data.overage > 500 && (
+                  <Alert variant="destructive">
+                    <Warning className="h-4 w-4" />
+                    <AlertDescription>
+                      Budget exceeded by ${data.overage.toLocaleString()}. Review campaign allocations.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Campaign count */}
+                <div className="text-sm text-muted-foreground">
+                  {data.campaigns.length} campaign{data.campaigns.length !== 1 ? 's' : ''} assigned
                 </div>
-              </div>
-
-              {(budget.forecastedOverage > 500 || budget.actualOverage > 500) && (
-                <div className="flex items-center gap-1 text-red-600 text-xs">
-                  <Warning className="h-3 w-3" />
-                  <span>Budget Exceeded</span>
-                </div>
-              )}
-
-              <div className="text-xs text-muted-foreground">
-                {budget.campaignCount} campaign(s)
-              </div>
-            </CardContent>
-
-            {budget.forecastedPercent > 100 && (
-              <div className="absolute top-2 right-2">
-                <Badge variant="destructive" className="text-xs">
-                  Over Budget
-                </Badge>
-              </div>
-            )}
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
-
-      {/* Budget Summary Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Budget Summary by Owner</CardTitle>
-          <CardDescription>
-            Detailed budget allocation and utilization tracking
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">Owner</th>
-                  <th className="text-left py-2">Region</th>
-                  <th className="text-right py-2">Assigned Budget</th>
-                  <th className="text-right py-2">Forecasted Spend</th>
-                  <th className="text-right py-2">Actual Spend</th>
-                  <th className="text-right py-2">Remaining</th>
-                  <th className="text-center py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {budgetSummary.map((budget) => (
-                  <tr key={budget.owner} className="border-b">
-                    <td className="py-2 font-medium">{budget.owner}</td>
-                    <td className="py-2">
-                      <Badge variant="outline" className="text-xs">
-                        {budget.region}
-                      </Badge>
-                    </td>
-                    <td className="py-2 text-right font-mono">
-                      ${budget.assignedBudget.toLocaleString()}
-                    </td>
-                    <td className="py-2 text-right font-mono">
-                      ${budget.totalForecasted.toLocaleString()}
-                    </td>
-                    <td className="py-2 text-right font-mono">
-                      ${budget.totalActual.toLocaleString()}
-                    </td>
-                    <td className="py-2 text-right font-mono">
-                      ${Math.max(0, budget.assignedBudget - budget.totalForecasted).toLocaleString()}
-                    </td>
-                    <td className="py-2 text-center">
-                      {budget.forecastedPercent > 100 ? (
-                        <Badge variant="destructive" className="text-xs">
-                          Over Budget
-                        </Badge>
-                      ) : budget.forecastedPercent > 90 ? (
-                        <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">
-                          Near Limit
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
-                          On Track
-                        </Badge>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
