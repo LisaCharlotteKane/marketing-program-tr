@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
 import { Calculator, ChartBarHorizontal, Target, Calendar, BuildingOffice, Gear, Warning, ChartBar, ClipboardText, Funnel, X, PencilSimple, Copy, FloppyDisk } from "@phosphor-icons/react";
+import { useKV } from "@github/spark/hooks";
 import { StorageCleanupPanel } from "@/components/storage-cleanup-panel";
 import { ErrorBoundary } from "@/components/error-boundary-simple";
 import { CampaignManager } from "@/components/campaign-manager";
@@ -13,39 +14,6 @@ import { ExecutionTracking } from "@/components/execution-tracking";
 import { ReportingDashboard } from "@/components/reporting-dashboard";
 import { CampaignCalendarView } from "@/components/campaign-calendar-view";
 import { Campaign } from "@/types/campaign";
-
-// Stable localStorage hook with error handling
-function useLocalStorage<T>(key: string, defaultValue: T) {
-  const [value, setValue] = useState<T>(defaultValue);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const item = localStorage.getItem(key);
-      if (item !== null) {
-        setValue(JSON.parse(item));
-      }
-    } catch (error) {
-      console.error(`Error loading ${key} from localStorage:`, error);
-    } finally {
-      setIsLoaded(true);
-    }
-  }, [key]);
-
-  // Save to localStorage when value changes (but only after initial load)
-  useEffect(() => {
-    if (isLoaded) {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-      } catch (error) {
-        console.error(`Error saving ${key} to localStorage:`, error);
-      }
-    }
-  }, [key, value, isLoaded]);
-
-  return [value, setValue] as const;
-}
 
 // Simple campaign table component
 function QuickStatsCard({ campaigns }: { campaigns: Campaign[] }) {
@@ -93,27 +61,23 @@ function QuickStatsCard({ campaigns }: { campaigns: Campaign[] }) {
 }
 
 export default function App() {
-  const [campaigns, setCampaigns] = useLocalStorage<Campaign[]>('campaignData', []);
+  // Use shared KV storage instead of localStorage for cross-user data sharing
+  const [campaigns, setCampaigns] = useKV<Campaign[]>('shared-campaign-data', []);
   const [storageWarning, setStorageWarning] = useState(false);
 
   useEffect(() => {
-    // Check storage size periodically
-    const checkStorage = () => {
+    // For shared storage, we don't need to check localStorage size as extensively
+    // Just check if there are potential performance issues with data size
+    const checkDataSize = () => {
       try {
-        let totalSize = 0;
-        for (let key in localStorage) {
-          if (localStorage.hasOwnProperty(key)) {
-            totalSize += new Blob([localStorage[key]]).size;
-          }
-        }
-        setStorageWarning(totalSize > 4 * 1024 * 1024); // 4MB threshold
+        const dataSize = new Blob([JSON.stringify(campaigns)]).size;
+        setStorageWarning(dataSize > 2 * 1024 * 1024); // 2MB threshold for campaign data
       } catch (error) {
-        console.warn('Could not check storage size:', error);
+        console.warn('Could not check data size:', error);
       }
     };
 
-    checkStorage();
-    // Check storage size when campaigns change
+    checkDataSize();
   }, [campaigns]);
 
   return (
@@ -127,16 +91,16 @@ export default function App() {
               <Alert variant="destructive" className="mb-4">
                 <Warning className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Storage Warning:</strong> Your browser storage is large and may cause issues.
+                  <strong>Data Size Warning:</strong> Campaign data is large and may affect performance.
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button variant="link" size="sm" className="ml-2 p-0 h-auto text-destructive underline">
-                        Open Settings to clear storage
+                        Open Settings to manage data
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>Storage Management</DialogTitle>
+                        <DialogTitle>Data Management</DialogTitle>
                       </DialogHeader>
                       <StorageCleanupPanel />
                     </DialogContent>
@@ -160,11 +124,11 @@ export default function App() {
                   {campaigns.length} campaigns
                 </div>
                 <div className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-200">
-                  ✓ Storage Fixed
+                  ✓ Shared Storage Active
                 </div>
                 {storageWarning && (
                   <div className="text-xs bg-red-50 text-red-700 px-2 py-1 rounded-full border border-red-200">
-                    ⚠ Storage Warning
+                    ⚠ Large Dataset
                   </div>
                 )}
 
@@ -177,7 +141,7 @@ export default function App() {
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>App Settings & Storage Management</DialogTitle>
+                      <DialogTitle>App Settings & Data Management</DialogTitle>
                     </DialogHeader>
                     <StorageCleanupPanel />
                   </DialogContent>
@@ -291,8 +255,8 @@ export default function App() {
                     <Alert>
                       <Target className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>All Systems Operational:</strong> Storage issues have been resolved. 
-                        The app now uses a stable localStorage implementation with proper error handling.
+                        <strong>Shared Storage Active:</strong> Campaign data is now shared across all logged-in users. 
+                        All team members can view and collaborate on the same campaign data in real-time.
                       </AlertDescription>
                     </Alert>
                   </CardContent>
