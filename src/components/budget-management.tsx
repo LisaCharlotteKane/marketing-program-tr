@@ -1,10 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { BuildingOffice, Warning } from "@phosphor-icons/react";
+import { BuildingOffice, Warning, ChartBar, FileText } from "@phosphor-icons/react";
 import { Campaign } from "@/types/campaign";
+import { BudgetAllocationCharts } from "@/components/budget-allocation-charts";
+import { BudgetSummaryReport } from "@/components/budget-summary-report";
 
 interface BudgetManagementProps {
   campaigns: Campaign[];
@@ -86,147 +89,178 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BuildingOffice className="h-5 w-5" />
-            Budget Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Region</label>
-              <Select value={regionFilter} onValueChange={setRegionFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  {regions.filter(r => r !== "all").map(region => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Quarter</label>
-              <Select value={quarterFilter} onValueChange={setQuarterFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Quarters</SelectItem>
-                  {quarters.filter(q => q !== "all").map(quarter => (
-                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <BuildingOffice className="h-4 w-4" />
+            Budget Overview
+          </TabsTrigger>
+          <TabsTrigger value="charts" className="flex items-center gap-2">
+            <ChartBar className="h-4 w-4" />
+            Visual Analytics
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Detailed Reports
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Overall Budget Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Overall Budget Summary</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">${totalBudget.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Total Assigned</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">${totalUsed.toLocaleString()}</div>
-              <div className="text-sm text-muted-foreground">Total Used</div>
-            </div>
-            <div className="text-center">
-              <div className={`text-2xl font-bold ${totalRemaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                ${Math.abs(totalRemaining).toLocaleString()}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {totalRemaining >= 0 ? 'Remaining' : 'Over Budget'}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Individual Budget Pools */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.values(budgetData).map((data) => {
-          const utilizationPercent = (data.used / data.assigned) * 100;
-          const region = ownerToRegion[data.owner as keyof typeof ownerToRegion];
-          
-          return (
-            <Card key={data.owner} className="space-y-4">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div>
-                    <div className="text-lg font-semibold">{region}</div>
-                    <div className="text-sm text-muted-foreground">{data.owner}</div>
-                  </div>
-                  <Badge variant={data.overage > 0 ? "destructive" : "secondary"}>
-                    {utilizationPercent.toFixed(1)}% used
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Budget breakdown */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BuildingOffice className="h-5 w-5" />
+                Budget Filters
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4">
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Assigned Budget:</span>
-                    <span className="font-medium">${data.assigned.toLocaleString()}</span>
+                  <label className="text-sm font-medium">Region</label>
+                  <Select value={regionFilter} onValueChange={setRegionFilter}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Regions</SelectItem>
+                      {regions.filter(r => r !== "all").map(region => (
+                        <SelectItem key={region} value={region}>{region}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Quarter</label>
+                  <Select value={quarterFilter} onValueChange={setQuarterFilter}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Quarters</SelectItem>
+                      {quarters.filter(q => q !== "all").map(quarter => (
+                        <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Overall Budget Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Overall Budget Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">${totalBudget.toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">Total Assigned</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">${totalUsed.toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">Total Used</div>
+                </div>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${totalRemaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    ${Math.abs(totalRemaining).toLocaleString()}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Used:</span>
-                    <span className="font-medium text-orange-600">${data.used.toLocaleString()}</span>
+                  <div className="text-sm text-muted-foreground">
+                    {totalRemaining >= 0 ? 'Remaining' : 'Over Budget'}
                   </div>
-                  {data.overage > 0 ? (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Over Budget:</span>
-                      <span className="font-medium text-red-600">${data.overage.toLocaleString()}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Individual Budget Pools */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Object.values(budgetData).map((data) => {
+              const utilizationPercent = (data.used / data.assigned) * 100;
+              const region = ownerToRegion[data.owner as keyof typeof ownerToRegion];
+              
+              return (
+                <Card key={data.owner} className="space-y-4">
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <div>
+                        <div className="text-lg font-semibold">{region}</div>
+                        <div className="text-sm text-muted-foreground">{data.owner}</div>
+                      </div>
+                      <Badge variant={data.overage > 0 ? "destructive" : "secondary"}>
+                        {utilizationPercent.toFixed(1)}% used
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {/* Budget breakdown */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Assigned Budget:</span>
+                        <span className="font-medium">${data.assigned.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Used:</span>
+                        <span className="font-medium text-orange-600">${data.used.toLocaleString()}</span>
+                      </div>
+                      {data.overage > 0 ? (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Over Budget:</span>
+                          <span className="font-medium text-red-600">${data.overage.toLocaleString()}</span>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Remaining:</span>
+                          <span className="font-medium text-green-600">${data.remaining.toLocaleString()}</span>
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Remaining:</span>
-                      <span className="font-medium text-green-600">${data.remaining.toLocaleString()}</span>
+
+                    {/* Progress bar */}
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          data.overage > 0 ? 'bg-red-500' : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${Math.min(utilizationPercent, 100)}%` }}
+                      />
                     </div>
-                  )}
-                </div>
 
-                {/* Progress bar */}
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      data.overage > 0 ? 'bg-red-500' : 'bg-blue-500'
-                    }`}
-                    style={{ width: `${Math.min(utilizationPercent, 100)}%` }}
-                  />
-                </div>
+                    {/* Warning for overage */}
+                    {data.overage > 500 && (
+                      <Alert variant="destructive">
+                        <Warning className="h-4 w-4" />
+                        <AlertDescription>
+                          Budget exceeded by ${data.overage.toLocaleString()}. Review campaign allocations.
+                        </AlertDescription>
+                      </Alert>
+                    )}
 
-                {/* Warning for overage */}
-                {data.overage > 500 && (
-                  <Alert variant="destructive">
-                    <Warning className="h-4 w-4" />
-                    <AlertDescription>
-                      Budget exceeded by ${data.overage.toLocaleString()}. Review campaign allocations.
-                    </AlertDescription>
-                  </Alert>
-                )}
+                    {/* Campaign count */}
+                    <div className="text-sm text-muted-foreground">
+                      {data.campaigns.length} campaign{data.campaigns.length !== 1 ? 's' : ''} assigned
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
 
-                {/* Campaign count */}
-                <div className="text-sm text-muted-foreground">
-                  {data.campaigns.length} campaign{data.campaigns.length !== 1 ? 's' : ''} assigned
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+        <TabsContent value="charts" className="space-y-6">
+          <BudgetAllocationCharts 
+            campaigns={campaigns}
+            budgetData={Object.values(budgetData)}
+            ownerToRegion={ownerToRegion}
+          />
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-6">
+          <BudgetSummaryReport campaigns={campaigns} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
