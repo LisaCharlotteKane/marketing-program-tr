@@ -79,7 +79,7 @@ export function SimpleCampaignTable({ campaigns, setCampaigns }: SimpleCampaignT
     }
     
     const mql = Math.round(expectedLeads * 0.1);
-    const sql = Math.round(mql * 0.06); // 6% of MQLs, not leads
+    const sql = Math.round(expectedLeads * 0.06); // 6% of Expected Leads
     const opportunities = Math.round(sql * 0.8);
     const pipeline = opportunities * 50000;
     return { mql, sql, opportunities, pipeline };

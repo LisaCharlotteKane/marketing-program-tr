@@ -113,7 +113,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
 
     // Calculate forecasted metrics
     const totalMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of leads
-    const totalSQLs = Math.round(totalMQLs * 0.06); // 6% of MQLs
+    const totalSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of Expected Leads
     const totalOpportunities = Math.round(totalSQLs * 0.8); // 80% of SQLs
     
     // Calculate pipeline with special logic for In-Account Events
@@ -136,7 +136,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
       } else if (expectedLeads > 0) {
         // Standard calculation based on leads
         const mqlValue = Math.round(expectedLeads * 0.1);
-        const sqlValue = Math.round(mqlValue * 0.06); // 6% of MQLs, not leads
+        const sqlValue = Math.round(expectedLeads * 0.06); // 6% of Expected Leads
         const oppsValue = Math.round(sqlValue * 0.8);
         totalPipelineForecast += oppsValue * 50000;
       }
@@ -599,7 +599,7 @@ export const ROIDashboard: React.FC<ROIDashboardProps> = ({ campaigns }) => {
                     } else {
                       // Standard calculation
                       const expectedMQLs = Math.round(expectedLeads * 0.1);
-                      const expectedSQLs = Math.round(expectedMQLs * 0.06); // 6% of MQLs, not leads
+                      const expectedSQLs = Math.round(expectedLeads * 0.06); // 6% of Expected Leads
                       const expectedOpps = Math.round(expectedSQLs * 0.8);
                       pipelineValue = expectedOpps * 50000;
                     }

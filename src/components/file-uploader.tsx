@@ -166,7 +166,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
                 if (typeof campaign.expectedLeads === 'number' && campaign.expectedLeads > 0) {
                   // Standard calculation if leads are provided
                   campaign.mql = Math.round(campaign.expectedLeads * 0.1);
-                  campaign.sql = Math.round(campaign.mql * 0.06); // 6% of MQLs, not leads
+                  campaign.sql = Math.round(campaign.expectedLeads * 0.06); // 6% of Expected Leads
                   campaign.opportunities = Math.round(campaign.sql * 0.8);
                   campaign.pipelineForecast = campaign.opportunities * 50000;
                 } else if (typeof campaign.forecastedCost === 'number' && campaign.forecastedCost > 0) {
@@ -179,7 +179,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
               } else if (typeof campaign.expectedLeads === 'number' && campaign.expectedLeads > 0) {
                 // Standard calculation for all other campaign types
                 campaign.mql = Math.round(campaign.expectedLeads * 0.1);
-                campaign.sql = Math.round(campaign.mql * 0.06); // 6% of MQLs, not leads
+                campaign.sql = Math.round(campaign.expectedLeads * 0.06); // 6% of Expected Leads
                 campaign.opportunities = Math.round(campaign.sql * 0.8);
                 campaign.pipelineForecast = campaign.opportunities * 50000;
               }

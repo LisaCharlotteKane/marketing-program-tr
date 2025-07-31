@@ -203,7 +203,7 @@ export const calculateSummaryMetrics = (campaigns) => {
     } else {
       // Standard calculation
       mql = Math.round(expectedLeads * 0.1); // 10% of leads
-      sql = Math.round(mql * 0.06); // 6% of MQLs, not leads
+      sql = Math.round(expectedLeads * 0.06); // 6% of Expected Leads
       opps = Math.round(sql * 0.8); // 80% of SQLs
       pipeline = opps * 50000; // $50K per opportunity
     }
@@ -260,7 +260,7 @@ export const prepareLeadsComparisonData = (campaigns) => {
   const totalActualLeads = campaigns.reduce((sum, campaign) => sum + (campaign.actualLeads || 0), 0);
   const totalExpectedMQLs = Math.round(totalExpectedLeads * 0.1); // 10% of expected leads
   const totalActualMQLs = campaigns.reduce((sum, campaign) => sum + (campaign.actualMQLs || 0), 0);
-  const totalExpectedSQLs = Math.round(totalExpectedMQLs * 0.06); // 6% of expected MQLs, not leads
+  const totalExpectedSQLs = Math.round(totalExpectedLeads * 0.06); // 6% of Expected Leads
   const totalActualSQLs = campaigns.reduce((sum, campaign) => sum + (campaign.actualSQLs || 0), 0);
   
   return [

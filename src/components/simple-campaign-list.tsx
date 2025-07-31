@@ -39,7 +39,7 @@ export function SimpleCampaignList({ campaigns }: SimpleCampaignListProps) {
   const totalCost = campaigns.reduce((sum, campaign) => sum + (campaign.forecastedCost || 0), 0);
   const totalLeads = campaigns.reduce((sum, campaign) => sum + (campaign.expectedLeads || 0), 0);
   const totalMQLs = Math.round(totalLeads * 0.1);
-  const totalSQLs = Math.round(totalMQLs * 0.06); // 6% of MQLs, not leads
+  const totalSQLs = Math.round(totalLeads * 0.06); // 6% of Expected Leads
   const totalOpportunities = Math.round(totalSQLs * 0.8);
   const totalPipeline = totalOpportunities * 50000;
 
@@ -111,7 +111,7 @@ export function SimpleCampaignList({ campaigns }: SimpleCampaignListProps) {
                   pipeline = forecastedCost * 20;
                 } else {
                   mql = Math.round(expectedLeads * 0.1);
-                  sql = Math.round(mql * 0.06); // 6% of MQLs, not leads
+                  sql = Math.round(expectedLeads * 0.06); // 6% of Expected Leads
                   opportunities = Math.round(sql * 0.8);
                   pipeline = opportunities * 50000;
                 }

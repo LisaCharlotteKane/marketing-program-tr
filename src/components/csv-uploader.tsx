@@ -205,8 +205,8 @@ Cross-region Webinar,Webinars,"New Logo Acquisition; Brand Awareness & Top of Fu
                   // MQLs = 10% of Expected Leads
                   const mqlValue = Math.round(campaign.expectedLeads * 0.1);
                   
-                  // SQLs = 6% of MQLs (not 6% of leads)
-                  const sqlValue = Math.round(mqlValue * 0.06);
+                  // SQLs = 6% of Expected Leads
+                  const sqlValue = Math.round(campaign.expectedLeads * 0.06);
                   
                   // Opportunities = 80% of SQLs  
                   const oppsValue = Math.round(sqlValue * 0.8);

@@ -164,7 +164,7 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
     if (expectedLeads > 0) {
       // Standard calculation if leads are provided
       updatedCampaign.mql = Math.round(expectedLeads * 0.1);
-      updatedCampaign.sql = Math.round((updatedCampaign.mql as number) * 0.06); // 6% of MQLs, not leads
+      updatedCampaign.sql = Math.round(expectedLeads * 0.06); // 6% of Expected Leads
       updatedCampaign.opportunities = Math.round((updatedCampaign.sql as number) * 0.8);
       updatedCampaign.pipelineForecast = (updatedCampaign.opportunities as number) * 50000;
       console.log(`Standard calculation for In-Account Events with leads: MQL=${updatedCampaign.mql}, SQL=${updatedCampaign.sql}, Opps=${updatedCampaign.opportunities}, Pipeline=${updatedCampaign.pipelineForecast}`);
@@ -188,7 +188,7 @@ export function calculateDerivedFields(campaign: Partial<Campaign>): Partial<Cam
   // Standard calculation for all other campaign types
   else if (expectedLeads > 0) {
     updatedCampaign.mql = Math.round(expectedLeads * 0.1);
-    updatedCampaign.sql = Math.round((updatedCampaign.mql as number) * 0.06); // 6% of MQLs, not leads
+    updatedCampaign.sql = Math.round(expectedLeads * 0.06); // 6% of Expected Leads
     updatedCampaign.opportunities = Math.round((updatedCampaign.sql as number) * 0.8);
     updatedCampaign.pipelineForecast = (updatedCampaign.opportunities as number) * 50000;
     console.log(`Standard calculation for other campaign types: MQL=${updatedCampaign.mql}, SQL=${updatedCampaign.sql}, Opps=${updatedCampaign.opportunities}, Pipeline=${updatedCampaign.pipelineForecast}`);
