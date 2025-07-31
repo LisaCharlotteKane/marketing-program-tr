@@ -994,9 +994,8 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                             }
                             
                             const mqls = Math.round(leads * 0.1);
-                            const sqls = Math.round(mqls * 0.06);
                             const opportunities = Math.round(sqls * 0.8);
-                            return (opportunities * 50000).toLocaleString();
+                            const opportunities = Math.round(sqls * 0.8);
                           })()}
                         </div>
                       </TableCell>
