@@ -25,7 +25,7 @@ import {
   Warning,
   ChartBarHorizontal,
   Gear,
-  ClipboardList
+  ClipboardText
 } from "@phosphor-icons/react";
 
 // Test if all imports work correctly
@@ -108,7 +108,7 @@ export function TestComponent() {
               <Warning className="h-6 w-6" />
               <ChartBarHorizontal className="h-6 w-6" />
               <Gear className="h-6 w-6" />
-              <ClipboardList className="h-6 w-6" />
+              <ClipboardText className="h-6 w-6" />
               <Upload className="h-6 w-6" />
               <Download className="h-6 w-6" />
               <Funnel className="h-6 w-6" />

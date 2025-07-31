@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Users } from "@phosphor-icons/react";
+import { ArrowClockwise, Users } from "@phosphor-icons/react";
 import { Campaign } from "@/types/campaign";
 
 interface DataSyncStatusProps {
@@ -25,7 +25,7 @@ export function DataSyncStatus({ campaigns }: DataSyncStatusProps) {
         Shared Data
       </Badge>
       <Badge variant={timeSinceUpdate < 30 ? "default" : "secondary"} className="flex items-center gap-1">
-        <RefreshCw className="h-3 w-3" />
+        <ArrowClockwise className="h-3 w-3" />
         {timeSinceUpdate < 60 
           ? `${timeSinceUpdate}s ago` 
           : `${Math.floor(timeSinceUpdate / 60)}m ago`}
