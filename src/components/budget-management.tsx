@@ -55,22 +55,22 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
 
       // Apply filters
       if (regionFilter !== "all") {
+  const regions = ["all", ...Array.from(new Set(campaigns.map(c => c.region).filter(Boolean)))];
+  const quarters = ["all", ...Array.from(new Set(campaigns.map(c => c.quarterMonth).filter(Boolean)))];
+
+  // Calculate budget data for each owner
+  const budgetData = useMemo(() => {
+    const data: Record<string, BudgetPoolData> = {};
+
+    Object.entries(budgetPoolByOwner).forEach(([owner, assigned]) => {
+      // Get campaigns owned by this person
+      let ownerCampaigns = campaigns.filter(c => c.owner === owner);
+
+      // Apply filters
+      if (regionFilter !== "all") {
         ownerCampaigns = ownerCampaigns.filter(c => c.region === regionFilter);
       }
       if (quarterFilter !== "all") {
-        ownerCampaigns = ownerCampaigns.filter(c => c.quarterMonth === quarterFilter);
-      }
-
-      // Calculate totals
-      const used = ownerCampaigns.reduce((sum, campaign) => {
-        const cost = Number(campaign.forecastedCost) || 0;
-        return sum + cost;
-      }, 0);
-
-      const remaining = assigned - used;
-      const overage = remaining < 0 ? Math.abs(remaining) : 0;
-
-      data[owner] = {
         owner,
         assigned,
         used,
@@ -100,22 +100,6 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
             Visual Analytics
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Detailed Reports
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BuildingOffice className="h-5 w-5" />
-                Budget Filters
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Region</label>
                   <Select value={regionFilter} onValueChange={setRegionFilter}>
@@ -159,66 +143,66 @@ export function BudgetManagement({ campaigns }: BudgetManagementProps) {
                   <div className="text-2xl font-bold text-blue-600">${totalBudget.toLocaleString()}</div>
                   <div className="text-sm text-muted-foreground">Total Assigned</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">${totalUsed.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Total Used</div>
-                </div>
-                <div className="text-center">
-                  <div className={`text-2xl font-bold ${totalRemaining >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    ${Math.abs(totalRemaining).toLocaleString()}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {totalRemaining >= 0 ? 'Remaining' : 'Over Budget'}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+  return (
+    <div className="space-y-6">
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BuildingOffice className="h-5 w-5" />
+            Budget Filters
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Region</label>
+              <Select value={regionFilter} onValueChange={setRegionFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  {regions.filter(r => r !== "all").map(region => (
+                    <SelectItem key={region} value={region}>{region}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Quarter</label>
+              <Select value={quarterFilter} onValueChange={setQuarterFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Quarters</SelectItem>
+                  {quarters.filter(q => q !== "all").map(quarter => (
+                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-          {/* Individual Budget Pools */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {Object.values(budgetData).map((data) => {
-              const utilizationPercent = (data.used / data.assigned) * 100;
-              const region = ownerToRegion[data.owner as keyof typeof ownerToRegion];
-              
-              return (
-                <Card key={data.owner} className="space-y-4">
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <div>
-                        <div className="text-lg font-semibold">{region}</div>
-                        <div className="text-sm text-muted-foreground">{data.owner}</div>
-                      </div>
-                      <Badge variant={data.overage > 0 ? "destructive" : "secondary"}>
-                        {utilizationPercent.toFixed(1)}% used
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Budget breakdown */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Assigned Budget:</span>
-                        <span className="font-medium">${data.assigned.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Used:</span>
-                        <span className="font-medium text-orange-600">${data.used.toLocaleString()}</span>
-                      </div>
-                      {data.overage > 0 ? (
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Over Budget:</span>
-                          <span className="font-medium text-red-600">${data.overage.toLocaleString()}</span>
-                        </div>
+      {/* Overall Budget Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Overall Budget Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       ) : (
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Remaining:</span>
-                          <span className="font-medium text-green-600">${data.remaining.toLocaleString()}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Progress bar */}
+              <div className="text-2xl font-bold text-blue-600">${totalBudget.toLocaleString()}</div>
+              <div className="text-sm text-muted-foreground">Total Assigned</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">${totalUsed.toLocaleString()}</div>
+              <div className="text-sm text-muted-foreground">Total Used</div>
+            </div>
+            <div className="text-center">
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
                         className={`h-2 rounded-full ${
