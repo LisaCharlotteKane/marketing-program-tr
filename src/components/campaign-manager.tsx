@@ -982,23 +982,24 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                       </TableCell>
 
                       {/* Forecasted Pipeline (Auto-calculated) */}
-                      <TableCell>
-                        <div className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded text-center w-24">
-                          ${(() => {
-                            const leads = Number(newCampaign.expectedLeads) || 0;
-                            const cost = Number(newCampaign.forecastedCost) || 0;
-                            const campaignType = newCampaign.campaignType || '';
-                            
-                            if (campaignType.includes('In-Account') && leads === 0) {
-                              return (cost * 20).toLocaleString();
-                            }
-                            
-                            const mqls = Math.round(leads * 0.1);
-                            const opportunities = Math.round(sqls * 0.8);
-                            const opportunities = Math.round(sqls * 0.8);
-                          })()}
-                        </div>
-                      </TableCell>
+                     <TableCell>
+  <div className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded text-center w-24">
+    ${(() => {
+      const leads = Number(newCampaign.expectedLeads) || 0;
+      const cost = Number(newCampaign.forecastedCost) || 0;
+      const campaignType = newCampaign.campaignType || '';
+      
+      if (campaignType.includes('In-Account') && leads === 0) {
+        return (cost * 20).toLocaleString();
+      }
+
+      const mql = Math.round(leads * 0.1);
+      const sql = Math.round(mql * 0.06);
+      const opportunities = Math.round(sql * 0.8);
+      return (opportunities * 50000).toLocaleString();
+    })()}
+  </div>
+</TableCell>
 
                       {/* Actions */}
                       <TableCell>
@@ -1050,72 +1051,29 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                       </TableCell>
 
                       {/* Strategic Pillar */}
-                      <TableCell>
-                        <div className="max-w-48">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1">
-                              {Array.isArray(campaign.strategicPillar) && campaign.strategicPillar.length > 0 ? (
-                                <div className="flex flex-wrap gap-1">
-                                  {campaign.strategicPillar.map((pillar, index) => (
-                                    <Badge key={index} variant="secondary" className="text-xs">
-                                      {pillar.substring(0, 15)}{pillar.length > 15 ? '...' : ''}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground text-sm">None selected</span>
-                              )}
-                            </div>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  onClick={() => openPillarEditor(campaign.id, campaign.strategicPillar || [])}
-                                >
-                                  <PencilSimple className="h-3 w-3" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Edit Strategic Pillars</DialogTitle>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <p className="text-sm text-muted-foreground">
-                                    Select one or more strategic pillars for this campaign:
-                                  </p>
-                                  <div className="space-y-2">
-                                    {strategicPillars.map(pillar => (
-                                      <div key={pillar} className="flex items-center space-x-2">
-                                        <Checkbox
-                                          id={pillar}
-                                          checked={editingPillars?.pillars.includes(pillar) || false}
-                                          onCheckedChange={() => togglePillar(pillar)}
-                                        />
-                                        <Label htmlFor={pillar} className="text-sm">
-                                          {pillar}
-                                        </Label>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <div className="flex justify-end gap-2">
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setEditingPillars(null)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button onClick={savePillars}>
-                                      Save
-                                    </Button>
-                                  </div>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          </div>
-                        </div>
-                      </TableCell>
+<TableCell>
+  <div className="max-w-48">
+    <div className="flex items-center gap-2">
+      <div className="flex-1">
+        {Array.isArray(campaign?.strategicPillar) && campaign.strategicPillar.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {campaign.strategicPillar.map((pillar: string, index: number) => (
+              <Badge
+                key={`${campaign.id || 'campaign'}-pillar-${index}`}
+                variant="secondary"
+                className="text-xs"
+              >
+                {pillar && pillar.length > 15 ? `${pillar.substring(0, 15)}...` : pillar || "—"}
+              </Badge>
+            ))}
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-sm">None selected</span>
+        )}
+      </div>
+    </div>
+  </div>
+</TableCell>
 
                       {/* Revenue Play */}
                       <TableCell>
