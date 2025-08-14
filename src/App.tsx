@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Plus, Trash, Calculator, ChartBar, Target, Calendar, BuildingOffice } from "@phosphor-icons/react";
+import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 // Types
