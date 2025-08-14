@@ -1,143 +1,99 @@
-# Marketing Campaign Planner PRD
+# Marketing Campaign Planner - PRD
 
 ## Core Purpose & Success
-
-**Mission Statement**: A comprehensive marketing campaign planning and tracking tool for APAC marketing operations that streamlines campaign creation, budget management, and ROI calculation.
-
-**Success Indicators**: 
-- Reduced time to plan campaigns (from hours to minutes)
-- Accurate budget tracking and ROI forecasting
-- Centralized campaign data accessible by all team members
-- Improved visibility into pipeline forecasts and performance metrics
-
-**Experience Qualities**: Professional, Efficient, Reliable
+- **Mission Statement**: Streamline APAC marketing campaign planning with automated ROI calculations and budget tracking for GitHub's marketing operations team.
+- **Success Indicators**: Reduction in campaign planning time, improved budget visibility, accurate pipeline forecasting, and consistent ROI modeling across regions.
+- **Experience Qualities**: Professional, efficient, data-driven
 
 ## Project Classification & Approach
+- **Complexity Level**: Light Application (multiple features with basic state management)
+- **Primary User Activity**: Creating and Managing (campaign planning and budget tracking)
 
-**Complexity Level**: Light Application (multiple features with basic state management)
-
-**Primary User Activity**: Creating and Managing (campaign planning, execution tracking, budget oversight)
-
-## Core Problem Analysis
-
-APAC marketing teams need a unified tool to:
-- Plan marketing campaigns with consistent ROI calculations
-- Track budget allocation across regions and owners
-- Monitor campaign execution status and actual performance
-- Generate reports and forecasts for leadership
+## Thought Process for Feature Selection
+- **Core Problem Analysis**: Marketing teams need to quickly plan campaigns with accurate forecasting while staying within regional budgets and tracking performance against standardized metrics.
+- **User Context**: Marketing managers planning quarterly campaigns, needing to forecast costs, leads, and pipeline impact while adhering to regional budget constraints.
+- **Critical Path**: Campaign creation → Metric calculation → Budget validation → Campaign management
+- **Key Moments**: 
+  1. Automated ROI calculation providing instant feedback
+  2. Budget status alerts preventing overspend
+  3. Campaign overview showing portfolio performance
 
 ## Essential Features
 
-### 1. Campaign Planning
-- **Functionality**: Form-based campaign creation with auto-calculated ROI metrics
-- **Purpose**: Standardize campaign planning process and ensure consistent calculations
-- **Success Criteria**: Users can create campaigns in under 2 minutes with accurate forecasts
+### Campaign Planning
+- **What it does**: Form-based campaign creation with automated metric calculations
+- **Why it matters**: Standardizes planning process and ensures consistent ROI modeling
+- **Success criteria**: Users can create campaigns in under 2 minutes with accurate forecasts
 
-### 2. Budget Management
-- **Functionality**: Owner-based budget allocation and tracking with visual indicators
-- **Purpose**: Prevent budget overruns and provide real-time spend visibility
-- **Success Criteria**: Budget warnings appear when 90% utilized, overruns clearly flagged
+### Budget Management  
+- **What it does**: Real-time budget tracking by owner/region with overspend alerts
+- **Why it matters**: Prevents budget overruns and provides transparency into spend allocation
+- **Success criteria**: Budget status visible at a glance with clear remaining amounts
 
-### 3. Data Import/Export
-- **Functionality**: CSV import for bulk campaign creation and export for reporting
-- **Purpose**: Enable data migration and external reporting workflows
-- **Success Criteria**: Support for 100+ campaign imports with validation
-
-### 4. Storage Management
-- **Functionality**: Browser storage optimization and cleanup tools
-- **Purpose**: Prevent HTTP 431 errors and ensure app stability
-- **Success Criteria**: App maintains performance with 100+ campaigns stored
+### Campaign Portfolio View
+- **What it does**: Aggregate view of all campaigns with total metrics and ROI
+- **Why it matters**: Enables portfolio-level decision making and performance tracking
+- **Success criteria**: Leadership can assess total marketing investment and expected returns
 
 ## Design Direction
 
 ### Visual Tone & Identity
-**Emotional Response**: Professional confidence and operational efficiency
-**Design Personality**: Clean, systematic, trustworthy - like enterprise productivity tools
-**Visual Metaphors**: Dashboard controls, financial planning interfaces
-**Simplicity Spectrum**: Minimal but comprehensive - hide complexity behind intuitive interfaces
+- **Emotional Response**: Confidence, clarity, and control over marketing operations
+- **Design Personality**: Professional, clean, data-focused with GitHub brand alignment
+- **Visual Metaphors**: Dashboard-style interface reflecting operational efficiency
+- **Simplicity Spectrum**: Clean interface that doesn't overwhelm with data density
 
 ### Color Strategy
-**Color Scheme Type**: Professional blue-based palette with semantic colors
-**Primary Color**: Blue (#3b82f6) - conveys trust and professionalism
-**Secondary Colors**: Gray (#f3f4f6) for backgrounds, Green for success states
-**Accent Color**: Blue variants for CTAs and active states
-**Semantic Colors**: Red for warnings/errors, Green for success, Orange for alerts
+- **Color Scheme Type**: Analogous (blue-based palette matching GitHub brand)
+- **Primary Color**: GitHub Blue (#3b82f6) for primary actions and branding
+- **Secondary Colors**: Neutral grays for backgrounds and supporting elements
+- **Accent Color**: Green for positive metrics, red for warnings/alerts
+- **Color Psychology**: Blue conveys trust and professionalism, green/red provide clear status indicators
+- **Foreground/Background Pairings**: 
+  - White text on blue primary (#ffffff on #3b82f6) - 4.5:1 contrast ✓
+  - Dark gray text on white background (#333333 on #ffffff) - 12.6:1 contrast ✓
+  - Medium gray text on light gray background (#6b7280 on #f9fafb) - 7.2:1 contrast ✓
 
 ### Typography System
-**Font Pairing Strategy**: Single family (Inter) with weight variations for hierarchy
-**Typographic Hierarchy**: Clear distinction between headings, body text, and data
-**Font Personality**: Modern, readable, professional
-**Which fonts**: Inter (Google Fonts) for all text
-**Legibility Check**: Excellent readability across all screen sizes
+- **Font Pairing Strategy**: Single typeface approach using Inter for consistency
+- **Typographic Hierarchy**: Clear size and weight progression from headlines to body text
+- **Font Personality**: Modern, readable, professional
+- **Readability Focus**: Optimized for data-heavy interfaces with clear information hierarchy
+- **Which fonts**: Inter from Google Fonts - excellent for UI and data display
+- **Legibility Check**: Inter is specifically designed for digital interfaces and data readability
 
 ### Visual Hierarchy & Layout
-**Attention Direction**: Card-based layout guides users through logical workflow
-**White Space Philosophy**: Generous spacing prevents cognitive overload
-**Grid System**: Responsive grid adapts to screen size while maintaining alignment
-**Content Density**: Balanced - enough information without overwhelming
+- **Attention Direction**: Tab-based navigation guides users through workflow stages
+- **White Space Philosophy**: Generous spacing between sections to reduce cognitive load
+- **Grid System**: CSS Grid and Flexbox for responsive, aligned layouts
+- **Responsive Approach**: Mobile-first design adapting to larger screens
+- **Content Density**: Balanced information display with clear grouping and separation
+
+### Animations
+- **Purposeful Meaning**: Subtle state transitions and hover effects provide feedback
+- **Hierarchy of Movement**: Focus on form interactions and button states
+- **Contextual Appropriateness**: Minimal animations maintain professional feel
 
 ### UI Elements & Component Selection
-**Component Usage**: 
-- Cards for content grouping
-- Tables for data display
-- Forms for input collection
-- Dialogs for confirmations and detailed views
-- Badges for status indicators
-
-**Component States**: 
-- Clear hover, focus, and active states
-- Loading states for async operations
-- Error states with recovery guidance
+- **Component Usage**: Shadcn v4 components for consistency and accessibility
+- **Component Customization**: GitHub brand colors applied through CSS variables
+- **Component States**: Clear hover, focus, and disabled states for all interactive elements
+- **Icon Selection**: Phosphor icons for clean, consistent iconography
+- **Component Hierarchy**: Primary buttons for main actions, secondary for supporting actions
+- **Spacing System**: Tailwind's spacing scale for consistent padding and margins
 
 ### Accessibility & Readability
-**Contrast Goal**: WCAG AA compliance maintained throughout
-**Keyboard Navigation**: Full keyboard accessibility for all interactions
-**Screen Reader Support**: Proper ARIA labels and semantic HTML
-
-## Implementation Considerations
-
-### Technical Architecture
-- React with TypeScript for type safety
-- Local storage for data persistence (with cleanup tools)
-- Shadcn/ui for consistent component library
-- Phosphor Icons for visual consistency
-
-### Data Management
-- Campaign data stored as JSON in localStorage
-- Budget calculations performed client-side
-- CSV import/export for data portability
-- Error boundaries for graceful failure handling
-
-### Performance
-- Optimized for 100+ campaigns
-- Storage monitoring and cleanup tools
-- Lazy loading for large datasets
-- Efficient re-rendering patterns
+- **Contrast Goal**: WCAG AA compliance maintained across all text and interactive elements
 
 ## Edge Cases & Problem Scenarios
+- **Potential Obstacles**: Budget constraints forcing campaign modifications, metric calculation edge cases
+- **Edge Case Handling**: Special handling for In-Account Events with different ROI models
+- **Technical Constraints**: Data persistence using Spark KV storage for reliability
 
-### Storage Limitations
-- **Problem**: Browser localStorage limits (5-10MB)
-- **Solution**: Storage monitoring with cleanup tools and warnings
-
-### Data Validation
-- **Problem**: Invalid CSV imports or corrupt data
-- **Solution**: Comprehensive validation with clear error messages
-
-### Budget Overruns
-- **Problem**: Campaigns exceeding allocated budgets
-- **Solution**: Visual warnings but allow creation for planning purposes
-
-### Concurrent Usage
-- **Problem**: Multiple users making changes simultaneously
-- **Solution**: Current localStorage approach - future enhancement for real-time sync
+## Implementation Considerations
+- **Scalability Needs**: Designed for team use with individual ownership and regional budgets
+- **Testing Focus**: ROI calculations accuracy and budget tracking reliability
+- **Critical Questions**: Metric calculation formulas validated with marketing operations team
 
 ## Reflection
-
-This solution uniquely combines:
-- Automated ROI calculations with industry-standard conversion rates
-- Owner-based budget tracking separate from regional reporting
-- Comprehensive data management with import/export capabilities
-- Built-in storage optimization to prevent common browser issues
-
-The tool transforms ad-hoc campaign planning into a standardized, trackable process that provides immediate value to marketing operations teams while scaling to enterprise requirements.
+This solution uniquely addresses GitHub's specific marketing operations needs with standardized ROI modeling and regional budget management. The automated calculations reduce manual errors while the dashboard view enables portfolio-level oversight. The professional interface matches GitHub's operational tools aesthetic while remaining highly functional for daily use.

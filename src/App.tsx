@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
 import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { useKV } from "@github/spark/hooks";
 
 // Types
 interface Campaign {
@@ -41,30 +42,9 @@ interface Campaign {
   actualMqls?: number;
 }
 
-// Simple localStorage hook
-function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error('Error reading from localStorage:', error);
-      return initialValue;
-    }
-  });
-
-  const setValue = (value: T) => {
-    try {
-      setStoredValue(value);
-      window.localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
-    }
-  };
-
-  return [storedValue, setValue];
-}
-
+// Main App Component
+export default function App() {
+  const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
 // Campaign Form Component
 function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) => void }) {
   const [formData, setFormData] = useState({
@@ -500,8 +480,7 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 }
 
 // Main App Component
-export default function App() {
-  const [campaigns, setCampaigns] = useLocalStorage<Campaign[]>('marketing-campaigns', []);
+  const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
 
   const handleAddCampaign = (campaign: Campaign) => {
     setCampaigns([...campaigns, campaign]);
