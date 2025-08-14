@@ -26,9 +26,12 @@
       ]
     },
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true
   },
   "include": [
-    "src"
+    "src",
+    "src/**/*.d.ts"
   ]
 }

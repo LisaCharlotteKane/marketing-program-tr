@@ -14,6 +14,7 @@ import { Toaster } from "sonner";
 import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useKV } from "@github/spark/hooks";
+import type { CheckedState } from "@radix-ui/react-checkbox";
 
 // Types
 interface Campaign {
@@ -42,12 +43,38 @@ interface Campaign {
   actualMqls?: number;
 }
 
-// Main App Component
-export default function App() {
-  const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
+interface FormData {
+  campaignType: string;
+  strategicPillar: string[];
+  revenuePlay: string;
+  fy: string;
+  quarterMonth: string;
+  region: string;
+  country: string;
+  owner: string;
+  description: string;
+  forecastedCost: number;
+  expectedLeads: number;
+}
+
+interface BudgetAllocation {
+  region: string;
+  budget: number;
+}
+
+interface BudgetUsage {
+  owner: string;
+  region: string;
+  budget: number;
+  used: number;
+  remaining: number;
+  percentage: number;
+  isOverBudget: boolean;
+}
+
 // Campaign Form Component
 function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) => void }) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     campaignType: '',
     strategicPillar: [] as string[],
     revenuePlay: '',
@@ -80,7 +107,7 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
     return { mql, sql, opportunities, pipelineForecast };
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     if (!formData.campaignType || !formData.owner || !formData.region) {
@@ -168,12 +195,12 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="campaignType">Campaign Type *</Label>
-              <Select value={formData.campaignType} onValueChange={(value) => setFormData(prev => ({...prev, campaignType: value}))}>
+              <Select value={formData.campaignType} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, campaignType: value}))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select campaign type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {campaignTypes.map(type => (
+                  {campaignTypes.map((type: string) => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
                 </SelectContent>
@@ -182,12 +209,12 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
 
             <div>
               <Label htmlFor="region">Region *</Label>
-              <Select value={formData.region} onValueChange={(value) => setFormData(prev => ({...prev, region: value}))}>
+              <Select value={formData.region} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, region: value}))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select region" />
                 </SelectTrigger>
                 <SelectContent>
-                  {regions.map(region => (
+                  {regions.map((region: string) => (
                     <SelectItem key={region} value={region}>{region}</SelectItem>
                   ))}
                 </SelectContent>
@@ -196,12 +223,12 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
 
             <div>
               <Label htmlFor="owner">Campaign Owner *</Label>
-              <Select value={formData.owner} onValueChange={(value) => setFormData(prev => ({...prev, owner: value}))}>
+              <Select value={formData.owner} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, owner: value}))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select owner" />
                 </SelectTrigger>
                 <SelectContent>
-                  {owners.map(owner => (
+                  {owners.map((owner: string) => (
                     <SelectItem key={owner} value={owner}>{owner}</SelectItem>
                   ))}
                 </SelectContent>
@@ -210,12 +237,12 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
 
             <div>
               <Label htmlFor="fy">Fiscal Year</Label>
-              <Select value={formData.fy} onValueChange={(value) => setFormData(prev => ({...prev, fy: value}))}>
+              <Select value={formData.fy} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, fy: value}))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select FY" />
                 </SelectTrigger>
                 <SelectContent>
-                  {fiscalYears.map(fy => (
+                  {fiscalYears.map((fy: string) => (
                     <SelectItem key={fy} value={fy}>{fy}</SelectItem>
                   ))}
                 </SelectContent>
@@ -224,12 +251,12 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
 
             <div>
               <Label htmlFor="quarterMonth">Quarter/Month</Label>
-              <Select value={formData.quarterMonth} onValueChange={(value) => setFormData(prev => ({...prev, quarterMonth: value}))}>
+              <Select value={formData.quarterMonth} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, quarterMonth: value}))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select quarter/month" />
                 </SelectTrigger>
                 <SelectContent>
-                  {quarters.map(quarter => (
+                  {quarters.map((quarter: string) => (
                     <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
                   ))}
                 </SelectContent>
@@ -238,12 +265,12 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
 
             <div>
               <Label htmlFor="revenuePlay">Revenue Play</Label>
-              <Select value={formData.revenuePlay} onValueChange={(value) => setFormData(prev => ({...prev, revenuePlay: value}))}>
+              <Select value={formData.revenuePlay} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, revenuePlay: value}))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select revenue play" />
                 </SelectTrigger>
                 <SelectContent>
-                  {revenuePlayOptions.map(play => (
+                  {revenuePlayOptions.map((play: string) => (
                     <SelectItem key={play} value={play}>{play}</SelectItem>
                   ))}
                 </SelectContent>
@@ -255,7 +282,7 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
               <Input
                 type="number"
                 value={formData.forecastedCost}
-                onChange={(e) => setFormData(prev => ({...prev, forecastedCost: Number(e.target.value)}))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: FormData) => ({...prev, forecastedCost: Number(e.target.value)}))}
                 placeholder="0"
               />
             </div>
@@ -265,7 +292,7 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
               <Input
                 type="number"
                 value={formData.expectedLeads}
-                onChange={(e) => setFormData(prev => ({...prev, expectedLeads: Number(e.target.value)}))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: FormData) => ({...prev, expectedLeads: Number(e.target.value)}))}
                 placeholder="0"
               />
             </div>
@@ -275,7 +302,7 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
             <Label htmlFor="description">Description</Label>
             <Textarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({...prev, description: e.target.value}))}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData((prev: FormData) => ({...prev, description: e.target.value}))}
               placeholder="Campaign description..."
               rows={3}
             />
@@ -295,15 +322,15 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
 function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[]; onDeleteCampaign: (id: string) => void }) {
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
 
-  const handleSelectAll = (checked: boolean) => {
-    setSelectedCampaigns(checked ? campaigns.map(c => c.id) : []);
+  const handleSelectAll = (checked: CheckedState) => {
+    setSelectedCampaigns(checked ? campaigns.map((c: Campaign) => c.id) : []);
   };
 
-  const handleSelectCampaign = (campaignId: string, checked: boolean) => {
-    setSelectedCampaigns(prev => 
+  const handleSelectCampaign = (campaignId: string, checked: CheckedState) => {
+    setSelectedCampaigns((prev: string[]) => 
       checked 
         ? [...prev, campaignId]
-        : prev.filter(id => id !== campaignId)
+        : prev.filter((id: string) => id !== campaignId)
     );
   };
 
@@ -362,12 +389,12 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {campaigns.map((campaign) => (
+                {campaigns.map((campaign: Campaign) => (
                   <TableRow key={campaign.id}>
                     <TableCell>
                       <Checkbox
                         checked={selectedCampaigns.includes(campaign.id)}
-                        onCheckedChange={(checked) => handleSelectCampaign(campaign.id, checked as boolean)}
+                        onCheckedChange={(checked: CheckedState) => handleSelectCampaign(campaign.id, checked)}
                       />
                     </TableCell>
                     <TableCell className="font-medium">{campaign.campaignType}</TableCell>
@@ -407,16 +434,16 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
 
 // Budget Overview Component
 function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
-  const budgetAllocations = {
+  const budgetAllocations: Record<string, BudgetAllocation> = {
     "Tomoko Tanaka": { region: "JP & Korea", budget: 358000 },
     "Beverly Leung": { region: "South APAC", budget: 385500 },
     "Shruti Narang": { region: "SAARC", budget: 265000 },
     "Giorgia Parham": { region: "Digital", budget: 68000 },
   };
 
-  const budgetUsage = Object.entries(budgetAllocations).map(([owner, { region, budget }]) => {
-    const ownerCampaigns = campaigns.filter(c => c.owner === owner);
-    const used = ownerCampaigns.reduce((sum, c) => sum + c.forecastedCost, 0);
+  const budgetUsage: BudgetUsage[] = Object.entries(budgetAllocations).map(([owner, { region, budget }]: [string, BudgetAllocation]): BudgetUsage => {
+    const ownerCampaigns = campaigns.filter((c: Campaign) => c.owner === owner);
+    const used = ownerCampaigns.reduce((sum: number, c: Campaign) => sum + c.forecastedCost, 0);
     const remaining = budget - used;
     const percentage = (used / budget) * 100;
     
@@ -442,7 +469,7 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">
-          {budgetUsage.map(({ owner, region, budget, used, remaining, percentage, isOverBudget }) => (
+          {budgetUsage.map(({ owner, region, budget, used, remaining, percentage, isOverBudget }: BudgetUsage) => (
             <div key={owner} className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <div>
@@ -480,6 +507,7 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 }
 
 // Main App Component
+export default function App() {
   const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
 
   const handleAddCampaign = (campaign: Campaign) => {
@@ -487,11 +515,11 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
   };
 
   const handleDeleteCampaign = (id: string) => {
-    setCampaigns(campaigns.filter(c => c.id !== id));
+    setCampaigns(campaigns.filter((c: Campaign) => c.id !== id));
   };
 
   // Calculate totals for summary
-  const totals = campaigns.reduce((acc, campaign) => {
+  const totals = campaigns.reduce((acc: { totalCost: number; totalLeads: number; totalPipeline: number }, campaign: Campaign) => {
     acc.totalCost += campaign.forecastedCost;
     acc.totalLeads += campaign.expectedLeads;
     acc.totalPipeline += campaign.pipelineForecast;
