@@ -13,7 +13,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: process.env.NODE_ENV === 'production' ? './' : '/',
+  base: '/',
   build: {
     outDir: process.env.OUTPUT_DIR || 'dist',
     rollupOptions: {

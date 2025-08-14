@@ -1,9 +1,13 @@
-name: Deploy Marketing Planner to GitHub Pages
+# GitHub Pages deployment disabled per user request
+# This workflow has been disabled to prevent automatic deployment to GitHub Pages
+
+name: Deploy Marketing Planner to GitHub Pages (DISABLED)
 
 on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
+  # Disabled all triggers
+  # push:
+  #   branches: [ main, master ]
+  # workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,6 +21,7 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    if: false  # This job will never run
     steps:
       - name: Checkout
         uses: actions/checkout@v4
