@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice } from "@phosphor-icons/react";
+import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Download } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useKV } from "@github/spark/hooks";
 import type { CheckedState } from "@radix-ui/react-checkbox";
@@ -70,6 +70,232 @@ interface BudgetUsage {
   remaining: number;
   percentage: number;
   isOverBudget: boolean;
+}
+
+// Import/Export Component
+function ImportExport({ onImportCampaigns, campaigns }: { 
+  onImportCampaigns: (campaigns: Campaign[]) => void;
+  campaigns: Campaign[];
+}) {
+  const [isImporting, setIsImporting] = useState(false);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Please upload a CSV file');
+      return;
+    }
+
+    setIsImporting(true);
+    
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast.error('CSV file must contain a header row and at least one data row');
+        return;
+      }
+
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+      const importedCampaigns: Campaign[] = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        
+        if (values.length !== headers.length) continue;
+
+        const campaignData: any = {};
+        headers.forEach((header, index) => {
+          campaignData[header] = values[index];
+        });
+
+        // Map CSV data to Campaign interface
+        const campaign: Campaign = {
+          id: Date.now().toString() + i,
+          campaignType: campaignData.campaignType || campaignData['Campaign Type'] || '',
+          strategicPillar: campaignData.strategicPillar ? campaignData.strategicPillar.split(';') : [],
+          revenuePlay: campaignData.revenuePlay || campaignData['Revenue Play'] || '',
+          fy: campaignData.fy || campaignData['FY'] || '',
+          quarterMonth: campaignData.quarterMonth || campaignData['Quarter/Month'] || '',
+          region: campaignData.region || campaignData['Region'] || '',
+          country: campaignData.country || campaignData['Country'] || '',
+          owner: campaignData.owner || campaignData['Owner'] || '',
+          description: campaignData.description || campaignData['Description'] || '',
+          forecastedCost: Number(campaignData.forecastedCost || campaignData['Forecasted Cost'] || 0),
+          expectedLeads: Number(campaignData.expectedLeads || campaignData['Expected Leads'] || 0),
+          mql: Number(campaignData.mql || campaignData['MQL'] || 0),
+          sql: Number(campaignData.sql || campaignData['SQL'] || 0),
+          opportunities: Number(campaignData.opportunities || campaignData['Opportunities'] || 0),
+          pipelineForecast: Number(campaignData.pipelineForecast || campaignData['Pipeline Forecast'] || 0),
+          status: campaignData.status || campaignData['Status'] || 'Planning'
+        };
+
+        // If metrics are not provided, calculate them
+        if (!campaign.mql && !campaign.sql && !campaign.opportunities && !campaign.pipelineForecast) {
+          const calculated = calculateMetrics(campaign.expectedLeads, campaign.forecastedCost, campaign.campaignType);
+          campaign.mql = calculated.mql;
+          campaign.sql = calculated.sql;
+          campaign.opportunities = calculated.opportunities;
+          campaign.pipelineForecast = calculated.pipelineForecast;
+        }
+
+        importedCampaigns.push(campaign);
+      }
+
+      if (importedCampaigns.length > 0) {
+        onImportCampaigns(importedCampaigns);
+        toast.success(`Successfully imported ${importedCampaigns.length} campaigns`);
+      } else {
+        toast.error('No valid campaigns found in the CSV file');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      toast.error('Failed to import campaigns. Please check the CSV format.');
+    } finally {
+      setIsImporting(false);
+      // Reset file input
+      event.target.value = '';
+    }
+  };
+
+  const exportToCsv = () => {
+    if (campaigns.length === 0) {
+      toast.error('No campaigns to export');
+      return;
+    }
+
+    const headers = [
+      'Campaign Type',
+      'Strategic Pillar',
+      'Revenue Play',
+      'FY',
+      'Quarter/Month',
+      'Region',
+      'Country',
+      'Owner',
+      'Description',
+      'Forecasted Cost',
+      'Expected Leads',
+      'MQL',
+      'SQL',
+      'Opportunities',
+      'Pipeline Forecast',
+      'Status'
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...campaigns.map(campaign => [
+        `"${campaign.campaignType}"`,
+        `"${campaign.strategicPillar.join(';')}"`,
+        `"${campaign.revenuePlay}"`,
+        `"${campaign.fy}"`,
+        `"${campaign.quarterMonth}"`,
+        `"${campaign.region}"`,
+        `"${campaign.country}"`,
+        `"${campaign.owner}"`,
+        `"${campaign.description}"`,
+        campaign.forecastedCost,
+        campaign.expectedLeads,
+        campaign.mql,
+        campaign.sql,
+        campaign.opportunities,
+        campaign.pipelineForecast,
+        `"${campaign.status || 'Planning'}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `marketing-campaigns-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success(`Exported ${campaigns.length} campaigns to CSV`);
+  };
+
+  const calculateMetrics = (expectedLeads: number, forecastedCost: number, campaignType: string) => {
+    // Special case for In Account Events
+    if (campaignType === "In-Account Events (1:1)" && expectedLeads === 0) {
+      return {
+        mql: 0,
+        sql: 0,
+        opportunities: 0,
+        pipelineForecast: forecastedCost * 20 // 20:1 ROI for in-account events
+      };
+    }
+
+    const mql = Math.round(expectedLeads * 0.1); // 10% of expected leads
+    const sql = Math.round(mql * 0.6); // 6% of expected leads  
+    const opportunities = Math.round(sql * 0.8); // 80% of SQLs
+    const pipelineForecast = opportunities * 50000; // $50K per opportunity
+
+    return { mql, sql, opportunities, pipelineForecast };
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="h-5 w-5" />
+          Import/Export Campaigns
+        </CardTitle>
+        <CardDescription>
+          Import campaigns from CSV or export existing campaigns
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <h4 className="font-medium">Import from CSV</h4>
+            <p className="text-sm text-muted-foreground">
+              Upload a CSV file with campaign data. The file should include columns for campaign type, region, owner, etc.
+            </p>
+            <div className="relative">
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                disabled={isImporting}
+                className="cursor-pointer"
+              />
+              {isImporting && (
+                <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                </div>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Expected headers: Campaign Type, Region, Owner, Forecasted Cost, Expected Leads, Description, etc.
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="font-medium">Export to CSV</h4>
+            <p className="text-sm text-muted-foreground">
+              Download all current campaigns as a CSV file for backup or analysis.
+            </p>
+            <Button 
+              onClick={exportToCsv}
+              disabled={campaigns.length === 0}
+              variant="outline"
+              className="w-full"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export {campaigns.length} Campaigns
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 // Campaign Form Component
@@ -522,6 +748,10 @@ export default function App() {
     setCampaigns([...campaigns, campaign]);
   };
 
+  const handleImportCampaigns = (importedCampaigns: Campaign[]) => {
+    setCampaigns([...campaigns, ...importedCampaigns]);
+  };
+
   const handleDeleteCampaign = (id: string) => {
     setCampaigns(campaigns.filter(c => c.id !== id));
     toast.success('Campaign deleted');
@@ -594,6 +824,7 @@ export default function App() {
                 </p>
               </div>
 
+              <ImportExport onImportCampaigns={handleImportCampaigns} campaigns={campaigns} />
               <CampaignForm onAddCampaign={handleAddCampaign} />
               <CampaignTable campaigns={campaigns} onDeleteCampaign={handleDeleteCampaign} />
             </TabsContent>
