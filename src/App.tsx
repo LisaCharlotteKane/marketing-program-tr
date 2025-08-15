@@ -519,14 +519,14 @@ export default function App() {
   }, [campaigns]);
 
   const handleAddCampaign = (campaign: Campaign) => {
+  
+  React.useEffect(() => {
+    console.log("App mounted successfully!");
+    console.log("Campaigns:", campaigns);
+  }, [campaigns]);
+
+  const handleAddCampaign = (campaign: Campaign) => {
     setCampaigns([...campaigns, campaign]);
-  };
-
-  const handleDeleteCampaign = (id: string) => {
-    setCampaigns(campaigns.filter((c: Campaign) => c.id !== id));
-  };
-
-  // Calculate totals for summary
   const totals = campaigns.reduce((acc: { totalCost: number; totalLeads: number; totalPipeline: number }, campaign: Campaign) => {
     acc.totalCost += campaign.forecastedCost;
     acc.totalLeads += campaign.expectedLeads;
@@ -547,42 +547,42 @@ export default function App() {
     console.error("Error in render preparation:", e);
     return <div style={{ padding: '20px', fontSize: '24px', color: 'green' }}>READY - Basic render</div>;
   }
-
+  // Fallback render if something goes wrong
   try {
-    return (
-      <div className="min-h-screen bg-background">
-        {/* Simple ready check */}
-        <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'green', color: 'white', padding: '5px', zIndex: 9999 }}>
-          READY
-        </div>
+    console.log("App rendering...", { campaignsLength: campaigns.length, totals });
+  } catch (e) {
+    console.error("Error in render preparation:", e);
+    return <div style={{ padding: '20px', fontSize: '24px', color: 'green' }}>READY - Basic render</div>;
+  }
+
         
         <Toaster position="top-right" richColors />
-        
-        <header className="border-b shadow-sm bg-card">
-          <div className="container mx-auto p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+      {/* Simple ready check */}
+      <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'green', color: 'white', padding: '5px', zIndex: 9999 }}>
+        READY
+      </div>
+      
                 <Target className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-foreground">Marketing Campaign Planner</h1>
                 <p className="text-sm text-muted-foreground">APAC Marketing Operations</p>
               </div>
+              <Target className="h-5 w-5 text-primary-foreground" />
             </div>
-          </div>
-        </header>
-
-        <main className="container mx-auto p-4">
-          <Tabs defaultValue="planning" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
-              <TabsTrigger value="planning" className="flex items-center gap-2">
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">Marketing Campaign Planner</h1>
+              <p className="text-sm text-muted-foreground">APAC Marketing Operations</p>
+            </div>
+          </div>st className="grid w-full grid-cols-3 mb-6">
+        </div><TabsTrigger value="planning" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 Campaign Planning
-              </TabsTrigger>
-              <TabsTrigger value="budget" className="flex items-center gap-2">
-                <BuildingOffice className="h-4 w-4" />
-                Budget Management
-              </TabsTrigger>
+      <main className="container mx-auto p-4">
+        <Tabs defaultValue="planning" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="planning" className="flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <ChartBar className="h-4 w-4" />
                 Overview
