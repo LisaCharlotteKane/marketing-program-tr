@@ -546,6 +546,7 @@ export default function App() {
     
     return (
       <div className="min-h-screen bg-background">
+        <div data-healthcheck="READY" />
         <Toaster position="top-right" richColors />
         
         {/* Simple ready check */}
@@ -574,12 +575,13 @@ export default function App() {
               <TabsTrigger value="planning" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 Campaign Planning
+              </TabsTrigger>
               <TabsTrigger value="budget" className="flex items-center gap-2">
                 <BuildingOffice className="h-4 w-4" />
                 Budget
               </TabsTrigger>
-              </TabsTrigger>items-center gap-2">
               <TabsTrigger value="overview" className="flex items-center gap-2">
+                <ChartBar className="h-4 w-4" />
                 Overview
               </TabsTrigger>
             </TabsList>
