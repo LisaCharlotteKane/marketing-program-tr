@@ -519,14 +519,14 @@ export default function App() {
   }, [campaigns]);
 
   const handleAddCampaign = (campaign: Campaign) => {
-  
-  React.useEffect(() => {
-    console.log("App mounted successfully!");
-    console.log("Campaigns:", campaigns);
-  }, [campaigns]);
-
-  const handleAddCampaign = (campaign: Campaign) => {
     setCampaigns([...campaigns, campaign]);
+  };
+
+  const handleDeleteCampaign = (id: string) => {
+    setCampaigns(campaigns.filter(c => c.id !== id));
+    toast.success('Campaign deleted');
+  };
+
   const totals = campaigns.reduce((acc: { totalCost: number; totalLeads: number; totalPipeline: number }, campaign: Campaign) => {
     acc.totalCost += campaign.forecastedCost;
     acc.totalLeads += campaign.expectedLeads;
@@ -543,46 +543,42 @@ export default function App() {
   // Fallback render if something goes wrong
   try {
     console.log("App rendering...", { campaignsLength: campaigns.length, totals });
-  } catch (e) {
-    console.error("Error in render preparation:", e);
-    return <div style={{ padding: '20px', fontSize: '24px', color: 'green' }}>READY - Basic render</div>;
-  }
-  // Fallback render if something goes wrong
-  try {
-    console.log("App rendering...", { campaignsLength: campaigns.length, totals });
-  } catch (e) {
-    console.error("Error in render preparation:", e);
-    return <div style={{ padding: '20px', fontSize: '24px', color: 'green' }}>READY - Basic render</div>;
-  }
-
-        
+    
+    return (
+      <div className="min-h-screen bg-background">
         <Toaster position="top-right" richColors />
-      {/* Simple ready check */}
-      <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'green', color: 'white', padding: '5px', zIndex: 9999 }}>
-        READY
-      </div>
-      
+        
+        {/* Simple ready check */}
+        <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'green', color: 'white', padding: '5px', zIndex: 9999 }}>
+          READY
+        </div>
+        
+        {/* Header */}
+        <header className="border-b bg-card">
+          <div className="container mx-auto p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary rounded-lg">
                 <Target className="h-5 w-5 text-primary-foreground" />
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-foreground">Marketing Campaign Planner</h1>
                 <p className="text-sm text-muted-foreground">APAC Marketing Operations</p>
               </div>
-              <Target className="h-5 w-5 text-primary-foreground" />
             </div>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">Marketing Campaign Planner</h1>
-              <p className="text-sm text-muted-foreground">APAC Marketing Operations</p>
-            </div>
-          </div>st className="grid w-full grid-cols-3 mb-6">
-        </div><TabsTrigger value="planning" className="flex items-center gap-2">
+          </div>
+        </header>
+
+        <main className="container mx-auto p-4">
+          <Tabs defaultValue="planning" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="planning" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 Campaign Planning
-      <main className="container mx-auto p-4">
-        <Tabs defaultValue="planning" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="planning" className="flex items-center gap-2">
-              <Calculator className="h-4 w-4" />
+              </TabsTrigger>
+              <TabsTrigger value="budget" className="flex items-center gap-2">
+                <BuildingOffice className="h-4 w-4" />
+                Budget
+              </TabsTrigger>
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <ChartBar className="h-4 w-4" />
                 Overview
