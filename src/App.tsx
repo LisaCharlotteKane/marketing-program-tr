@@ -508,7 +508,15 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 
 // Main App Component
 export default function App() {
+  console.log("App component loading...");
+  
+  // Primary approach - try useKV, fall back to simple state if needed
   const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
+  
+  React.useEffect(() => {
+    console.log("App mounted successfully!");
+    console.log("Campaigns:", campaigns);
+  }, [campaigns]);
 
   const handleAddCampaign = (campaign: Campaign) => {
     setCampaigns([...campaigns, campaign]);
@@ -532,114 +540,137 @@ export default function App() {
 
   const roi = totals.totalCost > 0 ? (totals.totalPipeline / totals.totalCost) : 0;
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Toaster position="top-right" richColors />
-      
-      <header className="border-b shadow-sm bg-card">
-        <div className="container mx-auto p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Target className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">Marketing Campaign Planner</h1>
-              <p className="text-sm text-muted-foreground">APAC Marketing Operations</p>
-            </div>
-          </div>
+  // Fallback render if something goes wrong
+  try {
+    console.log("App rendering...", { campaignsLength: campaigns.length, totals });
+  } catch (e) {
+    console.error("Error in render preparation:", e);
+    return <div style={{ padding: '20px', fontSize: '24px', color: 'green' }}>READY - Basic render</div>;
+  }
+
+  try {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Simple ready check */}
+        <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'green', color: 'white', padding: '5px', zIndex: 9999 }}>
+          READY
         </div>
-      </header>
-
-      <main className="container mx-auto p-4">
-        <Tabs defaultValue="planning" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="planning" className="flex items-center gap-2">
-              <Calculator className="h-4 w-4" />
-              Campaign Planning
-            </TabsTrigger>
-            <TabsTrigger value="budget" className="flex items-center gap-2">
-              <BuildingOffice className="h-4 w-4" />
-              Budget Management
-            </TabsTrigger>
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <ChartBar className="h-4 w-4" />
-              Overview
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="planning" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">Campaign Planning</h2>
-              <p className="text-muted-foreground">
-                Plan and manage marketing campaigns with ROI calculations
-              </p>
-            </div>
-
-            <CampaignForm onAddCampaign={handleAddCampaign} />
-            <CampaignTable campaigns={campaigns} onDeleteCampaign={handleDeleteCampaign} />
-          </TabsContent>
-
-          <TabsContent value="budget" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">Budget Management</h2>
-              <p className="text-muted-foreground">
-                Track regional budget allocations and spending
-              </p>
-            </div>
-
-            <BudgetOverview campaigns={campaigns} />
-          </TabsContent>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">Campaign Overview</h2>
-              <p className="text-muted-foreground">
-                Summary of all marketing campaigns and metrics
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-primary">{campaigns.length}</div>
-                  <div className="text-sm text-muted-foreground">Total Campaigns</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-green-600">${totals.totalCost.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Total Forecasted Spend</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-blue-600">${totals.totalPipeline.toLocaleString()}</div>
-                  <div className="text-sm text-muted-foreground">Total Pipeline Forecast</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-purple-600">{roi.toFixed(1)}x</div>
-                  <div className="text-sm text-muted-foreground">ROI Multiple</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-4">Auto-Calculated Metrics</h3>
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <ul className="space-y-2 text-sm">
-                  <li><strong>MQL Forecast:</strong> 10% of Expected Leads</li>
-                  <li><strong>SQL Forecast:</strong> 6% of Expected Leads (60% of MQLs)</li>
-                  <li><strong>Opportunities:</strong> 80% of SQLs</li>
-                  <li><strong>Pipeline Forecast:</strong> Opportunities × $50,000</li>
-                  <li><strong>Special Case:</strong> In-Account Events (1:1) with no leads assume 20:1 ROI</li>
-                </ul>
+        
+        <Toaster position="top-right" richColors />
+        
+        <header className="border-b shadow-sm bg-card">
+          <div className="container mx-auto p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Target className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-foreground">Marketing Campaign Planner</h1>
+                <p className="text-sm text-muted-foreground">APAC Marketing Operations</p>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
-  );
+          </div>
+        </header>
+
+        <main className="container mx-auto p-4">
+          <Tabs defaultValue="planning" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsTrigger value="planning" className="flex items-center gap-2">
+                <Calculator className="h-4 w-4" />
+                Campaign Planning
+              </TabsTrigger>
+              <TabsTrigger value="budget" className="flex items-center gap-2">
+                <BuildingOffice className="h-4 w-4" />
+                Budget Management
+              </TabsTrigger>
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <ChartBar className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="planning" className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Campaign Planning</h2>
+                <p className="text-muted-foreground">
+                  Plan and manage marketing campaigns with ROI calculations
+                </p>
+              </div>
+
+              <CampaignForm onAddCampaign={handleAddCampaign} />
+              <CampaignTable campaigns={campaigns} onDeleteCampaign={handleDeleteCampaign} />
+            </TabsContent>
+
+            <TabsContent value="budget" className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Budget Management</h2>
+                <p className="text-muted-foreground">
+                  Track regional budget allocations and spending
+                </p>
+              </div>
+
+              <BudgetOverview campaigns={campaigns} />
+            </TabsContent>
+
+            <TabsContent value="overview" className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Campaign Overview</h2>
+                <p className="text-muted-foreground">
+                  Summary of all marketing campaigns and metrics
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-primary">{campaigns.length}</div>
+                    <div className="text-sm text-muted-foreground">Total Campaigns</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-green-600">${totals.totalCost.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Total Forecasted Spend</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-blue-600">${totals.totalPipeline.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">Total Pipeline Forecast</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold text-purple-600">{roi.toFixed(1)}x</div>
+                    <div className="text-sm text-muted-foreground">ROI Multiple</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">Auto-Calculated Metrics</h3>
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <ul className="space-y-2 text-sm">
+                    <li><strong>MQL Forecast:</strong> 10% of Expected Leads</li>
+                    <li><strong>SQL Forecast:</strong> 6% of Expected Leads (60% of MQLs)</li>
+                    <li><strong>Opportunities:</strong> 80% of SQLs</li>
+                    <li><strong>Pipeline Forecast:</strong> Opportunities × $50,000</li>
+                    <li><strong>Special Case:</strong> In-Account Events (1:1) with no leads assume 20:1 ROI</li>
+                  </ul>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    );
+  } catch (error) {
+    console.error("Error in main render:", error);
+    return (
+      <div style={{ padding: '20px', color: 'black', fontFamily: 'Arial' }}>
+        <h1>READY - App Error Caught</h1>
+        <p>Error: {String(error)}</p>
+      </div>
+    );
+  }
 }
