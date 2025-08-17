@@ -998,10 +998,6 @@ export default function App() {
     toast.success('Campaign deleted');
   };
 
-  const handleUpdateCampaign = (updatedCampaign: Campaign) => {
-    setCampaigns(campaigns.map(c => c.id === updatedCampaign.id ? updatedCampaign : c));
-  };
-
   const totals = campaigns.reduce((acc: { totalCost: number; totalLeads: number; totalPipeline: number }, campaign: Campaign) => {
     acc.totalCost += campaign.forecastedCost;
     acc.totalLeads += campaign.expectedLeads;
@@ -1046,14 +1042,10 @@ export default function App() {
 
         <main className="container mx-auto p-4">
           <Tabs defaultValue="planning" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="planning" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 Campaign Planning
-              </TabsTrigger>
-              <TabsTrigger value="execution" className="flex items-center gap-2">
-                <ClipboardText className="h-4 w-4" />
-                Execution
               </TabsTrigger>
               <TabsTrigger value="budget" className="flex items-center gap-2">
                 <BuildingOffice className="h-4 w-4" />
@@ -1076,17 +1068,6 @@ export default function App() {
               <ImportExport onImportCampaigns={handleImportCampaigns} campaigns={campaigns} />
               <CampaignForm onAddCampaign={handleAddCampaign} />
               <CampaignTable campaigns={campaigns} onDeleteCampaign={handleDeleteCampaign} />
-            </TabsContent>
-
-            <TabsContent value="execution" className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Campaign Execution</h2>
-                <p className="text-muted-foreground">
-                  Track actual results and execution status for your campaigns
-                </p>
-              </div>
-
-              <ExecutionTracking campaigns={campaigns} onUpdateCampaign={handleUpdateCampaign} />
             </TabsContent>
 
             <TabsContent value="budget" className="space-y-6">
@@ -1141,6 +1122,25 @@ export default function App() {
                   <ul className="space-y-2 text-sm">
                     <li><strong>MQL Forecast:</strong> 10% of Expected Leads</li>
                     <li><strong>SQL Forecast:</strong> 6% of Expected Leads (60% of MQLs)</li>
+                    <li><strong>Opportunities:</strong> 80% of SQLs</li>
+                    <li><strong>Pipeline Forecast:</strong> Opportunities × $50,000</li>
+                    <li><strong>Special Case:</strong> In-Account Events (1:1) with no leads assume 20:1 ROI</li>
+                  </ul>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+                </Card>
+  } catch (error) {
+    console.error("Error in main render:", error);
+    return (
+      <div style={{ padding: '20px', color: 'black', fontFamily: 'Arial' }}>
+        <h1>READY - App Error Caught</h1>
+        <p>Error: {String(error)}</p>
+      </div>
+    );
                     <li><strong>Opportunities:</strong> 80% of SQLs</li>
                     <li><strong>Pipeline Forecast:</strong> Opportunities × $50,000</li>
                     <li><strong>Special Case:</strong> In-Account Events (1:1) with no leads assume 20:1 ROI</li>
