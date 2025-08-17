@@ -1,6 +1,6 @@
 // Utility functions for type safety and calculations
 
-import type { Campaign } from './campaign';
+import type { Campaign, CampaignStatus } from './campaign';
 
 /**
  * Calculate campaign metrics based on expected leads and cost
@@ -29,9 +29,9 @@ export function calculateCampaignMetrics(
 }
 
 /**
- * Parse a string/number value to a safe number
+ * Safe number parsing helper with type assertion
  */
-export function parseToNumber(value: string | number | undefined | null): number {
+export function safeParseNumber(value: unknown): number {
   if (typeof value === 'number') return isNaN(value) ? 0 : value;
   if (typeof value === 'string') {
     // Remove currency symbols and commas
@@ -40,6 +40,28 @@ export function parseToNumber(value: string | number | undefined | null): number
     return isNaN(parsed) ? 0 : parsed;
   }
   return 0;
+}
+
+/**
+ * Parse a string/number value to a safe number (alias for backwards compatibility)
+ */
+export const parseToNumber = safeParseNumber;
+
+/**
+ * Type guard for campaign status
+ */
+export function isValidCampaignStatus(status: string): status is CampaignStatus {
+  return ['Planning', 'On Track', 'Shipped', 'Cancelled'].includes(status);
+}
+
+/**
+ * Safely parse campaign status with fallback
+ */
+export function parseCampaignStatus(status: unknown): CampaignStatus {
+  if (typeof status === 'string' && isValidCampaignStatus(status)) {
+    return status;
+  }
+  return 'Planning';
 }
 
 /**

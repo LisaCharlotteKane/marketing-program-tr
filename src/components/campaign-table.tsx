@@ -8,9 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash, Calculator, FunnelX } from "@phosphor-icons/react";
-import { toast } from "sonner";
-import { Campaign, CampaignTableProps } from "@/types/campaign";
+import { Plus, Trash, Calculator, X } from "@phosphor-icons/react";
+import { notifier } from "@/lib/notifier";
+import { Campaign, CampaignTableProps, CampaignStatus } from "@/types/campaign";
 import { CSVUploader } from "@/components/csv-uploader";
 
 export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
@@ -33,7 +33,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
     owner: "",
     forecastedCost: 0,
     expectedLeads: 0,
-    status: "Planning",
+    status: "Planning" as CampaignStatus,
     poRaised: false,
     campaignCode: "",
     issueLink: "",
@@ -129,7 +129,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
   // Add new campaign
   const addCampaign = () => {
     if (!newCampaign.campaignType || !newCampaign.owner) {
-      toast.error("Please fill in required fields: Campaign Type and Owner");
+      notifier.error("Please fill in required fields: Campaign Type and Owner");
       return;
     }
 
@@ -186,13 +186,13 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
       actualMQLs: 0
     });
 
-    toast.success("Campaign added successfully");
+    notifier.success("Campaign added successfully");
   };
 
   // Remove campaign
   const removeCampaign = (id: string) => {
     setCampaigns(safeCampaigns.filter(c => c.id !== id));
-    toast.success("Campaign removed");
+    notifier.success("Campaign removed");
   };
 
   // Filter campaigns
@@ -260,7 +260,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
                 }}
                 className="w-full"
               >
-                <FunnelX className="h-4 w-4 mr-2" />
+                <X className="h-4 w-4 mr-2" />
                 Clear Filters
               </Button>
             </div>
@@ -280,7 +280,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
           <CSVUploader 
             onCampaignsImported={(newCampaigns) => {
               setCampaigns([...safeCampaigns, ...newCampaigns]);
-              toast.success(`Imported ${newCampaigns.length} campaigns successfully`);
+              notifier.success(`Imported ${newCampaigns.length} campaigns successfully`);
             }}
           />
         </CardContent>

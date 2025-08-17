@@ -1,3 +1,6 @@
+// Status type for campaigns
+export type CampaignStatus = "Planning" | "On Track" | "Shipped" | "Cancelled";
+
 // Strategic Pillar types
 export type StrategicPillar = "Account Growth and Product Adoption" | "Pipeline Acceleration & Executive Engagement" | "Brand Awareness & Top of Funnel Demand Generation" | "New Logo Acquisition" | string;
 
@@ -21,7 +24,7 @@ export interface Campaign {
   sql: number;
   opportunities: number;
   pipelineForecast: number;
-  status?: 'Planning' | 'On Track' | 'Shipped' | 'Cancelled';
+  status?: CampaignStatus;
   poRaised?: boolean;
   salesforceCampaignCode?: string;
   issueLink?: string;

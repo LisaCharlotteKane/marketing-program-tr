@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
 import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Download, ClipboardText } from "@phosphor-icons/react";
-import { toast } from "sonner";
+import { notifier } from "@/lib/notifier";
 import { useKV } from "@github/spark/hooks";
 import type { CheckedState } from "@radix-ui/react-checkbox";
 import type { 
@@ -23,13 +23,15 @@ import type {
   ImportExportProps,
   CampaignFormProps,
   CampaignTableProps,
-  ExecutionTrackingProps
+  ExecutionTrackingProps,
+  CampaignStatus
 } from "@/types/campaign";
 import { 
   calculateCampaignMetrics, 
   parseToNumber, 
   parseStrategicPillars, 
-  createCampaignWithMetrics 
+  createCampaignWithMetrics,
+  parseCampaignStatus
 } from "@/types/utils";
 
 // Import/Export Component
@@ -41,7 +43,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
     if (!file) return;
 
     if (!file.name.endsWith('.csv')) {
-      toast.error('Please upload a CSV file');
+      notifier.error('Please upload a CSV file');
       return;
     }
 
@@ -52,7 +54,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
       const lines = text.split('\n').filter(line => line.trim());
       
       if (lines.length < 2) {
-        toast.error('CSV file must contain a header row and at least one data row');
+        notifier.error('CSV file must contain a header row and at least one data row');
         return;
       }
 
@@ -88,7 +90,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
           sql: parseToNumber(campaignData.sql || campaignData['SQL']),
           opportunities: parseToNumber(campaignData.opportunities || campaignData['Opportunities']),
           pipelineForecast: parseToNumber(campaignData.pipelineForecast || campaignData['Pipeline Forecast']),
-          status: campaignData.status || campaignData['Status'] || 'Planning'
+          status: parseCampaignStatus(campaignData.status || campaignData['Status'])
         };
 
         // If metrics are not provided, calculate them
@@ -105,13 +107,13 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
 
       if (importedCampaigns.length > 0) {
         onImportCampaigns(importedCampaigns);
-        toast.success(`Successfully imported ${importedCampaigns.length} campaigns`);
+        notifier.success(`Successfully imported ${importedCampaigns.length} campaigns`);
       } else {
-        toast.error('No valid campaigns found in the CSV file');
+        notifier.error('No valid campaigns found in the CSV file');
       }
     } catch (error) {
       console.error('Import error:', error);
-      toast.error('Failed to import campaigns. Please check the CSV format.');
+      notifier.error('Failed to import campaigns. Please check the CSV format.');
     } finally {
       setIsImporting(false);
       // Reset file input
@@ -121,7 +123,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
 
   const exportToCsv = () => {
     if (campaigns.length === 0) {
-      toast.error('No campaigns to export');
+      notifier.error('No campaigns to export');
       return;
     }
 
@@ -176,7 +178,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
     link.click();
     document.body.removeChild(link);
     
-    toast.success(`Exported ${campaigns.length} campaigns to CSV`);
+    notifier.success(`Exported ${campaigns.length} campaigns to CSV`);
   };
 
   return (
@@ -258,7 +260,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
     e.preventDefault();
     
     if (!formData.campaignType || !formData.owner || !formData.region) {
-      toast.error('Please fill in required fields');
+      notifier.error('Please fill in required fields');
       return;
     }
 
@@ -289,7 +291,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
       campaignName: '',
     });
     
-    toast.success('Campaign added successfully');
+    notifier.success('Campaign added successfully');
   };
 
   const campaignTypes = [
@@ -492,9 +494,9 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
   };
 
   const handleDeleteSelected = () => {
-    selectedCampaigns.forEach(id => onDeleteCampaign(id));
+    selectedCampaigns.forEach((id: string) => onDeleteCampaign(id));
     setSelectedCampaigns([]);
-    toast.success(`Deleted ${selectedCampaigns.length} campaigns`);
+    notifier.success(`Deleted ${selectedCampaigns.length} campaigns`);
   };
 
   return (
@@ -561,13 +563,13 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
                     <TableCell>{campaign.owner}</TableCell>
                     <TableCell className="max-w-xs truncate">{campaign.description || '-'}</TableCell>
                     <TableCell className="text-right font-mono">
-                      ${campaign.forecastedCost.toLocaleString()}
+                      ${(campaign.forecastedCost || 0).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-right">{campaign.expectedLeads}</TableCell>
-                    <TableCell className="text-right">{campaign.mql}</TableCell>
-                    <TableCell className="text-right">{campaign.sql}</TableCell>
+                    <TableCell className="text-right">{campaign.expectedLeads || 0}</TableCell>
+                    <TableCell className="text-right">{campaign.mql || 0}</TableCell>
+                    <TableCell className="text-right">{campaign.sql || 0}</TableCell>
                     <TableCell className="text-right font-mono">
-                      ${campaign.pipelineForecast.toLocaleString()}
+                      ${(campaign.pipelineForecast || 0).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Button 
@@ -615,7 +617,7 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
     onUpdateCampaign(updatedCampaign);
     setEditingCampaign(null);
     setEditFormData({});
-    toast.success('Campaign execution updated');
+    notifier.success('Campaign execution updated');
   };
 
   const handleCancelEdit = () => {
@@ -623,7 +625,7 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
     setEditFormData({});
   };
 
-  const statusOptions = ['Planning', 'On Track', 'Shipped', 'Cancelled'];
+  const statusOptions: CampaignStatus[] = ['Planning', 'On Track', 'Shipped', 'Cancelled'];
 
   return (
     <Card>
@@ -851,7 +853,7 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 
   const budgetUsage: BudgetUsage[] = Object.entries(budgetAllocations).map(([owner, { region, budget }]: [string, BudgetAllocation]): BudgetUsage => {
     const ownerCampaigns = campaigns.filter((c: Campaign) => c.owner === owner);
-    const used = ownerCampaigns.reduce((sum: number, c: Campaign) => sum + c.forecastedCost, 0);
+    const used = ownerCampaigns.reduce((sum: number, c: Campaign) => sum + (c.forecastedCost || 0), 0);
     const remaining = budget - used;
     const percentage = (used / budget) * 100;
     
@@ -935,12 +937,12 @@ export default function App() {
   };
 
   const handleDeleteCampaign = (id: string): void => {
-    setCampaigns(campaigns.filter(c => c.id !== id));
-    toast.success('Campaign deleted');
+    setCampaigns(campaigns.filter((c: Campaign) => c.id !== id));
+    notifier.success('Campaign deleted');
   };
 
   const handleUpdateCampaign = (updatedCampaign: Campaign): void => {
-    setCampaigns(campaigns.map(c => c.id === updatedCampaign.id ? updatedCampaign : c));
+    setCampaigns(campaigns.map((c: Campaign) => c.id === updatedCampaign.id ? updatedCampaign : c));
   };
 
   const totals = campaigns.reduce(
