@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Download } from "@phosphor-icons/react";
+import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Download, ClipboardText } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useKV } from "@github/spark/hooks";
 import type { CheckedState } from "@radix-ui/react-checkbox";
@@ -658,6 +658,247 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
   );
 }
 
+// Execution Tracking Component
+function ExecutionTracking({ campaigns, onUpdateCampaign }: { 
+  campaigns: Campaign[]; 
+  onUpdateCampaign: (campaign: Campaign) => void; 
+}) {
+  const [editingCampaign, setEditingCampaign] = useState<string | null>(null);
+  const [editFormData, setEditFormData] = useState<Partial<Campaign>>({});
+
+  const handleEditStart = (campaign: Campaign) => {
+    setEditingCampaign(campaign.id);
+    setEditFormData({
+      status: campaign.status || 'Planning',
+      poRaised: campaign.poRaised || false,
+      issueLink: campaign.issueLink || '',
+      actualCost: campaign.actualCost || 0,
+      actualLeads: campaign.actualLeads || 0,
+      actualMqls: campaign.actualMqls || 0
+    });
+  };
+
+  const handleSaveExecution = (campaign: Campaign) => {
+    const updatedCampaign = {
+      ...campaign,
+      ...editFormData
+    };
+    onUpdateCampaign(updatedCampaign);
+    setEditingCampaign(null);
+    setEditFormData({});
+    toast.success('Campaign execution updated');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCampaign(null);
+    setEditFormData({});
+  };
+
+  const statusOptions = ['Planning', 'On Track', 'Shipped', 'Cancelled'];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ClipboardText className="h-5 w-5" />
+          Campaign Execution Tracking
+        </CardTitle>
+        <CardDescription>
+          Update actual results and execution status for campaigns
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {campaigns.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No campaigns to track. Add campaigns in the Planning tab first.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Campaign</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>PO Raised</TableHead>
+                  <TableHead>Issue URL</TableHead>
+                  <TableHead className="text-right">Actual Cost</TableHead>
+                  <TableHead className="text-right">Actual Leads</TableHead>
+                  <TableHead className="text-right">Actual MQLs</TableHead>
+                  <TableHead className="w-24">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {campaigns.map((campaign: Campaign) => (
+                  <TableRow key={campaign.id}>
+                    <TableCell className="font-medium">
+                      <div>
+                        <div className="truncate max-w-xs">{campaign.campaignType}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {campaign.description}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{campaign.owner}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{campaign.region}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {editingCampaign === campaign.id ? (
+                        <Select 
+                          value={editFormData.status || 'Planning'} 
+                          onValueChange={(value: string) => setEditFormData(prev => ({...prev, status: value}))}
+                        >
+                          <SelectTrigger className="w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusOptions.map((status: string) => (
+                              <SelectItem key={status} value={status}>
+                                {status}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Badge 
+                          variant={
+                            campaign.status === 'Shipped' ? 'default' :
+                            campaign.status === 'On Track' ? 'secondary' :
+                            campaign.status === 'Cancelled' ? 'destructive' : 'outline'
+                          }
+                        >
+                          {campaign.status || 'Planning'}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingCampaign === campaign.id ? (
+                        <Checkbox
+                          checked={editFormData.poRaised || false}
+                          onCheckedChange={(checked: CheckedState) => 
+                            setEditFormData(prev => ({...prev, poRaised: !!checked}))
+                          }
+                        />
+                      ) : (
+                        <Badge variant={campaign.poRaised ? 'default' : 'outline'}>
+                          {campaign.poRaised ? 'Yes' : 'No'}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingCampaign === campaign.id ? (
+                        <Input
+                          type="url"
+                          placeholder="GitHub issue URL"
+                          value={editFormData.issueLink || ''}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                            setEditFormData(prev => ({...prev, issueLink: e.target.value}))
+                          }
+                          className="w-40"
+                        />
+                      ) : (
+                        campaign.issueLink ? (
+                          <a 
+                            href={campaign.issueLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-sm"
+                          >
+                            View Issue
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {editingCampaign === campaign.id ? (
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={editFormData.actualCost || 0}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                            setEditFormData(prev => ({...prev, actualCost: Number(e.target.value)}))
+                          }
+                          className="w-24 text-right"
+                        />
+                      ) : (
+                        <span className="font-mono">
+                          ${(campaign.actualCost || 0).toLocaleString()}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {editingCampaign === campaign.id ? (
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={editFormData.actualLeads || 0}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                            setEditFormData(prev => ({...prev, actualLeads: Number(e.target.value)}))
+                          }
+                          className="w-20 text-right"
+                        />
+                      ) : (
+                        <span>{campaign.actualLeads || 0}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {editingCampaign === campaign.id ? (
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={editFormData.actualMqls || 0}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
+                            setEditFormData(prev => ({...prev, actualMqls: Number(e.target.value)}))
+                          }
+                          className="w-20 text-right"
+                        />
+                      ) : (
+                        <span>{campaign.actualMqls || 0}</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {editingCampaign === campaign.id ? (
+                        <div className="flex gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="default"
+                            onClick={() => handleSaveExecution(campaign)}
+                          >
+                            Save
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={handleCancelEdit}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditStart(campaign)}
+                        >
+                          Edit
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // Budget Overview Component
 function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
   const budgetAllocations: Record<string, BudgetAllocation> = {
@@ -757,6 +998,10 @@ export default function App() {
     toast.success('Campaign deleted');
   };
 
+  const handleUpdateCampaign = (updatedCampaign: Campaign) => {
+    setCampaigns(campaigns.map(c => c.id === updatedCampaign.id ? updatedCampaign : c));
+  };
+
   const totals = campaigns.reduce((acc: { totalCost: number; totalLeads: number; totalPipeline: number }, campaign: Campaign) => {
     acc.totalCost += campaign.forecastedCost;
     acc.totalLeads += campaign.expectedLeads;
@@ -801,10 +1046,14 @@ export default function App() {
 
         <main className="container mx-auto p-4">
           <Tabs defaultValue="planning" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="planning" className="flex items-center gap-2">
                 <Calculator className="h-4 w-4" />
                 Campaign Planning
+              </TabsTrigger>
+              <TabsTrigger value="execution" className="flex items-center gap-2">
+                <ClipboardText className="h-4 w-4" />
+                Execution
               </TabsTrigger>
               <TabsTrigger value="budget" className="flex items-center gap-2">
                 <BuildingOffice className="h-4 w-4" />
@@ -827,6 +1076,17 @@ export default function App() {
               <ImportExport onImportCampaigns={handleImportCampaigns} campaigns={campaigns} />
               <CampaignForm onAddCampaign={handleAddCampaign} />
               <CampaignTable campaigns={campaigns} onDeleteCampaign={handleDeleteCampaign} />
+            </TabsContent>
+
+            <TabsContent value="execution" className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight">Campaign Execution</h2>
+                <p className="text-muted-foreground">
+                  Track actual results and execution status for your campaigns
+                </p>
+              </div>
+
+              <ExecutionTracking campaigns={campaigns} onUpdateCampaign={handleUpdateCampaign} />
             </TabsContent>
 
             <TabsContent value="budget" className="space-y-6">
