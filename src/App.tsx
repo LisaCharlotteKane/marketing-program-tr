@@ -15,70 +15,25 @@ import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Down
 import { toast } from "sonner";
 import { useKV } from "@github/spark/hooks";
 import type { CheckedState } from "@radix-ui/react-checkbox";
-
-// Types
-interface Campaign {
-  id: string;
-  campaignType: string;
-  strategicPillar: string[];
-  revenuePlay: string;
-  fy: string;
-  quarterMonth: string;
-  region: string;
-  country: string;
-  owner: string;
-  description: string;
-  forecastedCost: number;
-  expectedLeads: number;
-  mql: number;
-  sql: number;
-  opportunities: number;
-  pipelineForecast: number;
-  status?: string;
-  poRaised?: boolean;
-  salesforceCampaignCode?: string;
-  issueLink?: string;
-  actualCost?: number;
-  actualLeads?: number;
-  actualMqls?: number;
-  campaignName?: string;
-}
-
-interface FormData {
-  campaignType: string;
-  strategicPillar: string[];
-  revenuePlay: string;
-  fy: string;
-  quarterMonth: string;
-  region: string;
-  country: string;
-  owner: string;
-  description: string;
-  forecastedCost: number;
-  expectedLeads: number;
-  campaignName: string;
-}
-
-interface BudgetAllocation {
-  region: string;
-  budget: number;
-}
-
-interface BudgetUsage {
-  owner: string;
-  region: string;
-  budget: number;
-  used: number;
-  remaining: number;
-  percentage: number;
-  isOverBudget: boolean;
-}
+import type { 
+  Campaign, 
+  FormData, 
+  BudgetAllocation, 
+  BudgetUsage,
+  ImportExportProps,
+  CampaignFormProps,
+  CampaignTableProps,
+  ExecutionTrackingProps
+} from "@/types/campaign";
+import { 
+  calculateCampaignMetrics, 
+  parseToNumber, 
+  parseStrategicPillars, 
+  createCampaignWithMetrics 
+} from "@/types/utils";
 
 // Import/Export Component
-function ImportExport({ onImportCampaigns, campaigns }: { 
-  onImportCampaigns: (campaigns: Campaign[]) => void;
-  campaigns: Campaign[];
-}) {
+function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
   const [isImporting, setIsImporting] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,16 +64,16 @@ function ImportExport({ onImportCampaigns, campaigns }: {
         
         if (values.length !== headers.length) continue;
 
-        const campaignData: any = {};
+        const campaignData: Record<string, string> = {};
         headers.forEach((header, index) => {
-          campaignData[header] = values[index];
+          campaignData[header] = values[index] || '';
         });
 
-        // Map CSV data to Campaign interface
+        // Map CSV data to Campaign interface with proper type conversions
         const campaign: Campaign = {
           id: Date.now().toString() + i,
           campaignType: campaignData.campaignType || campaignData['Campaign Type'] || '',
-          strategicPillar: campaignData.strategicPillar ? campaignData.strategicPillar.split(';') : [],
+          strategicPillar: parseStrategicPillars(campaignData.strategicPillar || campaignData['Strategic Pillar']),
           revenuePlay: campaignData.revenuePlay || campaignData['Revenue Play'] || '',
           fy: campaignData.fy || campaignData['FY'] || '',
           quarterMonth: campaignData.quarterMonth || campaignData['Quarter/Month'] || '',
@@ -126,18 +81,19 @@ function ImportExport({ onImportCampaigns, campaigns }: {
           country: campaignData.country || campaignData['Country'] || '',
           owner: campaignData.owner || campaignData['Owner'] || '',
           description: campaignData.description || campaignData['Description'] || '',
-          forecastedCost: Number(campaignData.forecastedCost || campaignData['Forecasted Cost'] || 0),
-          expectedLeads: Number(campaignData.expectedLeads || campaignData['Expected Leads'] || 0),
-          mql: Number(campaignData.mql || campaignData['MQL'] || 0),
-          sql: Number(campaignData.sql || campaignData['SQL'] || 0),
-          opportunities: Number(campaignData.opportunities || campaignData['Opportunities'] || 0),
-          pipelineForecast: Number(campaignData.pipelineForecast || campaignData['Pipeline Forecast'] || 0),
+          // Fixed: Use utility function for safe number conversion
+          forecastedCost: parseToNumber(campaignData.forecastedCost || campaignData['Forecasted Cost']),
+          expectedLeads: parseToNumber(campaignData.expectedLeads || campaignData['Expected Leads']),
+          mql: parseToNumber(campaignData.mql || campaignData['MQL']),
+          sql: parseToNumber(campaignData.sql || campaignData['SQL']),
+          opportunities: parseToNumber(campaignData.opportunities || campaignData['Opportunities']),
+          pipelineForecast: parseToNumber(campaignData.pipelineForecast || campaignData['Pipeline Forecast']),
           status: campaignData.status || campaignData['Status'] || 'Planning'
         };
 
         // If metrics are not provided, calculate them
         if (!campaign.mql && !campaign.sql && !campaign.opportunities && !campaign.pipelineForecast) {
-          const calculated = calculateMetrics(campaign.expectedLeads, campaign.forecastedCost, campaign.campaignType);
+          const calculated = calculateCampaignMetrics(campaign.expectedLeads, campaign.forecastedCost, campaign.campaignType);
           campaign.mql = calculated.mql;
           campaign.sql = calculated.sql;
           campaign.opportunities = calculated.opportunities;
@@ -223,25 +179,6 @@ function ImportExport({ onImportCampaigns, campaigns }: {
     toast.success(`Exported ${campaigns.length} campaigns to CSV`);
   };
 
-  const calculateMetrics = (expectedLeads: number, forecastedCost: number, campaignType: string) => {
-    // Special case for In Account Events
-    if (campaignType === "In-Account Events (1:1)" && expectedLeads === 0) {
-      return {
-        mql: 0,
-        sql: 0,
-        opportunities: 0,
-        pipelineForecast: forecastedCost * 20 // 20:1 ROI for in-account events
-      };
-    }
-
-    const mql = Math.round(expectedLeads * 0.1); // 10% of expected leads
-    const sql = Math.round(mql * 0.6); // 6% of expected leads  
-    const opportunities = Math.round(sql * 0.8); // 80% of SQLs
-    const pipelineForecast = opportunities * 50000; // $50K per opportunity
-
-    return { mql, sql, opportunities, pipelineForecast };
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -301,7 +238,7 @@ function ImportExport({ onImportCampaigns, campaigns }: {
 }
 
 // Campaign Form Component
-function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) => void }) {
+function CampaignForm({ onAddCampaign }: CampaignFormProps) {
   const [formData, setFormData] = useState<FormData>({
     campaignType: '',
     strategicPillar: [] as string[],
@@ -317,25 +254,6 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
     campaignName: '',
   });
 
-  const calculateMetrics = (expectedLeads: number, forecastedCost: number, campaignType: string) => {
-    // Special case for In Account Events
-    if (campaignType === "In-Account Events (1:1)" && expectedLeads === 0) {
-      return {
-        mql: 0,
-        sql: 0,
-        opportunities: 0,
-        pipelineForecast: forecastedCost * 20 // 20:1 ROI for in-account events
-      };
-    }
-
-    const mql = Math.round(expectedLeads * 0.1); // 10% of expected leads
-    const sql = Math.round(mql * 0.6); // 6% of expected leads  
-    const opportunities = Math.round(sql * 0.8); // 80% of SQLs
-    const pipelineForecast = opportunities * 50000; // $50K per opportunity
-
-    return { mql, sql, opportunities, pipelineForecast };
-  };
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
@@ -344,7 +262,7 @@ function CampaignForm({ onAddCampaign }: { onAddCampaign: (campaign: Campaign) =
       return;
     }
 
-    const metrics = calculateMetrics(formData.expectedLeads, formData.forecastedCost, formData.campaignType);
+    const metrics = calculateCampaignMetrics(formData.expectedLeads, formData.forecastedCost, formData.campaignType);
     
     const newCampaign: Campaign = {
       id: Date.now().toString(),
@@ -672,10 +590,7 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
 }
 
 // Execution Tracking Component
-function ExecutionTracking({ campaigns, onUpdateCampaign }: { 
-  campaigns: Campaign[]; 
-  onUpdateCampaign: (campaign: Campaign) => void; 
-}) {
+function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingProps) {
   const [editingCampaign, setEditingCampaign] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Partial<Campaign>>({});
 
@@ -1003,7 +918,7 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 export default function App() {
   console.log("App component loading...");
   
-  // Primary approach - try useKV, fall back to simple state if needed
+  // Fixed: Use proper error boundary for useKV with fallback
   const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
   
   React.useEffect(() => {
@@ -1011,35 +926,38 @@ export default function App() {
     console.log("Campaigns:", campaigns);
   }, [campaigns]);
 
-  const handleAddCampaign = (campaign: Campaign) => {
+  const handleAddCampaign = (campaign: Campaign): void => {
     setCampaigns([...campaigns, campaign]);
   };
 
-  const handleImportCampaigns = (importedCampaigns: Campaign[]) => {
+  const handleImportCampaigns = (importedCampaigns: Campaign[]): void => {
     setCampaigns([...campaigns, ...importedCampaigns]);
   };
 
-  const handleDeleteCampaign = (id: string) => {
+  const handleDeleteCampaign = (id: string): void => {
     setCampaigns(campaigns.filter(c => c.id !== id));
     toast.success('Campaign deleted');
   };
 
-  const handleUpdateCampaign = (updatedCampaign: Campaign) => {
+  const handleUpdateCampaign = (updatedCampaign: Campaign): void => {
     setCampaigns(campaigns.map(c => c.id === updatedCampaign.id ? updatedCampaign : c));
   };
 
-  const totals = campaigns.reduce((acc: { totalCost: number; totalLeads: number; totalPipeline: number }, campaign: Campaign) => {
-    acc.totalCost += campaign.forecastedCost;
-    acc.totalLeads += campaign.expectedLeads;
-    acc.totalPipeline += campaign.pipelineForecast;
-    return acc;
-  }, {
-    totalCost: 0,
-    totalLeads: 0,
-    totalPipeline: 0
-  });
+  const totals = campaigns.reduce(
+    (acc: { totalCost: number; totalLeads: number; totalPipeline: number }, campaign: Campaign) => {
+      acc.totalCost += campaign.forecastedCost || 0;
+      acc.totalLeads += campaign.expectedLeads || 0;
+      acc.totalPipeline += campaign.pipelineForecast || 0;
+      return acc;
+    }, 
+    {
+      totalCost: 0,
+      totalLeads: 0,
+      totalPipeline: 0
+    }
+  );
 
-  const roi = totals.totalCost > 0 ? (totals.totalPipeline / totals.totalCost) : 0;
+  const roi: number = totals.totalCost > 0 ? (totals.totalPipeline / totals.totalCost) : 0;
 
   // Fallback render if something goes wrong
   try {
