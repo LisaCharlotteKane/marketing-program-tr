@@ -624,17 +624,16 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
                     </TableCell>
                     <TableCell>{campaign.owner}</TableCell>
                     <TableCell className="max-w-xs truncate">{campaign.description || '-'}</TableCell>
-                    <TableCell className="text-right font-mono">
                       ${(campaign.forecastedCost || 0).toLocaleString()}
-                    </TableCell>
+                      ${(campaign.forecastedCost || 0).toLocaleString()}
                     <TableCell className="text-right">{campaign.expectedLeads || 0}</TableCell>
                     <TableCell className="text-right">{campaign.mql || 0}</TableCell>
                     <TableCell className="text-right">{campaign.sql || 0}</TableCell>
                     <TableCell className="text-right font-mono">
                       ${(campaign.pipelineForecast || 0).toLocaleString()}
-                    </TableCell>
+                      ${(campaign.pipelineForecast || 0).toLocaleString()}
                     <TableCell>
-                      <Button 
+                    <TableCell>
                         variant="ghost" 
                         size="sm"
                         onClick={() => onDeleteCampaign(campaign.id)}
