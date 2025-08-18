@@ -1,41 +1,58 @@
 import type { Campaign, CampaignStatus } from './campaign';
 
-export function parseToNumber(value: string | number | undefined): number {
+/**
+ * Parse string to number safely
+ */
+export function parseToNumber(value: string | number | undefined | null): number {
   if (typeof value === 'number') return value;
-  if (!value) return 0;
+  if (!value || value === '') return 0;
   
-  // Strip currency symbols, commas, and whitespace
-  const cleaned = String(value).replace(/[\$,\s]/g, '');
+  const cleaned = String(value).replace(/[$,\s]/g, '');
   const parsed = parseFloat(cleaned);
-  
   return isNaN(parsed) ? 0 : parsed;
 }
 
+/**
+ * Parse strategic pillars from string or array
+ */
 export function parseStrategicPillars(value: string | string[] | undefined): string[] {
   if (Array.isArray(value)) return value;
-  if (!value) return [];
+  if (!value || typeof value !== 'string') return [];
   
-  // Handle semicolon-separated values from CSV
-  return String(value).split(';').map(p => p.trim()).filter(p => p.length > 0);
+  // Handle semicolon or comma separated values
+  return value.split(/[;,]/).map(s => s.trim()).filter(s => s.length > 0);
 }
 
+/**
+ * Parse campaign status with validation
+ */
 export function parseCampaignStatus(value: string | undefined): CampaignStatus {
   const validStatuses: CampaignStatus[] = ['Planning', 'On Track', 'Shipped', 'Cancelled'];
-  return validStatuses.includes(value as CampaignStatus) ? (value as CampaignStatus) : 'Planning';
+  
+  if (!value) return 'Planning';
+  
+  const found = validStatuses.find(status => 
+    status.toLowerCase() === value.toLowerCase()
+  );
+  
+  return found || 'Planning';
 }
 
+/**
+ * Calculate campaign metrics based on leads, cost, and type
+ */
 export function calculateCampaignMetrics(
-  expectedLeads: number,
-  forecastedCost: number,
-  campaignType: string
+  expectedLeads: number = 0, 
+  forecastedCost: number = 0, 
+  campaignType: string = ''
 ): {
   mql: number;
   sql: number;
   opportunities: number;
   pipelineForecast: number;
 } {
+  // Special case for In-Account Events (1:1) - use 20:1 ROI if no leads
   if (campaignType.includes('In-Account Events (1:1)') && expectedLeads === 0) {
-    // Special case: assume 20:1 ROI for in-account events
     return {
       mql: 0,
       sql: 0,
@@ -44,8 +61,9 @@ export function calculateCampaignMetrics(
     };
   }
 
-  const mql = Math.round(expectedLeads * 0.1); // 10% of leads
-  const sql = Math.round(mql * 0.6); // 6% of leads (60% of MQLs)
+  // Standard calculations
+  const mql = Math.round(expectedLeads * 0.1); // 10% of expected leads
+  const sql = Math.round(mql * 0.6); // 6% of expected leads (60% of MQLs)
   const opportunities = Math.round(sql * 0.8); // 80% of SQLs
   const pipelineForecast = opportunities * 50000; // $50K per opportunity
 
@@ -57,14 +75,16 @@ export function calculateCampaignMetrics(
   };
 }
 
-export function createCampaignWithMetrics(
-  baseData: Partial<Campaign>,
-  expectedLeads: number,
-  forecastedCost: number,
-  campaignType: string
-): Campaign {
-  const metrics = calculateCampaignMetrics(expectedLeads, forecastedCost, campaignType);
-  
+/**
+ * Create a campaign with calculated metrics
+ */
+export function createCampaignWithMetrics(baseData: Partial<Campaign>): Campaign {
+  const metrics = calculateCampaignMetrics(
+    baseData.expectedLeads, 
+    baseData.forecastedCost, 
+    baseData.campaignType
+  );
+
   return {
     id: Date.now().toString(),
     campaignName: '',
@@ -82,5 +102,46 @@ export function createCampaignWithMetrics(
     status: 'Planning',
     ...baseData,
     ...metrics
-  } as Campaign;
+  };
+}
+
+/**
+ * Format currency for display
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+/**
+ * Validate campaign data
+ */
+export function validateCampaign(campaign: Partial<Campaign>): string[] {
+  const errors: string[] = [];
+
+  if (!campaign.campaignType) {
+    errors.push('Campaign type is required');
+  }
+
+  if (!campaign.owner) {
+    errors.push('Campaign owner is required');
+  }
+
+  if (!campaign.region) {
+    errors.push('Region is required');
+  }
+
+  if (campaign.forecastedCost && campaign.forecastedCost < 0) {
+    errors.push('Forecasted cost cannot be negative');
+  }
+
+  if (campaign.expectedLeads && campaign.expectedLeads < 0) {
+    errors.push('Expected leads cannot be negative');
+  }
+
+  return errors;
 }

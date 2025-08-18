@@ -34,11 +34,8 @@ import {
   parseCampaignStatus
 } from "@/types/utils";
 
-// Import monitoring utilities to prevent HTTP 431 errors
-import { startHeaderSizeMonitoring } from "@/utils/header-guard";
-import { startStorageMonitoring } from "@/utils/storage-size-guard";
-import { clearProblematicCookies } from "@/lib/cookie-cleanup";
-import { HTTP431Monitor } from "@/components/http431-monitor";
+// HTTP 431 Prevention
+import { initializeHTTP431Prevention } from "@/utils/http431-prevention";
 
 // Import/Export Component
 function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
@@ -89,7 +86,6 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
           country: campaignData.country || campaignData['Country'] || '',
           owner: campaignData.owner || campaignData['Owner'] || '',
           description: campaignData.description || campaignData['Description'] || '',
-          // Fixed: Use utility function for safe number conversion
           forecastedCost: parseToNumber(campaignData.forecastedCost || campaignData['Forecasted Cost']),
           expectedLeads: parseToNumber(campaignData.expectedLeads || campaignData['Expected Leads']),
           mql: parseToNumber(campaignData.mql || campaignData['MQL']),
@@ -122,7 +118,6 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
       toast('Failed to import campaigns. Please check the CSV format.');
     } finally {
       setIsImporting(false);
-      // Reset file input
       event.target.value = '';
     }
   };
@@ -156,7 +151,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
       headers.join(','),
       ...campaigns.map((campaign: Campaign) => [
         `"${campaign.campaignType}"`,
-        `"${campaign.strategicPillar.join(';')}"`,
+        `"${Array.isArray(campaign.strategicPillar) ? campaign.strategicPillar.join(';') : campaign.strategicPillar}"`,
         `"${campaign.revenuePlay}"`,
         `"${campaign.fy}"`,
         `"${campaign.quarterMonth}"`,
@@ -164,12 +159,12 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
         `"${campaign.country}"`,
         `"${campaign.owner}"`,
         `"${campaign.description}"`,
-        campaign.forecastedCost,
-        campaign.expectedLeads,
-        campaign.mql,
-        campaign.sql,
-        campaign.opportunities,
-        campaign.pipelineForecast,
+        campaign.forecastedCost || 0,
+        campaign.expectedLeads || 0,
+        campaign.mql || 0,
+        campaign.sql || 0,
+        campaign.opportunities || 0,
+        campaign.pipelineForecast || 0,
         `"${campaign.status || 'Planning'}"`
       ].join(','))
     ].join('\n');
@@ -203,7 +198,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
           <div className="space-y-3">
             <h4 className="font-medium">Import from CSV</h4>
             <p className="text-sm text-muted-foreground">
-              Upload a CSV file with campaign data. The file should include columns for campaign type, region, owner, etc.
+              Upload a CSV file with campaign data.
             </p>
             <div className="relative">
               <Input
@@ -219,15 +214,12 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
                 </div>
               )}
             </div>
-            <div className="text-xs text-muted-foreground">
-              Expected headers: Campaign Type, Region, Owner, Forecasted Cost, Expected Leads, Description, etc.
-            </div>
           </div>
 
           <div className="space-y-3">
             <h4 className="font-medium">Export to CSV</h4>
             <p className="text-sm text-muted-foreground">
-              Download all current campaigns as a CSV file for backup or analysis.
+              Download all current campaigns as a CSV file.
             </p>
             <Button 
               onClick={exportToCsv}
@@ -249,7 +241,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
 function CampaignForm({ onAddCampaign }: CampaignFormProps) {
   const [formData, setFormData] = useState<FormData>({
     campaignType: '',
-    strategicPillar: [] as string[],
+    strategicPillar: [],
     revenuePlay: '',
     fy: '',
     quarterMonth: '',
@@ -333,7 +325,12 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
   const regions = ["JP & Korea", "South APAC", "SAARC", "Digital"];
   const owners = ["Tomoko Tanaka", "Beverly Leung", "Shruti Narang", "Giorgia Parham"];
   const fiscalYears = ["FY25", "FY26"];
-  const quarters = ["Q1 - July", "Q1 - August", "Q1 - September", "Q2 - October", "Q2 - November", "Q2 - December", "Q3 - January", "Q3 - February", "Q3 - March", "Q4 - April", "Q4 - May", "Q4 - June"];
+  const quarters = [
+    "Q1 - July", "Q1 - August", "Q1 - September", 
+    "Q2 - October", "Q2 - November", "Q2 - December", 
+    "Q3 - January", "Q3 - February", "Q3 - March", 
+    "Q4 - April", "Q4 - May", "Q4 - June"
+  ];
   
   const countries = [
     "Afghanistan", "Australia", "ASEAN", "Bangladesh", "Bhutan", "Brunei", "Cambodia",
@@ -361,14 +358,14 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
               <Label htmlFor="campaignName">Campaign Name</Label>
               <Input
                 value={formData.campaignName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: FormData) => ({...prev, campaignName: e.target.value}))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({...prev, campaignName: e.target.value}))}
                 placeholder="Enter campaign name"
               />
             </div>
 
             <div>
               <Label htmlFor="campaignType">Campaign Type *</Label>
-              <Select value={formData.campaignType} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, campaignType: value}))}>
+              <Select value={formData.campaignType} onValueChange={(value: string) => setFormData(prev => ({...prev, campaignType: value}))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select campaign type" />
                 </SelectTrigger>
@@ -388,7 +385,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
                     <Checkbox
                       id={pillar}
                       checked={formData.strategicPillar.includes(pillar)}
-                      onCheckedChange={(checked) => {
+                      onCheckedChange={(checked: CheckedState) => {
                         if (checked) {
                           setFormData(prev => ({
                             ...prev,
@@ -412,7 +409,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
 
             <div>
               <Label htmlFor="region">Region *</Label>
-              <Select value={formData.region} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, region: value}))}>
+              <Select value={formData.region} onValueChange={(value: string) => setFormData(prev => ({...prev, region: value}))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select region" />
                 </SelectTrigger>
@@ -426,7 +423,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
 
             <div>
               <Label htmlFor="owner">Campaign Owner *</Label>
-              <Select value={formData.owner} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, owner: value}))}>
+              <Select value={formData.owner} onValueChange={(value: string) => setFormData(prev => ({...prev, owner: value}))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select owner" />
                 </SelectTrigger>
@@ -439,67 +436,11 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
             </div>
 
             <div>
-              <Label htmlFor="country">Country</Label>
-              <Select value={formData.country} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, country: value}))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map((country: string) => (
-                    <SelectItem key={country} value={country}>{country}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="fy">Fiscal Year</Label>
-              <Select value={formData.fy} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, fy: value}))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select FY" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fiscalYears.map((fy: string) => (
-                    <SelectItem key={fy} value={fy}>{fy}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="quarterMonth">Quarter/Month</Label>
-              <Select value={formData.quarterMonth} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, quarterMonth: value}))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select quarter/month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {quarters.map((quarter: string) => (
-                    <SelectItem key={quarter} value={quarter}>{quarter}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="revenuePlay">Revenue Play</Label>
-              <Select value={formData.revenuePlay} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, revenuePlay: value}))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select revenue play" />
-                </SelectTrigger>
-                <SelectContent>
-                  {revenuePlayOptions.map((play: string) => (
-                    <SelectItem key={play} value={play}>{play}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
               <Label htmlFor="forecastedCost">Forecasted Cost ($)</Label>
               <Input
                 type="number"
                 value={formData.forecastedCost}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: FormData) => ({...prev, forecastedCost: Number(e.target.value)}))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({...prev, forecastedCost: Number(e.target.value)}))}
                 placeholder="0"
               />
             </div>
@@ -509,7 +450,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
               <Input
                 type="number"
                 value={formData.expectedLeads}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData((prev: FormData) => ({...prev, expectedLeads: Number(e.target.value)}))}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({...prev, expectedLeads: Number(e.target.value)}))}
                 placeholder="0"
               />
             </div>
@@ -519,7 +460,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
             <Label htmlFor="description">Description</Label>
             <Textarea
               value={formData.description}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData((prev: FormData) => ({...prev, description: e.target.value}))}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData(prev => ({...prev, description: e.target.value}))}
               placeholder="Campaign description..."
               rows={3}
             />
@@ -536,23 +477,23 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
 }
 
 // Campaign Table Component
-function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[]; onDeleteCampaign: (id: string) => void }) {
+function CampaignTable({ campaigns, onDeleteCampaign }: CampaignTableProps) {
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
 
   const handleSelectAll = (checked: CheckedState) => {
-    setSelectedCampaigns(checked ? campaigns.map((c: Campaign) => c.id) : []);
+    setSelectedCampaigns(checked ? campaigns.map(c => c.id) : []);
   };
 
   const handleSelectCampaign = (campaignId: string, checked: CheckedState) => {
-    setSelectedCampaigns((prev: string[]) => 
+    setSelectedCampaigns(prev => 
       checked 
         ? [...prev, campaignId]
-        : prev.filter((id: string) => id !== campaignId)
+        : prev.filter(id => id !== campaignId)
     );
   };
 
   const handleDeleteSelected = () => {
-    selectedCampaigns.forEach((id: string) => onDeleteCampaign(id));
+    selectedCampaigns.forEach(id => onDeleteCampaign(id));
     setSelectedCampaigns([]);
     toast(`Deleted ${selectedCampaigns.length} campaigns`);
   };
@@ -618,7 +559,7 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
                     <TableCell className="font-medium">{campaign.campaignType}</TableCell>
                     <TableCell>
                       <div>
-                        {campaign.strategicPillar?.map((pillar: string, index: number) => (
+                        {Array.isArray(campaign.strategicPillar) && campaign.strategicPillar.map((pillar: string, index: number) => (
                           <Badge key={index} variant="secondary" className="text-xs mr-1">
                             {pillar}
                           </Badge>
@@ -630,16 +571,17 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
                     </TableCell>
                     <TableCell>{campaign.owner}</TableCell>
                     <TableCell className="max-w-xs truncate">{campaign.description || '-'}</TableCell>
+                    <TableCell className="text-right">
                       ${(campaign.forecastedCost || 0).toLocaleString()}
-                      ${(campaign.forecastedCost || 0).toLocaleString()}
+                    </TableCell>
                     <TableCell className="text-right">{campaign.expectedLeads || 0}</TableCell>
                     <TableCell className="text-right">{campaign.mql || 0}</TableCell>
                     <TableCell className="text-right">{campaign.sql || 0}</TableCell>
                     <TableCell className="text-right font-mono">
                       ${(campaign.pipelineForecast || 0).toLocaleString()}
-                      ${(campaign.pipelineForecast || 0).toLocaleString()}
+                    </TableCell>
                     <TableCell>
-                    <TableCell>
+                      <Button
                         variant="ghost" 
                         size="sm"
                         onClick={() => onDeleteCampaign(campaign.id)}
@@ -918,8 +860,8 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
     "Giorgia Parham": { region: "Digital", budget: 68000 },
   };
 
-  const budgetUsage: BudgetUsage[] = Object.entries(budgetAllocations).map(([owner, { region, budget }]: [string, BudgetAllocation]): BudgetUsage => {
-    const ownerCampaigns = campaigns.filter((c: Campaign) => c.owner === owner);
+  const budgetUsage: BudgetUsage[] = Object.entries(budgetAllocations).map(([owner, { region, budget }]): BudgetUsage => {
+    const ownerCampaigns = campaigns.filter(c => c.owner === owner);
     const used = ownerCampaigns.reduce((sum: number, c: Campaign) => sum + (c.forecastedCost || 0), 0);
     const remaining = budget - used;
     const percentage = (used / budget) * 100;
@@ -946,7 +888,7 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">
-          {budgetUsage.map(({ owner, region, budget, used, remaining, percentage, isOverBudget }: BudgetUsage) => (
+          {budgetUsage.map(({ owner, region, budget, used, remaining, percentage, isOverBudget }) => (
             <div key={owner} className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-2">
                 <div>
@@ -985,210 +927,172 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 
 // Main App Component
 export default function App() {
-  console.log("App component loading...");
+  console.log("App loading with HTTP 431 prevention...");
   
-  // Fixed: Use proper useKV hook with type annotations
   const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
   
-  // Initialize monitoring systems to prevent HTTP 431 errors
+  // Initialize HTTP 431 prevention system
   useEffect(() => {
-    console.log("App mounted successfully!");
-    console.log("Campaigns:", campaigns);
+    console.log("App mounted, initializing HTTP 431 prevention...");
+    const cleanup = initializeHTTP431Prevention();
     
-    // Clear problematic cookies on startup
-    clearProblematicCookies();
-    
-    // Start monitoring header and storage sizes
-    const cleanupHeaderMonitoring = startHeaderSizeMonitoring();
-    const cleanupStorageMonitoring = startStorageMonitoring();
-    
-    // Cleanup function
-    return () => {
-      cleanupHeaderMonitoring();
-      cleanupStorageMonitoring();
-    };
-  }, [campaigns]);
+    return cleanup;
+  }, []);
 
-  const handleAddCampaign = (campaign: Campaign): void => {
+  const handleAddCampaign = (campaign: Campaign) => {
     setCampaigns([...campaigns, campaign]);
   };
 
-  const handleImportCampaigns = (importedCampaigns: Campaign[]): void => {
+  const handleImportCampaigns = (importedCampaigns: Campaign[]) => {
     setCampaigns([...campaigns, ...importedCampaigns]);
   };
 
-  const handleDeleteCampaign = (id: string): void => {
-    setCampaigns(campaigns.filter((c: Campaign) => c.id !== id));
+  const handleDeleteCampaign = (id: string) => {
+    setCampaigns(campaigns.filter(c => c.id !== id));
     toast('Campaign deleted');
   };
 
-  const handleUpdateCampaign = (updatedCampaign: Campaign): void => {
-    setCampaigns(campaigns.map((c: Campaign) => c.id === updatedCampaign.id ? updatedCampaign : c));
+  const handleUpdateCampaign = (updatedCampaign: Campaign) => {
+    setCampaigns(campaigns.map(c => c.id === updatedCampaign.id ? updatedCampaign : c));
   };
 
   const totals = campaigns.reduce(
-    (acc: { totalCost: number; totalLeads: number; totalPipeline: number }, campaign: Campaign) => {
+    (acc, campaign) => {
       acc.totalCost += campaign.forecastedCost || 0;
       acc.totalLeads += campaign.expectedLeads || 0;
       acc.totalPipeline += campaign.pipelineForecast || 0;
       return acc;
     }, 
-    {
-      totalCost: 0,
-      totalLeads: 0,
-      totalPipeline: 0
-    }
+    { totalCost: 0, totalLeads: 0, totalPipeline: 0 }
   );
 
-  const roi: number = totals.totalCost > 0 ? (totals.totalPipeline / totals.totalCost) : 0;
+  const roi = totals.totalCost > 0 ? (totals.totalPipeline / totals.totalCost) : 0;
 
-  // Fallback render if something goes wrong
-  try {
-    console.log("App rendering...", { campaignsLength: campaigns.length, totals });
-    
-    return (
-      <div className="min-h-screen bg-background">
-        <div data-healthcheck="READY" />
-        <Toaster position="top-right" richColors />
-        
-        {/* HTTP 431 Prevention Monitor */}
-        <HTTP431Monitor />
-        
-        {/* Simple ready check */}
-        <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'green', color: 'white', padding: '5px', zIndex: 9999 }}>
-          READY
-        </div>
-        
-        {/* Header */}
-        <header className="border-b bg-card">
-          <div className="container mx-auto p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-lg">
-                <Target className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-foreground">Marketing Campaign Planner</h1>
-                <p className="text-sm text-muted-foreground">APAC Marketing Operations</p>
-              </div>
+  return (
+    <div className="min-h-screen bg-background">
+      <Toaster position="top-right" richColors />
+      
+      {/* Header */}
+      <header className="border-b bg-card">
+        <div className="container mx-auto p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary rounded-lg">
+              <Target className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">Marketing Campaign Planner</h1>
+              <p className="text-sm text-muted-foreground">APAC Marketing Operations</p>
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main className="container mx-auto p-4">
-          <Tabs defaultValue="planning" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
-              <TabsTrigger value="planning" className="flex items-center gap-2">
-                <Calculator className="h-4 w-4" />
-                Campaign Planning
-              </TabsTrigger>
-              <TabsTrigger value="execution" className="flex items-center gap-2">
-                <ClipboardText className="h-4 w-4" />
-                Execution
-              </TabsTrigger>
-              <TabsTrigger value="budget" className="flex items-center gap-2">
-                <BuildingOffice className="h-4 w-4" />
-                Budget
-              </TabsTrigger>
-              <TabsTrigger value="overview" className="flex items-center gap-2">
-                <ChartBar className="h-4 w-4" />
-                Overview
-              </TabsTrigger>
-            </TabsList>
+      <main className="container mx-auto p-4">
+        <Tabs defaultValue="planning" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="planning" className="flex items-center gap-2">
+              <Calculator className="h-4 w-4" />
+              Campaign Planning
+            </TabsTrigger>
+            <TabsTrigger value="execution" className="flex items-center gap-2">
+              <ClipboardText className="h-4 w-4" />
+              Execution
+            </TabsTrigger>
+            <TabsTrigger value="budget" className="flex items-center gap-2">
+              <BuildingOffice className="h-4 w-4" />
+              Budget
+            </TabsTrigger>
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <ChartBar className="h-4 w-4" />
+              Overview
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="planning" className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Campaign Planning</h2>
-                <p className="text-muted-foreground">
-                  Plan and manage marketing campaigns with ROI calculations
-                </p>
+          <TabsContent value="planning" className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Campaign Planning</h2>
+              <p className="text-muted-foreground">
+                Plan and manage marketing campaigns with ROI calculations
+              </p>
+            </div>
+
+            <ImportExport onImportCampaigns={handleImportCampaigns} campaigns={campaigns} />
+            <CampaignForm onAddCampaign={handleAddCampaign} />
+            <CampaignTable campaigns={campaigns} onDeleteCampaign={handleDeleteCampaign} />
+          </TabsContent>
+
+          <TabsContent value="execution" className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Campaign Execution</h2>
+              <p className="text-muted-foreground">
+                Track actual results and execution status for campaigns
+              </p>
+            </div>
+
+            <ExecutionTracking campaigns={campaigns} onUpdateCampaign={handleUpdateCampaign} />
+          </TabsContent>
+
+          <TabsContent value="budget" className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Budget Management</h2>
+              <p className="text-muted-foreground">
+                Track regional budget allocations and spending
+              </p>
+            </div>
+
+            <BudgetOverview campaigns={campaigns} />
+          </TabsContent>
+
+          <TabsContent value="overview" className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold tracking-tight">Campaign Overview</h2>
+              <p className="text-muted-foreground">
+                Summary of all marketing campaigns and metrics
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-primary">{campaigns.length}</div>
+                  <div className="text-sm text-muted-foreground">Total Campaigns</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-green-600">${totals.totalCost.toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">Total Forecasted Spend</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-blue-600">${totals.totalPipeline.toLocaleString()}</div>
+                  <div className="text-sm text-muted-foreground">Total Pipeline Forecast</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-purple-600">{roi.toFixed(1)}x</div>
+                  <div className="text-sm text-muted-foreground">ROI Multiple</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-4">Auto-Calculated Metrics</h3>
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <ul className="space-y-2 text-sm">
+                  <li><strong>MQL Forecast:</strong> 10% of Expected Leads</li>
+                  <li><strong>SQL Forecast:</strong> 6% of Expected Leads (60% of MQLs)</li>
+                  <li><strong>Opportunities:</strong> 80% of SQLs</li>
+                  <li><strong>Pipeline Forecast:</strong> Opportunities × $50,000</li>
+                  <li><strong>Special Case:</strong> In-Account Events (1:1) with no leads assume 20:1 ROI</li>
+                </ul>
               </div>
-
-              <ImportExport onImportCampaigns={handleImportCampaigns} campaigns={campaigns} />
-              <CampaignForm onAddCampaign={handleAddCampaign} />
-              <CampaignTable campaigns={campaigns} onDeleteCampaign={handleDeleteCampaign} />
-            </TabsContent>
-
-            <TabsContent value="execution" className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Campaign Execution</h2>
-                <p className="text-muted-foreground">
-                  Track actual results and execution status for campaigns
-                </p>
-              </div>
-
-              <ExecutionTracking campaigns={campaigns} onUpdateCampaign={handleUpdateCampaign} />
-            </TabsContent>
-
-            <TabsContent value="budget" className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Budget Management</h2>
-                <p className="text-muted-foreground">
-                  Track regional budget allocations and spending
-                </p>
-              </div>
-
-              <BudgetOverview campaigns={campaigns} />
-            </TabsContent>
-
-            <TabsContent value="overview" className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Campaign Overview</h2>
-                <p className="text-muted-foreground">
-                  Summary of all marketing campaigns and metrics
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-primary">{campaigns.length}</div>
-                    <div className="text-sm text-muted-foreground">Total Campaigns</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-green-600">${totals.totalCost.toLocaleString()}</div>
-                    <div className="text-sm text-muted-foreground">Total Forecasted Spend</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-blue-600">${totals.totalPipeline.toLocaleString()}</div>
-                    <div className="text-sm text-muted-foreground">Total Pipeline Forecast</div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="text-2xl font-bold text-purple-600">{roi.toFixed(1)}x</div>
-                    <div className="text-sm text-muted-foreground">ROI Multiple</div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold mb-4">Auto-Calculated Metrics</h3>
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <ul className="space-y-2 text-sm">
-                    <li><strong>MQL Forecast:</strong> 10% of Expected Leads</li>
-                    <li><strong>SQL Forecast:</strong> 6% of Expected Leads (60% of MQLs)</li>
-                    <li><strong>Opportunities:</strong> 80% of SQLs</li>
-                    <li><strong>Pipeline Forecast:</strong> Opportunities × $50,000</li>
-                    <li><strong>Special Case:</strong> In-Account Events (1:1) with no leads assume 20:1 ROI</li>
-                  </ul>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </main>
-      </div>
-    );
-  } catch (error) {
-    console.error("Error in main render:", error);
-    return (
-      <div style={{ padding: '20px', color: 'black', fontFamily: 'Arial' }}>
-        <h1>READY - App Error Caught</h1>
-        <p>Error: {String(error)}</p>
-      </div>
-    );
-  }
+            </div>
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
 }
