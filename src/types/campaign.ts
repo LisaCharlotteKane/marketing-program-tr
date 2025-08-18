@@ -47,28 +47,27 @@ export interface FormData {
   description: string;
   forecastedCost: number;
   expectedLeads: number;
-}
+
 
 // Budget Interfaces
-export interface BudgetAllocation {
   region: string;
   budget: number;
-}
+  budget: number;
 
 export interface BudgetUsage extends BudgetAllocation {
-  owner: string;
+export interface BudgetUsage extends BudgetAllocation {
+  used: number;
   used: number;
   remaining: number;
   percentage: number;
-  isOverBudget: boolean;
 }
 
 // Component Props Interfaces
-export interface ImportExportProps {
+// Component Props Interfaces
   onImportCampaigns: (campaigns: Campaign[]) => void;
   campaigns: Campaign[];
 }
-
+}
 export interface CampaignFormProps {
   onAddCampaign: (campaign: Campaign) => void;
 }
@@ -76,22 +75,21 @@ export interface CampaignFormProps {
 export interface CampaignTableProps {
   campaigns: Campaign[];
   onDeleteCampaign: (id: string) => void;
-}
-
+  onDeleteCampaign: (id: string) => void;
 export interface ExecutionTrackingProps {
   campaigns: Campaign[];
-  onUpdateCampaign: (campaign: Campaign) => void;
-}
+export interface ExecutionTrackingProps {
+  campaigns: Campaign[];
 
 // Simplified Campaign Interface for basic display
 export interface SimpleCampaign {
-  id: string;
-  campaignName?: string;
-  campaignType?: string;
+// Simplified Campaign Interface for basic display
   region?: string;
   owner?: string;
 }
 
 export interface CampaignDisplayProps {
+  campaigns: Campaign[];
+}export interface CampaignDisplayProps {
   campaigns: Campaign[];
 }
