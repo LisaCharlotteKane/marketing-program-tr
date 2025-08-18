@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
 import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Download, ClipboardText } from "@phosphor-icons/react";
-import { notifier } from "@/lib/notifier";
+import { toast } from "@/lib/notifier";
 import { useKV } from "@/hooks/useKV";
 import type { CheckedState } from "@radix-ui/react-checkbox";
 import type { 
@@ -43,7 +43,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
     if (!file) return;
 
     if (!file.name.endsWith('.csv')) {
-      notifier.error('Please upload a CSV file');
+      toast('Please upload a CSV file');
       return;
     }
 
@@ -54,7 +54,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
       const lines = text.split('\n').filter(line => line.trim());
       
       if (lines.length < 2) {
-        notifier.error('CSV file must contain a header row and at least one data row');
+        toast('CSV file must contain a header row and at least one data row');
         return;
       }
 
@@ -107,13 +107,13 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
 
       if (importedCampaigns.length > 0) {
         onImportCampaigns(importedCampaigns);
-        notifier.success(`Successfully imported ${importedCampaigns.length} campaigns`);
+        toast(`Successfully imported ${importedCampaigns.length} campaigns`);
       } else {
-        notifier.error('No valid campaigns found in the CSV file');
+        toast('No valid campaigns found in the CSV file');
       }
     } catch (error) {
       console.error('Import error:', error);
-      notifier.error('Failed to import campaigns. Please check the CSV format.');
+      toast('Failed to import campaigns. Please check the CSV format.');
     } finally {
       setIsImporting(false);
       // Reset file input
@@ -123,7 +123,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
 
   const exportToCsv = () => {
     if (campaigns.length === 0) {
-      notifier.error('No campaigns to export');
+      toast('No campaigns to export');
       return;
     }
 
@@ -178,7 +178,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
     link.click();
     document.body.removeChild(link);
     
-    notifier.success(`Exported ${campaigns.length} campaigns to CSV`);
+    toast(`Exported ${campaigns.length} campaigns to CSV`);
   };
 
   return (
@@ -260,7 +260,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
     e.preventDefault();
     
     if (!formData.campaignType || !formData.owner || !formData.region) {
-      notifier.error('Please fill in required fields');
+      toast('Please fill in required fields');
       return;
     }
 
@@ -291,7 +291,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
       campaignName: '',
     });
     
-    notifier.success('Campaign added successfully');
+    toast('Campaign added successfully');
   };
 
   const campaignTypes = [
@@ -496,7 +496,7 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
   const handleDeleteSelected = () => {
     selectedCampaigns.forEach((id: string) => onDeleteCampaign(id));
     setSelectedCampaigns([]);
-    notifier.success(`Deleted ${selectedCampaigns.length} campaigns`);
+    toast(`Deleted ${selectedCampaigns.length} campaigns`);
   };
 
   return (
@@ -617,7 +617,7 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
     onUpdateCampaign(updatedCampaign);
     setEditingCampaign(null);
     setEditFormData({});
-    notifier.success('Campaign execution updated');
+    toast('Campaign execution updated');
   };
 
   const handleCancelEdit = () => {
@@ -938,7 +938,7 @@ export default function App() {
 
   const handleDeleteCampaign = (id: string): void => {
     setCampaigns(campaigns.filter((c: Campaign) => c.id !== id));
-    notifier.success('Campaign deleted');
+    toast('Campaign deleted');
   };
 
   const handleUpdateCampaign = (updatedCampaign: Campaign): void => {

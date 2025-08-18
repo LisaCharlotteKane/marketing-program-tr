@@ -25,7 +25,7 @@ import {
   Copy,
   FloppyDisk
 } from "@phosphor-icons/react";
-import { notifier } from "@/lib/notifier";
+import { toast } from "@/lib/notifier";
 import Papa from "papaparse";
 import { Campaign } from "@/types/campaign";
 import { 
@@ -183,7 +183,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     const errors = validateCampaign(newCampaign);
     if (errors.length > 0) {
       setValidationErrors({...validationErrors, 'new': errors});
-      notifier.error("Please fix validation errors");
+      toast("Please fix validation errors");
       return;
     }
 
@@ -227,7 +227,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     });
     setIsAddingNew(false);
     setValidationErrors({...validationErrors, 'new': []});
-    notifier.success("Campaign added successfully");
+    toast("Campaign added successfully");
   };
 
   // Cancel new campaign
@@ -320,19 +320,19 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     };
     
     setCampaigns([...campaigns, duplicated]);
-    notifier.success("Campaign duplicated successfully");
+    toast("Campaign duplicated successfully");
   };
 
   // Delete selected campaigns
   const deleteSelectedCampaigns = () => {
     if (selectedCampaigns.length === 0) {
-      notifier.error("No campaigns selected");
+      toast("No campaigns selected");
       return;
     }
     
     setCampaigns(campaigns.filter(c => !selectedCampaigns.includes(c.id)));
     setSelectedCampaigns([]);
-    notifier.success(`Deleted ${selectedCampaigns.length} campaign(s)`);
+    toast(`Deleted ${selectedCampaigns.length} campaign(s)`);
   };
 
   // Filter campaigns using multi-select filters
@@ -388,7 +388,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     a.download = 'campaign-template.csv';
     a.click();
     URL.revokeObjectURL(url);
-    notifier.success("Template downloaded successfully");
+    toast("Template downloaded successfully");
   };
 
   // Export to CSV
@@ -428,7 +428,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     a.download = 'campaigns.csv';
     a.click();
     URL.revokeObjectURL(url);
-    notifier.success("CSV exported successfully");
+    toast("CSV exported successfully");
   };
 
   // Enhanced CSV Import with PapaParse
@@ -437,7 +437,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     if (!file) return;
 
     console.log('File selected:', file.name, file.size, file.type);
-    notifier.info(`Reading file: ${file.name}...`);
+    toast(`Reading file: ${file.name}...`);
 
     Papa.parse(file, {
       header: true,
@@ -454,7 +454,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
             // Show non-critical errors as warnings
             const criticalErrors = results.errors.filter(error => error.type === 'Delimiter');
             if (criticalErrors.length > 0) {
-              notifier.error("Critical CSV parsing errors detected");
+              toast("Critical CSV parsing errors detected");
               return;
             }
           }
@@ -467,7 +467,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
           });
           
           if (data.length === 0) {
-            notifier.error("No data found in CSV file");
+            toast("No data found in CSV file");
             return;
           }
 
@@ -487,15 +487,15 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
             console.log('Preview should now be visible');
           }, 100);
           
-          notifier.success(`Loaded ${validData.length} rows for preview`);
+          toast(`Loaded ${validData.length} rows for preview`);
         } catch (error) {
           console.error('CSV processing error:', error);
-          notifier.error("Error processing CSV file: " + (error as Error).message);
+          toast("Error processing CSV file: " + (error as Error).message);
         }
       },
       error: (error) => {
         console.error('PapaParse error:', error);
-        notifier.error("Error reading CSV file: " + error.message);
+        toast("Error reading CSV file: " + error.message);
       }
     });
   };
@@ -624,9 +624,9 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
     // Show results
     if (failedImports.length > 0) {
       console.warn('Failed imports:', failedImports);
-      notifier.error(`Imported ${successfulImports.length} campaigns successfully, ${failedImports.length} failed. Check console for details.`);
+      toast(`Imported ${successfulImports.length} campaigns successfully, ${failedImports.length} failed. Check console for details.`);
     } else {
-      notifier.success(`Successfully imported all ${successfulImports.length} campaigns with complete data capture`);
+      toast(`Successfully imported all ${successfulImports.length} campaigns with complete data capture`);
     }
 
     setShowPreview(false);
@@ -1277,7 +1277,7 @@ export function CampaignManager({ campaigns, setCampaigns }: CampaignManagerProp
                             variant="ghost" 
                             onClick={() => {
                               setCampaigns(campaigns.filter(c => c.id !== campaign.id));
-                              notifier.success("Campaign deleted");
+                              toast("Campaign deleted");
                             }}
                             className="h-8 w-8 p-0 text-red-500"
                             title="Delete"

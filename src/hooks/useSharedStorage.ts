@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { toast } from 'sonner';
+import { toast } from "@/lib/notifier";
 
 // Storage size limits (conservative estimates)
 const STORAGE_LIMITS = {
@@ -83,13 +83,13 @@ export function useSharedStorage<T>(key: string, defaultValue: T) {
             
             // Check if adding this data would exceed limits
             if (currentSize + newSize > STORAGE_LIMITS.localStorage) {
-              toast.error('Storage limit exceeded. Please clear some data or export to CSV.');
+              toast('Storage limit exceeded. Please clear some data or export to CSV.');
               return;
             }
             
             // Warn if approaching limit
             if (currentSize + newSize > STORAGE_LIMITS.warning) {
-              toast.warning('Storage is getting full. Consider exporting data to prevent issues.');
+              toast('Storage is getting full. Consider exporting data to prevent issues.');
             }
             
             localStorage.setItem(key, serialized);
@@ -99,9 +99,9 @@ export function useSharedStorage<T>(key: string, defaultValue: T) {
           
           // Check if it's a quota exceeded error
           if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-            toast.error('Browser storage is full. Please clear storage in Settings to continue.');
+            toast('Browser storage is full. Please clear storage in Settings to continue.');
           } else {
-            toast.error('Failed to save data. Storage may be corrupted.');
+            toast('Failed to save data. Storage may be corrupted.');
           }
         }
       }, 300); // 300ms debounce

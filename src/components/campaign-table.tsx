@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash, Calculator, X } from "@phosphor-icons/react";
-import { notifier } from "@/lib/notifier";
+import { toast } from "@/lib/notifier";
 import { Campaign, CampaignTableProps, CampaignStatus } from "@/types/campaign";
 import { CSVUploader } from "@/components/csv-uploader";
 
@@ -129,7 +129,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
   // Add new campaign
   const addCampaign = () => {
     if (!newCampaign.campaignType || !newCampaign.owner) {
-      notifier.error("Please fill in required fields: Campaign Type and Owner");
+      toast("Please fill in required fields: Campaign Type and Owner");
       return;
     }
 
@@ -186,13 +186,13 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
       actualMQLs: 0
     });
 
-    notifier.success("Campaign added successfully");
+    toast("Campaign added successfully");
   };
 
   // Remove campaign
   const removeCampaign = (id: string) => {
     setCampaigns(safeCampaigns.filter(c => c.id !== id));
-    notifier.success("Campaign removed");
+    toast("Campaign removed");
   };
 
   // Filter campaigns
@@ -280,7 +280,7 @@ export function CampaignTable({ campaigns, setCampaigns }: CampaignTableProps) {
           <CSVUploader 
             onCampaignsImported={(newCampaigns) => {
               setCampaigns([...safeCampaigns, ...newCampaigns]);
-              notifier.success(`Imported ${newCampaigns.length} campaigns successfully`);
+              toast(`Imported ${newCampaigns.length} campaigns successfully`);
             }}
           />
         </CardContent>

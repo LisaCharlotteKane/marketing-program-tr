@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { toast } from 'sonner';
+import { toast } from "@/lib/notifier";
 import { saveCampaignsToGitHub } from '@/services/github-api';
 import { Campaign } from '@/types/campaign';
 
@@ -77,12 +77,12 @@ export function useAutoSave(campaigns: Campaign[], config: AutoSaveConfig = {}) 
           // toast.success("Campaigns saved to GitHub");
         } else {
           setError(result.message);
-          toast.error(`Error auto-saving: ${result.message}`);
+          toast(`Error auto-saving: ${result.message}`);
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         setError(errorMessage);
-        toast.error(`Auto-save error: ${errorMessage}`);
+        toast(`Auto-save error: ${errorMessage}`);
       } finally {
         setIsSaving(false);
       }
