@@ -9,11 +9,15 @@ export function parseToNumber(value: string | number | undefined): number {
   return isNaN(num) ? 0 : num;
 }
 
-export function parseStrategicPillars(value: string | string[] | undefined): string {
+export function parseStrategicPillars(value: string | string[] | undefined): string[] {
   if (Array.isArray(value)) {
-    return value.join(';');
+    return value;
   }
-  return String(value || '');
+  if (!value) return [];
+  
+  const str = String(value);
+  // Split by semicolon, comma, or newline for CSV imports
+  return str.split(/[;,\n]/).map(s => s.trim()).filter(s => s.length > 0);
 }
 
 export function parseCampaignStatus(value: string | undefined): CampaignStatus {
@@ -62,8 +66,9 @@ export function createCampaignWithMetrics(
   
   return {
     id: Date.now().toString(),
+    campaignName: '',
     campaignType: '',
-    strategicPillar: '',
+    strategicPillar: [],
     revenuePlay: '',
     fy: '',
     quarterMonth: '',

@@ -77,6 +77,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
         // Map CSV data to Campaign interface with proper type conversions
         const campaign: Campaign = {
           id: Date.now().toString() + i,
+          campaignName: campaignData.campaignName || campaignData['Campaign Name'] || `Campaign ${i}`,
           campaignType: campaignData.campaignType || campaignData['Campaign Type'] || '',
           strategicPillar: parseStrategicPillars(campaignData.strategicPillar || campaignData['Strategic Pillar']),
           revenuePlay: campaignData.revenuePlay || campaignData['Revenue Play'] || '',
@@ -97,7 +98,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
 
         // If metrics are not provided, calculate them
         if (!campaign.mql && !campaign.sql && !campaign.opportunities && !campaign.pipelineForecast) {
-          const calculated = calculateCampaignMetrics(campaign.expectedLeads, campaign.forecastedCost, campaign.campaignType);
+          const calculated = calculateCampaignMetrics(campaign.expectedLeads || 0, campaign.forecastedCost || 0, campaign.campaignType || '');
           campaign.mql = calculated.mql;
           campaign.sql = calculated.sql;
           campaign.opportunities = calculated.opportunities;
@@ -129,6 +130,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
     }
 
     const headers = [
+      'Campaign Name',
       'Campaign Type',
       'Strategic Pillar',
       'Revenue Play',
@@ -150,15 +152,16 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
     const csvContent = [
       headers.join(','),
       ...campaigns.map((campaign: Campaign) => [
-        `"${campaign.campaignType}"`,
-        `"${Array.isArray(campaign.strategicPillar) ? campaign.strategicPillar.join(';') : String(campaign.strategicPillar)}"`,
-        `"${campaign.revenuePlay}"`,
-        `"${campaign.fy}"`,
-        `"${campaign.quarterMonth}"`,
-        `"${campaign.region}"`,
-        `"${campaign.country}"`,
-        `"${campaign.owner}"`,
-        `"${campaign.description}"`,
+        `"${campaign.campaignName || ''}"`,
+        `"${campaign.campaignType || ''}"`,
+        `"${Array.isArray(campaign.strategicPillar) ? campaign.strategicPillar.join(';') : String(campaign.strategicPillar || '')}"`,
+        `"${campaign.revenuePlay || ''}"`,
+        `"${campaign.fy || ''}"`,
+        `"${campaign.quarterMonth || ''}"`,
+        `"${campaign.region || ''}"`,
+        `"${campaign.country || ''}"`,
+        `"${campaign.owner || ''}"`,
+        `"${campaign.description || ''}"`,
         campaign.forecastedCost || 0,
         campaign.expectedLeads || 0,
         campaign.mql || 0,
@@ -266,7 +269,18 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
     
     const newCampaign: Campaign = {
       id: Date.now().toString(),
-      ...formData,
+      campaignName: formData.campaignName,
+      campaignType: formData.campaignType,
+      strategicPillar: formData.strategicPillar,
+      revenuePlay: formData.revenuePlay,
+      fy: formData.fy,
+      quarterMonth: formData.quarterMonth,
+      region: formData.region,
+      country: formData.country,
+      owner: formData.owner,
+      description: formData.description,
+      forecastedCost: formData.forecastedCost,
+      expectedLeads: formData.expectedLeads,
       ...metrics,
       status: 'Planning'
     };
@@ -493,7 +507,9 @@ function CampaignTable({ campaigns, onDeleteCampaign }: CampaignTableProps) {
   };
 
   const handleDeleteSelected = () => {
-    selectedCampaigns.forEach(id => onDeleteCampaign(id));
+    if (onDeleteCampaign) {
+      selectedCampaigns.forEach(id => onDeleteCampaign(id));
+    }
     setSelectedCampaigns([]);
     toast(`Deleted ${selectedCampaigns.length} campaigns`);
   };
@@ -566,9 +582,11 @@ function CampaignTable({ campaigns, onDeleteCampaign }: CampaignTableProps) {
                             </Badge>
                           ))
                         ) : (
-                          <Badge variant="secondary" className="text-xs">
-                            {campaign.strategicPillar}
-                          </Badge>
+                          campaign.strategicPillar && (
+                            <Badge variant="secondary" className="text-xs">
+                              {campaign.strategicPillar}
+                            </Badge>
+                          )
                         )}
                       </div>
                     </TableCell>
@@ -590,7 +608,7 @@ function CampaignTable({ campaigns, onDeleteCampaign }: CampaignTableProps) {
                       <Button
                         variant="ghost" 
                         size="sm"
-                        onClick={() => onDeleteCampaign(campaign.id)}
+                        onClick={() => onDeleteCampaign?.(campaign.id)}
                       >
                         <Trash className="h-4 w-4" />
                       </Button>
@@ -625,9 +643,15 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
   };
 
   const handleSaveExecution = (campaign: Campaign) => {
-    const updatedCampaign = {
+    const updatedCampaign: Campaign = {
       ...campaign,
-      ...editFormData
+      campaignName: editFormData.campaignName || campaign.campaignName || '',
+      status: editFormData.status || campaign.status,
+      poRaised: editFormData.poRaised,
+      issueLink: editFormData.issueLink,
+      actualCost: editFormData.actualCost,
+      actualLeads: editFormData.actualLeads,
+      actualMqls: editFormData.actualMqls
     };
     onUpdateCampaign(updatedCampaign);
     setEditingCampaign(null);
@@ -691,16 +715,16 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
                         />
                       ) : (
                         <div className="font-medium">
-                          {campaign.campaignName || campaign.campaignType}
+                          {campaign.campaignName || campaign.campaignType || 'Unnamed Campaign'}
                         </div>
                       )}
                     </TableCell>
                     <TableCell className="font-medium">
-                      <div className="truncate max-w-xs">{campaign.campaignType}</div>
+                      <div className="truncate max-w-xs">{campaign.campaignType || 'Unknown Type'}</div>
                     </TableCell>
-                    <TableCell>{campaign.owner}</TableCell>
+                    <TableCell>{campaign.owner || 'Unassigned'}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{campaign.region}</Badge>
+                      <Badge variant="outline">{campaign.region || 'Unknown'}</Badge>
                     </TableCell>
                     <TableCell>
                       {editingCampaign === campaign.id ? (
@@ -870,7 +894,7 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
     const ownerCampaigns = campaigns.filter(c => c.owner === owner);
     const used = ownerCampaigns.reduce((sum: number, c: Campaign) => sum + (c.forecastedCost || 0), 0);
     const remaining = budget - used;
-    const percentage = (used / budget) * 100;
+    const percentage = budget > 0 ? (used / budget) * 100 : 0;
     
     return {
       owner,

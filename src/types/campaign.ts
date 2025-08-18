@@ -3,18 +3,18 @@ export type CampaignStatus = "Planning" | "On Track" | "Shipped" | "Cancelled";
 
 export interface Campaign {
   id: string;
-  campaignName?: string;
-  campaignType: string;
-  strategicPillar: string | string[];
-  revenuePlay: string;
-  fy: string;
-  quarterMonth: string;
-  region: string;
-  country: string;
-  owner: string;
-  description: string;
+  campaignName: string;
+  campaignType?: string;
+  strategicPillar?: string[];
+  fy?: string;
+  quarterMonth?: string;
+  region?: string;
+  country?: string;
+  owner?: string;
+  description?: string;
+  revenuePlay?: string;
 
-  // Numeric fields
+  // Numeric fields - storing as numbers
   forecastedCost?: number;
   expectedLeads?: number;
   mql?: number;
@@ -38,7 +38,7 @@ export interface Campaign {
 
 export interface SimpleCampaign {
   id: string;
-  campaignName?: string;
+  campaignName: string;
   campaignType?: string;
   region?: string;
   owner?: string;
