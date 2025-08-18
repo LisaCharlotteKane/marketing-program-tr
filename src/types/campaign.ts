@@ -1,12 +1,13 @@
-export type StrategicPillar = "Account Growth and Product Adoption" | "Pipeline Acceleration & Executive Engagement" | "Brand Awareness & Top of Funnel Demand Generation" | "New Logo Acquisition";
+// Campaign Type Definitions
+export type CampaignStatus = 'Planning' | 'On Track' | 'Shipped' | 'Cancelled';
+export type StrategicPillar = string[]; // Array of strategic pillars
 
-export type CampaignStatus = "Planning" | "On Track" | "Shipped" | "Cancelled";
-
+// Core Campaign Interface
 export interface Campaign {
   id: string;
   campaignName?: string;
   campaignType: string;
-  strategicPillar: string[];
+  strategicPillar: StrategicPillar;
   revenuePlay: string;
   fy: string;
   quarterMonth: string;
@@ -16,29 +17,25 @@ export interface Campaign {
   description: string;
   forecastedCost: number;
   expectedLeads: number;
+  
+  // Auto-calculated metrics
   mql: number;
   sql: number;
   opportunities: number;
   pipelineForecast: number;
+  
+  // Execution tracking
   status?: CampaignStatus;
   poRaised?: boolean;
   issueLink?: string;
   actualCost?: number;
   actualLeads?: number;
   actualMqls?: number;
-  impactedRegions?: string[];
-  [key: string]: unknown;
 }
 
-export interface SimpleCampaign {
-  id: string;
-  campaignName?: string;
-  campaignType?: string;
-  region?: string;
-  owner?: string;
-}
-
+// Form Data Interface
 export interface FormData {
+  campaignName: string;
   campaignType: string;
   strategicPillar: string[];
   revenuePlay: string;
@@ -50,24 +47,23 @@ export interface FormData {
   description: string;
   forecastedCost: number;
   expectedLeads: number;
-  campaignName: string;
 }
 
+// Budget Interfaces
 export interface BudgetAllocation {
   region: string;
   budget: number;
 }
 
-export interface BudgetUsage {
+export interface BudgetUsage extends BudgetAllocation {
   owner: string;
-  region: string;
-  budget: number;
   used: number;
   remaining: number;
   percentage: number;
   isOverBudget: boolean;
 }
 
+// Component Props Interfaces
 export interface ImportExportProps {
   onImportCampaigns: (campaigns: Campaign[]) => void;
   campaigns: Campaign[];
@@ -79,13 +75,21 @@ export interface CampaignFormProps {
 
 export interface CampaignTableProps {
   campaigns: Campaign[];
-  onDeleteCampaign?: (id: string) => void;
-  onChange?: (campaigns: Campaign[]) => void;
+  onDeleteCampaign: (id: string) => void;
 }
 
 export interface ExecutionTrackingProps {
   campaigns: Campaign[];
   onUpdateCampaign: (campaign: Campaign) => void;
+}
+
+// Simplified Campaign Interface for basic display
+export interface SimpleCampaign {
+  id: string;
+  campaignName?: string;
+  campaignType?: string;
+  region?: string;
+  owner?: string;
 }
 
 export interface CampaignDisplayProps {

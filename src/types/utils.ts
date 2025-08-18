@@ -1,81 +1,89 @@
-import type { Campaign, CampaignStatus, StrategicPillar } from './campaign';
+import type { Campaign, CampaignStatus } from './campaign';
 
-export function parseToNumber(value: string | number | undefined): number {
+// Utility function to safely parse numbers from string inputs
+export const parseToNumber = (value: string | number | undefined): number => {
   if (typeof value === 'number') return value;
-  if (typeof value === 'string') {
-    // Remove currency symbols and commas
-    const cleaned = value.replace(/[$,]/g, '');
-    const parsed = parseFloat(cleaned);
-    return isNaN(parsed) ? 0 : parsed;
-  }
-  return 0;
-}
+  if (!value || value === '') return 0;
+  
+  // Clean the string: remove currency symbols, commas, and whitespace
+  const cleaned = String(value).replace(/[$,\s]/g, '');
+  const parsed = parseFloat(cleaned);
+  
+  return isNaN(parsed) ? 0 : parsed;
+};
 
-export function parseStrategicPillars(value: string | string[] | undefined): string[] {
+// Utility function to parse strategic pillars from string input
+export const parseStrategicPillars = (value: string | string[]): string[] => {
   if (Array.isArray(value)) return value;
-  if (typeof value === 'string') {
-    if (value.includes(';')) {
-      return value.split(';').map(s => s.trim()).filter(Boolean);
-    }
-    return value ? [value] : [];
-  }
-  return [];
-}
+  if (!value || value === '') return [];
+  
+  // Split by semicolon or comma
+  return value.split(/[;,]/).map(item => item.trim()).filter(item => item !== '');
+};
 
-export function parseCampaignStatus(value: string | undefined): CampaignStatus {
+// Utility function to parse campaign status
+export const parseCampaignStatus = (value: string): CampaignStatus => {
   const validStatuses: CampaignStatus[] = ['Planning', 'On Track', 'Shipped', 'Cancelled'];
   return validStatuses.includes(value as CampaignStatus) ? (value as CampaignStatus) : 'Planning';
-}
+};
 
-export function calculateCampaignMetrics(expectedLeads: number, forecastedCost: number, campaignType: string) {
-  const leads = Number(expectedLeads) || 0;
-  const cost = Number(forecastedCost) || 0;
-
-  // Special case for In-Account Events (1:1) without leads
+// Calculate campaign metrics based on leads and cost
+export const calculateCampaignMetrics = (
+  expectedLeads: number, 
+  forecastedCost: number, 
+  campaignType: string
+) => {
+  const leads = parseToNumber(expectedLeads);
+  const cost = parseToNumber(forecastedCost);
+  
+  // Special logic for In-Account Events (1:1) - assume 20:1 ROI if no leads
   if (campaignType === "In-Account Events (1:1)" && leads === 0) {
     return {
       mql: 0,
       sql: 0,
       opportunities: 0,
-      pipelineForecast: cost * 20 // 20:1 ROI
+      pipelineForecast: cost * 20
     };
   }
-
-  const mql = Math.round(leads * 0.1);
-  const sql = Math.round(mql * 0.6);
-  const opportunities = Math.round(sql * 0.8);
-  const pipelineForecast = opportunities * 50000;
-
+  
+  // Standard calculations
+  const mql = Math.round(leads * 0.1); // 10% of expected leads
+  const sql = Math.round(mql * 0.6);   // 6% of expected leads (60% of MQLs)
+  const opportunities = Math.round(sql * 0.8); // 80% of SQLs
+  const pipelineForecast = opportunities * 50000; // $50K per opportunity
+  
   return {
     mql,
     sql,
     opportunities,
     pipelineForecast
   };
-}
+};
 
-export function createCampaignWithMetrics(formData: Partial<Campaign>): Campaign {
+// Create a campaign with calculated metrics
+export const createCampaignWithMetrics = (campaignData: Partial<Campaign>): Campaign => {
   const metrics = calculateCampaignMetrics(
-    formData.expectedLeads || 0,
-    formData.forecastedCost || 0,
-    formData.campaignType || ''
+    campaignData.expectedLeads || 0,
+    campaignData.forecastedCost || 0,
+    campaignData.campaignType || ''
   );
-
+  
   return {
     id: Date.now().toString(),
-    campaignName: formData.campaignName || '',
-    campaignType: formData.campaignType || '',
-    strategicPillar: formData.strategicPillar || [],
-    revenuePlay: formData.revenuePlay || '',
-    fy: formData.fy || '',
-    quarterMonth: formData.quarterMonth || '',
-    region: formData.region || '',
-    country: formData.country || '',
-    owner: formData.owner || '',
-    description: formData.description || '',
-    forecastedCost: Number(formData.forecastedCost) || 0,
-    expectedLeads: Number(formData.expectedLeads) || 0,
-    status: formData.status || 'Planning',
+    campaignName: '',
+    campaignType: '',
+    strategicPillar: [],
+    revenuePlay: '',
+    fy: '',
+    quarterMonth: '',
+    region: '',
+    country: '',
+    owner: '',
+    description: '',
+    forecastedCost: 0,
+    expectedLeads: 0,
+    status: 'Planning',
+    ...campaignData,
     ...metrics
-  };
-}
+  } as Campaign;
+};

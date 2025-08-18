@@ -1,45 +1,33 @@
 import { useState, useEffect } from 'react';
 
-// Mock implementation of useKV for GitHub Pages deployment
-// This replaces @github/spark/hooks when not running in Spark runtime
-export function useKV<T>(key: string, initialValue: T, options?: { scope?: 'global' | 'user' }): [T, (value: T) => void, () => void] {
-  const storageKey = options?.scope === 'global' ? `global-${key}` : `user-${key}`;
-  
+// Simple KV hook implementation
+export function useKV<T>(key: string, defaultValue: T): [T, (value: T) => void, () => void] {
   const [value, setValue] = useState<T>(() => {
     try {
-      const stored = localStorage.getItem(storageKey);
-      return stored ? JSON.parse(stored) : initialValue;
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : defaultValue;
     } catch {
-      return initialValue;
+      return defaultValue;
     }
   });
 
-  const setStoredValue = (newValue: T) => {
+  const setValueAndStore = (newValue: T) => {
+    setValue(newValue);
     try {
-      localStorage.setItem(storageKey, JSON.stringify(newValue));
-      setValue(newValue);
+      localStorage.setItem(key, JSON.stringify(newValue));
     } catch (error) {
-      console.warn('Failed to save to localStorage:', error);
-      setValue(newValue);
+      console.error('Failed to save to localStorage:', error);
     }
   };
 
   const deleteValue = () => {
+    setValue(defaultValue);
     try {
-      localStorage.removeItem(storageKey);
-      setValue(initialValue);
+      localStorage.removeItem(key);
     } catch (error) {
-      console.warn('Failed to delete from localStorage:', error);
+      console.error('Failed to remove from localStorage:', error);
     }
   };
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(value));
-    } catch (error) {
-      console.warn('Failed to persist to localStorage:', error);
-    }
-  }, [value, storageKey]);
-
-  return [value, setStoredValue, deleteValue];
+  return [value, setValueAndStore, deleteValue];
 }
