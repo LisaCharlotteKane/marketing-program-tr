@@ -1,72 +1,69 @@
 import type { Campaign, CampaignStatus } from './campaign';
 
-// Utility function to safely parse numbers from string inputs
-export const parseToNumber = (value: string | number | undefined): number => {
+export function parseToNumber(value: string | number | undefined): number {
   if (typeof value === 'number') return value;
-  if (!value || value === '') return 0;
+  if (!value) return 0;
   
-  // Clean the string: remove currency symbols, commas, and whitespace
-  const cleaned = String(value).replace(/[$,\s]/g, '');
+  // Strip currency symbols, commas, and whitespace
+  const cleaned = String(value).replace(/[\$,\s]/g, '');
   const parsed = parseFloat(cleaned);
   
   return isNaN(parsed) ? 0 : parsed;
-};
+}
 
-// Utility function to parse strategic pillars from string input
-export const parseStrategicPillars = (value: string | string[]): string[] => {
+export function parseStrategicPillars(value: string | string[] | undefined): string[] {
   if (Array.isArray(value)) return value;
-  if (!value || value === '') return [];
+  if (!value) return [];
   
-  // Split by semicolon or comma
-  return value.split(/[;,]/).map(item => item.trim()).filter(item => item !== '');
-};
+  // Handle semicolon-separated values from CSV
+  return String(value).split(';').map(p => p.trim()).filter(p => p.length > 0);
+}
 
-// Utility function to parse campaign status
-export const parseCampaignStatus = (value: string): CampaignStatus => {
+export function parseCampaignStatus(value: string | undefined): CampaignStatus {
   const validStatuses: CampaignStatus[] = ['Planning', 'On Track', 'Shipped', 'Cancelled'];
   return validStatuses.includes(value as CampaignStatus) ? (value as CampaignStatus) : 'Planning';
-};
+}
 
-// Calculate campaign metrics based on leads and cost
-export const calculateCampaignMetrics = (
-  expectedLeads: number, 
-  forecastedCost: number, 
+export function calculateCampaignMetrics(
+  expectedLeads: number,
+  forecastedCost: number,
   campaignType: string
-) => {
-  const leads = parseToNumber(expectedLeads);
-  const cost = parseToNumber(forecastedCost);
-  
-  // Special logic for In-Account Events (1:1) - assume 20:1 ROI if no leads
-  if (campaignType === "In-Account Events (1:1)" && leads === 0) {
+): {
+  mql: number;
+  sql: number;
+  opportunities: number;
+  pipelineForecast: number;
+} {
+  if (campaignType.includes('In-Account Events (1:1)') && expectedLeads === 0) {
+    // Special case: assume 20:1 ROI for in-account events
     return {
       mql: 0,
       sql: 0,
       opportunities: 0,
-      pipelineForecast: cost * 20
+      pipelineForecast: forecastedCost * 20
     };
   }
-  
-  // Standard calculations
-  const mql = Math.round(leads * 0.1); // 10% of expected leads
-  const sql = Math.round(mql * 0.6);   // 6% of expected leads (60% of MQLs)
+
+  const mql = Math.round(expectedLeads * 0.1); // 10% of leads
+  const sql = Math.round(mql * 0.6); // 6% of leads (60% of MQLs)
   const opportunities = Math.round(sql * 0.8); // 80% of SQLs
   const pipelineForecast = opportunities * 50000; // $50K per opportunity
-  
+
   return {
     mql,
     sql,
     opportunities,
     pipelineForecast
   };
-};
+}
 
-// Create a campaign with calculated metrics
-export const createCampaignWithMetrics = (campaignData: Partial<Campaign>): Campaign => {
-  const metrics = calculateCampaignMetrics(
-    campaignData.expectedLeads || 0,
-    campaignData.forecastedCost || 0,
-    campaignData.campaignType || ''
-  );
+export function createCampaignWithMetrics(
+  baseData: Partial<Campaign>,
+  expectedLeads: number,
+  forecastedCost: number,
+  campaignType: string
+): Campaign {
+  const metrics = calculateCampaignMetrics(expectedLeads, forecastedCost, campaignType);
   
   return {
     id: Date.now().toString(),
@@ -83,7 +80,7 @@ export const createCampaignWithMetrics = (campaignData: Partial<Campaign>): Camp
     forecastedCost: 0,
     expectedLeads: 0,
     status: 'Planning',
-    ...campaignData,
+    ...baseData,
     ...metrics
   } as Campaign;
-};
+}

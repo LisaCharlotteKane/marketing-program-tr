@@ -1,33 +1,40 @@
 import { useState, useEffect } from 'react';
 
-// Simple KV hook implementation
-export function useKV<T>(key: string, defaultValue: T): [T, (value: T) => void, () => void] {
-  const [value, setValue] = useState<T>(() => {
+type SetValue<T> = (value: T | ((prev: T) => T)) => void;
+type DeleteValue = () => void;
+
+export function useKV<T>(key: string, initialValue: T): [T, SetValue<T>, DeleteValue] {
+  const [value, setValue] = useState<T>(initialValue);
+
+  // Load from localStorage on mount
+  useEffect(() => {
     try {
       const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : defaultValue;
-    } catch {
-      return defaultValue;
-    }
-  });
-
-  const setValueAndStore = (newValue: T) => {
-    setValue(newValue);
-    try {
-      localStorage.setItem(key, JSON.stringify(newValue));
+      if (stored) {
+        setValue(JSON.parse(stored));
+      }
     } catch (error) {
-      console.error('Failed to save to localStorage:', error);
+      console.warn(`Failed to load ${key} from localStorage:`, error);
     }
-  };
+  }, [key]);
+
+  // Save to localStorage when value changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.warn(`Failed to save ${key} to localStorage:`, error);
+    }
+  }, [key, value]);
 
   const deleteValue = () => {
-    setValue(defaultValue);
     try {
       localStorage.removeItem(key);
+      setValue(initialValue);
     } catch (error) {
-      console.error('Failed to remove from localStorage:', error);
+      console.warn(`Failed to delete ${key} from localStorage:`, error);
     }
   };
 
-  return [value, setValueAndStore, deleteValue];
+  return [value, setValue, deleteValue];
 }

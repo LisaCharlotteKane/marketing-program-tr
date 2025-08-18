@@ -1,13 +1,10 @@
-// Campaign Type Definitions
-export type CampaignStatus = 'Planning' | 'On Track' | 'Shipped' | 'Cancelled';
-export type StrategicPillar = string[]; // Array of strategic pillars
+export type CampaignStatus = "Planning" | "On Track" | "Shipped" | "Cancelled";
 
-// Core Campaign Interface
 export interface Campaign {
   id: string;
   campaignName?: string;
   campaignType: string;
-  strategicPillar: StrategicPillar;
+  strategicPillar: string[];           // array for multiple pillars
   revenuePlay: string;
   fy: string;
   quarterMonth: string;
@@ -15,25 +12,39 @@ export interface Campaign {
   country: string;
   owner: string;
   description: string;
-  forecastedCost: number;
-  expectedLeads: number;
-  
-  // Auto-calculated metrics
-  mql: number;
-  sql: number;
-  opportunities: number;
-  pipelineForecast: number;
-  
+
+  // Core metrics
+  forecastedCost?: number;
+  expectedLeads?: number;
+  mql?: number;
+  sql?: number;
+  opportunities?: number;
+  pipelineForecast?: number;
+
   // Execution tracking
   status?: CampaignStatus;
-  poRaised?: boolean;
-  issueLink?: string;
   actualCost?: number;
   actualLeads?: number;
   actualMqls?: number;
+  poRaised?: boolean;
+  issueLink?: string;
+
+  // Optional fields
+  impactedRegions?: string[];
+  campaignCode?: string;
+
+  // Allow indexing for CSV processing
+  [key: string]: unknown;
 }
 
-// Form Data Interface
+export interface SimpleCampaign {
+  id: string;
+  campaignName?: string;
+  campaignType?: string;
+  region?: string;
+  owner?: string;
+}
+
 export interface FormData {
   campaignName: string;
   campaignType: string;
@@ -47,27 +58,28 @@ export interface FormData {
   description: string;
   forecastedCost: number;
   expectedLeads: number;
+}
 
-
-// Budget Interfaces
+export interface BudgetAllocation {
   region: string;
   budget: number;
-  budget: number;
+}
 
-export interface BudgetUsage extends BudgetAllocation {
-export interface BudgetUsage extends BudgetAllocation {
-  used: number;
+export interface BudgetUsage {
+  owner: string;
+  region: string;
+  budget: number;
   used: number;
   remaining: number;
   percentage: number;
+  isOverBudget: boolean;
 }
 
-// Component Props Interfaces
-// Component Props Interfaces
+export interface ImportExportProps {
   onImportCampaigns: (campaigns: Campaign[]) => void;
   campaigns: Campaign[];
 }
-}
+
 export interface CampaignFormProps {
   onAddCampaign: (campaign: Campaign) => void;
 }
@@ -75,21 +87,9 @@ export interface CampaignFormProps {
 export interface CampaignTableProps {
   campaigns: Campaign[];
   onDeleteCampaign: (id: string) => void;
-  onDeleteCampaign: (id: string) => void;
-export interface ExecutionTrackingProps {
-  campaigns: Campaign[];
-export interface ExecutionTrackingProps {
-  campaigns: Campaign[];
-
-// Simplified Campaign Interface for basic display
-export interface SimpleCampaign {
-// Simplified Campaign Interface for basic display
-  region?: string;
-  owner?: string;
 }
 
-export interface CampaignDisplayProps {
+export interface ExecutionTrackingProps {
   campaigns: Campaign[];
-}export interface CampaignDisplayProps {
-  campaigns: Campaign[];
+  onUpdateCampaign: (campaign: Campaign) => void;
 }

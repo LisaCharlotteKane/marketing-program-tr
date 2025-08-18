@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
 import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Download, ClipboardText } from "@phosphor-icons/react";
-import { toast } from "@/lib/notifier";
+import { toast } from "sonner";
 import { useKV } from "@/hooks/useKV";
 import type { CheckedState } from "@radix-ui/react-checkbox";
 import type { 
@@ -328,6 +328,14 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
   const owners = ["Tomoko Tanaka", "Beverly Leung", "Shruti Narang", "Giorgia Parham"];
   const fiscalYears = ["FY25", "FY26"];
   const quarters = ["Q1 - July", "Q1 - August", "Q1 - September", "Q2 - October", "Q2 - November", "Q2 - December", "Q3 - January", "Q3 - February", "Q3 - March", "Q4 - April", "Q4 - May", "Q4 - June"];
+  
+  const countries = [
+    "Afghanistan", "Australia", "ASEAN", "Bangladesh", "Bhutan", "Brunei", "Cambodia",
+    "China", "GCR", "Hong Kong", "India", "Indonesia", "Japan", "Laos", "Malaysia",
+    "Maldives", "Myanmar", "Nepal", "New Zealand", "Pakistan", "Philippines",
+    "Singapore", "South Korea", "Sri Lanka", "Taiwan", "Thailand", "Vietnam",
+    "X APAC English", "X APAC Non English", "X South APAC", "X SAARC"
+  ];
 
   return (
     <Card>
@@ -367,6 +375,36 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
             </div>
 
             <div>
+              <Label htmlFor="strategicPillar">Strategic Pillar</Label>
+              <div className="space-y-2">
+                {strategicPillars.map((pillar: string) => (
+                  <div key={pillar} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={pillar}
+                      checked={formData.strategicPillar.includes(pillar)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData(prev => ({
+                            ...prev,
+                            strategicPillar: [...prev.strategicPillar, pillar]
+                          }));
+                        } else {
+                          setFormData(prev => ({
+                            ...prev,
+                            strategicPillar: prev.strategicPillar.filter(p => p !== pillar)
+                          }));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={pillar} className="text-sm font-normal">
+                      {pillar}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
               <Label htmlFor="region">Region *</Label>
               <Select value={formData.region} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, region: value}))}>
                 <SelectTrigger>
@@ -389,6 +427,20 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
                 <SelectContent>
                   {owners.map((owner: string) => (
                     <SelectItem key={owner} value={owner}>{owner}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="country">Country</Label>
+              <Select value={formData.country} onValueChange={(value: string) => setFormData((prev: FormData) => ({...prev, country: value}))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country: string) => (
+                    <SelectItem key={country} value={country}>{country}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -536,6 +588,7 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
                     />
                   </TableHead>
                   <TableHead>Campaign Type</TableHead>
+                  <TableHead>Strategic Pillar</TableHead>
                   <TableHead>Region</TableHead>
                   <TableHead>Owner</TableHead>
                   <TableHead>Description</TableHead>
@@ -557,6 +610,15 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
                       />
                     </TableCell>
                     <TableCell className="font-medium">{campaign.campaignType}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {campaign.strategicPillar?.map((pillar: string, index: number) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {pillar}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="outline">{campaign.region}</Badge>
                     </TableCell>
