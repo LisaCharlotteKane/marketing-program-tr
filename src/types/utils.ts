@@ -1,58 +1,36 @@
 import type { Campaign, CampaignStatus } from './campaign';
 
-/**
- * Parse string to number safely
- */
-export function parseToNumber(value: string | number | undefined | null): number {
+export function parseToNumber(value: string | number | undefined): number {
   if (typeof value === 'number') return value;
-  if (!value || value === '') return 0;
+  if (!value) return 0;
   
-  const cleaned = String(value).replace(/[$,\s]/g, '');
-  const parsed = parseFloat(cleaned);
-  return isNaN(parsed) ? 0 : parsed;
+  const str = String(value).replace(/[$,]/g, '');
+  const num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
 }
 
-/**
- * Parse strategic pillars from string or array
- */
-export function parseStrategicPillars(value: string | string[] | undefined): string[] {
-  if (Array.isArray(value)) return value;
-  if (!value || typeof value !== 'string') return [];
-  
-  // Handle semicolon or comma separated values
-  return value.split(/[;,]/).map(s => s.trim()).filter(s => s.length > 0);
+export function parseStrategicPillars(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) {
+    return value.join(';');
+  }
+  return String(value || '');
 }
 
-/**
- * Parse campaign status with validation
- */
 export function parseCampaignStatus(value: string | undefined): CampaignStatus {
   const validStatuses: CampaignStatus[] = ['Planning', 'On Track', 'Shipped', 'Cancelled'];
-  
-  if (!value) return 'Planning';
-  
-  const found = validStatuses.find(status => 
-    status.toLowerCase() === value.toLowerCase()
-  );
-  
-  return found || 'Planning';
+  if (validStatuses.includes(value as CampaignStatus)) {
+    return value as CampaignStatus;
+  }
+  return 'Planning';
 }
 
-/**
- * Calculate campaign metrics based on leads, cost, and type
- */
 export function calculateCampaignMetrics(
-  expectedLeads: number = 0, 
-  forecastedCost: number = 0, 
-  campaignType: string = ''
-): {
-  mql: number;
-  sql: number;
-  opportunities: number;
-  pipelineForecast: number;
-} {
-  // Special case for In-Account Events (1:1) - use 20:1 ROI if no leads
-  if (campaignType.includes('In-Account Events (1:1)') && expectedLeads === 0) {
+  expectedLeads: number, 
+  forecastedCost: number, 
+  campaignType: string
+) {
+  // Special case for In-Account Events with no leads
+  if (campaignType.includes('In-Account') && expectedLeads === 0) {
     return {
       mql: 0,
       sql: 0,
@@ -61,11 +39,10 @@ export function calculateCampaignMetrics(
     };
   }
 
-  // Standard calculations
-  const mql = Math.round(expectedLeads * 0.1); // 10% of expected leads
-  const sql = Math.round(mql * 0.6); // 6% of expected leads (60% of MQLs)
-  const opportunities = Math.round(sql * 0.8); // 80% of SQLs
-  const pipelineForecast = opportunities * 50000; // $50K per opportunity
+  const mql = Math.round(expectedLeads * 0.1);
+  const sql = Math.round(mql * 0.6);
+  const opportunities = Math.round(sql * 0.8);
+  const pipelineForecast = opportunities * 50000;
 
   return {
     mql,
@@ -75,21 +52,18 @@ export function calculateCampaignMetrics(
   };
 }
 
-/**
- * Create a campaign with calculated metrics
- */
-export function createCampaignWithMetrics(baseData: Partial<Campaign>): Campaign {
-  const metrics = calculateCampaignMetrics(
-    baseData.expectedLeads, 
-    baseData.forecastedCost, 
-    baseData.campaignType
-  );
-
+export function createCampaignWithMetrics(
+  baseData: Partial<Campaign>,
+  expectedLeads: number,
+  forecastedCost: number,
+  campaignType: string
+): Campaign {
+  const metrics = calculateCampaignMetrics(expectedLeads, forecastedCost, campaignType);
+  
   return {
     id: Date.now().toString(),
-    campaignName: '',
     campaignType: '',
-    strategicPillar: [],
+    strategicPillar: '',
     revenuePlay: '',
     fy: '',
     quarterMonth: '',
@@ -97,51 +71,10 @@ export function createCampaignWithMetrics(baseData: Partial<Campaign>): Campaign
     country: '',
     owner: '',
     description: '',
-    forecastedCost: 0,
-    expectedLeads: 0,
-    status: 'Planning',
     ...baseData,
-    ...metrics
-  };
-}
-
-/**
- * Format currency for display
- */
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-/**
- * Validate campaign data
- */
-export function validateCampaign(campaign: Partial<Campaign>): string[] {
-  const errors: string[] = [];
-
-  if (!campaign.campaignType) {
-    errors.push('Campaign type is required');
-  }
-
-  if (!campaign.owner) {
-    errors.push('Campaign owner is required');
-  }
-
-  if (!campaign.region) {
-    errors.push('Region is required');
-  }
-
-  if (campaign.forecastedCost && campaign.forecastedCost < 0) {
-    errors.push('Forecasted cost cannot be negative');
-  }
-
-  if (campaign.expectedLeads && campaign.expectedLeads < 0) {
-    errors.push('Expected leads cannot be negative');
-  }
-
-  return errors;
+    expectedLeads,
+    forecastedCost,
+    ...metrics,
+    status: 'Planning'
+  } as Campaign;
 }

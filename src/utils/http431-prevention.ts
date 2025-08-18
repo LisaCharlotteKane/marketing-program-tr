@@ -1,104 +1,90 @@
-/**
- * HTTP 431 Prevention System
- * Initialize all monitoring and cleanup systems to prevent "Request Header Fields Too Large" errors
- */
-
-import { clearProblematicCookies } from '@/lib/cookie-cleanup';
-import { startHeaderSizeMonitoring, getHeaderSizeInfo } from '@/utils/header-guard';
-import { startStorageMonitoring, getStorageSizeInfo, cleanupLargeStorageItems } from '@/utils/storage-size-guard';
-
-/**
- * Initialize the HTTP 431 prevention system
- */
+// HTTP 431 Prevention Utilities
 export function initializeHTTP431Prevention(): () => void {
-  console.log('🛡️ Initializing HTTP 431 prevention system...');
+  console.log("Initializing HTTP 431 prevention...");
   
-  // 1. Immediate cleanup of problematic cookies
-  clearProblematicCookies();
-  
-  // 2. Check current header size
-  const headerInfo = getHeaderSizeInfo();
-  if (headerInfo.warnings.length > 0) {
-    console.warn('⚠️ Header size warnings:', headerInfo.warnings);
-  }
-  
-  // 3. Check storage size
-  const storageInfo = getStorageSizeInfo();
-  if (storageInfo.isNearLimit) {
-    console.warn('⚠️ localStorage near capacity, cleaning up...');
-    cleanupLargeStorageItems();
-  }
-  
-  // 4. Start monitoring systems
-  const cleanupHeaderMonitoring = startHeaderSizeMonitoring();
-  const cleanupStorageMonitoring = startStorageMonitoring();
-  
-  // 5. Set up periodic emergency cleanup
-  const emergencyCleanupInterval = setInterval(() => {
-    const currentHeaderInfo = getHeaderSizeInfo();
-    const currentStorageInfo = getStorageSizeInfo();
+  // Clear potentially large cookies
+  const clearLargeCookies = () => {
+    const cookies = document.cookie.split(';');
+    cookies.forEach(cookie => {
+      const [name] = cookie.split('=');
+      if (name && name.trim().length > 0) {
+        // Check if cookie is suspiciously large
+        if (cookie.length > 1000) {
+          console.log(`Clearing large cookie: ${name.trim()}`);
+          document.cookie = `${name.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+      }
+    });
+  };
+
+  // Clear localStorage items that might be too large
+  const clearLargeStorage = () => {
+    try {
+      const storage = window.localStorage;
+      for (let i = 0; i < storage.length; i++) {
+        const key = storage.key(i);
+        if (key) {
+          const value = storage.getItem(key);
+          if (value && value.length > 50000) { // 50KB threshold
+            console.log(`Clearing large localStorage item: ${key}`);
+            storage.removeItem(key);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Error clearing large storage items:', error);
+    }
+  };
+
+  // Monitor header size
+  const originalFetch = window.fetch;
+  window.fetch = function(...args) {
+    const [input, init] = args;
     
-    // Emergency cleanup if critically over limits
-    if (currentHeaderInfo.isOverLimit) {
-      console.warn('🚨 Emergency cookie cleanup - headers over limit');
-      clearProblematicCookies();
+    // Check if headers are getting too large
+    if (init?.headers) {
+      const headerString = JSON.stringify(init.headers);
+      if (headerString.length > 8000) { // 8KB warning threshold
+        console.warn('Large headers detected in fetch request:', headerString.length, 'bytes');
+      }
     }
     
-    if (currentStorageInfo.percentUsed > 0.95) {
-      console.warn('🚨 Emergency storage cleanup - localStorage over 95% full');
-      cleanupLargeStorageItems();
-    }
-  }, 120000); // Check every 2 minutes
-  
-  console.log('✅ HTTP 431 prevention system initialized');
-  
+    return originalFetch.apply(this, args);
+  };
+
+  // Run cleanup
+  clearLargeCookies();
+  clearLargeStorage();
+
   // Return cleanup function
   return () => {
-    cleanupHeaderMonitoring();
-    cleanupStorageMonitoring();
-    clearInterval(emergencyCleanupInterval);
-    console.log('🛡️ HTTP 431 prevention system shut down');
+    window.fetch = originalFetch;
   };
 }
 
-/**
- * Emergency cleanup function for immediate use
- */
 export function emergencyCleanup(): void {
-  console.log('🚨 Running emergency cleanup...');
+  console.log("Running emergency HTTP 431 cleanup...");
   
-  // Clear all problematic cookies
-  clearProblematicCookies();
+  // Clear all cookies
+  document.cookie.split(";").forEach(cookie => {
+    const eqPos = cookie.indexOf("=");
+    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+    document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+  });
   
-  // Clean up large storage items
-  const cleaned = cleanupLargeStorageItems(256 * 1024); // 256KB threshold
+  // Clear all localStorage
+  try {
+    localStorage.clear();
+  } catch (error) {
+    console.warn('Failed to clear localStorage:', error);
+  }
   
-  console.log(`🚨 Emergency cleanup complete - removed ${cleaned} large items`);
-}
-
-/**
- * Get current system status for debugging
- */
-export function getSystemStatus() {
-  const headerInfo = getHeaderSizeInfo();
-  const storageInfo = getStorageSizeInfo();
+  // Clear sessionStorage
+  try {
+    sessionStorage.clear();
+  } catch (error) {
+    console.warn('Failed to clear sessionStorage:', error);
+  }
   
-  return {
-    headers: {
-      cookieSize: headerInfo.cookieSize,
-      estimatedSize: headerInfo.estimatedHeaderSize,
-      isOverLimit: headerInfo.isOverLimit,
-      warnings: headerInfo.warnings
-    },
-    storage: {
-      currentSize: storageInfo.currentSize,
-      percentUsed: storageInfo.percentUsed,
-      isNearLimit: storageInfo.isNearLimit,
-      recommendations: storageInfo.recommendations
-    },
-    recommendations: [
-      ...headerInfo.warnings,
-      ...storageInfo.recommendations
-    ]
-  };
+  console.log("Emergency cleanup completed");
 }

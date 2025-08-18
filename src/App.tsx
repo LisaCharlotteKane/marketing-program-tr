@@ -151,7 +151,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
       headers.join(','),
       ...campaigns.map((campaign: Campaign) => [
         `"${campaign.campaignType}"`,
-        `"${Array.isArray(campaign.strategicPillar) ? campaign.strategicPillar.join(';') : campaign.strategicPillar}"`,
+        `"${Array.isArray(campaign.strategicPillar) ? campaign.strategicPillar.join(';') : String(campaign.strategicPillar)}"`,
         `"${campaign.revenuePlay}"`,
         `"${campaign.fy}"`,
         `"${campaign.quarterMonth}"`,
@@ -559,11 +559,17 @@ function CampaignTable({ campaigns, onDeleteCampaign }: CampaignTableProps) {
                     <TableCell className="font-medium">{campaign.campaignType}</TableCell>
                     <TableCell>
                       <div>
-                        {Array.isArray(campaign.strategicPillar) && campaign.strategicPillar.map((pillar: string, index: number) => (
-                          <Badge key={index} variant="secondary" className="text-xs mr-1">
-                            {pillar}
+                        {Array.isArray(campaign.strategicPillar) ? (
+                          campaign.strategicPillar.map((pillar: string, index: number) => (
+                            <Badge key={index} variant="secondary" className="text-xs mr-1">
+                              {pillar}
+                            </Badge>
+                          ))
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">
+                            {campaign.strategicPillar}
                           </Badge>
-                        ))}
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
