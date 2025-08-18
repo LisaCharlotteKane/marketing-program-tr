@@ -611,7 +611,6 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
                     </TableCell>
                     <TableCell className="font-medium">{campaign.campaignType}</TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
                         {campaign.strategicPillar?.map((pillar: string, index: number) => (
                           <Badge key={index} variant="secondary" className="text-xs">
                             {pillar}
@@ -621,17 +620,17 @@ function CampaignTable({ campaigns, onDeleteCampaign }: { campaigns: Campaign[];
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{campaign.region}</Badge>
+                      <Badge variant="outline">{campaign.region}</Badge>
                     </TableCell>
                     <TableCell>{campaign.owner}</TableCell>
                     <TableCell className="max-w-xs truncate">{campaign.description || '-'}</TableCell>
-                    <TableCell className="text-right font-mono">
+                      ${(campaign.forecastedCost || 0).toLocaleString()}
                       ${(campaign.forecastedCost || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right">{campaign.expectedLeads || 0}</TableCell>
                     <TableCell className="text-right">{campaign.mql || 0}</TableCell>
                     <TableCell className="text-right">{campaign.sql || 0}</TableCell>
                     <TableCell className="text-right font-mono">
-                      ${(campaign.pipelineForecast || 0).toLocaleString()}
                     </TableCell>
                     <TableCell>
                       <Button 
