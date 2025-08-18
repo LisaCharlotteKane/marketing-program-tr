@@ -1,38 +1,7 @@
-// Utility functions for type safety and calculations
+import type { Campaign, CampaignStatus, StrategicPillar } from './campaign';
 
-import type { Campaign, CampaignStatus } from './campaign';
-
-/**
- * Calculate campaign metrics based on expected leads and cost
- */
-export function calculateCampaignMetrics(
-  expectedLeads: number, 
-  forecastedCost: number, 
-  campaignType: string
-): { mql: number; sql: number; opportunities: number; pipelineForecast: number } {
-  // Special case for In Account Events
-  if (campaignType === "In-Account Events (1:1)" && expectedLeads === 0) {
-    return {
-      mql: 0,
-      sql: 0,
-      opportunities: 0,
-      pipelineForecast: forecastedCost * 20 // 20:1 ROI for in-account events
-    };
-  }
-
-  const mql = Math.round(expectedLeads * 0.1); // 10% of expected leads
-  const sql = Math.round(mql * 0.6); // 60% of MQLs
-  const opportunities = Math.round(sql * 0.8); // 80% of SQLs
-  const pipelineForecast = opportunities * 50000; // $50K per opportunity
-
-  return { mql, sql, opportunities, pipelineForecast };
-}
-
-/**
- * Safe number parsing helper with type assertion
- */
-export function safeParseNumber(value: unknown): number {
-  if (typeof value === 'number') return isNaN(value) ? 0 : value;
+export function parseToNumber(value: string | number | undefined): number {
+  if (typeof value === 'number') return value;
   if (typeof value === 'string') {
     // Remove currency symbols and commas
     const cleaned = value.replace(/[$,]/g, '');
@@ -42,62 +11,71 @@ export function safeParseNumber(value: unknown): number {
   return 0;
 }
 
-/**
- * Parse a string/number value to a safe number (alias for backwards compatibility)
- */
-export const parseToNumber = safeParseNumber;
-
-/**
- * Type guard for campaign status
- */
-export function isValidCampaignStatus(status: string): status is CampaignStatus {
-  return ['Planning', 'On Track', 'Shipped', 'Cancelled'].includes(status);
-}
-
-/**
- * Safely parse campaign status with fallback
- */
-export function parseCampaignStatus(status: unknown): CampaignStatus {
-  if (typeof status === 'string' && isValidCampaignStatus(status)) {
-    return status;
-  }
-  return 'Planning';
-}
-
-/**
- * Safe string array parser for strategic pillars
- */
 export function parseStrategicPillars(value: string | string[] | undefined): string[] {
   if (Array.isArray(value)) return value;
   if (typeof value === 'string') {
-    return value.split(';').map(s => s.trim()).filter(Boolean);
+    if (value.includes(';')) {
+      return value.split(';').map(s => s.trim()).filter(Boolean);
+    }
+    return value ? [value] : [];
   }
   return [];
 }
 
-/**
- * Type guard to ensure campaign has required fields
- */
-export function isValidCampaign(campaign: Partial<Campaign>): campaign is Campaign {
-  return !!(
-    campaign.id &&
-    campaign.campaignType &&
-    campaign.owner &&
-    campaign.region &&
-    typeof campaign.forecastedCost === 'number' &&
-    typeof campaign.expectedLeads === 'number'
-  );
+export function parseCampaignStatus(value: string | undefined): CampaignStatus {
+  const validStatuses: CampaignStatus[] = ['Planning', 'On Track', 'Shipped', 'Cancelled'];
+  return validStatuses.includes(value as CampaignStatus) ? (value as CampaignStatus) : 'Planning';
 }
 
-/**
- * Create a new campaign with calculated metrics
- */
-export function createCampaignWithMetrics(data: Omit<Campaign, 'id' | 'mql' | 'sql' | 'opportunities' | 'pipelineForecast'>): Campaign {
-  const metrics = calculateCampaignMetrics(data.expectedLeads, data.forecastedCost, data.campaignType);
-  
+export function calculateCampaignMetrics(expectedLeads: number, forecastedCost: number, campaignType: string) {
+  const leads = Number(expectedLeads) || 0;
+  const cost = Number(forecastedCost) || 0;
+
+  // Special case for In-Account Events (1:1) without leads
+  if (campaignType === "In-Account Events (1:1)" && leads === 0) {
+    return {
+      mql: 0,
+      sql: 0,
+      opportunities: 0,
+      pipelineForecast: cost * 20 // 20:1 ROI
+    };
+  }
+
+  const mql = Math.round(leads * 0.1);
+  const sql = Math.round(mql * 0.6);
+  const opportunities = Math.round(sql * 0.8);
+  const pipelineForecast = opportunities * 50000;
+
+  return {
+    mql,
+    sql,
+    opportunities,
+    pipelineForecast
+  };
+}
+
+export function createCampaignWithMetrics(formData: Partial<Campaign>): Campaign {
+  const metrics = calculateCampaignMetrics(
+    formData.expectedLeads || 0,
+    formData.forecastedCost || 0,
+    formData.campaignType || ''
+  );
+
   return {
     id: Date.now().toString(),
-    ...data,
+    campaignName: formData.campaignName || '',
+    campaignType: formData.campaignType || '',
+    strategicPillar: formData.strategicPillar || [],
+    revenuePlay: formData.revenuePlay || '',
+    fy: formData.fy || '',
+    quarterMonth: formData.quarterMonth || '',
+    region: formData.region || '',
+    country: formData.country || '',
+    owner: formData.owner || '',
+    description: formData.description || '',
+    forecastedCost: Number(formData.forecastedCost) || 0,
+    expectedLeads: Number(formData.expectedLeads) || 0,
+    status: formData.status || 'Planning',
     ...metrics
   };
 }

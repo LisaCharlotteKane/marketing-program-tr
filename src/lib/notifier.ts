@@ -1,18 +1,38 @@
 import { toast } from "sonner";
 
-/**
- * Notification wrapper that provides typed methods for the toast API
- * Since we're using sonner which already has success/error/etc methods,
- * we'll just re-export them with proper types
- */
+// Notifier wrapper to provide toast methods using Sonner
 export const notifier = {
-  success: (message: string) => toast.success(message),
-  error: (message: string) => toast.error(message),
-  info: (message: string) => toast.info(message),
-  warning: (message: string) => toast.warning(message),
-  loading: (message: string) => toast.loading(message),
-  dismiss: () => toast.dismiss(),
+  success: (message: string) => {
+    toast(message, {
+      description: "Success",
+      style: { backgroundColor: '#10b981', color: 'white' }
+    });
+  },
+  error: (message: string) => {
+    toast(message, {
+      description: "Error", 
+      style: { backgroundColor: '#ef4444', color: 'white' }
+    });
+  },
+  info: (message: string) => {
+    toast(message, {
+      description: "Info",
+      style: { backgroundColor: '#3b82f6', color: 'white' }
+    });
+  },
+  warning: (message: string) => {
+    toast(message, {
+      description: "Warning",
+      style: { backgroundColor: '#f59e0b', color: 'white' }
+    });
+  },
+  loading: (message: string) => {
+    toast(message, {
+      description: "Loading...",
+      duration: 0 // Keep loading toast indefinitely
+    });
+  },
+  dismiss: () => {
+    toast.dismiss();
+  }
 };
-
-// Also export a simple toast function for backwards compatibility
-export { toast };

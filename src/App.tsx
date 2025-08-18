@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
 import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Download, ClipboardText } from "@phosphor-icons/react";
 import { notifier } from "@/lib/notifier";
-import { useKV } from "@github/spark/hooks";
+import { useKV } from "@/hooks/useKV";
 import type { CheckedState } from "@radix-ui/react-checkbox";
 import type { 
   Campaign, 
@@ -67,7 +67,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
         if (values.length !== headers.length) continue;
 
         const campaignData: Record<string, string> = {};
-        headers.forEach((header, index) => {
+        headers.forEach((header: string, index: number) => {
           campaignData[header] = values[index] || '';
         });
 
@@ -148,7 +148,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
 
     const csvContent = [
       headers.join(','),
-      ...campaigns.map(campaign => [
+      ...campaigns.map((campaign: Campaign) => [
         `"${campaign.campaignType}"`,
         `"${campaign.strategicPillar.join(';')}"`,
         `"${campaign.revenuePlay}"`,
@@ -691,7 +691,7 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
                       {editingCampaign === campaign.id ? (
                         <Select 
                           value={editFormData.status || 'Planning'} 
-                          onValueChange={(value: string) => setEditFormData(prev => ({...prev, status: value}))}
+                          onValueChange={(value: string) => setEditFormData(prev => ({...prev, status: parseCampaignStatus(value)}))}
                         >
                           <SelectTrigger className="w-28">
                             <SelectValue />
@@ -920,7 +920,7 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 export default function App() {
   console.log("App component loading...");
   
-  // Fixed: Use proper error boundary for useKV with fallback
+  // Fixed: Use proper useKV hook with type annotations
   const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
   
   React.useEffect(() => {

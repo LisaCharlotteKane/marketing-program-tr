@@ -1,15 +1,12 @@
-// Status type for campaigns
+export type StrategicPillar = "Account Growth and Product Adoption" | "Pipeline Acceleration & Executive Engagement" | "Brand Awareness & Top of Funnel Demand Generation" | "New Logo Acquisition";
+
 export type CampaignStatus = "Planning" | "On Track" | "Shipped" | "Cancelled";
 
-// Strategic Pillar types
-export type StrategicPillar = "Account Growth and Product Adoption" | "Pipeline Acceleration & Executive Engagement" | "Brand Awareness & Top of Funnel Demand Generation" | "New Logo Acquisition" | string;
-
-// Main Campaign interface
 export interface Campaign {
   id: string;
   campaignName?: string;
   campaignType: string;
-  strategicPillar: string[]; // Keep as array to support multiple selections
+  strategicPillar: string[];
   revenuePlay: string;
   fy: string;
   quarterMonth: string;
@@ -17,7 +14,6 @@ export interface Campaign {
   country: string;
   owner: string;
   description: string;
-  // Fixed: Convert string costs/leads to numbers for calculations
   forecastedCost: number;
   expectedLeads: number;
   mql: number;
@@ -26,17 +22,22 @@ export interface Campaign {
   pipelineForecast: number;
   status?: CampaignStatus;
   poRaised?: boolean;
-  salesforceCampaignCode?: string;
   issueLink?: string;
-  // Fixed: Convert string actuals to numbers  
   actualCost?: number;
   actualLeads?: number;
   actualMqls?: number;
-  // Index signature to avoid strict indexing errors
+  impactedRegions?: string[];
   [key: string]: unknown;
 }
 
-// Form data interface for new campaigns
+export interface SimpleCampaign {
+  id: string;
+  campaignName?: string;
+  campaignType?: string;
+  region?: string;
+  owner?: string;
+}
+
 export interface FormData {
   campaignType: string;
   strategicPillar: string[];
@@ -52,13 +53,11 @@ export interface FormData {
   campaignName: string;
 }
 
-// Budget allocation interface
 export interface BudgetAllocation {
   region: string;
   budget: number;
 }
 
-// Budget usage interface
 export interface BudgetUsage {
   owner: string;
   region: string;
@@ -67,26 +66,6 @@ export interface BudgetUsage {
   remaining: number;
   percentage: number;
   isOverBudget: boolean;
-}
-
-// Simplified campaign interface
-export interface SimpleCampaign {
-  id: string;
-  campaignName: string;
-  campaignType?: string;
-  region?: string;
-  owner?: string;
-}
-
-// Component prop interfaces
-export interface CampaignTableProps { 
-  campaigns: Campaign[]; 
-  setCampaigns?: (campaigns: Campaign[]) => void;
-  onDeleteCampaign?: (id: string) => void;
-}
-
-export interface CampaignDisplayProps { 
-  campaigns: Campaign[]; 
 }
 
 export interface ImportExportProps {
@@ -98,7 +77,17 @@ export interface CampaignFormProps {
   onAddCampaign: (campaign: Campaign) => void;
 }
 
+export interface CampaignTableProps {
+  campaigns: Campaign[];
+  onDeleteCampaign?: (id: string) => void;
+  onChange?: (campaigns: Campaign[]) => void;
+}
+
 export interface ExecutionTrackingProps {
   campaigns: Campaign[];
   onUpdateCampaign: (campaign: Campaign) => void;
+}
+
+export interface CampaignDisplayProps {
+  campaigns: Campaign[];
 }
