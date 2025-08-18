@@ -1,7 +1,14 @@
 declare module '*.css' {
-  const content: Record<string, string>;
+  const content: string;
   export default content;
 }
 
-declare module './main.css';
-declare module './index.css';
+declare module './main.css' {
+  const content: string;
+  export default content;
+}
+
+declare module './index.css' {
+  const content: string;
+  export default content;
+}
