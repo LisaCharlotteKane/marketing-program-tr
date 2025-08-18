@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useKV } from '@github/spark/hooks';
 import { Badge } from "@/components/ui/badge";
-import { SyncSquare } from "@phosphor-icons/react";
+import { ArrowsClockwise } from "@phosphor-icons/react";
 
 /**
  * This component ensures campaign data is properly shared between users
@@ -138,7 +138,7 @@ export function DataSharingService({ campaigns }) {
         className="flex items-center gap-1 opacity-70 hover:opacity-100 transition-opacity cursor-help"
         title={`Data sharing status: ${syncStatus}`}
       >
-        <SyncSquare className={`h-3 w-3 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+        <ArrowsClockwise className={`h-3 w-3 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
         {syncStatus === 'synced' 
           ? 'Data Synced' 
           : syncStatus === 'syncing' 

@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash, Check, X, Calculator, Save } from "@phosphor-icons/react";
+import { Plus, Trash, Check, X, Calculator, FloppyDisk } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { Campaign, CampaignTableProps } from "@/types/campaign";
 
@@ -384,7 +384,7 @@ export function InlineEditableTable({ campaigns, setCampaigns }: CampaignTablePr
                 </Badge>
               )}
               <Button onClick={saveAllChanges} disabled={unsavedChanges.size === 0}>
-                <Save className="h-4 w-4 mr-2" />
+                <FloppyDisk className="h-4 w-4 mr-2" />
                 Save All
               </Button>
               <Button onClick={addNewRow}>

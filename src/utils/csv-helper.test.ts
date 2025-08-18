@@ -1,14 +1,14 @@
 import { processCsvData, exportCampaignsToCsv } from "@/utils/csv-helper";
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 
 // Define a minimal sample campaign for testing
 const sampleCampaign: Campaign = {
   id: "test123",
   campaignName: "Test Campaign",
   campaignType: "Webinars",
-  strategicPillars: ["Account Growth and Product Adoption"],
+  strategicPillar: ["Account Growth and Product Adoption"], // Fixed: renamed from strategicPillars
   revenuePlay: "All",
-  fiscalYear: "FY25",
+  fy: "FY25", // Fixed: renamed from fiscalYear
   quarterMonth: "Q1 - July",
   region: "JP & Korea",
   country: "Japan",
@@ -16,14 +16,13 @@ const sampleCampaign: Campaign = {
   description: "Test description",
   forecastedCost: 10000,
   expectedLeads: 100,
-  impactedRegions: [],
-  status: "Planning",
+  status: "Planning", // Fixed: proper typing
   poRaised: false,
-  campaignCode: "",
+  salesforceCampaignCode: "", // Fixed: renamed from campaignCode
   issueLink: "",
-  actualCost: "",
-  actualLeads: "",
-  actualMQLs: "",
+  actualCost: 0, // Fixed: number instead of string
+  actualLeads: 0, // Fixed: number instead of string
+  actualMqls: 0, // Fixed: number instead of string
   mql: 10,
   sql: 6,
   opportunities: 5,

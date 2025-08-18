@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database, GitBranch, FileJson, Users, CloudArrowUp, ArrowsClockwise } from "@phosphor-icons/react";
+import { Database, GitBranch, FileJs, Users, CloudArrowUp, ArrowsClockwise } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -152,7 +152,7 @@ export function PersistentStorageInfo({ campaigns = [] }) {
           
           <div className="rounded-md bg-muted p-4">
             <h4 className="font-medium mb-2 flex items-center gap-2">
-              <FileJson className="h-4 w-4" /> Regional Budgets
+              <FileJs className="h-4 w-4" /> Regional Budgets
             </h4>
             <p className="text-sm text-muted-foreground mb-2">
               Regional budget assignments are also stored in the shared KV store.

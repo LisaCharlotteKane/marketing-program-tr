@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendUp, TrendDown, AlertTriangle, CheckCircle } from "@phosphor-icons/react";
+import { TrendUp, TrendDown, WarningCircle, CheckCircle } from "@phosphor-icons/react";
 import { Campaign } from "@/types/campaign";
 
 interface BudgetSummaryReportProps {
@@ -82,7 +82,7 @@ export function BudgetSummaryReport({ campaigns }: BudgetSummaryReportProps) {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'over':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <WarningCircle className="h-4 w-4 text-red-500" />;
       case 'warning':
         return <TrendUp className="h-4 w-4 text-yellow-500" />;
       default:

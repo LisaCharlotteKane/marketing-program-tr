@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { X, Warning, AlertTriangle } from "@phosphor-icons/react";
+import { X, Warning, WarningCircle } from "@phosphor-icons/react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Campaign, CampaignDisplayProps } from "@/types/campaign";
 
@@ -232,7 +232,7 @@ export function BudgetManagement({ campaigns = [] }: BudgetManagementProps) {
                 {/* Status Alert */}
                 {status.type !== 'good' && (
                   <Alert variant={status.type === 'critical' ? 'destructive' : 'default'}>
-                    <AlertTriangle className="h-4 w-4" />
+                    <WarningCircle className="h-4 w-4" />
                     <AlertDescription className="text-xs">
                       {status.message}
                     </AlertDescription>

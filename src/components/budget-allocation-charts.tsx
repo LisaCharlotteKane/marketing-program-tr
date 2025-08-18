@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChartPie, TrendUp, DollarSign, Users } from "@phosphor-icons/react";
+import { ChartPie, TrendUp, CurrencyDollar, Users } from "@phosphor-icons/react";
 import { 
   ResponsiveContainer, 
   PieChart, 
@@ -190,7 +190,7 @@ export function BudgetAllocationCharts({ campaigns, budgetData, ownerToRegion }:
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
+            <CurrencyDollar className="h-5 w-5" />
             Quarterly Spending Trend
           </CardTitle>
         </CardHeader>
