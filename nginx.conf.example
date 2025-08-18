@@ -1,0 +1,54 @@
+# Nginx configuration to prevent HTTP 431 errors
+# This is a reference configuration for self-hosted deployments
+
+server {
+    listen 80;
+    server_name your-domain.com;
+    
+    # Increase header buffer sizes to handle larger requests
+    # Default is usually too small for apps with many cookies
+    large_client_header_buffers 8 16k;  # 8 buffers of 16KB each (128KB total)
+    client_header_buffer_size 4k;       # Initial buffer size
+    
+    # Optional: Set a reasonable limit for request headers
+    # This prevents abuse while allowing legitimate large headers
+    client_max_body_size 50M;
+    
+    # Enable compression to reduce header size when possible
+    gzip on;
+    gzip_types text/plain text/css text/javascript application/javascript application/json;
+    
+    location / {
+        # Proxy to your app
+        proxy_pass http://localhost:3000;
+        
+        # Don't pass through problematic headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Optional: Set timeout for large header processing
+        proxy_connect_timeout 30s;
+        proxy_read_timeout 60s;
+    }
+    
+    # Optional: Block requests with excessively large headers
+    location /api/ {
+        # More restrictive for API endpoints
+        large_client_header_buffers 4 8k;  # Smaller buffers for API
+        
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Error handling for 431 errors
+error_page 431 /431.html;
+location = /431.html {
+    root /var/www/html;
+    internal;
+}

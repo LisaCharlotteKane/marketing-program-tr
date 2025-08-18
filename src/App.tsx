@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,12 @@ import {
   createCampaignWithMetrics,
   parseCampaignStatus
 } from "@/types/utils";
+
+// Import monitoring utilities to prevent HTTP 431 errors
+import { startHeaderSizeMonitoring } from "@/utils/header-guard";
+import { startStorageMonitoring } from "@/utils/storage-size-guard";
+import { clearProblematicCookies } from "@/lib/cookie-cleanup";
+import { HTTP431Monitor } from "@/components/http431-monitor";
 
 // Import/Export Component
 function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
@@ -984,9 +990,23 @@ export default function App() {
   // Fixed: Use proper useKV hook with type annotations
   const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
   
-  React.useEffect(() => {
+  // Initialize monitoring systems to prevent HTTP 431 errors
+  useEffect(() => {
     console.log("App mounted successfully!");
     console.log("Campaigns:", campaigns);
+    
+    // Clear problematic cookies on startup
+    clearProblematicCookies();
+    
+    // Start monitoring header and storage sizes
+    const cleanupHeaderMonitoring = startHeaderSizeMonitoring();
+    const cleanupStorageMonitoring = startStorageMonitoring();
+    
+    // Cleanup function
+    return () => {
+      cleanupHeaderMonitoring();
+      cleanupStorageMonitoring();
+    };
   }, [campaigns]);
 
   const handleAddCampaign = (campaign: Campaign): void => {
@@ -1030,6 +1050,9 @@ export default function App() {
       <div className="min-h-screen bg-background">
         <div data-healthcheck="READY" />
         <Toaster position="top-right" richColors />
+        
+        {/* HTTP 431 Prevention Monitor */}
+        <HTTP431Monitor />
         
         {/* Simple ready check */}
         <div style={{ position: 'fixed', top: '10px', right: '10px', background: 'green', color: 'white', padding: '5px', zIndex: 9999 }}>

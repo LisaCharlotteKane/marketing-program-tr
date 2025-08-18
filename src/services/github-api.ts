@@ -2,11 +2,16 @@
  * GitHub Repository API Service
  * 
  * Handles interactions with GitHub API for storing and retrieving campaign data
+ * Optimized to prevent HTTP 431 errors
  */
 
 // Campaign data type import
 import { Campaign } from "@/types/campaign";
 import { RegionalBudgets } from "@/hooks/useRegionalBudgets";
+import { getMinimalHeaders, createHeaderGuardedFetch } from "@/utils/header-guard";
+
+// Use header-guarded fetch
+const guardedFetch = createHeaderGuardedFetch();
 
 // Base configuration
 interface GitHubConfig {
@@ -32,27 +37,34 @@ interface GitHubFileResponse {
 }
 
 /**
- * Attempts to perform a fetch operation with retries
- * 
- * @param url The URL to fetch
- * @param options Fetch options
- * @param retries Number of retries
- * @returns Promise with the fetch response
+ * Attempts to perform a fetch operation with retries and header size management
  */
 async function retryableFetch(url: string, options: RequestInit, retries = 2): Promise<Response> {
   try {
-    const response = await fetch(url, options);
+    const response = await guardedFetch(url, options);
     if (response.ok) {
       return response;
     }
     
+    // Handle specific HTTP 431 error
+    if (response.status === 431) {
+      console.warn('HTTP 431 - Request headers too large, attempting cleanup...');
+      // Import and run cookie cleanup
+      const { clearProblematicCookies } = await import('@/lib/cookie-cleanup');
+      clearProblematicCookies();
+      
+      if (retries > 0) {
+        // Wait a moment for cleanup to take effect
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return retryableFetch(url, options, retries - 1);
+      }
+    }
+    
     // For 429 Too Many Requests, retry with backoff
     if (response.status === 429 && retries > 0) {
-      // Get retry-after header or use default backoff
       const retryAfter = response.headers.get('retry-after');
       const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : 2000;
       
-      // Wait before retry
       await new Promise(resolve => setTimeout(resolve, delay));
       return retryableFetch(url, options, retries - 1);
     }
@@ -120,11 +132,10 @@ export async function saveDataToGitHub<T>(
       const response = await retryableFetch(
         `https://api.github.com/repos/${fullConfig.owner}/${fullConfig.repo}/contents/${fullConfig.path}`,
         {
-          headers: {
-            'Authorization': `token ${fullConfig.token}`,
-            'Content-Type': 'application/json',
+          headers: getMinimalHeaders({
+            'Authorization': `Bearer ${fullConfig.token}`,
             'Accept': 'application/vnd.github.v3+json',
-          },
+          }),
         }
       );
       
@@ -142,8 +153,8 @@ export async function saveDataToGitHub<T>(
       message: commitMessage,
       content: encodedContent,
       committer: {
-        name: 'Marketing Campaign Tool',
-        email: 'campaign-tool@example.com',
+        name: 'Campaign Tool',
+        email: 'tool@example.com',
       },
     };
     
@@ -157,11 +168,10 @@ export async function saveDataToGitHub<T>(
       `https://api.github.com/repos/${fullConfig.owner}/${fullConfig.repo}/contents/${fullConfig.path}`,
       {
         method: 'PUT',
-        headers: {
-          'Authorization': `token ${fullConfig.token}`,
-          'Content-Type': 'application/json',
+        headers: getMinimalHeaders({
+          'Authorization': `Bearer ${fullConfig.token}`,
           'Accept': 'application/vnd.github.v3+json',
-        },
+        }),
         body: JSON.stringify(requestBody),
       }
     );
@@ -215,11 +225,10 @@ export async function loadDataFromGitHub<T>(
     const response = await retryableFetch(
       `https://api.github.com/repos/${fullConfig.owner}/${fullConfig.repo}/contents/${fullConfig.path}`,
       {
-        headers: {
-          'Authorization': `token ${fullConfig.token}`,
-          'Content-Type': 'application/json',
+        headers: getMinimalHeaders({
+          'Authorization': `Bearer ${fullConfig.token}`,
           'Accept': 'application/vnd.github.v3+json',
-        },
+        }),
       }
     );
     

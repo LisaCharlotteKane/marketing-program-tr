@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { safeSetItem } from '@/utils/storage-size-guard';
 
 type SetValue<T> = (value: T | ((prev: T) => T)) => void;
 type DeleteValue = () => void;
@@ -18,10 +19,16 @@ export function useKV<T>(key: string, initialValue: T): [T, SetValue<T>, DeleteV
     }
   }, [key]);
 
-  // Save to localStorage when value changes
+  // Save to localStorage when value changes using safe setter
   useEffect(() => {
     try {
-      localStorage.setItem(key, JSON.stringify(value));
+      const serialized = JSON.stringify(value);
+      const success = safeSetItem(key, serialized);
+      
+      if (!success) {
+        console.warn(`Failed to save ${key} - storage full or item too large`);
+        // Could trigger a cleanup notification here
+      }
     } catch (error) {
       console.warn(`Failed to save ${key} to localStorage:`, error);
     }
