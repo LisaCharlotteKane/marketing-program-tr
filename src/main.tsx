@@ -1,4 +1,4 @@
-import React from 'react'
+import { Component, StrictMode, type ErrorInfo, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import SimpleApp from './SimpleApp.tsx'
@@ -7,11 +7,11 @@ import "./main.css"
 import "./index.css"
 
 // Error Boundary Component
-class ErrorBoundary extends React.Component<
-  { children: React.ReactNode },
+class ErrorBoundary extends Component<
+  { children: ReactNode },
   { hasError: boolean; error?: Error }
 > {
-  constructor(props: { children: React.ReactNode }) {
+  constructor(props: { children: ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -21,7 +21,7 @@ class ErrorBoundary extends React.Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary details:', error, errorInfo);
   }
 
@@ -67,11 +67,11 @@ if (container) {
   }
   
   createRoot(container).render(
-    <React.StrictMode>
+    <StrictMode>
       <ErrorBoundary>
         <AppToRender />
       </ErrorBoundary>
-    </React.StrictMode>
+    </StrictMode>
   );
 } else {
   console.error('Root container not found!');

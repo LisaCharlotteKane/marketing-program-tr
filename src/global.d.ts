@@ -13,7 +13,7 @@ declare module './index.css' {
   export default content;
 }
 
-// Spark hooks declarations
-declare module '@github/spark/hooks' {
-  export function useKV<T>(key: string, initialValue: T): [T, (value: T) => void, () => void];
-}
+// Spark hooks declarations - using local implementation instead
+// declare module '@github/spark/hooks' {
+//   export function useKV<T>(key: string, initialValue: T): [T, (value: T) => void, () => void];
+// }

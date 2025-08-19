@@ -30,9 +30,7 @@ declare global {
 }
 
 // GitHub Spark types (if used)
-declare module '@github/spark/hooks' {
-  export function useKV<T>(key: string, initialValue: T): [T, (value: T) => void, () => void];
-}
+// Using local hooks instead of @github/spark/hooks
 
 // PapaParse types
 declare module 'papaparse' {

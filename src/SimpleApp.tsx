@@ -1,9 +1,9 @@
-import React from 'react';
+import { useEffect } from 'react';
 
 export default function SimpleApp() {
   console.log("SimpleApp rendering...");
   
-  React.useEffect(() => {
+  useEffect(() => {
     console.log("SimpleApp mounted!");
   }, []);
 
