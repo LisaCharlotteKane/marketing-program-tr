@@ -45,12 +45,3 @@ export const makeEmptyCampaign = (): Campaign => ({
   pipelineForecast: 0,
   status: "Planning",
 });
-
-export interface CampaignTableProps {
-  campaigns: Campaign[];
-  setCampaigns?: (campaigns: Campaign[]) => void;
-}
-
-export interface CampaignDisplayProps {
-  campaigns: Campaign[];
-}
