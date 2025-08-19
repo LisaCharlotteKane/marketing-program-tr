@@ -93,3 +93,29 @@ export function getAllCampaignTypes(): string[] {
     "Contractor/Infrastructure"
   ];
 }
+
+/**
+ * Safely convert any value to a number with fallback
+ * @param v The value to convert to number
+ * @param d Default value if conversion fails (default: 0)
+ * @returns Converted number or default value
+ */
+export const num = (v: unknown, d = 0): number => {
+  const n = Number((v ?? "").toString().trim());
+  return Number.isFinite(n) ? n : d;
+};
+
+/**
+ * Safely convert any value to a string with fallback
+ * @param v The value to convert to string
+ * @param d Default value if conversion fails (default: "")
+ * @returns Converted string or default value
+ */
+export const str = (v: unknown, d = ""): string => (v ?? d) as string;
+
+/**
+ * Convert a value or array to always be an array
+ * @param x The value to convert to array
+ * @returns Array containing the value(s)
+ */
+export const toArray = <T>(x: T | T[]): T[] => (Array.isArray(x) ? x : [x]);
