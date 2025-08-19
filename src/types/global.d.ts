@@ -1,26 +1,61 @@
-// Global type declarations
+// CSS Module declarations
 declare module '*.css' {
   const content: string;
   export default content;
 }
 
+declare module './main.css' {
+  const content: string;
+  export default content;
+}
+
+declare module './index.css' {
+  const content: string;
+  export default content;
+}
+
+// Sonner toast type declarations
 declare module 'sonner' {
   export function toast(message: string): void;
-  export const Toaster: React.ComponentType<{
-    position?: string;
-    richColors?: boolean;
-  }>;
+  export const Toaster: React.ComponentType<any>;
 }
 
-declare module '@github/spark/hooks' {
-  export function useKV<T>(key: string, defaultValue: T): [T, (value: T) => void, () => void];
-}
-
-// Extend Window interface if needed
+// React types extensions
 declare global {
-  interface Window {
-    BASE_KV_SERVICE_URL?: string;
+  namespace React {
+    interface CSSProperties {
+      [key: `--${string}`]: string | number;
+    }
   }
+}
+
+// GitHub Spark types (if used)
+declare module '@github/spark/hooks' {
+  export function useKV<T>(key: string, initialValue: T): [T, (value: T) => void, () => void];
+}
+
+// PapaParse types
+declare module 'papaparse' {
+  export interface ParseResult<T> {
+    data: T[];
+    errors: any[];
+    meta: {
+      delimiter: string;
+      linebreak: string;
+      aborted: boolean;
+      truncated: boolean;
+      cursor: number;
+    };
+  }
+
+  export function parse<T = any>(
+    csv: string,
+    config?: {
+      header?: boolean;
+      skipEmptyLines?: boolean;
+      transform?: (value: string) => any;
+    }
+  ): ParseResult<T>;
 }
 
 export {};

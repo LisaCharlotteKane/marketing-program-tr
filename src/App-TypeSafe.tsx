@@ -803,8 +803,7 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
                           placeholder="0"
                           value={editFormData.actualCost || 0}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                            setEditFormData(prev => ({...prev, actualCost: Number(e.target.value)}))
-                          }
+                            setEditFormData(prev => ({...prev, actualCost: Number(e.target.value)}))}
                           className="w-24 text-right"
                         />
                       ) : (
@@ -820,8 +819,7 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
                           placeholder="0"
                           value={editFormData.actualLeads || 0}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                            setEditFormData(prev => ({...prev, actualLeads: Number(e.target.value)}))
-                          }
+                            setEditFormData(prev => ({...prev, actualLeads: Number(e.target.value)}))}
                           className="w-20 text-right"
                         />
                       ) : (
@@ -835,8 +833,7 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
                           placeholder="0"
                           value={editFormData.actualMqls || 0}
                           onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                            setEditFormData(prev => ({...prev, actualMqls: Number(e.target.value)}))
-                          }
+                            setEditFormData(prev => ({...prev, actualMqls: Number(e.target.value)}))}
                           className="w-20 text-right"
                         />
                       ) : (
