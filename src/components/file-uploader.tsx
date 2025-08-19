@@ -1,9 +1,9 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/lib/notifier";
+import { notify } from "@/lib/notifier";
 import Papa from "papaparse";
 import { UploadSimple, DownloadSimple } from "@phosphor-icons/react";
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 import { processCsvData, exportCampaignsToCsv } from "@/utils/csv-helper";
 import { CsvPreviewModal } from "@/components/csv-preview-modal";
 
@@ -32,7 +32,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
     if (!file) return;
     
     // Show toast to indicate processing has started
-    toast('Processing CSV file...');
+    notify.info('Processing CSV file...');
     
     // Use FileReader to read the file content
     const reader = new FileReader();
@@ -42,7 +42,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
       try {
         const csvContent = e.target?.result as string;
         if (!csvContent) {
-          toast('Failed to read CSV file content');
+          notify.error('Failed to read CSV file content');
           return;
         }
         
@@ -205,7 +205,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
         
       } catch (error) {
         console.error('Error processing CSV:', error);
-        toast(`Failed to process CSV file: ${(error as Error).message}`);
+        notify.error(`Failed to process CSV file: ${(error as Error).message}`);
       }
       
       // Reset the file input
@@ -213,7 +213,7 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
     };
     
     reader.onerror = () => {
-      toast('Failed to read the file');
+      notify.error('Failed to read the file');
       event.target.value = '';
     };
     
@@ -229,19 +229,19 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
     
     // Show errors and warnings as toasts (reduced version since they've already seen them in the preview)
     if (errors.length > 0) {
-      toast(`Import had ${errors.length} error${errors.length !== 1 ? 's' : ''}`);
+      notify.warning(`Import had ${errors.length} error${errors.length !== 1 ? 's' : ''}`);
     }
     
     if (warnings.length > 0) {
-      toast(`Import had ${warnings.length} warning${warnings.length !== 1 ? 's' : ''}`);
+      notify.warning(`Import had ${warnings.length} warning${warnings.length !== 1 ? 's' : ''}`);
     }
     
     // Process imported campaigns
     if (campaigns.length > 0) {
       onFileUpload(campaigns);
-      toast(`Imported ${campaigns.length} campaigns successfully`);
+      notify.success(`Imported ${campaigns.length} campaigns successfully`);
     } else if (errors.length === 0) {
-      toast('No valid campaigns found in the CSV file');
+      notify.warning('No valid campaigns found in the CSV file');
     }
   };
 
@@ -414,12 +414,12 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
     link.click();
     document.body.removeChild(link);
     
-    toast('Template downloaded successfully');
+    notify.success('Template downloaded successfully');
   };
 
   const exportToCsv = () => {
     if (currentCampaigns.length === 0) {
-      toast('No campaigns to export');
+      notify.warning('No campaigns to export');
       return;
     }
 
@@ -437,10 +437,10 @@ export function FileUploader({ onFileUpload, currentCampaigns }: FileUploaderPro
       link.click();
       document.body.removeChild(link);
 
-      toast(`Exported ${currentCampaigns.length} campaigns successfully`);
+      notify.success(`Exported ${currentCampaigns.length} campaigns successfully`);
     } catch (error) {
       console.error('Export error:', error);
-      toast(`Failed to export campaigns: ${(error as Error).message}`);
+      notify.error(`Failed to export campaigns: ${(error as Error).message}`);
     }
   };
 

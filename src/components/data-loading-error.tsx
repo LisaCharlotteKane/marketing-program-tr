@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Warning, X, ArrowClockwise, TrashSimple, DownloadSimple } from "@phosphor-icons/react";
 import { resetAllStorage, exportDataBackup } from "@/services/storage-recovery";
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 import { useState } from "react";
 
 interface DataLoadingErrorProps {

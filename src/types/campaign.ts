@@ -5,7 +5,7 @@ export interface Campaign {
   id: string;
   campaignName: string;
   campaignType?: string;
-  strategicPillar?: string[];
+  strategicPillar?: string[] | string;
   fy?: string;
   quarterMonth?: string;
   region?: string;

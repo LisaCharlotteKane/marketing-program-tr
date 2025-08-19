@@ -6,12 +6,6 @@ declare module '*.css' {
 
 declare module 'sonner' {
   export function toast(message: string): void;
-  export const toast: {
-    success: (message: string) => void;
-    error: (message: string) => void;
-    warning: (message: string) => void;
-    info: (message: string) => void;
-  };
   export const Toaster: React.ComponentType<{
     position?: string;
     richColors?: boolean;

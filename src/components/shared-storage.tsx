@@ -10,7 +10,7 @@ interface StorageProps {
 
 export function SharedStorage({ scope = 'global' }: StorageProps) {
   // Use global scope for shared data across all users
-  const [campaigns, setCampaigns] = useKV('campaignData', [], { scope });
+  const [campaigns, setCampaigns] = useKV('campaignData', []);
   const [refreshTime, setRefreshTime] = useState(new Date());
   
   const refreshData = () => {

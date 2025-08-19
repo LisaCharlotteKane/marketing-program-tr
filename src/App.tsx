@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
 import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Download, ClipboardText } from "@phosphor-icons/react";
-import { toast } from "sonner";
+import { notify } from "@/lib/notifier";
 import { useKV } from "@/hooks/useKV";
 import type { CheckedState } from "@radix-ui/react-checkbox";
 import type { 
@@ -46,7 +46,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
     if (!file) return;
 
     if (!file.name.endsWith('.csv')) {
-      toast('Please upload a CSV file');
+      notify.error('Please upload a CSV file');
       return;
     }
 
@@ -57,7 +57,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
       const lines = text.split('\n').filter(line => line.trim());
       
       if (lines.length < 2) {
-        toast('CSV file must contain a header row and at least one data row');
+        notify.error('CSV file must contain a header row and at least one data row');
         return;
       }
 
@@ -110,13 +110,13 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
 
       if (importedCampaigns.length > 0) {
         onImportCampaigns(importedCampaigns);
-        toast(`Successfully imported ${importedCampaigns.length} campaigns`);
+        notify.success(`Successfully imported ${importedCampaigns.length} campaigns`);
       } else {
-        toast('No valid campaigns found in the CSV file');
+        notify.error('No valid campaigns found in the CSV file');
       }
     } catch (error) {
       console.error('Import error:', error);
-      toast('Failed to import campaigns. Please check the CSV format.');
+      notify.error('Failed to import campaigns. Please check the CSV format.');
     } finally {
       setIsImporting(false);
       event.target.value = '';
@@ -125,7 +125,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
 
   const exportToCsv = () => {
     if (campaigns.length === 0) {
-      toast('No campaigns to export');
+      notify.error('No campaigns to export');
       return;
     }
 
@@ -182,7 +182,7 @@ function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
     link.click();
     document.body.removeChild(link);
     
-    toast(`Exported ${campaigns.length} campaigns to CSV`);
+    notify.success(`Exported ${campaigns.length} campaigns to CSV`);
   };
 
   return (
@@ -261,7 +261,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
     e.preventDefault();
     
     if (!formData.campaignType || !formData.owner || !formData.region) {
-      toast('Please fill in required fields');
+      notify.error('Please fill in required fields');
       return;
     }
 
@@ -303,7 +303,7 @@ function CampaignForm({ onAddCampaign }: CampaignFormProps) {
       campaignName: '',
     });
     
-    toast('Campaign added successfully');
+    notify.success('Campaign added successfully');
   };
 
   const campaignTypes = [
@@ -511,7 +511,7 @@ function CampaignTable({ campaigns, onDeleteCampaign }: CampaignTableProps) {
       selectedCampaigns.forEach(id => onDeleteCampaign(id));
     }
     setSelectedCampaigns([]);
-    toast(`Deleted ${selectedCampaigns.length} campaigns`);
+    notify.success(`Deleted ${selectedCampaigns.length} campaigns`);
   };
 
   return (
@@ -656,7 +656,7 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
     onUpdateCampaign(updatedCampaign);
     setEditingCampaign(null);
     setEditFormData({});
-    toast('Campaign execution updated');
+    notify.success('Campaign execution updated');
   };
 
   const handleCancelEdit = () => {
@@ -979,7 +979,7 @@ export default function App() {
 
   const handleDeleteCampaign = (id: string) => {
     setCampaigns(campaigns.filter(c => c.id !== id));
-    toast('Campaign deleted');
+    notify.success('Campaign deleted');
   };
 
   const handleUpdateCampaign = (updatedCampaign: Campaign) => {

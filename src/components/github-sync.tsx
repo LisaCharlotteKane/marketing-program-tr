@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { type Campaign } from "@/components/campaign-table";
+import { type Campaign } from "@/types/campaign";
 
 export function GitHubSync({ campaigns, setCampaigns }: { 
   campaigns: Campaign[], 

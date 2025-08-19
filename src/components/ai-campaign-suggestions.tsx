@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Brain } from "@phosphor-icons/react";
-import { Campaign } from "@/components/campaign-table";
+import { Campaign } from "@/types/campaign";
 
 interface AICampaignSuggestionsProps {
   campaigns: Campaign[];
