@@ -1,8 +1,6 @@
 import { Component, StrictMode, type ErrorInfo, type ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
-import SimpleApp from './SimpleApp.tsx'
-import MinimalApp from './MinimalApp.tsx'
 import "./main.css"
 import "./index.css"
 
@@ -58,18 +56,10 @@ const container = document.getElementById('root');
 if (container) {
   console.log('Container found, rendering app...');
   
-  // Choose app version based on URL params
-  let AppToRender = App;
-  if (window.location.search.includes('simple')) {
-    AppToRender = SimpleApp;
-  } else if (window.location.search.includes('minimal')) {
-    AppToRender = MinimalApp;
-  }
-  
   createRoot(container).render(
     <StrictMode>
       <ErrorBoundary>
-        <AppToRender />
+        <App />
       </ErrorBoundary>
     </StrictMode>
   );

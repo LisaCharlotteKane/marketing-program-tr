@@ -27,3 +27,20 @@ dist-ssr
 .env
 **/agent-eval-report*
 packages
+
+# Additional patterns to prevent excessive file watching
+*.bak
+*.backup
+*.tmp
+*.temp
+*test*.html
+*test*.js
+*check*.html
+*check*.js
+*debug*.html
+*debug*.js
+*fix*.html
+*fix*.js
+*.old
+*-old.*
+*-backup.*

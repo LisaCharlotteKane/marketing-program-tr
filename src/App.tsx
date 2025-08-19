@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Toaster } from "@/components/ui/sonner";
 import { Calculator, ChartBar, Target, BuildingOffice, ClipboardText } from "@phosphor-icons/react";
 import { notify } from "@/lib/notifier";
-import { useKV } from "@/hooks/useKV";
+import { useKV } from "@/hooks/useKV.ts";
 import { num } from "@/lib/utils";
 import type { Campaign } from "@/types/campaign";
 
