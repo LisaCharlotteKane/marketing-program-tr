@@ -28,7 +28,6 @@ export const notify: Notifier = {
     toast(msg);
     return msg; // Return a mock ID for compatibility
   },
-  dismiss(_id?: string): void {
     // sonner doesn't have dismiss, so this is a no-op
-  }
+    // sonner doesn't have dismiss, so this is a no-op
 };
