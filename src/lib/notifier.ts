@@ -1,33 +1,24 @@
-import { toast } from "sonner";
+import { toast as sonnerToast } from "sonner";
 
 export type Notifier = {
-  success(msg: string): void;
-  error(msg: string | Error): void;
-  info(msg: string): void;
-  warning(msg: string): void;
-  loading(msg: string): string;
-  dismiss(id?: string): void;
+  success: (message: string) => void;
+  error: (message: string) => void;
+  info: (message: string) => void;
+  warning: (message: string) => void;
+  loading: (message: string) => string | number;
+  dismiss: (id?: string | number) => void;
 };
 
-// Implementation using sonner with proper error handling
 export const notify: Notifier = {
-  success(msg: string): void {
-    toast(msg);
-  },
-  error(msg: string | Error): void {
-    const message = msg instanceof Error ? msg.message : String(msg);
-    toast(message);
-  },
-  info(msg: string): void {
-    toast(msg);
-  },
-  warning(msg: string): void {
-    toast(msg);
-  },
-  loading(msg: string): string {
-    toast(msg);
-    return msg; // Return a mock ID for compatibility
-  },
-    // sonner doesn't have dismiss, so this is a no-op
-    // sonner doesn't have dismiss, so this is a no-op
+  success: (message: string) => { sonnerToast.success(message); },
+  error: (message: string) => { sonnerToast.error(message); },
+  info: (message: string) => { sonnerToast.info(message); },
+  warning: (message: string) => { sonnerToast.warning(message); },
+  loading: (message: string) => sonnerToast.loading(message),
+  dismiss: (id?: string | number) => { sonnerToast.dismiss(id); },
 };
+
+// Legacy support for simple toast function
+export const toast = (message: string) => sonnerToast(message);
+
+export default notify;

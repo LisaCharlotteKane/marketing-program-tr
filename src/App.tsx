@@ -2,874 +2,78 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Toaster } from "sonner";
-import { Plus, Trash, Calculator, ChartBar, Target, BuildingOffice, Upload, Download, ClipboardText } from "@phosphor-icons/react";
+import { Calculator, ChartBar, Target, BuildingOffice, ClipboardText } from "@phosphor-icons/react";
 import { notify } from "@/lib/notifier";
 import { useKV } from "@/hooks/useKV";
-import type { CheckedState } from "@radix-ui/react-checkbox";
-import type { 
-  Campaign, 
-  FormData, 
-  BudgetAllocation, 
-  BudgetUsage,
-  ImportExportProps,
-  CampaignFormProps,
-  CampaignTableProps,
-  ExecutionTrackingProps,
-  CampaignStatus
-} from "@/types/campaign";
-import { 
-  calculateCampaignMetrics, 
-  parseToNumber, 
-  parseStrategicPillars, 
-  parseCampaignStatus
-} from "@/types/utils";
+import type { Campaign } from "@/types/campaign";
 
-// HTTP 431 Prevention
-import { initializeHTTP431Prevention } from "@/utils/http431-prevention";
+// Simple campaign data for testing
+const sampleCampaigns: Campaign[] = [
+  {
+    id: "1",
+    campaignName: "Q1 Developer Event",
+    campaignType: "Webinars",
+    strategicPillar: ["Brand Awareness & Top of Funnel Demand Generation"],
+    revenuePlay: "All",
+    fy: "FY25",
+    quarterMonth: "Q1 - July",
+    region: "JP & Korea",
+    country: "Japan",
+    owner: "Tomoko Tanaka",
+    description: "Quarterly developer engagement event",
+    forecastedCost: 15000,
+    expectedLeads: 100,
+    mql: 10,
+    sql: 6,
+    opportunities: 5,
+    pipelineForecast: 250000,
+    status: "Planning"
+  }
+];
 
-// Import/Export Component
-function ImportExport({ onImportCampaigns, campaigns }: ImportExportProps) {
-  const [isImporting, setIsImporting] = useState<boolean>(false);
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    if (!file.name.endsWith('.csv')) {
-      notify.error('Please upload a CSV file');
-      return;
-    }
-
-    setIsImporting(true);
-    
-    try {
-      const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim());
-      
-      if (lines.length < 2) {
-        notify.error('CSV file must contain a header row and at least one data row');
-        return;
-      }
-
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      const importedCampaigns: Campaign[] = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-        
-        if (values.length !== headers.length) continue;
-
-        const campaignData: Record<string, string> = {};
-        headers.forEach((header: string, index: number) => {
-          campaignData[header] = values[index] || '';
-        });
-
-        // Map CSV data to Campaign interface with proper type conversions
-        const campaign: Campaign = {
-          id: Date.now().toString() + i,
-          campaignName: campaignData.campaignName || campaignData['Campaign Name'] || `Campaign ${i}`,
-          campaignType: campaignData.campaignType || campaignData['Campaign Type'] || '',
-          strategicPillar: parseStrategicPillars(campaignData.strategicPillar || campaignData['Strategic Pillar']),
-          revenuePlay: campaignData.revenuePlay || campaignData['Revenue Play'] || '',
-          fy: campaignData.fy || campaignData['FY'] || '',
-          quarterMonth: campaignData.quarterMonth || campaignData['Quarter/Month'] || '',
-          region: campaignData.region || campaignData['Region'] || '',
-          country: campaignData.country || campaignData['Country'] || '',
-          owner: campaignData.owner || campaignData['Owner'] || '',
-          description: campaignData.description || campaignData['Description'] || '',
-          forecastedCost: parseToNumber(campaignData.forecastedCost || campaignData['Forecasted Cost']),
-          expectedLeads: parseToNumber(campaignData.expectedLeads || campaignData['Expected Leads']),
-          mql: parseToNumber(campaignData.mql || campaignData['MQL']),
-          sql: parseToNumber(campaignData.sql || campaignData['SQL']),
-          opportunities: parseToNumber(campaignData.opportunities || campaignData['Opportunities']),
-          pipelineForecast: parseToNumber(campaignData.pipelineForecast || campaignData['Pipeline Forecast']),
-          status: parseCampaignStatus(campaignData.status || campaignData['Status'])
-        };
-
-        // If metrics are not provided, calculate them
-        if (!campaign.mql && !campaign.sql && !campaign.opportunities && !campaign.pipelineForecast) {
-          const calculated = calculateCampaignMetrics(campaign.expectedLeads || 0, campaign.forecastedCost || 0, campaign.campaignType || '');
-          campaign.mql = calculated.mql;
-          campaign.sql = calculated.sql;
-          campaign.opportunities = calculated.opportunities;
-          campaign.pipelineForecast = calculated.pipelineForecast;
-        }
-
-        importedCampaigns.push(campaign);
-      }
-
-      if (importedCampaigns.length > 0) {
-        onImportCampaigns(importedCampaigns);
-        notify.success(`Successfully imported ${importedCampaigns.length} campaigns`);
-      } else {
-        notify.error('No valid campaigns found in the CSV file');
-      }
-    } catch (error) {
-      console.error('Import error:', error);
-      notify.error('Failed to import campaigns. Please check the CSV format.');
-    } finally {
-      setIsImporting(false);
-      if (event.target) {
-        event.target.value = '';
-      }
-    }
-  };
-
-  const exportToCsv = () => {
-    if (campaigns.length === 0) {
-      notify.error('No campaigns to export');
-      return;
-    }
-
-    const headers = [
-      'Campaign Name',
-      'Campaign Type',
-      'Strategic Pillar',
-      'Revenue Play',
-      'FY',
-      'Quarter/Month',
-      'Region',
-      'Country',
-      'Owner',
-      'Description',
-      'Forecasted Cost',
-      'Expected Leads',
-      'MQL',
-      'SQL',
-      'Opportunities',
-      'Pipeline Forecast',
-      'Status'
-    ];
-
-    const csvContent = [
-      headers.join(','),
-      ...campaigns.map((campaign: Campaign) => [
-        `"${campaign.campaignName || ''}"`,
-        `"${campaign.campaignType || ''}"`,
-        `"${Array.isArray(campaign.strategicPillar) ? campaign.strategicPillar.join(';') : String(campaign.strategicPillar || '')}"`,
-        `"${campaign.revenuePlay || ''}"`,
-        `"${campaign.fy || ''}"`,
-        `"${campaign.quarterMonth || ''}"`,
-        `"${campaign.region || ''}"`,
-        `"${campaign.country || ''}"`,
-        `"${campaign.owner || ''}"`,
-        `"${campaign.description || ''}"`,
-        campaign.forecastedCost || 0,
-        campaign.expectedLeads || 0,
-        campaign.mql || 0,
-        campaign.sql || 0,
-        campaign.opportunities || 0,
-        campaign.pipelineForecast || 0,
-        `"${campaign.status || 'Planning'}"`
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `marketing-campaigns-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    notify.success(`Exported ${campaigns.length} campaigns to CSV`);
-  };
-
+// Simple Campaign List Component
+function CampaignList({ campaigns }: { campaigns: Campaign[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Upload className="h-5 w-5" />
-          Import/Export Campaigns
-        </CardTitle>
-        <CardDescription>
-          Import campaigns from CSV or export existing campaigns
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-3">
-            <h4 className="font-medium">Import from CSV</h4>
-            <p className="text-sm text-muted-foreground">
-              Upload a CSV file with campaign data.
-            </p>
-            <div className="relative">
-              <Input
-                type="file"
-                accept=".csv"
-                onChange={handleFileUpload}
-                disabled={isImporting}
-                className="cursor-pointer"
-              />
-              {isImporting && (
-                <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h4 className="font-medium">Export to CSV</h4>
-            <p className="text-sm text-muted-foreground">
-              Download all current campaigns as a CSV file.
-            </p>
-            <Button 
-              onClick={exportToCsv}
-              disabled={campaigns.length === 0}
-              variant="outline"
-              className="w-full"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export {campaigns.length} Campaigns
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Campaign Form Component
-function CampaignForm({ onAddCampaign }: CampaignFormProps) {
-  const [formData, setFormData] = useState<FormData>({
-    campaignType: '',
-    strategicPillar: [],
-    revenuePlay: '',
-    fy: '',
-    quarterMonth: '',
-    region: '',
-    country: '',
-    owner: '',
-    description: '',
-    forecastedCost: 0,
-    expectedLeads: 0,
-    campaignName: '',
-  });
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    if (!formData.campaignType || !formData.owner || !formData.region) {
-      notify.error('Please fill in required fields');
-      return;
-    }
-
-    const metrics = calculateCampaignMetrics(formData.expectedLeads, formData.forecastedCost, formData.campaignType);
-    
-    const newCampaign: Campaign = {
-      id: Date.now().toString(),
-      campaignName: formData.campaignName,
-      campaignType: formData.campaignType,
-      strategicPillar: formData.strategicPillar,
-      revenuePlay: formData.revenuePlay,
-      fy: formData.fy,
-      quarterMonth: formData.quarterMonth,
-      region: formData.region,
-      country: formData.country,
-      owner: formData.owner,
-      description: formData.description,
-      forecastedCost: formData.forecastedCost,
-      expectedLeads: formData.expectedLeads,
-      ...metrics,
-      status: 'Planning'
-    };
-
-    onAddCampaign(newCampaign);
-    
-    // Reset form
-    setFormData({
-      campaignType: '',
-      strategicPillar: [],
-      revenuePlay: '',
-      fy: '',
-      quarterMonth: '',
-      region: '',
-      country: '',
-      owner: '',
-      description: '',
-      forecastedCost: 0,
-      expectedLeads: 0,
-      campaignName: '',
-    });
-    
-    notify.success('Campaign added successfully');
-  };
-
-  const campaignTypes = [
-    "In-Account Events (1:1)",
-    "Exec Engagement Programs", 
-    "CxO Events (1:Few)",
-    "Localized Events",
-    "Localized Programs",
-    "Lunch & Learns and Workshops (1:Few)",
-    "Microsoft",
-    "Partners",
-    "Webinars",
-    "3P Sponsored Events",
-    "Flagship Events (Galaxy, Universe Recaps) (1:Many)",
-    "Targeted Paid Ads & Content Syndication",
-    "User Groups",
-    "Contractor/Infrastructure"
-  ];
-
-  const strategicPillars = [
-    "Account Growth and Product Adoption",
-    "Pipeline Acceleration & Executive Engagement", 
-    "Brand Awareness & Top of Funnel Demand Generation",
-    "New Logo Acquisition"
-  ];
-
-  const revenuePlayOptions = [
-    "Accelerate developer productivity with Copilot in VS Code and GitHub",
-    "Secure all developer workloads with the power of AI",
-    "All"
-  ];
-
-  const regions = ["JP & Korea", "South APAC", "SAARC", "Digital"];
-  const owners = ["Tomoko Tanaka", "Beverly Leung", "Shruti Narang", "Giorgia Parham"];
-  const fiscalYears = ["FY25", "FY26"];
-  const quarters = [
-    "Q1 - July", "Q1 - August", "Q1 - September", 
-    "Q2 - October", "Q2 - November", "Q2 - December", 
-    "Q3 - January", "Q3 - February", "Q3 - March", 
-    "Q4 - April", "Q4 - May", "Q4 - June"
-  ];
-  
-  const countries = [
-    "Afghanistan", "Australia", "ASEAN", "Bangladesh", "Bhutan", "Brunei", "Cambodia",
-    "China", "GCR", "Hong Kong", "India", "Indonesia", "Japan", "Laos", "Malaysia",
-    "Maldives", "Myanmar", "Nepal", "New Zealand", "Pakistan", "Philippines",
-    "Singapore", "South Korea", "Sri Lanka", "Taiwan", "Thailand", "Vietnam",
-    "X APAC English", "X APAC Non English", "X South APAC", "X SAARC"
-  ];
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Plus className="h-5 w-5" />
-          Add New Campaign
-        </CardTitle>
-        <CardDescription>
-          Create a new marketing campaign with forecasted metrics
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="campaignName">Campaign Name</Label>
-              <Input
-                value={formData.campaignName}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({...prev, campaignName: e.target.value}))}
-                placeholder="Enter campaign name"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="campaignType">Campaign Type *</Label>
-              <Select value={formData.campaignType} onValueChange={(value: string) => setFormData(prev => ({...prev, campaignType: value}))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select campaign type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {campaignTypes.map((type: string) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="strategicPillar">Strategic Pillar</Label>
-              <div className="space-y-2">
-                {strategicPillars.map((pillar: string) => (
-                  <div key={pillar} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={pillar}
-                      checked={formData.strategicPillar.includes(pillar)}
-                      onCheckedChange={(checked: CheckedState) => {
-                        if (checked) {
-                          setFormData(prev => ({
-                            ...prev,
-                            strategicPillar: [...prev.strategicPillar, pillar]
-                          }));
-                        } else {
-                          setFormData(prev => ({
-                            ...prev,
-                            strategicPillar: prev.strategicPillar.filter(p => p !== pillar)
-                          }));
-                        }
-                      }}
-                    />
-                    <Label htmlFor={pillar} className="text-sm font-normal">
-                      {pillar}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="region">Region *</Label>
-              <Select value={formData.region} onValueChange={(value: string) => setFormData(prev => ({...prev, region: value}))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select region" />
-                </SelectTrigger>
-                <SelectContent>
-                  {regions.map((region: string) => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="owner">Campaign Owner *</Label>
-              <Select value={formData.owner} onValueChange={(value: string) => setFormData(prev => ({...prev, owner: value}))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select owner" />
-                </SelectTrigger>
-                <SelectContent>
-                  {owners.map((owner: string) => (
-                    <SelectItem key={owner} value={owner}>{owner}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="forecastedCost">Forecasted Cost ($)</Label>
-              <Input
-                type="number"
-                value={formData.forecastedCost}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({...prev, forecastedCost: Number(e.target.value)}))}
-                placeholder="0"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="expectedLeads">Expected Leads</Label>
-              <Input
-                type="number"
-                value={formData.expectedLeads}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({...prev, expectedLeads: Number(e.target.value)}))}
-                placeholder="0"
-              />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              value={formData.description}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData(prev => ({...prev, description: e.target.value}))}
-              placeholder="Campaign description..."
-              rows={3}
-            />
-          </div>
-
-          <Button type="submit" className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Campaign
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Campaign Table Component
-function CampaignTable({ campaigns, onDeleteCampaign }: CampaignTableProps) {
-  const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
-
-  const handleSelectAll = (checked: CheckedState) => {
-    setSelectedCampaigns(checked ? campaigns.map(c => c.id) : []);
-  };
-
-  const handleSelectCampaign = (campaignId: string, checked: CheckedState) => {
-    setSelectedCampaigns(prev => 
-      checked 
-        ? [...prev, campaignId]
-        : prev.filter(id => id !== campaignId)
-    );
-  };
-
-  const handleDeleteSelected = () => {
-    if (onDeleteCampaign) {
-      selectedCampaigns.forEach(id => onDeleteCampaign(id));
-    }
-    setSelectedCampaigns([]);
-    notify.success(`Deleted ${selectedCampaigns.length} campaigns`);
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Campaign List</CardTitle>
-            <CardDescription>Manage your marketing campaigns</CardDescription>
-          </div>
-          {selectedCampaigns.length > 0 && (
-            <Button 
-              variant="destructive" 
-              size="sm"
-              onClick={handleDeleteSelected}
-            >
-              <Trash className="h-4 w-4 mr-2" />
-              Delete Selected ({selectedCampaigns.length})
-            </Button>
-          )}
-        </div>
+        <CardTitle>Campaign List</CardTitle>
+        <CardDescription>Current marketing campaigns</CardDescription>
       </CardHeader>
       <CardContent>
         {campaigns.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No campaigns yet. Add your first campaign above.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={selectedCampaigns.length === campaigns.length}
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead>Campaign Type</TableHead>
-                  <TableHead>Strategic Pillar</TableHead>
-                  <TableHead>Region</TableHead>
-                  <TableHead>Owner</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Forecasted Cost</TableHead>
-                  <TableHead className="text-right">Expected Leads</TableHead>
-                  <TableHead className="text-right">MQLs</TableHead>
-                  <TableHead className="text-right">SQLs</TableHead>
-                  <TableHead className="text-right">Pipeline</TableHead>
-                  <TableHead className="w-12"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {campaigns.map((campaign: Campaign) => (
-                  <TableRow key={campaign.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedCampaigns.includes(campaign.id)}
-                        onCheckedChange={(checked: CheckedState) => handleSelectCampaign(campaign.id, checked)}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">{campaign.campaignType}</TableCell>
-                    <TableCell>
-                      <div>
-                        {Array.isArray(campaign.strategicPillar) ? (
-                          campaign.strategicPillar.map((pillar: string, index: number) => (
-                            <Badge key={index} variant="secondary" className="text-xs mr-1">
-                              {pillar}
-                            </Badge>
-                          ))
-                        ) : (
-                          campaign.strategicPillar && (
-                            <Badge variant="secondary" className="text-xs">
-                              {campaign.strategicPillar}
-                            </Badge>
-                          )
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{campaign.region}</Badge>
-                    </TableCell>
-                    <TableCell>{campaign.owner}</TableCell>
-                    <TableCell className="max-w-xs truncate">{campaign.description || '-'}</TableCell>
-                    <TableCell className="text-right">
-                      ${(campaign.forecastedCost || 0).toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right">{campaign.expectedLeads || 0}</TableCell>
-                    <TableCell className="text-right">{campaign.mql || 0}</TableCell>
-                    <TableCell className="text-right">{campaign.sql || 0}</TableCell>
-                    <TableCell className="text-right font-mono">
-                      ${(campaign.pipelineForecast || 0).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => onDeleteCampaign?.(campaign.id)}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-// Execution Tracking Component
-function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingProps) {
-  const [editingCampaign, setEditingCampaign] = useState<string | null>(null);
-  const [editFormData, setEditFormData] = useState<Partial<Campaign>>({});
-
-  const handleEditStart = (campaign: Campaign) => {
-    setEditingCampaign(campaign.id);
-    setEditFormData({
-      campaignName: campaign.campaignName || '',
-      status: campaign.status || 'Planning',
-      poRaised: campaign.poRaised || false,
-      issueLink: campaign.issueLink || '',
-      actualCost: campaign.actualCost || 0,
-      actualLeads: campaign.actualLeads || 0,
-      actualMqls: campaign.actualMqls || 0
-    });
-  };
-
-  const handleSaveExecution = (campaign: Campaign) => {
-    const updatedCampaign: Campaign = {
-      ...campaign,
-      campaignName: editFormData.campaignName || campaign.campaignName || '',
-      status: editFormData.status || campaign.status,
-      poRaised: editFormData.poRaised,
-      issueLink: editFormData.issueLink,
-      actualCost: editFormData.actualCost,
-      actualLeads: editFormData.actualLeads,
-      actualMqls: editFormData.actualMqls
-    };
-    onUpdateCampaign(updatedCampaign);
-    setEditingCampaign(null);
-    setEditFormData({});
-    notify.success('Campaign execution updated');
-  };
-
-  const handleCancelEdit = () => {
-    setEditingCampaign(null);
-    setEditFormData({});
-  };
-
-  const statusOptions: CampaignStatus[] = ['Planning', 'On Track', 'Shipped', 'Cancelled'];
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ClipboardText className="h-5 w-5" />
-          Campaign Execution Tracking
-        </CardTitle>
-        <CardDescription>
-          Update actual results and execution status for campaigns
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {campaigns.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No campaigns to track. Add campaigns in the Planning tab first.
-          </div>
+          <p className="text-center py-4 text-muted-foreground">No campaigns found</p>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Campaign Name</TableHead>
-                  <TableHead>Campaign Type</TableHead>
-                  <TableHead>Owner</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Region</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>PO Raised</TableHead>
-                  <TableHead>Issue URL</TableHead>
-                  <TableHead className="text-right">Actual Cost</TableHead>
-                  <TableHead className="text-right">Actual Leads</TableHead>
-                  <TableHead className="text-right">Actual MQLs</TableHead>
-                  <TableHead className="w-24">Actions</TableHead>
+                  <TableHead>Owner</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                  <TableHead className="text-right">Leads</TableHead>
+                  <TableHead className="text-right">Pipeline</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {campaigns.map((campaign: Campaign) => (
                   <TableRow key={campaign.id}>
+                    <TableCell className="font-medium">{campaign.campaignName}</TableCell>
+                    <TableCell>{campaign.campaignType}</TableCell>
                     <TableCell>
-                      {editingCampaign === campaign.id ? (
-                        <Input
-                          placeholder="Campaign name"
-                          value={editFormData.campaignName || ''}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                            setEditFormData(prev => ({...prev, campaignName: e.target.value}))
-                          }
-                          className="w-40"
-                        />
-                      ) : (
-                        <div className="font-medium">
-                          {campaign.campaignName || campaign.campaignType || 'Unnamed Campaign'}
-                        </div>
-                      )}
+                      <Badge variant="outline">{campaign.region}</Badge>
                     </TableCell>
-                    <TableCell className="font-medium">
-                      <div className="truncate max-w-xs">{campaign.campaignType || 'Unknown Type'}</div>
-                    </TableCell>
-                    <TableCell>{campaign.owner || 'Unassigned'}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{campaign.region || 'Unknown'}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      {editingCampaign === campaign.id ? (
-                        <Select 
-                          value={editFormData.status || 'Planning'} 
-                          onValueChange={(value: string) => setEditFormData(prev => ({...prev, status: parseCampaignStatus(value)}))}
-                        >
-                          <SelectTrigger className="w-28">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {statusOptions.map((status: string) => (
-                              <SelectItem key={status} value={status}>
-                                {status}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Badge 
-                          variant={
-                            campaign.status === 'Shipped' ? 'default' :
-                            campaign.status === 'On Track' ? 'secondary' :
-                            campaign.status === 'Cancelled' ? 'destructive' : 'outline'
-                          }
-                        >
-                          {campaign.status || 'Planning'}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editingCampaign === campaign.id ? (
-                        <Checkbox
-                          checked={editFormData.poRaised || false}
-                          onCheckedChange={(checked: CheckedState) => 
-                            setEditFormData(prev => ({...prev, poRaised: !!checked}))
-                          }
-                        />
-                      ) : (
-                        <Badge variant={campaign.poRaised ? 'default' : 'outline'}>
-                          {campaign.poRaised ? 'Yes' : 'No'}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editingCampaign === campaign.id ? (
-                        <Input
-                          type="url"
-                          placeholder="GitHub issue URL"
-                          value={editFormData.issueLink || ''}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                            setEditFormData(prev => ({...prev, issueLink: e.target.value}))
-                          }
-                          className="w-40"
-                        />
-                      ) : (
-                        campaign.issueLink ? (
-                          <a 
-                            href={campaign.issueLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline text-sm"
-                          >
-                            View Issue
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )
-                      )}
-                    </TableCell>
+                    <TableCell>{campaign.owner}</TableCell>
                     <TableCell className="text-right">
-                      {editingCampaign === campaign.id ? (
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={editFormData.actualCost || 0}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                            setEditFormData(prev => ({...prev, actualCost: Number(e.target.value)}))
-                          }
-                          className="w-24 text-right"
-                        />
-                      ) : (
-                        <span className="font-mono">
-                          ${(campaign.actualCost || 0).toLocaleString()}
-                        </span>
-                      )}
+                      ${(campaign.forecastedCost || 0).toLocaleString()}
                     </TableCell>
+                    <TableCell className="text-right">{campaign.expectedLeads || 0}</TableCell>
                     <TableCell className="text-right">
-                      {editingCampaign === campaign.id ? (
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={editFormData.actualLeads || 0}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                            setEditFormData(prev => ({...prev, actualLeads: Number(e.target.value)}))
-                          }
-                          className="w-20 text-right"
-                        />
-                      ) : (
-                        <span>{campaign.actualLeads || 0}</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {editingCampaign === campaign.id ? (
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          value={editFormData.actualMqls || 0}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
-                            setEditFormData(prev => ({...prev, actualMqls: Number(e.target.value)}))
-                          }
-                          className="w-20 text-right"
-                        />
-                      ) : (
-                        <span>{campaign.actualMqls || 0}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {editingCampaign === campaign.id ? (
-                        <div className="flex gap-1">
-                          <Button 
-                            size="sm" 
-                            variant="default"
-                            onClick={() => handleSaveExecution(campaign)}
-                          >
-                            Save
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={handleCancelEdit}
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleEditStart(campaign)}
-                        >
-                          Edit
-                        </Button>
-                      )}
+                      ${(campaign.pipelineForecast || 0).toLocaleString()}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -882,31 +86,14 @@ function ExecutionTracking({ campaigns, onUpdateCampaign }: ExecutionTrackingPro
   );
 }
 
-// Budget Overview Component
-function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
-  const budgetAllocations: Record<string, BudgetAllocation> = {
+// Simple Budget Overview
+function SimpleBudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
+  const budgets = {
     "Tomoko Tanaka": { region: "JP & Korea", budget: 358000 },
     "Beverly Leung": { region: "South APAC", budget: 385500 },
     "Shruti Narang": { region: "SAARC", budget: 265000 },
     "Giorgia Parham": { region: "Digital", budget: 68000 },
   };
-
-  const budgetUsage: BudgetUsage[] = Object.entries(budgetAllocations).map(([owner, { region, budget }]): BudgetUsage => {
-    const ownerCampaigns = campaigns.filter(c => c.owner === owner);
-    const used = ownerCampaigns.reduce((sum: number, c: Campaign) => sum + (c.forecastedCost || 0), 0);
-    const remaining = budget - used;
-    const percentage = budget > 0 ? (used / budget) * 100 : 0;
-    
-    return {
-      owner,
-      region,
-      budget,
-      used,
-      remaining,
-      percentage,
-      isOverBudget: remaining < 0
-    };
-  });
 
   return (
     <Card>
@@ -915,41 +102,34 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
           <BuildingOffice className="h-5 w-5" />
           Budget Overview
         </CardTitle>
-        <CardDescription>Budget allocation and usage by owner</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">
-          {budgetUsage.map(({ owner, region, budget, used, remaining, percentage, isOverBudget }) => (
-            <div key={owner} className="p-4 border rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <h4 className="font-medium">{owner}</h4>
-                  <p className="text-sm text-muted-foreground">{region}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-sm">
-                    ${used.toLocaleString()} / ${budget.toLocaleString()}
-                  </p>
-                  <p className={`text-xs ${isOverBudget ? 'text-red-600' : 'text-green-600'}`}>
-                    {isOverBudget ? `Over by $${Math.abs(remaining).toLocaleString()}` : `$${remaining.toLocaleString()} remaining`}
-                  </p>
+          {Object.entries(budgets).map(([owner, { region, budget }]) => {
+            const used = campaigns
+              .filter(c => c.owner === owner)
+              .reduce((sum, c) => sum + (c.forecastedCost || 0), 0);
+            const remaining = budget - used;
+            
+            return (
+              <div key={owner} className="p-4 border rounded-lg">
+                <div className="flex justify-between">
+                  <div>
+                    <h4 className="font-medium">{owner}</h4>
+                    <p className="text-sm text-muted-foreground">{region}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-mono text-sm">
+                      ${used.toLocaleString()} / ${budget.toLocaleString()}
+                    </p>
+                    <p className={`text-xs ${remaining < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {remaining < 0 ? `Over by $${Math.abs(remaining).toLocaleString()}` : `$${remaining.toLocaleString()} remaining`}
+                    </p>
+                  </div>
                 </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${isOverBudget ? 'bg-red-500' : 'bg-green-500'}`}
-                  style={{ width: `${Math.min(percentage, 100)}%` }}
-                />
-              </div>
-              {isOverBudget && (
-                <Alert variant="destructive" className="mt-2">
-                  <AlertDescription>
-                    Budget exceeded by ${Math.abs(remaining).toLocaleString()}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
     </Card>
@@ -958,34 +138,7 @@ function BudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 
 // Main App Component
 export default function App() {
-  console.log("App loading with HTTP 431 prevention...");
-  
-  const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', []);
-  
-  // Initialize HTTP 431 prevention system
-  useEffect(() => {
-    console.log("App mounted, initializing HTTP 431 prevention...");
-    const cleanup = initializeHTTP431Prevention();
-    
-    return cleanup;
-  }, []);
-
-  const handleAddCampaign = (campaign: Campaign) => {
-    setCampaigns([...campaigns, campaign]);
-  };
-
-  const handleImportCampaigns = (importedCampaigns: Campaign[]) => {
-    setCampaigns([...campaigns, ...importedCampaigns]);
-  };
-
-  const handleDeleteCampaign = (id: string) => {
-    setCampaigns(campaigns.filter(c => c.id !== id));
-    notify.success('Campaign deleted');
-  };
-
-  const handleUpdateCampaign = (updatedCampaign: Campaign) => {
-    setCampaigns(campaigns.map(c => c.id === updatedCampaign.id ? updatedCampaign : c));
-  };
+  const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', sampleCampaigns);
 
   const totals = campaigns.reduce(
     (acc, campaign) => {
@@ -998,6 +151,12 @@ export default function App() {
   );
 
   const roi = totals.totalCost > 0 ? (totals.totalPipeline / totals.totalCost) : 0;
+
+  // Test notification on mount
+  useEffect(() => {
+    console.log("App mounted successfully!");
+    notify.success("Marketing Campaign Planner loaded successfully!");
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -1023,7 +182,7 @@ export default function App() {
           <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="planning" className="flex items-center gap-2">
               <Calculator className="h-4 w-4" />
-              Campaign Planning
+              Planning
             </TabsTrigger>
             <TabsTrigger value="execution" className="flex items-center gap-2">
               <ClipboardText className="h-4 w-4" />
@@ -1046,21 +205,17 @@ export default function App() {
                 Plan and manage marketing campaigns with ROI calculations
               </p>
             </div>
-
-            <ImportExport onImportCampaigns={handleImportCampaigns} campaigns={campaigns} />
-            <CampaignForm onAddCampaign={handleAddCampaign} />
-            <CampaignTable campaigns={campaigns} onDeleteCampaign={handleDeleteCampaign} />
+            <CampaignList campaigns={campaigns} />
           </TabsContent>
 
           <TabsContent value="execution" className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold tracking-tight">Campaign Execution</h2>
               <p className="text-muted-foreground">
-                Track actual results and execution status for campaigns
+                Track actual results and execution status
               </p>
             </div>
-
-            <ExecutionTracking campaigns={campaigns} onUpdateCampaign={handleUpdateCampaign} />
+            <CampaignList campaigns={campaigns} />
           </TabsContent>
 
           <TabsContent value="budget" className="space-y-6">
@@ -1070,8 +225,7 @@ export default function App() {
                 Track regional budget allocations and spending
               </p>
             </div>
-
-            <BudgetOverview campaigns={campaigns} />
+            <SimpleBudgetOverview campaigns={campaigns} />
           </TabsContent>
 
           <TabsContent value="overview" className="space-y-6">

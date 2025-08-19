@@ -1,47 +1,24 @@
 import { useState, useEffect } from 'react';
-import { safeSetItem } from '@/utils/storage-size-guard';
 
-type SetValue<T> = (value: T | ((prev: T) => T)) => void;
-type DeleteValue = () => void;
-
-export function useKV<T>(key: string, initialValue: T): [T, SetValue<T>, DeleteValue] {
-  const [value, setValue] = useState<T>(initialValue);
-
-  // Load from localStorage on mount
-  useEffect(() => {
+export function useKV<T>(key: string, initialValue: T): [T, (value: T) => void] {
+  const [storedValue, setStoredValue] = useState<T>(() => {
     try {
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        setValue(JSON.parse(stored));
-      }
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.warn(`Failed to load ${key} from localStorage:`, error);
+      console.warn(`Error loading localStorage key "${key}":`, error);
+      return initialValue;
     }
-  }, [key]);
+  });
 
-  // Save to localStorage when value changes using safe setter
-  useEffect(() => {
+  const setValue = (value: T) => {
     try {
-      const serialized = JSON.stringify(value);
-      const success = safeSetItem(key, serialized);
-      
-      if (!success) {
-        console.warn(`Failed to save ${key} - storage full or item too large`);
-        // Could trigger a cleanup notification here
-      }
+      setStoredValue(value);
+      window.localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
-      console.warn(`Failed to save ${key} to localStorage:`, error);
-    }
-  }, [key, value]);
-
-  const deleteValue = () => {
-    try {
-      localStorage.removeItem(key);
-      setValue(initialValue);
-    } catch (error) {
-      console.warn(`Failed to delete ${key} from localStorage:`, error);
+      console.warn(`Error saving to localStorage key "${key}":`, error);
     }
   };
 
-  return [value, setValue, deleteValue];
+  return [storedValue, setValue];
 }

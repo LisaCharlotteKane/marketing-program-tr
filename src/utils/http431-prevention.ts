@@ -1,90 +1,65 @@
-// HTTP 431 Prevention Utilities
-export function initializeHTTP431Prevention(): () => void {
-  console.log("Initializing HTTP 431 prevention...");
-  
-  // Clear potentially large cookies
-  const clearLargeCookies = () => {
-    const cookies = document.cookie.split(';');
-    cookies.forEach(cookie => {
-      const [name] = cookie.split('=');
-      if (name && name.trim().length > 0) {
-        // Check if cookie is suspiciously large
-        if (cookie.length > 1000) {
-          console.log(`Clearing large cookie: ${name.trim()}`);
-          document.cookie = `${name.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        }
-      }
-    });
-  };
+// HTTP 431 Prevention System
+// Prevents "Request Header Fields Too Large" errors
 
-  // Clear localStorage items that might be too large
-  const clearLargeStorage = () => {
-    try {
-      const storage = window.localStorage;
-      for (let i = 0; i < storage.length; i++) {
-        const key = storage.key(i);
-        if (key) {
-          const value = storage.getItem(key);
-          if (value && value.length > 50000) { // 50KB threshold
-            console.log(`Clearing large localStorage item: ${key}`);
-            storage.removeItem(key);
-          }
-        }
-      }
-    } catch (error) {
-      console.warn('Error clearing large storage items:', error);
-    }
-  };
-
-  // Monitor header size
-  const originalFetch = window.fetch;
-  window.fetch = function(...args) {
-    const [input, init] = args;
-    
-    // Check if headers are getting too large
-    if (init?.headers) {
-      const headerString = JSON.stringify(init.headers);
-      if (headerString.length > 8000) { // 8KB warning threshold
-        console.warn('Large headers detected in fetch request:', headerString.length, 'bytes');
-      }
-    }
-    
-    return originalFetch.apply(this, args);
-  };
-
-  // Run cleanup
-  clearLargeCookies();
-  clearLargeStorage();
-
-  // Return cleanup function
-  return () => {
-    window.fetch = originalFetch;
-  };
-}
+let isInitialized = false;
 
 export function emergencyCleanup(): void {
-  console.log("Running emergency HTTP 431 cleanup...");
+  console.log('Running emergency cleanup for HTTP 431 prevention...');
   
-  // Clear all cookies
-  document.cookie.split(";").forEach(cookie => {
-    const eqPos = cookie.indexOf("=");
-    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-    document.cookie = `${name.trim()}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
-  });
-  
-  // Clear all localStorage
   try {
+    // Clear all localStorage
     localStorage.clear();
+    
+    // Clear all cookies
+    document.cookie.split(';').forEach(cookie => {
+      const eqPos = cookie.indexOf('=');
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
+    });
+    
+    console.log('Emergency cleanup completed');
   } catch (error) {
-    console.warn('Failed to clear localStorage:', error);
+    console.warn('Error during emergency cleanup:', error);
   }
+}
+
+export function initializeHTTP431Prevention(): () => void {
+  if (isInitialized) {
+    return () => {}; // Already initialized
+  }
+
+  console.log('Initializing HTTP 431 prevention...');
   
-  // Clear sessionStorage
+  // Clear large localStorage entries that might cause header issues
   try {
-    sessionStorage.clear();
+    const keysToCheck = ['marketing-campaigns', 'budget-allocations', 'user-preferences'];
+    
+    keysToCheck.forEach(key => {
+      const value = localStorage.getItem(key);
+      if (value && value.length > 100000) { // 100KB threshold
+        console.warn(`Large localStorage entry detected for key "${key}": ${value.length} characters`);
+        // Don't auto-clear, just warn
+      }
+    });
+
+    // Clear any overly large cookies
+    document.cookie.split(';').forEach(cookie => {
+      const [name, value] = cookie.split('=');
+      if (value && value.length > 4000) { // 4KB threshold for cookies
+        console.warn(`Large cookie detected: ${name?.trim()}`);
+        // Clear the large cookie
+        document.cookie = `${name?.trim()}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      }
+    });
+
   } catch (error) {
-    console.warn('Failed to clear sessionStorage:', error);
+    console.warn('Error during HTTP 431 prevention cleanup:', error);
   }
+
+  isInitialized = true;
   
-  console.log("Emergency cleanup completed");
+  return () => {
+    isInitialized = false;
+  };
 }

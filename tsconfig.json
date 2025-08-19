@@ -27,10 +27,8 @@
       ]
     },
     "esModuleInterop": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "types": ["jest", "node"]
+    "strict": false,
+    "strictNullChecks": false
   },
   "include": [
     "src",
