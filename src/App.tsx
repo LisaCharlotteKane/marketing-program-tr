@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Toaster } from "sonner";
 import { Calculator, ChartBar, Target, BuildingOffice, ClipboardText } from "@phosphor-icons/react";
 import { notify } from "@/lib/notifier";
-import { useKV } from "@/hooks/useKV";
+import { useKV } from "@github/spark/hooks";
 import { num } from "@/lib/utils";
-import type { Campaign, SimpleCampaign } from "@/types/campaign";
-import { makeEmptyCampaign } from "@/types/campaign";
+import type { Campaign } from "@/types/campaign";
 
 // Simple campaign data for testing
 const sampleCampaigns: Campaign[] = [
@@ -141,7 +139,6 @@ function SimpleBudgetOverview({ campaigns }: { campaigns: Campaign[] }): JSX.Ele
 // Main App Component
 export default function App(): JSX.Element {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [simpleCampaigns, setSimpleCampaigns] = useState<SimpleCampaign[]>([]);
   
   // Initialize with sample data using useKV for persistence
   const [persistedCampaigns, setPersistedCampaigns] = useKV<Campaign[]>('marketing-campaigns', sampleCampaigns);
