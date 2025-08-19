@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { Calculator, ChartBar, Target, BuildingOffice, ClipboardText } from "@phosphor-icons/react";
 import { notify } from "@/lib/notifier";
 import { useKV } from "@/hooks/useKV";
+import { num } from "@/lib/utils";
 import type { Campaign, SimpleCampaign } from "@/types/campaign";
 import { makeEmptyCampaign } from "@/types/campaign";
 
@@ -70,11 +71,11 @@ function CampaignList({ campaigns }: { campaigns: Campaign[] }) {
                     </TableCell>
                     <TableCell>{campaign.owner}</TableCell>
                     <TableCell className="text-right">
-                      ${(campaign.forecastedCost || 0).toLocaleString()}
+                      ${num(campaign.forecastedCost, 0).toLocaleString()}
                     </TableCell>
-                    <TableCell className="text-right">{campaign.expectedLeads || 0}</TableCell>
+                    <TableCell className="text-right">{num(campaign.expectedLeads, 0)}</TableCell>
                     <TableCell className="text-right">
-                      ${(campaign.pipelineForecast || 0).toLocaleString()}
+                      ${num(campaign.pipelineForecast, 0).toLocaleString()}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -109,7 +110,7 @@ function SimpleBudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
           {Object.entries(budgets).map(([owner, { region, budget }]) => {
             const used = campaigns
               .filter(c => c.owner === owner)
-              .reduce((sum, c) => sum + (c.forecastedCost || 0), 0);
+              .reduce((sum, c) => sum + num(c.forecastedCost, 0), 0);
             const remaining = budget - used;
             
             return (
@@ -152,9 +153,9 @@ export default function App() {
 
   const totals = campaigns.reduce(
     (acc, campaign) => {
-      acc.totalCost += campaign.forecastedCost || 0;
-      acc.totalLeads += campaign.expectedLeads || 0;
-      acc.totalPipeline += campaign.pipelineForecast || 0;
+      acc.totalCost += num(campaign.forecastedCost, 0);
+      acc.totalLeads += num(campaign.expectedLeads, 0);
+      acc.totalPipeline += num(campaign.pipelineForecast, 0);
       return acc;
     }, 
     { totalCost: 0, totalLeads: 0, totalPipeline: 0 }
