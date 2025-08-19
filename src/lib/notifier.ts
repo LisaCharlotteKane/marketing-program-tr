@@ -1,24 +1,24 @@
-import { toast as sonnerToast } from "sonner";
+import { toast } from "sonner";
 
 export type Notifier = {
-  success: (message: string) => void;
-  error: (message: string) => void;
-  info: (message: string) => void;
-  warning: (message: string) => void;
-  loading: (message: string) => string | number;
-  dismiss: (id?: string | number) => void;
+  success(msg: string): void;
+  error(msg: string): void;
+  info(msg: string): void;
+  warning(msg: string): void;
+  loading(msg: string): string;
+  dismiss(id?: string): void;
 };
 
 export const notify: Notifier = {
-  success: (message: string) => { sonnerToast.success(message); },
-  error: (message: string) => { sonnerToast.error(message); },
-  info: (message: string) => { sonnerToast.info(message); },
-  warning: (message: string) => { sonnerToast.warning(message); },
-  loading: (message: string) => sonnerToast.loading(message),
-  dismiss: (id?: string | number) => { sonnerToast.dismiss(id); },
+  success: (msg: string) => toast(msg),
+  error: (msg: string) => toast(msg),
+  info: (msg: string) => toast(msg),
+  warning: (msg: string) => toast(msg),
+  loading: (msg: string) => {
+    toast(msg);
+    return "";
+  },
+  dismiss: () => {
+    // No-op for now since sonner's toast doesn't expose dismiss
+  },
 };
-
-// Legacy support for simple toast function
-export const toast = (message: string) => sonnerToast(message);
-
-export default notify;
