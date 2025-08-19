@@ -9,6 +9,7 @@ import { Calculator, ChartBar, Target, BuildingOffice, ClipboardText } from "@ph
 import { notify } from "@/lib/notifier";
 import { useKV } from "@/hooks/useKV";
 import type { Campaign } from "@/types/campaign";
+import { makeEmptyCampaign } from "@/types/campaign";
 
 // Simple campaign data for testing
 const sampleCampaigns: Campaign[] = [
