@@ -136,7 +136,7 @@ export function CsvPreviewModal({
             )}
             
             {warnings.length > 0 && (
-              <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
+              <Alert variant="secondary" data-variant="warning" className="bg-yellow-50 border-yellow-200">
                 <Warning className="h-4 w-4 text-yellow-600" />
                 <AlertDescription className="text-yellow-700">
                   <div className="font-medium mb-1">
