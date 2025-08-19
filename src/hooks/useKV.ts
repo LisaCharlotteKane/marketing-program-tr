@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function useKV<T>(key: string, initialValue: T): [T, (value: T) => void] {
+export function useKV<T>(key: string, initialValue: T): [T, (value: T) => void, () => void] {
   // Simple localStorage implementation for now
   const [value, setValue] = useState<T>(() => {
     try {
@@ -12,7 +12,7 @@ export function useKV<T>(key: string, initialValue: T): [T, (value: T) => void] 
     }
   });
 
-  const updateValue = (newValue: T) => {
+  const updateValue = (newValue: T): void => {
     try {
       setValue(newValue);
       localStorage.setItem(key, JSON.stringify(newValue));
@@ -21,5 +21,14 @@ export function useKV<T>(key: string, initialValue: T): [T, (value: T) => void] 
     }
   };
 
-  return [value, updateValue];
+  const deleteValue = (): void => {
+    try {
+      setValue(initialValue);
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Error deleting ${key} from localStorage:`, error);
+    }
+  };
+
+  return [value, updateValue, deleteValue];
 }

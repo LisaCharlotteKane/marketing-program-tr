@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import type { Campaign, SimpleCampaign } from "@/types/campaign"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -51,7 +52,7 @@ export function normalizeRegionName(region: string): string {
  * - Used to filter out contractor campaigns from budget impacts, ROI calculations, and calendar view
  * - Uses multiple detection methods for greater reliability
  */
-export function isContractorCampaign(campaign: any): boolean {
+export function isContractorCampaign(campaign: Campaign | SimpleCampaign | null | undefined): boolean {
   if (!campaign) return false;
   
   // Check for explicit campaign types

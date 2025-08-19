@@ -37,7 +37,7 @@ const sampleCampaigns: Campaign[] = [
 ];
 
 // Simple Campaign List Component
-function CampaignList({ campaigns }: { campaigns: Campaign[] }) {
+function CampaignList({ campaigns }: { campaigns: Campaign[] }): JSX.Element {
   return (
     <Card>
       <CardHeader>
@@ -89,7 +89,7 @@ function CampaignList({ campaigns }: { campaigns: Campaign[] }) {
 }
 
 // Simple Budget Overview
-function SimpleBudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
+function SimpleBudgetOverview({ campaigns }: { campaigns: Campaign[] }): JSX.Element {
   const budgets = {
     "Tomoko Tanaka": { region: "JP & Korea", budget: 358000 },
     "Beverly Leung": { region: "South APAC", budget: 385500 },
@@ -139,7 +139,7 @@ function SimpleBudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 }
 
 // Main App Component
-export default function App() {
+export default function App(): JSX.Element {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [simpleCampaigns, setSimpleCampaigns] = useState<SimpleCampaign[]>([]);
   
