@@ -1,5 +1,16 @@
 export type CampaignStatus = "Planning" | "In Flight" | "Complete";
 
+export interface SimpleCampaign {
+  id: string;
+  campaignName: string;
+  campaignType: string;
+  region: string;
+  owner: string;
+  forecastedCost: number;
+  expectedLeads: number;
+  quarterMonth: string;
+}
+
 export interface Campaign {
   id: string;
   campaignName: string;                // required
@@ -27,6 +38,17 @@ export interface Campaign {
   sql?: number;
   opportunities?: number;
 }
+
+export const makeEmptySimpleCampaign = (): SimpleCampaign => ({
+  id: crypto?.randomUUID?.() ?? String(Date.now()),
+  campaignName: "",
+  campaignType: "",
+  region: "",
+  owner: "",
+  forecastedCost: 0,
+  expectedLeads: 0,
+  quarterMonth: "",
+});
 
 export const makeEmptyCampaign = (): Campaign => ({
   id: crypto?.randomUUID?.() ?? String(Date.now()),

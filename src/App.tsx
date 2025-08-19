@@ -8,7 +8,7 @@ import { Toaster } from "sonner";
 import { Calculator, ChartBar, Target, BuildingOffice, ClipboardText } from "@phosphor-icons/react";
 import { notify } from "@/lib/notifier";
 import { useKV } from "@/hooks/useKV";
-import type { Campaign } from "@/types/campaign";
+import type { Campaign, SimpleCampaign } from "@/types/campaign";
 import { makeEmptyCampaign } from "@/types/campaign";
 
 // Simple campaign data for testing
@@ -139,7 +139,16 @@ function SimpleBudgetOverview({ campaigns }: { campaigns: Campaign[] }) {
 
 // Main App Component
 export default function App() {
-  const [campaigns, setCampaigns] = useKV<Campaign[]>('marketing-campaigns', sampleCampaigns);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [simpleCampaigns, setSimpleCampaigns] = useState<SimpleCampaign[]>([]);
+  
+  // Initialize with sample data using useKV for persistence
+  const [persistedCampaigns, setPersistedCampaigns] = useKV<Campaign[]>('marketing-campaigns', sampleCampaigns);
+  
+  // Sync with persisted data on mount
+  useEffect(() => {
+    setCampaigns(persistedCampaigns);
+  }, [persistedCampaigns]);
 
   const totals = campaigns.reduce(
     (acc, campaign) => {
