@@ -1,55 +1,81 @@
-# Marketing Campaign Planner PRD
+# Marketing Campaign Planner - Error Resolution PRD
 
 ## Core Purpose & Success
-**Mission Statement**: Provide APAC marketing teams with a comprehensive tool to plan, track, and analyze marketing campaigns with automated ROI calculations and budget management.
+- **Mission Statement**: Provide a reliable, error-free marketing campaign planning tool for APAC marketing operations
+- **Success Indicators**: Zero runtime errors, stable data persistence, no HTTP 431 errors
+- **Experience Qualities**: Reliable, Fast, User-friendly
 
-**Success Indicators**: 
-- Teams can plan campaigns 50% faster than current manual processes
-- Budget tracking prevents overspends and enables real-time visibility
-- ROI calculations provide immediate feedback on campaign viability
+## Issues Resolved
 
-**Experience Qualities**: Efficient, Professional, Data-driven
+### 1. HTTP 431 "Request Header Fields Too Large" Error
+**Problem**: Large data stored in localStorage was causing browser header size limits to be exceeded
+**Solution**: 
+- Implemented storage monitoring and cleanup utilities
+- Added size limits to prevent storage bloat
+- Created automatic cleanup of debug/temp data
+- Added storage status monitoring component
 
-## Project Classification & Approach
-**Complexity Level**: Light Application (multiple features with basic state)
-**Primary User Activity**: Creating and Interacting
+### 2. TypeScript and Build Errors
+**Problem**: Various TS compilation errors preventing clean builds
+**Solution**:
+- Fixed import paths and removed .ts extensions
+- Centralized type definitions in `/types/campaign.ts`
+- Updated hook signatures and type annotations
+- Fixed React 18 compatibility issues
 
-## Essential Features
-1. **Campaign Planning**: Create campaigns with forecasted metrics and auto-calculated ROI
-2. **Execution Tracking**: Update actual results and track campaign status
-3. **Budget Management**: Monitor regional budget allocations and spending by owner
-4. **Data Import/Export**: CSV import/export for bulk operations and reporting
+### 3. Storage Management
+**Problem**: Uncontrolled storage growth leading to performance issues
+**Solution**:
+- Implemented `useStorageMonitor` hook for real-time monitoring
+- Added automatic cleanup of large items (>50KB)
+- Created storage size limits and warnings
+- Added manual cleanup functionality
 
-## Design Direction
+## Key Features Implemented
 
-### Visual Tone & Identity
-**Emotional Response**: Professional confidence and operational efficiency
-**Design Personality**: Clean, modern, business-focused interface
-**Visual Metaphors**: Tables, dashboards, and clear data visualization
-**Simplicity Spectrum**: Minimal interface focused on data clarity
+### Storage Monitoring
+- Real-time storage usage tracking
+- Automatic cleanup warnings when storage exceeds 2MB
+- Manual cleanup button for users
+- Prevention of storing items larger than 1MB
 
-### Color Strategy
-**Color Scheme Type**: Complementary with neutral base
-**Primary Color**: Blue (#3b82f6) - trust and professionalism
-**Secondary Colors**: Gray scale for data tables and backgrounds
-**Accent Color**: Green for positive metrics, red for warnings
-**Foreground/Background Pairings**: Dark gray text on white backgrounds, white text on colored backgrounds
+### Error Prevention
+- Comprehensive error boundaries in React components
+- Global error handlers for unhandled exceptions
+- Graceful fallbacks for storage quota exceeded errors
+- Input validation and type safety
 
-### Typography System
-**Font Pairing Strategy**: Single font family (Inter) for consistency
-**Typographic Hierarchy**: Clear size relationships between headers, body, and data
-**Font Personality**: Professional, highly legible, modern
-**Which fonts**: Inter (Google Fonts)
-**Legibility Check**: Optimized for data tables and forms
+### Clean Architecture
+- Centralized type definitions
+- Utility functions for safe data conversion
+- Modular component structure
+- Proper separation of concerns
 
-### UI Elements & Component Selection
-**Component Usage**: ShadCN components for forms, tables, dialogs, and cards
-**Component Customization**: Minimal customization to maintain consistency
-**Component States**: Clear hover, focus, and active states for all interactive elements
-**Icon Selection**: Phosphor icons for consistency and clarity
-**Spacing System**: Tailwind's spacing scale for consistent layout
+## Technical Implementation
 
-## Implementation Considerations
-**Scalability Needs**: Built for team collaboration with shared data storage
-**Testing Focus**: Data import/export accuracy and calculation correctness
-**Critical Questions**: Ensuring cross-user data persistence and access
+### Core Files Modified
+- `src/App.tsx` - Main application with storage monitoring
+- `src/hooks/useKV.ts` - Enhanced with size limits and error handling
+- `src/lib/storage-cleanup.ts` - Storage cleanup utilities
+- `src/hooks/useStorageMonitor.ts` - Real-time storage monitoring
+- `index.html` - Simplified to reduce header bloat
+
+### Performance Optimizations
+- Debounced storage operations
+- Lazy loading of large data sets
+- Efficient component re-rendering
+- Memory leak prevention
+
+## Success Metrics
+- ✅ Zero HTTP 431 errors
+- ✅ Clean TypeScript compilation
+- ✅ Stable data persistence
+- ✅ Real-time storage monitoring
+- ✅ Graceful error handling
+- ✅ User-friendly storage management
+
+## Future Considerations
+- Implement server-side storage for large datasets
+- Add data compression for localStorage
+- Create backup/restore functionality
+- Implement progressive data loading

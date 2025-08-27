@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Toaster } from "@/components/ui/sonner";
-import { Calculator, ChartBar, Target, BuildingOffice, ClipboardText } from "@phosphor-icons/react";
+import { Calculator, ChartBar, Target, BuildingOffice, ClipboardText, Trash } from "@phosphor-icons/react";
 import { notify } from "@/lib/notifier";
-import { useKV } from "@/hooks/useKV.ts";
+import { useKV } from "@/hooks/useKV";
+import { useStorageMonitor } from "@/hooks/useStorageMonitor";
 import { num } from "@/lib/utils";
+import { cleanupStorage, getStorageSize } from "@/lib/storage-cleanup";
 import type { Campaign } from "@/types/campaign";
 
 // Simple campaign data for testing
@@ -136,6 +139,66 @@ function SimpleBudgetOverview({ campaigns }: { campaigns: Campaign[] }): JSX.Ele
   );
 }
 
+// Storage Status Component
+function StorageStatus(): JSX.Element {
+  const { storageInfo, isCleanupNeeded, performCleanup } = useStorageMonitor();
+  
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Target className="h-5 w-5" />
+          Storage Status
+        </CardTitle>
+        <CardDescription>
+          Monitor storage usage to prevent errors
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span>Local Storage:</span>
+            <span className="font-mono">{formatBytes(storageInfo.localStorage)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Session Storage:</span>
+            <span className="font-mono">{formatBytes(storageInfo.sessionStorage)}</span>
+          </div>
+          <div className="flex justify-between font-semibold">
+            <span>Total:</span>
+            <span className="font-mono">{formatBytes(storageInfo.total)}</span>
+          </div>
+          
+          {isCleanupNeeded && (
+            <div className="pt-3 border-t">
+              <div className="flex items-center gap-2 text-yellow-600 mb-2">
+                <span className="text-sm">⚠️ High storage usage detected</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={performCleanup}
+                className="w-full"
+              >
+                <Trash className="h-4 w-4 mr-2" />
+                Clean Up Storage
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // Main App Component
 export default function App(): JSX.Element {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -160,9 +223,17 @@ export default function App(): JSX.Element {
 
   const roi = totals.totalCost > 0 ? (totals.totalPipeline / totals.totalCost) : 0;
 
-  // Test notification on mount
+  // Test notification on mount and cleanup storage
   useEffect(() => {
     console.log("App mounted successfully!");
+    
+    // Clean up storage to prevent HTTP 431 errors
+    cleanupStorage();
+    
+    // Log storage usage
+    const storageSize = getStorageSize();
+    console.log('Storage usage:', storageSize);
+    
     notify.success("Marketing Campaign Planner loaded successfully!");
   }, []);
 
@@ -271,17 +342,21 @@ export default function App(): JSX.Element {
               </Card>
             </div>
 
-            <div className="mt-8">
-              <h3 className="text-lg font-semibold mb-4">Auto-Calculated Metrics</h3>
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <ul className="space-y-2 text-sm">
-                  <li><strong>MQL Forecast:</strong> 10% of Expected Leads</li>
-                  <li><strong>SQL Forecast:</strong> 6% of Expected Leads (60% of MQLs)</li>
-                  <li><strong>Opportunities:</strong> 80% of SQLs</li>
-                  <li><strong>Pipeline Forecast:</strong> Opportunities × $50,000</li>
-                  <li><strong>Special Case:</strong> In-Account Events (1:1) with no leads assume 20:1 ROI</li>
-                </ul>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold mb-4">Auto-Calculated Metrics</h3>
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <ul className="space-y-2 text-sm">
+                    <li><strong>MQL Forecast:</strong> 10% of Expected Leads</li>
+                    <li><strong>SQL Forecast:</strong> 6% of Expected Leads (60% of MQLs)</li>
+                    <li><strong>Opportunities:</strong> 80% of SQLs</li>
+                    <li><strong>Pipeline Forecast:</strong> Opportunities × $50,000</li>
+                    <li><strong>Special Case:</strong> In-Account Events (1:1) with no leads assume 20:1 ROI</li>
+                  </ul>
+                </div>
               </div>
+              
+              <StorageStatus />
             </div>
           </TabsContent>
         </Tabs>
