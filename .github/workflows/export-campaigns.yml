@@ -1,0 +1,78 @@
+name: export-campaigns
+
+on:
+  schedule: 
+    - cron: "0 18 * * 1-5"  # weekdays 6pm UTC
+  workflow_dispatch:
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # push to gh-pages or repo
+      issues: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm init -y
+          npm install @octokit/rest
+
+      - name: Export issues to JSON/CSV
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node -e '
+          const { Octokit } = require("@octokit/rest");
+          const fs = require("fs");
+          const ok = new Octokit({ auth: process.env.GH_TOKEN });
+          (async () => {
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split("/");
+            let page = 1, all=[];
+            while(true){
+              const { data } = await ok.issues.listForRepo({
+                owner, repo, state: "all", per_page: 100, page,
+                labels: "campaign,share:external"   // only export issues with BOTH labels
+              });
+              all = all.concat(data);
+              if (data.length < 100) break;
+              page++;
+            }
+            const rows = all.map(i => ({
+              id: i.number,
+              title: i.title,
+              status: (i.labels||[]).map(l=>l.name).find(n=>["Planning","In-Flight","Complete"].includes(n)) || "Planning",
+              owner: i.assignee?.login || (i.assignees?.[0]?.login ?? "Unassigned"),
+              region: (i.labels||[]).map(l=>l.name).find(n=>n.startsWith("Region: "))?.replace("Region: ","") || "",
+              country: (i.labels||[]).map(l=>l.name).find(n=>n.startsWith("Country: "))?.replace("Country: ","") || "",
+              campaignType: (i.labels||[]).map(l=>l.name).find(n=>n.startsWith("Type: "))?.replace("Type: ","") || "",
+              start: (i.milestone?.due_on || ""),
+              budgetUSD: (i.body?.match(/Budget:\\s*\\$?([\\d,]+)/i)?.[1] || "").replace(/,/g,""),
+              description: (i.body||\"\").replace(/##\\s*Internal[\\s\\S]*/i,\"\").slice(0,500) // strip internal section if present
+            }));
+            console.log(`Exported ${rows.length} campaigns`);
+            fs.mkdirSync(\"public\", { recursive: true });
+            fs.writeFileSync(\"public/campaigns.json\", JSON.stringify(rows, null, 2));
+            const headers = Object.keys(rows[0]||{});
+            const csv = [headers.join(\",\")].concat(rows.map(r=>headers.map(h=>`\"${String(r[h]??\"\").replace(/\"/g,'\"\"')}\"`).join(\",\"))).join(\"\\n\");
+            fs.writeFileSync(\"public/campaigns.csv\", csv);
+          })().catch(e=>{ console.error(e); process.exit(1); });
+          '
+
+      - name: Create microsite files
+        run: |
+          # Copy the microsite files to public directory
+          cp -r microsite/* public/ 2>/dev/null || true
+
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public

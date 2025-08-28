@@ -1,0 +1,398 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>APAC Marketing Campaigns</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body { 
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; 
+        background-color: #f9fafb;
+        line-height: 1.5;
+      }
+      .container { max-width: 1280px; margin: 0 auto; padding: 2rem 1rem; }
+      .grid { display: grid; gap: 1rem; }
+      .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .card { background: white; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.5rem; }
+      .card-sm { padding: 1rem; }
+      .table { width: 100%; border-collapse: collapse; }
+      .table th, .table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+      .table th { background-color: #f9fafb; font-weight: 600; }
+      .table tr:hover { background-color: #f9fafb; }
+      .btn { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background: white; cursor: pointer; font-size: 0.875rem; }
+      .btn:hover { background-color: #f9fafb; }
+      .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .select { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; }
+      .badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+      .badge-blue { background-color: #dbeafe; color: #1e40af; }
+      .badge-yellow { background-color: #fef3c7; color: #92400e; }
+      .badge-green { background-color: #d1fae5; color: #065f46; }
+      .badge-gray { background-color: #f3f4f6; color: #374151; }
+      .text-3xl { font-size: 1.875rem; font-weight: bold; }
+      .text-lg { font-size: 1.125rem; font-weight: 600; }
+      .text-2xl { font-size: 1.5rem; font-weight: 600; }
+      .text-sm { font-size: 0.875rem; }
+      .text-xs { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+      .text-gray-900 { color: #111827; }
+      .text-gray-600 { color: #4b5563; }
+      .text-gray-500 { color: #6b7280; }
+      .text-gray-400 { color: #9ca3af; }
+      .text-right { text-align: right; }
+      .text-center { text-align: center; }
+      .mb-2 { margin-bottom: 0.5rem; }
+      .mb-4 { margin-bottom: 1rem; }
+      .mb-6 { margin-bottom: 1.5rem; }
+      .mb-8 { margin-bottom: 2rem; }
+      .mt-1 { margin-top: 0.25rem; }
+      .mt-2 { margin-top: 0.5rem; }
+      .mt-4 { margin-top: 1rem; }
+      .mt-8 { margin-top: 2rem; }
+      .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+      .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+      .py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+      .px-4 { padding-left: 1rem; padding-right: 1rem; }
+      .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .flex { display: flex; }
+      .justify-between { justify-content: space-between; }
+      .justify-center { justify-content: center; }
+      .items-center { align-items: center; }
+      .gap-2 { gap: 0.5rem; }
+      .gap-4 { gap: 1rem; }
+      .overflow-x-auto { overflow-x: auto; }
+      .rounded-full { border-radius: 9999px; }
+      .border-t { border-top: 1px solid #e5e7eb; }
+      .whitespace-nowrap { white-space: nowrap; }
+      .min-h-screen { min-height: 100vh; }
+      .loading { display: inline-block; width: 2rem; height: 2rem; border: 2px solid #e5e7eb; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      @media (min-width: 768px) {
+        .md-grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .md-grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="min-h-screen">
+      <main class="container">
+        <div id="loading" class="flex items-center justify-center py-10">
+          <div class="text-center">
+            <div class="loading"></div>
+            <p class="mt-2 text-gray-600">Loading campaigns...</p>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Demo data fallback
+      const DEMO_DATA = [
+        {
+          id: 1,
+          title: "APAC User Conference 2024",
+          status: "Planning",
+          owner: "john-doe",
+          region: "JP & Korea",
+          country: "Japan",
+          campaignType: "Event",
+          start: "2024-06-15",
+          budgetUSD: "50000",
+          description: "Annual user conference for APAC region featuring keynotes and workshops"
+        },
+        {
+          id: 2,
+          title: "Digital Marketing Campaign Q2",
+          status: "In-Flight",
+          owner: "jane-smith",
+          region: "South APAC",
+          country: "Australia",
+          campaignType: "Digital",
+          start: "2024-04-01",
+          budgetUSD: "25000",
+          description: "Targeted digital marketing campaign for Q2 focusing on new product launch"
+        },
+        {
+          id: 3,
+          title: "Partner Workshop Series",
+          status: "Complete",
+          owner: "mike-chen",
+          region: "SAARC",
+          country: "India",
+          campaignType: "Workshop",
+          start: "2024-02-01",
+          budgetUSD: "15000",
+          description: "Workshop series for our key partners in the SAARC region"
+        }
+      ];
+
+      const STATUS_COLORS = {
+        "Planning": "badge-blue",
+        "In-Flight": "badge-yellow", 
+        "Complete": "badge-green"
+      };
+
+      let campaigns = [];
+      let filteredCampaigns = [];
+      let statusFilter = "all";
+      let regionFilter = "all";
+      let ownerFilter = "all";
+      let typeFilter = "all";
+      let currentPage = 1;
+      const pageSize = 10;
+
+      function parseDate(dateStr) {
+        if (!dateStr) return null;
+        const date = new Date(dateStr);
+        return isNaN(date.getTime()) ? null : date;
+      }
+
+      function fmtUSD(amount) {
+        if (!amount) return "—";
+        const num = parseInt(amount.toString().replace(/[^0-9]/g, ''));
+        return isNaN(num) ? "—" : "$" + num.toLocaleString();
+      }
+
+      function getUniqueValues(arr, key) {
+        return [...new Set(arr.map(item => item[key]))].filter(Boolean);
+      }
+
+      function applyFilters() {
+        filteredCampaigns = campaigns.filter(campaign => {
+          if (statusFilter !== "all" && campaign.status !== statusFilter) return false;
+          if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
+          if (ownerFilter !== "all" && campaign.owner !== ownerFilter) return false;
+          if (typeFilter !== "all" && campaign.campaignType !== typeFilter) return false;
+          return true;
+        });
+        currentPage = 1;
+        updateDisplay();
+      }
+
+      function updateDisplay() {
+        const pageCount = Math.max(1, Math.ceil(filteredCampaigns.length / pageSize));
+        const startIndex = (currentPage - 1) * pageSize;
+        const currentCampaigns = filteredCampaigns.slice(startIndex, startIndex + pageSize);
+
+        // Calculate metrics
+        const metrics = {
+          total: filteredCampaigns.length,
+          planning: filteredCampaigns.filter(c => c.status === "Planning").length,
+          inFlight: filteredCampaigns.filter(c => c.status === "In-Flight").length,
+          complete: filteredCampaigns.filter(c => c.status === "Complete").length,
+          totalBudget: filteredCampaigns.reduce((sum, c) => {
+            const budget = parseInt(c.budgetUSD?.toString().replace(/[^0-9]/g, '') || '0');
+            return sum + (isNaN(budget) ? 0 : budget);
+          }, 0)
+        };
+
+        const app = document.getElementById('app');
+        app.innerHTML = `
+          <main class="container">
+            <!-- Header -->
+            <div class="mb-8">
+              <h1 class="text-3xl text-gray-900">APAC Marketing Campaigns</h1>
+              <p class="mt-2 text-gray-600">Public campaign overview and tracking</p>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md-grid-cols-5 gap-4 mb-8">
+              <div class="card card-sm">
+                <div class="text-xs text-gray-500">Total Campaigns</div>
+                <div class="text-2xl mt-1">${metrics.total}</div>
+              </div>
+              <div class="card card-sm">
+                <div class="text-xs text-gray-500">Planning</div>
+                <div class="text-2xl mt-1">${metrics.planning}</div>
+              </div>
+              <div class="card card-sm">
+                <div class="text-xs text-gray-500">In Flight</div>
+                <div class="text-2xl mt-1">${metrics.inFlight}</div>
+              </div>
+              <div class="card card-sm">
+                <div class="text-xs text-gray-500">Complete</div>
+                <div class="text-2xl mt-1">${metrics.complete}</div>
+              </div>
+              <div class="card card-sm">
+                <div class="text-xs text-gray-500">Total Budget</div>
+                <div class="text-2xl mt-1">${fmtUSD(metrics.totalBudget)}</div>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-6">
+              <h3 class="text-lg mb-4">Filters</h3>
+              <div class="grid grid-cols-1 md-grid-cols-4 gap-4">
+                <div>
+                  <label class="text-sm text-gray-600 mb-2">Status</label>
+                  <select id="status-filter" class="select">
+                    <option value="all">All Statuses</option>
+                    ${getUniqueValues(campaigns, 'status').map(status => 
+                      `<option value="${status}" ${statusFilter === status ? 'selected' : ''}>${status}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="text-sm text-gray-600 mb-2">Region</label>
+                  <select id="region-filter" class="select">
+                    <option value="all">All Regions</option>
+                    ${getUniqueValues(campaigns, 'region').map(region => 
+                      `<option value="${region}" ${regionFilter === region ? 'selected' : ''}>${region}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="text-sm text-gray-600 mb-2">Owner</label>
+                  <select id="owner-filter" class="select">
+                    <option value="all">All Owners</option>
+                    ${getUniqueValues(campaigns, 'owner').map(owner => 
+                      `<option value="${owner}" ${ownerFilter === owner ? 'selected' : ''}>${owner}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="text-sm text-gray-600 mb-2">Type</label>
+                  <select id="type-filter" class="select">
+                    <option value="all">All Types</option>
+                    ${getUniqueValues(campaigns, 'campaignType').map(type => 
+                      `<option value="${type}" ${typeFilter === type ? 'selected' : ''}>${type}</option>`
+                    ).join('')}
+                  </select>
+                </div>
+              </div>
+              <div class="mt-4">
+                <button id="clear-filters" class="btn">Clear All Filters</button>
+              </div>
+            </div>
+
+            <!-- Campaign Table -->
+            <div class="card">
+              <div class="overflow-x-auto">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Campaign</th>
+                      <th>Status</th>
+                      <th>Owner</th>
+                      <th>Region</th>
+                      <th>Type</th>
+                      <th>Start Date</th>
+                      <th class="text-right">Budget</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${currentCampaigns.length === 0 ? 
+                      `<tr><td colspan="7" class="text-center text-gray-500 py-10">No campaigns match your filters.</td></tr>` :
+                      currentCampaigns.map(campaign => `
+                        <tr>
+                          <td>
+                            <div>
+                              <div class="text-gray-900">${campaign.title}</div>
+                              ${campaign.description ? `<div class="text-sm text-gray-500 mt-1">${campaign.description.length > 100 ? campaign.description.slice(0, 100) + "..." : campaign.description}</div>` : ''}
+                            </div>
+                          </td>
+                          <td>
+                            <span class="badge ${STATUS_COLORS[campaign.status] || 'badge-gray'}">${campaign.status}</span>
+                          </td>
+                          <td>${campaign.owner || "—"}</td>
+                          <td>${campaign.region || "—"}</td>
+                          <td>${campaign.campaignType || "—"}</td>
+                          <td>${parseDate(campaign.start)?.toLocaleDateString?.() || "—"}</td>
+                          <td class="text-right whitespace-nowrap">${fmtUSD(campaign.budgetUSD)}</td>
+                        </tr>
+                      `).join('')
+                    }
+                  </tbody>
+                </table>
+              </div>
+              
+              <!-- Pagination -->
+              <div class="flex items-center justify-between px-6 py-4 border-t">
+                <div class="text-sm text-gray-500">Page ${currentPage} of ${pageCount}</div>
+                <div class="flex gap-2">
+                  <button id="prev-page" class="btn" ${currentPage <= 1 ? 'disabled' : ''}>Previous</button>
+                  <button id="next-page" class="btn" ${currentPage >= pageCount ? 'disabled' : ''}>Next</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <p class="mt-8 text-xs text-gray-400 text-center">
+              This view is read-only. Internal notes/comments are excluded by design.
+            </p>
+          </main>
+        `;
+
+        // Add event listeners
+        document.getElementById('status-filter').addEventListener('change', (e) => {
+          statusFilter = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('region-filter').addEventListener('change', (e) => {
+          regionFilter = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('owner-filter').addEventListener('change', (e) => {
+          ownerFilter = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('type-filter').addEventListener('change', (e) => {
+          typeFilter = e.target.value;
+          applyFilters();
+        });
+
+        document.getElementById('clear-filters').addEventListener('click', () => {
+          statusFilter = "all";
+          regionFilter = "all";
+          ownerFilter = "all";
+          typeFilter = "all";
+          applyFilters();
+        });
+
+        document.getElementById('prev-page').addEventListener('click', () => {
+          if (currentPage > 1) {
+            currentPage--;
+            updateDisplay();
+          }
+        });
+
+        document.getElementById('next-page').addEventListener('click', () => {
+          if (currentPage < pageCount) {
+            currentPage++;
+            updateDisplay();
+          }
+        });
+      }
+
+      // Load campaigns data
+      async function loadCampaigns() {
+        try {
+          const response = await fetch('./campaigns.json');
+          if (response.ok) {
+            campaigns = await response.json();
+          } else {
+            console.warn('Using demo data - campaigns.json not found');
+            campaigns = DEMO_DATA;
+          }
+        } catch (err) {
+          console.warn('Using demo data - failed to load campaigns.json:', err);
+          campaigns = DEMO_DATA;
+        }
+        
+        applyFilters();
+      }
+
+      // Initialize the app
+      loadCampaigns();
+    </script>
+  </body>
+</html>
