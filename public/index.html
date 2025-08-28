@@ -1,0 +1,395 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>APAC Marketing Campaigns</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body { 
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; 
+        background-color: #f9fafb;
+        line-height: 1.5;
+      }
+      .container { max-width: 1280px; margin: 0 auto; padding: 2rem 1rem; }
+      .grid { display: grid; gap: 1rem; }
+      .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .card { background: white; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.5rem; }
+      .card-sm { padding: 1rem; }
+      .table { width: 100%; border-collapse: collapse; }
+      .table th, .table td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+      .table th { background-color: #f9fafb; font-weight: 600; }
+      .table tr:hover { background-color: #f9fafb; }
+      .btn { padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background: white; cursor: pointer; font-size: 0.875rem; }
+      .btn:hover { background-color: #f9fafb; }
+      .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .select { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; }
+      .badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; }
+      .badge-blue { background-color: #dbeafe; color: #1e40af; }
+      .badge-yellow { background-color: #fef3c7; color: #92400e; }
+      .badge-green { background-color: #d1fae5; color: #065f46; }
+      .badge-gray { background-color: #f3f4f6; color: #374151; }
+      .text-3xl { font-size: 1.875rem; font-weight: bold; }
+      .text-lg { font-size: 1.125rem; font-weight: 600; }
+      .text-2xl { font-size: 1.5rem; font-weight: 600; }
+      .text-sm { font-size: 0.875rem; }
+      .text-xs { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+      .text-gray-900 { color: #111827; }
+      .text-gray-600 { color: #4b5563; }
+      .text-gray-500 { color: #6b7280; }
+      .text-gray-400 { color: #9ca3af; }
+      .text-right { text-align: right; }
+      .text-center { text-align: center; }
+      .mb-2 { margin-bottom: 0.5rem; }
+      .mb-4 { margin-bottom: 1rem; }
+      .mb-6 { margin-bottom: 1.5rem; }
+      .mb-8 { margin-bottom: 2rem; }
+      .mt-1 { margin-top: 0.25rem; }
+      .mt-2 { margin-top: 0.5rem; }
+      .mt-4 { margin-top: 1rem; }
+      .mt-8 { margin-top: 2rem; }
+      .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+      .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+      .py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
+      .px-4 { padding-left: 1rem; padding-right: 1rem; }
+      .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+      .flex { display: flex; }
+      .justify-between { justify-content: space-between; }
+      .justify-center { justify-content: center; }
+      .items-center { align-items: center; }
+      .gap-2 { gap: 0.5rem; }
+      .gap-4 { gap: 1rem; }
+      .overflow-x-auto { overflow-x: auto; }
+      .rounded-full { border-radius: 9999px; }
+      .border-t { border-top: 1px solid #e5e7eb; }
+      .whitespace-nowrap { white-space: nowrap; }
+      .min-h-screen { min-height: 100vh; }
+      .loading { display: inline-block; width: 2rem; height: 2rem; border: 2px solid #e5e7eb; border-top: 2px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      @media (min-width: 768px) {
+        .md-grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .md-grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import React from "https://esm.sh/react@18";
+      import { createRoot } from "https://esm.sh/react-dom@18/client";
+      
+      const { useState, useEffect, useMemo } = React;
+
+      // Demo data fallback for development
+      const DEMO_DATA = [
+        {
+          id: 1,
+          title: "APAC User Conference 2024",
+          status: "Planning",
+          owner: "john-doe",
+          region: "JP & Korea",
+          country: "Japan",
+          campaignType: "Event",
+          start: "2024-06-15",
+          budgetUSD: "50000",
+          description: "Annual user conference for APAC region featuring keynotes and workshops"
+        },
+        {
+          id: 2,
+          title: "Digital Marketing Campaign Q2",
+          status: "In-Flight",
+          owner: "jane-smith",
+          region: "South APAC",
+          country: "Australia",
+          campaignType: "Digital",
+          start: "2024-04-01",
+          budgetUSD: "25000",
+          description: "Targeted digital marketing campaign for Q2 focusing on new product launch"
+        }
+      ];
+
+      const STATUS_COLORS = {
+        "Planning": "badge-blue",
+        "In-Flight": "badge-yellow", 
+        "Complete": "badge-green"
+      };
+
+      function cls(...classes) {
+        return classes.filter(Boolean).join(" ");
+      }
+
+      function parseDate(dateStr) {
+        if (!dateStr) return null;
+        const date = new Date(dateStr);
+        return isNaN(date.getTime()) ? null : date;
+      }
+
+      function fmtUSD(amount) {
+        if (!amount) return "—";
+        const num = parseInt(amount.toString().replace(/[^0-9]/g, ''));
+        return isNaN(num) ? "—" : "$" + num.toLocaleString();
+      }
+
+      function App() {
+        const [campaigns, setCampaigns] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+        const [statusFilter, setStatusFilter] = useState("all");
+        const [regionFilter, setRegionFilter] = useState("all");
+        const [ownerFilter, setOwnerFilter] = useState("all");
+        const [typeFilter, setTypeFilter] = useState("all");
+        const [page, setPage] = useState(1);
+        const pageSize = 10;
+
+        // Load campaigns data
+        useEffect(() => {
+          const loadCampaigns = async () => {
+            try {
+              const response = await fetch('./campaigns.json');
+              if (response.ok) {
+                const data = await response.json();
+                setCampaigns(data);
+              } else {
+                console.warn('Using demo data - campaigns.json not found');
+                setCampaigns(DEMO_DATA);
+              }
+            } catch (err) {
+              console.warn('Using demo data - failed to load campaigns.json:', err);
+              setCampaigns(DEMO_DATA);
+            } finally {
+              setLoading(false);
+            }
+          };
+          loadCampaigns();
+        }, []);
+
+        // Get unique filter values
+        const { statuses, regions, owners, types } = useMemo(() => {
+          const statuses = [...new Set(campaigns.map(c => c.status))].filter(Boolean);
+          const regions = [...new Set(campaigns.map(c => c.region))].filter(Boolean);
+          const owners = [...new Set(campaigns.map(c => c.owner))].filter(Boolean);
+          const types = [...new Set(campaigns.map(c => c.campaignType))].filter(Boolean);
+          return { statuses, regions, owners, types };
+        }, [campaigns]);
+
+        // Filter and paginate campaigns
+        const { current, pageCount } = useMemo(() => {
+          let filtered = campaigns.filter(campaign => {
+            if (statusFilter !== "all" && campaign.status !== statusFilter) return false;
+            if (regionFilter !== "all" && campaign.region !== regionFilter) return false;
+            if (ownerFilter !== "all" && campaign.owner !== ownerFilter) return false;
+            if (typeFilter !== "all" && campaign.campaignType !== typeFilter) return false;
+            return true;
+          });
+
+          const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+          const current = filtered.slice((page - 1) * pageSize, page * pageSize);
+          return { current, pageCount };
+        }, [campaigns, statusFilter, regionFilter, ownerFilter, typeFilter, page]);
+
+        // Reset page when filters change
+        useEffect(() => {
+          setPage(1);
+        }, [statusFilter, regionFilter, ownerFilter, typeFilter]);
+
+        // Calculate summary metrics
+        const metrics = useMemo(() => {
+          const total = current.length;
+          const planning = current.filter(c => c.status === "Planning").length;
+          const inFlight = current.filter(c => c.status === "In-Flight").length;
+          const complete = current.filter(c => c.status === "Complete").length;
+          const totalBudget = current.reduce((sum, c) => {
+            const budget = parseInt(c.budgetUSD?.toString().replace(/[^0-9]/g, '') || '0');
+            return sum + (isNaN(budget) ? 0 : budget);
+          }, 0);
+          return { total, planning, inFlight, complete, totalBudget };
+        }, [current]);
+
+        if (loading) {
+          return (
+            React.createElement("div", { className: "min-h-screen flex items-center justify-center" },
+              React.createElement("div", { className: "text-center" },
+                React.createElement("div", { className: "loading" }),
+                React.createElement("p", { className: "mt-2 text-gray-600" }, "Loading campaigns...")
+              )
+            )
+          );
+        }
+
+        return React.createElement("div", { className: "min-h-screen" },
+          React.createElement("main", { className: "container" },
+            // Header
+            React.createElement("div", { className: "mb-8" },
+              React.createElement("h1", { className: "text-3xl text-gray-900" }, "APAC Marketing Campaigns"),
+              React.createElement("p", { className: "mt-2 text-gray-600" }, "Public campaign overview and tracking")
+            ),
+
+            // Summary Cards
+            React.createElement("div", { className: "grid grid-cols-1 md-grid-cols-5 gap-4 mb-8" },
+              React.createElement(Card, { label: "Total Campaigns", value: metrics.total.toString() }),
+              React.createElement(Card, { label: "Planning", value: metrics.planning.toString() }),
+              React.createElement(Card, { label: "In Flight", value: metrics.inFlight.toString() }),
+              React.createElement(Card, { label: "Complete", value: metrics.complete.toString() }),
+              React.createElement(Card, { label: "Total Budget", value: fmtUSD(metrics.totalBudget) })
+            ),
+
+            // Filters
+            React.createElement("div", { className: "card mb-6" },
+              React.createElement("h3", { className: "text-lg mb-4" }, "Filters"),
+              React.createElement("div", { className: "grid grid-cols-1 md-grid-cols-4 gap-4" },
+                React.createElement("div", null,
+                  React.createElement("label", { className: "text-sm text-gray-600 mb-2" }, "Status"),
+                  React.createElement("select", {
+                    value: statusFilter,
+                    onChange: (e) => setStatusFilter(e.target.value),
+                    className: "select"
+                  },
+                    React.createElement("option", { value: "all" }, "All Statuses"),
+                    statuses.map(status => React.createElement("option", { key: status, value: status }, status))
+                  )
+                ),
+                React.createElement("div", null,
+                  React.createElement("label", { className: "text-sm text-gray-600 mb-2" }, "Region"),
+                  React.createElement("select", {
+                    value: regionFilter,
+                    onChange: (e) => setRegionFilter(e.target.value),
+                    className: "select"
+                  },
+                    React.createElement("option", { value: "all" }, "All Regions"),
+                    regions.map(region => React.createElement("option", { key: region, value: region }, region))
+                  )
+                ),
+                React.createElement("div", null,
+                  React.createElement("label", { className: "text-sm text-gray-600 mb-2" }, "Owner"),
+                  React.createElement("select", {
+                    value: ownerFilter,
+                    onChange: (e) => setOwnerFilter(e.target.value),
+                    className: "select"
+                  },
+                    React.createElement("option", { value: "all" }, "All Owners"),
+                    owners.map(owner => React.createElement("option", { key: owner, value: owner }, owner))
+                  )
+                ),
+                React.createElement("div", null,
+                  React.createElement("label", { className: "text-sm text-gray-600 mb-2" }, "Type"),
+                  React.createElement("select", {
+                    value: typeFilter,
+                    onChange: (e) => setTypeFilter(e.target.value),
+                    className: "select"
+                  },
+                    React.createElement("option", { value: "all" }, "All Types"),
+                    types.map(type => React.createElement("option", { key: type, value: type }, type))
+                  )
+                )
+              ),
+              React.createElement("div", { className: "mt-4" },
+                React.createElement("button", {
+                  onClick: () => {
+                    setStatusFilter("all");
+                    setRegionFilter("all");
+                    setOwnerFilter("all");
+                    setTypeFilter("all");
+                  },
+                  className: "btn"
+                }, "Clear All Filters")
+              )
+            ),
+
+            // Campaign Table
+            React.createElement("div", { className: "card" },
+              React.createElement("div", { className: "overflow-x-auto" },
+                React.createElement("table", { className: "table" },
+                  React.createElement("thead", null,
+                    React.createElement("tr", null,
+                      React.createElement(Th, null, "Campaign"),
+                      React.createElement(Th, null, "Status"),
+                      React.createElement(Th, null, "Owner"),
+                      React.createElement(Th, null, "Region"),
+                      React.createElement(Th, null, "Type"),
+                      React.createElement(Th, null, "Start Date"),
+                      React.createElement(Th, { className: "text-right" }, "Budget")
+                    )
+                  ),
+                  React.createElement("tbody", null,
+                    current.map(r => 
+                      React.createElement("tr", { key: r.id },
+                        React.createElement(Td, null,
+                          React.createElement("div", null,
+                            React.createElement("div", { className: "text-gray-900" }, r.title),
+                            r.description && React.createElement("div", { className: "text-sm text-gray-500 mt-1" }, 
+                              r.description.length > 100 ? r.description.slice(0, 100) + "..." : r.description
+                            )
+                          )
+                        ),
+                        React.createElement(Td, null,
+                          React.createElement("span", { 
+                            className: cls("badge", STATUS_COLORS[r.status] || "badge-gray") 
+                          }, r.status)
+                        ),
+                        React.createElement(Td, null, r.owner || "—"),
+                        React.createElement(Td, null, r.region || "—"),
+                        React.createElement(Td, null, r.campaignType || "—"),
+                        React.createElement(Td, null, parseDate(r.start)?.toLocaleDateString?.() || "—"),
+                        React.createElement(Td, { className: "text-right whitespace-nowrap" }, fmtUSD(r.budgetUSD))
+                      )
+                    ),
+                    current.length === 0 && React.createElement("tr", null,
+                      React.createElement("td", { colSpan: 7, className: "text-center text-gray-500 py-10" }, "No campaigns match your filters.")
+                    )
+                  )
+                )
+              ),
+
+              // Pagination
+              React.createElement("div", { className: "flex items-center justify-between px-6 py-4 border-t" },
+                React.createElement("div", { className: "text-sm text-gray-500" }, `Page ${page} of ${pageCount}`),
+                React.createElement("div", { className: "flex gap-2" },
+                  React.createElement("button", {
+                    disabled: page <= 1,
+                    onClick: () => setPage(p => Math.max(1, p - 1)),
+                    className: "btn"
+                  }, "Previous"),
+                  React.createElement("button", {
+                    disabled: page >= pageCount,
+                    onClick: () => setPage(p => Math.min(pageCount, p + 1)),
+                    className: "btn"
+                  }, "Next")
+                )
+              )
+            ),
+
+            // Footer
+            React.createElement("p", { className: "mt-8 text-xs text-gray-400 text-center" }, 
+              "This view is read-only. Internal notes/comments are excluded by design."
+            )
+          )
+        );
+      }
+
+      function Card({ label, value }) {
+        return React.createElement("div", { className: "card card-sm" },
+          React.createElement("div", { className: "text-xs text-gray-500" }, label),
+          React.createElement("div", { className: "text-2xl mt-1" }, value)
+        );
+      }
+
+      function Th({ children, className = "" }) {
+        return React.createElement("th", { className: cls(className) }, children);
+      }
+
+      function Td({ children, className = "" }) {
+        return React.createElement("td", { className: cls(className) }, children);
+      }
+
+      // Mount the app
+      createRoot(document.getElementById("root")).render(React.createElement(App));
+    </script>
+  </body>
+</html>
